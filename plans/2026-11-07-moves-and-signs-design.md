@@ -105,7 +105,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -552,7 +552,361 @@ SHOULD-CONSIDER:
 
 ## Steps
 
+Shared for every step:
+- `REPO=/srv/critter-ai/worktrees/moves-and-signs-design`, `STATE=/srv/critter-ai/agent-state/missions/moves-and-signs-design`, `AUDIT=/srv/critter-ai/agent-state/missions/clue-audit` (read-only, never write there). `DOC=docs/research/2026-11-07-moves-and-signs.md`, `IMG=docs/research/2026-11-07-moves-and-signs/`, `BRIEF=plans/2026-11-07-moves-and-signs-build-brief.md`.
+- State layout (§1): `STATE/tools/` our scripts; `research/`, `out/`, `deals/`, `bot/`, `patches/`, `patched/`, `mockups/`. New downloads go to `STATE/sources/<key>/<id>.*`: untrusted, never executed, Python with `-I`.
+- Repo changes only: this plan, `BRIEF`, `DOC`, `IMG/*.png`, `IMG/sign-map.csv`. Nothing under `src/ db/ scripts/ public/` or the site. Copies never write back.
+- No step writes to any database. Read the live DB only when a fact is only there, lightly. Never print `DATABASE_URL` or any connection string (H9). Never run `content -- build|check` here.
+- Heavy jobs (bot, deals, `next dev`, Chrome) run one at a time. Research subagents: at most 3 at once (`CONTENT_SOURCES.md:78`).
+- Disk: at most two E2E/screenshot folders in `STATE`: `baseline-e2e/` (or S1's re-run, which replaces it) and `mockups/shots/` (overwritten each shoot). The final `final-e2e/`, if Verification 6 runs one, replaces `mockups/shots/`. Delete `patched/*` after S12 and `mockups/app/.next*` after S15. Patches and overlays stay, so any copy can be rebuilt.
+- Every session ends with:
+  1. the step's **Check**;
+  2. `npm run typecheck && npm run lint` (~16 s; no code changes, so both must exit 0);
+  3. `STATE/tools/paths.sh` (written in S1), which prints nothing:
+     ```
+     git -C $REPO diff --name-only origin/main...HEAD | grep -vE '^(plans/2026-11-07-moves-and-signs-(design|build-brief)\.md|docs/research/2026-11-07-moves-and-signs(\.md|/[a-z0-9-]+\.png|/sign-map\.csv))$'
+     rg -n "postgres(ql)?://" $REPO/plans $REPO/docs/research
+     ```
+  4. check the step off, add one Log line (UTC, counts, check result), commit, push. `git status --porcelain` is empty afterwards; if `next dev` touched `AGENTS.md` or `next-env.d.ts`, `git restore` them.
+- Write each tool only after reading its group under Failure modes; it must catch every case listed there.
+
+- [ ] S1 · Freshness and research setup.
+  - `git fetch origin --prune`.
+    - If `origin/main` has moved past `69f45fa6`: rebase, then `git push --force-with-lease` (the brief asks for the rebase). Read the new plans (`055`+). Run `git diff --stat 69f45fa6 origin/main -- src db scripts tests` and re-check the F1–F13 line refs in the touched files. Record what moved under Decisions. If game code moved, run `CHROME_PATH=$STATE/chrome-nosandbox.sh npm run e2e:fresh` once into `STATE/s1-e2e/`, which replaces `baseline-e2e/`.
+    - If it hasn't moved, Baseline's 4 rounds on `69f45fa6` count as the played round.
+  - `research/rules.md` (§4 "rules first"):
+    - the written rule for `climbs_trees`, `lives_in_trees` (a subset of Climbs), `digs_burrows` and `swims` (strict), from §2;
+    - the evidence rule (yes: a quote says so; no: a quote of how it lives rules it out; silence: no record; disagreement: both quotes, no record);
+    - §4's source order;
+    - 2 worked edge cases per value: rocks (4, 15), digging for food (52), `borrowed_burrows`, river crossings (25), multi-movers (51, 73).
+    - Frozen once S4 starts. A later change means re-judging the batches already done, recorded under Decisions.
+  - `research/moves.csv` header: §4's columns plus `reason` (needed on every no-record, per §4's coverage rule): `animal_id,animal,value,verdict,quote,url,source_key,tier,quote2,url2,tier2,disagree,reason,photo_cue,guide_cue,sign_cue,note_text_cues,hard,checked_at`. `url` is the public page (`redList.url`, the ADW account), even when read from a cache.
+  - `tools/moves.py`:
+    - `upsert <batch.csv>`, keyed on `animal_id,value`, writing with the `csv` module;
+    - `coverage [ids]`: rows per id × 4 values; fails on a yes/no without a quote and an http `url`, a no-record without `reason`, `disagree=y` without both quotes or with a verdict other than no-record, unknown enum values, and `lives_in_trees=yes` with `climbs_trees` not yes.
+  - `tools/quotes.py [ids]`: finds every `quote`/`quote2` verbatim in a cached page for that animal (`AUDIT/sources/<key>/<id>.*` or `STATE/sources/<key>/<id>.*`), with HTML stripped and whitespace and quote marks normalised. Lists the misses.
+  - `research/inventory.md`: one block per animal from HEAD, adapted from a copy of `AUDIT/audit/inventory.ts`. Each block holds:
+    - guide lines by section;
+    - signs (tag → phrase);
+    - hand-written notes with category and tags;
+    - today's `travelOf`;
+    - the photo url and credit.
+  - Photo sheets:
+    - reuse `AUDIT/sources/photos*` and fetch the rest from `profile.photo.url` into `STATE/sources/photos/<id>.jpg`;
+    - one HTML grid per batch (S4–S8 ids; id and name under each photo, tiles ≥300 px) → `research/photos/sheet-s<n>.png`, via `chrome-nosandbox.sh --headless --screenshot`;
+    - 19 and 47 have no photo (`photo_cue=neutral`, said in the row).
+  - `tools/paths.sh` (the shared check above).
+  - **Check:**
+    - `moves.py coverage` on the empty CSV reports 304 missing and exits non-zero;
+    - `inventory.md` has 76 blocks;
+    - the 5 sheets open (view each) and show 74 photos, with 19 and 47 marked "none";
+    - the S4–S8 id lists join to exactly 1–76.
+
+- [ ] S2 · Patched-copy harness, with deals and the bot for `base` and `no-ft`.
+  - `tools/copy.sh <variant>`:
+    - `git archive HEAD src scripts db tests package.json tsconfig.json` into `patched/<variant>/`, with `node_modules` symlinked;
+    - applies `patches/<variant>.patch`, then `tools/overlay.mjs <variant>` (content edits to the copy's `db/content/animals/*.json` only);
+    - writes `patched/<variant>/STAMP` (HEAD sha, patch sha256);
+    - refuses any target inside `REPO`.
+  - `base`: an empty patch. `no-ft` overlay: drop `artificial` and its kinds from the 20 holders (2, 6, 7, 11, 13, 23, 24, 25, 28, 32, 48, 49, 51, 52, 54, 58, 59, 72, 73, 74). The constants stay (§3).
+  - `tools/deals.ts`: an adapted copy of `AUDIT/audit/deals.ts`, not an import. It covers the world and every continent with ≥ `MIN_PLACE_ANIMALS` (12), every seed, `pickSuspectSet` then `dealClues`, with this tree's `ANIMAL_RULES`. Output `deals/<variant>.json|md`, with the command and STAMP at the top. Metrics now:
+    - seeds with a set;
+    - each tag's deal share;
+    - sets and decks changed against `base`;
+    - pairs only F&T separates;
+    - decks with two clues of one category.
+
+    S11 adds the sign-map metrics.
+  - Bot in each copy: `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 400 --seed 44 --places africa,asia,north-america,south-america` → `bot/<variant>.txt`, with the command and STAMP on line 1. About 8 min per run.
+  - **Check:**
+    - both copies: `tsc --noEmit` exits 0 and `node scripts/run-tests.mjs` passes;
+    - `diff -r` of the `no-ft` copy's content against `REPO/db/content` shows exactly the 20 files, `habitats` only, and no `artificial` left;
+    - `base`'s F&T deal share and lost seeds match `AUDIT/out/s2-deals.json`, or `git log 094da493..HEAD -- src/clueGame db/content` explains each difference;
+    - `git -C $REPO status --porcelain` is empty.
+
+- [ ] S3 · Sign map: note categories, all 198 tags, answers (§6).
+  - `out/note-categories.csv`: the 12 categories with their counts, the question category from §6's table, and whether the category can feed signs (F6: tagged clues, never facts).
+  - `out/sign-map.csv`, one row per open tag, with §6's columns `tag,uses,holders,note_categories,category,rule,answers,restates,misleads`:
+    - `answers` is a list of `prefix: why`. It is judged against the prefixes askable after −F&T, plus `climbs`, `digs`, `swims` and C's `trees`;
+    - `tools/signmap.py build` fills `uses`, `holders`, `note_categories` and the rule-1 category from content;
+    - the judgment columns (`answers`, `restates`, `misleads`, the 2 ties) come from reading each tag's notes in `inventory.md`. Start from §6's draft table and record every change from it, with the reason;
+    - when in doubt, a tag answers (§6).
+  - `out/witness-marks.csv`: each tagged note's distinct categories, in guide order.
+  - **Check:** `tools/signmap.py check` exits 0:
+    - every content tag exactly once (198), and `uses` over them summing to 519. The only other rows allowed are new tags named in `out/retags.csv` (S9 on; `rule` = `new (retag)`);
+    - every `category` one of Body/Habits/Habitat/Range/Life cycle;
+    - every `answers` prefix askable, and each `restates` tag's prefix in its own `answers`;
+    - `town_dweller` answers nothing;
+    - 12 note categories summing to 1027;
+    - the answering-tag counts printed beside §6's 76 tags / 185 uses, and the mark counts beside about 424 / 13 / 0, with every difference listed.
+
+Research batches S4–S8, shared:
+- Each step runs 2–3 parallel subagents, one per taxon group. Each gets:
+  - `rules.md`;
+  - its ids' `inventory.md` blocks and photo sheet;
+  - `out/sign-map.csv`, to tell hint tags (`sign_cue`) from answering ones;
+  - §4's source order: `AUDIT/sources/iucn/<id>.pdf.txt` and `.details.txt` and `AUDIT/sources/adw/<id>.html` first; then the profile's cited pages and the other tier-2/3 keys in `db/content/sources.json`; Wikipedia last, checking its cited source. Routes: `CONTENT_SOURCES.md` "Research access".
+- Every new fetch is saved under `STATE/sources/<key>/<id>.*`, so `quotes.py` can check it.
+- Output `research/batch-s<n>-<group>.csv`: 4 rows per animal, every §4 column filled, `checked_at` in UTC.
+- The session reviews it, then runs `moves.py upsert`. If search limits stop a group, upsert what's done and split the rest into a new step before S9.
+- **Check (each):**
+  - `moves.py coverage <ids>` exits 0, and `quotes.py <ids>` has 0 misses;
+  - the session re-reads 3 random yes/no quotes per group against the page, and every `hard=y` reason;
+  - the Log line gives yes/no/no-record counts per value.
+
+- [ ] S4 · Research, amphibians (15): frogs 3, 5, 6, 7, 8, 9, 10, 11 | frogs 13, 14, 16, 76 and salamanders 62, 74, 75. Two groups. AmphibiaWeb blocks bots, so use IUCN and ADW, and no record where they can't settle it.
+- [ ] S5 · Research, turtles and tortoises (11): 1, 2, 4, 12, 15, 17, 18, 19, 20, 21, 22 | tree animals (9): primates 23, 34, 40, 56, 61; sloths 30, 54; tree-kangaroo 43; flying fox 45. Two groups. Rock climbing (4, 15) follows the Climbs rule.
+- [ ] S6 · Research, carnivores (12): 25, 26, 33, 35, 48 (Tasmanian devil, judged here), 51, 58, 60, 65, 71, 72, 73. Two groups (cats and dogs | the rest). ADW keywords miss swimming (the tiger, F10): read the text.
+- [ ] S7 · Research, diggers (16): pangolins 24, 55, 59, 63; echidnas 27, 67; 31, 32, 36, 37, 42, 46, 47, 49, 52, 57. Two or three groups. The giant anteater (52) and `borrowed_burrows` sit on the Digs rule's edge.
+- [ ] S8 · Research, hoofed animals and elephants (13): 28, 29, 38, 39, 41, 44, 50, 53, 64, 66, 68, 69, 70. Two groups. Swims is strict here (elephants, tapirs, rhinos).
+
+- [ ] S9 · Research consolidation (all 76).
+  - Run `moves.py coverage` and `quotes.py` over 1–76.
+  - Consistency pass: per value, read all yes and no rows side by side; like animals judged unlike get fixed or explained (4 against 15 on rocks; 28/41/64 on Swims).
+  - `research/summary.md`:
+    - counts per value;
+    - the disagreements, with both quotes;
+    - the `hard` list, with why;
+    - the `photo_cue` tally on Climbs-yes and Lives-in-trees-yes animals (it decides the Lives-in-trees fallback and pencil option (a) or (b), §2);
+    - the text-only cues found on today's prefixes, as content notes for the audit's part 3.
+  - `out/retags.csv` (rule 4): every holder of `climber`, `burrower`, `tree_dweller`, `swimmer`, `glider` or `fully_aquatic` checked against its researched value. A conflict gets a row: animal, note, old tag, new tag (e.g. `rock_climber`), why. A new tag also gets a `sign-map.csv` row.
+  - `out/note-tags.csv` (rule 5): the `note_text_cues` notes, with the answering tag the build adds.
+  - Decisions: Climbs or Lives in trees; the pencil option; which values S10 patches.
+  - **Check:**
+    - coverage exits 0 on 304 rows, and quotes has 0 misses;
+    - every restating-tag holder is listed as consistent or has a `retags.csv` row;
+    - `signmap.py check` still exits 0.
+
+- [ ] S10 · Movement patches and overlays.
+  - `patches/move-d.patch`, the §2 D build in miniature:
+    - `climbs` and `digs` in `EXCLUSIVE_PREFIXES`, the `no` constant, and F2's never-ask predicate in `fullTable` and `questionsFor`;
+    - `PREFIX_CATEGORY` keys after `social` (F8);
+    - `QUESTION_TEXT`, `SHORT_TEXT` and `COLUMN_LABEL` for the `:yes` tags only;
+    - one unique, non-animal face per new tag (F9);
+    - in `profiles.ts`: the `traits` type, the yes and no lines, the `trait()` calls, `TRAIT_VALUES`;
+    - a throwaway `src/clueGame/signs.ts`, generated from `out/sign-map.csv`, with `answersAsked`;
+    - witness rules 2–3 in `witnessNotes`, with the dealt prefixes passed from `newAnimalRound`;
+    - `travelOf` reading dig from `digs:yes`.
+  - The other patches:
+    - `move-d-swims.patch` adds `swims`;
+    - `move-d-notravel.patch` is D without the `travelOf` change;
+    - `move-c.patch` adds one `trees:yes|no` prefix with the same wiring.
+  - Overlays:
+    - `no-ft`, plus the researched values from `moves.csv` as `Sourced` traits (value, note = quote, source, url), with no-records left out;
+    - for D variants, also `retags.csv` and `note-tags.csv`.
+  - `tools/probe.ts`: over every place and seed it asserts that no dealt tag ends `:no`, that `clueFace` is never ❓ on an askable tag, and that `QUESTION_PREFIXES` puts the new keys after `social`.
+  - **Check:**
+    - every copy: `tsc --noEmit` exits 0, and `run-tests.mjs` passes, except the witness-fits test that rule 3 changes (`tests/clueGame/animalBoard.test.ts:72-81`), explained;
+    - the D copy's `npm run content -- preview Jaguar` (no DB) shows the Climbs line in Habits;
+    - `probe.ts` exits 0 on every variant;
+    - the overlay's trait count equals the yes+no count in `moves.csv`;
+    - `REPO` is clean.
+
+- [ ] S11 · Deal runs, all variants (§5).
+  - `tools/deals.ts` gains the rest of §5's metrics:
+    - witness notes per round with and without rule 2;
+    - median signs shown per suspect while their prefix is dealt (rule 1);
+    - Swims rows equal to `system:freshwater`'s (share of sets);
+    - sets where a new question isn't dealt because a suspect has no record;
+    - pairs in a dealt deck that only the new clue separates, and pairs only it separates in the whole table.
+  - Run `base`, `no-ft`, `move-c`, `move-d` and `move-d-swims` → `deals/*.json|md`. `deals/metrics.md` has one table per metric, with variants as columns and rounds gained or lost against `no-ft`.
+  - Decisions: keep or drop Swims, with the numbers (§2 lean: drop unless it splits sets Fresh water and Sea don't).
+  - **Check:**
+    - every place × variant has every metric;
+    - `base` and `no-ft` match S2;
+    - a place whose seeds-with-a-set count falls is flagged in `metrics.md`.
+
+- [ ] S12 · Bot runs and `travelOf`.
+  - S2's command in `move-c`, `move-d`, `move-d-notravel` and `move-d-swims` (the last only if S11 keeps Swims).
+  - Then with `--knows size,covering,climbs` on `move-d`, and `--knows size,covering,trees` on `move-c`.
+  - One Climbs-in-Body run, only if S9 picked pencil option (b).
+  - Each → `bot/<variant>[-knows].txt`, with the command and STAMP on line 1.
+  - `bot/summary.md`: the careful, novice, expert and reader rows (find rate, moves left) per variant against `no-ft`; `move-d` against `move-d-notravel` for `travelOf`, with the decision under Decisions.
+  - Then delete `patched/*`.
+  - **Check:** every planned run is present, exited 0, and covers all 4 places.
+
+- [ ] S13 · Mockup harness, today's sheet and option 1.
+  - `mockups/app/`:
+    - `git archive HEAD` of the whole tree, with `node_modules` and `.env.local` symlinked;
+    - apply the picked D (or C) patch;
+    - inject the researched traits at `animalsFromPool` (§7; the pool comes from the live DB);
+    - make `POST /api/clue-game/solves` return early before any DB call;
+    - pick the option with `?mock=0|1|2|3`, where 0 is today's UI.
+  - Pick the suspect: signs in ≥3 categories, a Climbs or Digs value, and a photo with a credit. Probe a `?seed=&place=` where it's a suspect and a movement question is dealt, reading `window.__cc.clue().orders` through `scripts/cdp.mjs`. Record it in `mockups/README.md`, with every command.
+  - `tools/shoot.mjs` (CDP, `CHROME_PATH=$STATE/chrome-nosandbox.sh`): 390 px wide at DPR 2, light and dark (`data-theme`), the suspect sheet open with one cell scouted, at full sheet height → `mockups/shots/<name>-<mode>.png`. It never finishes a round.
+  - Option 1 (§7):
+    - an icon and the category word on sign chips, guide headings, answer rows, order tiles and witness notes;
+    - tapping a sign scrolls to its category in the guide;
+    - no new colour.
+  - The dev server runs on a free port in 3100–3102 (`ss -ltn` first) and stops at session end.
+  - **Check:**
+    - `today-*` and `option-1-*` (light and dark) open (view each): signs, guide, "Its answers" and a scouted question, at 390 px, dark really dark, credit visible;
+    - the server log shows the solves block answering, never a DB write;
+    - `REPO` is clean.
+
+- [ ] S14 · Mockups, options 2 and 3.
+  - Option 2: the chips sit inside the guide's category rows, and "Its answers" is grouped under the same headings.
+  - Option 3:
+    - gems coloured by category (043's `GEM_OF`), with icons kept;
+    - a deck rule of four distinct categories, in the copy;
+    - five data colours in both modes from existing tokens, with any gap named per `GUI.md`;
+    - run the copy's `node scripts/check-theme.mjs` and record the contrast result, with S11's two-clues-one-category share, as the option's cost.
+  - **Check:** the `option-2-*` and `option-3-*` PNGs open and show the same suspect and scouted cell as option 1; the cost numbers are in `mockups/README.md`.
+
+- [ ] S15 · One `graphical-audit` pass, and its fixes.
+  - Run `.agents/skills/graphical-audit/` once over the copy's mockup diff, against `GUI.md`, `gui/theme-contract.md` and `gui/foundations.md`, in audit-and-fix scope. The report, in the skill's format, goes to `mockups/audit.md`.
+  - Fix confirmed drift in the copy, then reshoot all 8.
+  - Copy them to `IMG` as `{today,option-1,option-2,option-3}-{light,dark}.png`.
+  - Delete `mockups/app/.next*`.
+  - **Check:**
+    - 8 valid PNGs in `IMG`, 780 px wide (IHDR via `python3 -I`), each under 1 MB;
+    - every finding in `audit.md` is fixed or listed as a gap or an intentional exception, with the reason;
+    - no second pass.
+
+- [ ] S16 · Design doc, sections 2 and 3.
+  - Headings: `## 1. Summary`, `## 2. Movement clue`, `## 3. The 76 animals`, `## 4. Signs and categories`, `## 5. What the build changes`, `## Method and coverage`.
+  - §2:
+    - options A–D, each with its values, written rules (`rules.md`), and kept/merged/dropped with why (walks, gallops, crawls, hops, glides);
+    - how a player deduces each;
+    - engine fit: prefix kind, `traits.ts`, `PREFIX_CATEGORY`, texts, faces, guide lines, `travelOf`, overlap of Swims with Fresh water, pencil weight (a)–(c);
+    - balance numbers from `deals/metrics.md` and `bot/summary.md`, naming the files;
+    - the recommendation.
+  - §3: `tools/table.py` writes it from `moves.csv`. One row per animal:
+    - the values under the recommended option;
+    - the quote and link;
+    - how a player can tell (photo, guide, signs);
+    - hard ones marked; no-records with their reason.
+
+    Then a short list of the hard ones.
+  - Plain language for the owner.
+  - **Check:**
+    - §3 has 76 rows, ids 1–76 once each;
+    - every http link in §3 is a `url`/`url2` in `moves.csv`;
+    - 5 numbers in §2, spot-checked, trace to their file.
+
+- [ ] S17 · Design doc: sections 4, 5, method and coverage, and the summary.
+  - §4:
+    - the note-category table, and a summary of the tag mapping. Copy `out/sign-map.csv` to `IMG/sign-map.csv` and link it;
+    - the retag and note-tag tables (`out/retags.csv`, `out/note-tags.csv`), in full, so the build has them in git;
+    - the three mockups, light and dark side by side, each with its trade-offs: readability for grades 6–12, colour never the only cue, fit beside the photo and paging, leaks;
+    - leak rules 1–6, with the tags hidden per prefix (an owner choice against 045's "signs stay");
+    - misleading signs and text-only cues, as content notes for the audit's part 3;
+    - the recommendation.
+  - §5: the build's files and size, from §8, F&T removal included (content in 20 files, constants kept until the cleanup brief).
+  - Method and coverage:
+    - the routes used;
+    - no-record counts and why;
+    - what couldn't be checked, and why;
+    - the evidence paths in `STATE`.
+  - §1 Summary: the recommended movement clue and link option, then each owner choice with the mission's pick: option, Swims, Climbs or Lives in trees, pencil weight, hiding signs during play, link option, `travelOf`, shots refresh.
+  - **Check:**
+    - the 6 headings are present;
+    - `tools/links.py $DOC`: every relative link and image resolves;
+    - `IMG/sign-map.csv` parses with the same row count as `out/sign-map.csv` (198, plus any new retag tags);
+    - every Summary choice has a pick.
+
+- [ ] S18 · Build brief(s), in `BRIEF`.
+  - Two briefs in order (§8), each with the template's headings (`/srv/critter-ai/ops/templates/mission-brief.md`): Goal, Why, Scope, Definition of done, Decision rules, Notes.
+    - **A. Build**: slug `moves-and-signs-build`, plan `055` or the next free number on `origin/main`.
+    - **B. F&T cleanup**: slug `ft-cleanup`, 1 session. It starts once the owner confirms the prod content build, and at least 11 min after it.
+  - The top of the file says:
+    - the control room saves each brief as its own file under `agent-state/missions/briefs/`;
+    - an "Owner's picks" block, defaulting to the doc's picks, which brief A reads.
+  - Brief A names:
+    - the files (doc §5);
+    - the content changes for all 76: values from doc §3, quotes in `STATE/research/moves.csv`, retags and note tags from doc §4;
+    - F&T content leaving the 20 files, constants kept;
+    - `ANIMAL_RULES.version` `054-1` → `055-0`, re-read on `origin/main`;
+    - the checks: `typecheck`, `lint`, `npm test`, `content -- preview`, then §8(a)'s dev-DB block word for word, with its guard (the path only);
+    - the proof the movement question is dealt (grid columns with `climbs:yes`/`digs:yes` on a probed seed, recorded in plan 055);
+    - the bot rerun, with numbers in plan 055;
+    - the fixes to `CONTENT_SOURCES.md` and `DATABASE_ACCESS.md:202-203`;
+    - the accepted CI risk;
+    - the prod content build, the owner's from WSL after a successful deploy, as a handoff item;
+    - Release `deploy`.
+  - A size estimate in sessions. Above 60, split A into ordered briefs.
+  - **Check:**
+    - each of the 6 headings appears once per brief;
+    - `rg -n "postgres(ql)?://|sk_(live|test)|pk_(live|test)" $BRIEF` finds nothing;
+    - every existing file the brief names exists on `origin/main`, and new ones are marked new;
+    - the version string matches `origin/main`.
+
+- [ ] S19 · Final freshness and consistency.
+  - `git fetch origin --prune`. If `origin/main` has moved:
+    - rebase and `git push --force-with-lease`;
+    - run `git diff --stat <old> origin/main -- src db scripts tests docs/CONTENT_SOURCES.md docs/DATABASE_ACCESS.md`;
+    - re-check, in the touched files, every file:line the doc and brief cite, plus the next plan number and `ANIMAL_RULES.version`;
+    - a new animal or tag on main means a research or sign-map addition: add a step before this one.
+  - Read `DOC` and `BRIEF` end to end: the numbers agree across §1, §2, §5 and the brief.
+  - **Check:** `git merge-base --is-ancestor origin/main HEAD` exits 0, and `paths.sh` prints nothing. If main moved, the Log says what changed.
+
+After S19, the code-review unit writes `Skipped: design mission, no code` under `## Code review (Astra)`, per the brief's Decision rules, with no Astra run. The next session runs Verification; then comes Release (`deploy`: docs only, same game).
+
 ## Verification
+
+From `REPO`, one heavy job at a time. Each command's output goes to `STATE/final/verify.txt`. Done when every item holds.
+
+1. **Fresh base:** `git fetch origin --prune && git merge-base --is-ancestor origin/main HEAD` exits 0. If not, rebase and redo S19's re-checks first.
+2. **Only docs (allowed paths):**
+   - `git diff --stat origin/main...HEAD` lists only this plan, `BRIEF`, `DOC`, `IMG/*.png` and `IMG/sign-map.csv`; `STATE/tools/paths.sh` prints nothing.
+   - `git status --porcelain` is empty.
+   - The `--stat` output goes in the Summary (DoD, Release).
+3. **Doc structure:** the 6 headings (S16) are in `DOC`, and §1 gives every owner choice with a pick. `BRIEF` has the 6 template headings per brief.
+4. **Coverage:**
+   - `python3 -I $STATE/tools/moves.py coverage` exits 0: 76 ids × 4 values = 304 rows; no yes/no without a quote and link; no no-record without a reason. `quotes.py` has 0 misses.
+   - `DOC` §3 has 76 rows, ids 1–76 once each.
+   - `signmap.py check` exits 0 against the current content: all 198 content tags present once, uses summing to 519, extra rows only for `retags.csv` tags, all 12 note categories mapped. `IMG/sign-map.csv` equals `out/sign-map.csv`.
+   - The 8 mockup PNGs (`today` and `option-1..3`, × `light|dark`) are valid, 780 px wide, and each is referenced from `DOC` (`rg -c "2026-11-07-moves-and-signs/<name>.png"`).
+5. **Links:** `tools/links.py $DOC $BRIEF`: every relative link and image resolves, and every http link in §3 is a `url` in `moves.csv`. These pages were fetched and cached during research, so no network is needed.
+6. **Game unchanged:**
+   - `npm run typecheck`, `npm run lint` and `npm test` exit 0 (baseline 48/48).
+   - **E2E only if the game moved under us:** check `git diff --quiet 69f45fa6 origin/main -- src db scripts tests public package.json package-lock.json next.config.mjs tsconfig.json`.
+     - When it exits 0, Baseline's run stands as the E2E evidence (1512/1512, `baseline-e2e/`, or S1's re-run). The branch adds only docs, and the game tree is byte-identical to the one played, so a rerun would only add load and live-DB solve rows (F13), plus the known VPS timing flakes.
+     - Otherwise, delete `mockups/shots/` and run `CHROME_PATH=$STATE/chrome-nosandbox.sh npm run e2e:fresh` (seed 7, 4 rounds). Every check must pass; after a timing flake, run once more, as Baseline did. Copy `e2e-artifacts/<run>/` and the log to `STATE/final-e2e/`, then delete the repo copy. Keep two folders: the baseline or S1 run, and `final-e2e/`.
+7. **Evidence in `STATE`:**
+   - `research/` (`moves.csv`, `rules.md`, `summary.md`, the batch CSVs, `photos/`);
+   - `out/` (`sign-map.csv`, `note-categories.csv`, `witness-marks.csv`, `retags.csv`, `note-tags.csv`);
+   - `deals/` (with `metrics.md`) and `bot/` (with `summary.md`), each file headed by its command;
+   - `patches/` and `mockups/` (sources, README, `audit.md`);
+   - `du -sh $STATE` recorded in `verify.txt`.
+8. **Release smoke** (the `deploy` unit, after `deploy critter-connect`):
+   - `curl -s https://play.critterconnect.org/version.txt` names the merge commit;
+   - `https://play.critterconnect.org/` and `https://critterconnect.org/` return 200;
+   - no game page changed, so nothing else needs a check.
+
+## Failure modes
+
+Written before the tools. Each tool must catch, or loudly flag, every case in its group.
+
+- **Research (S1 tools, S4–S9):**
+  - Silence read as no, e.g. a missing ADW keyword (F10). Coverage rejects a no without a quote, and review checks that the quote rules the value out.
+  - A quote paraphrased, invented, or taken from an uncached page. `quotes.py` finds it verbatim or lists it.
+  - A quote about the wrong species: a genus page, a shared account, old ADW spellings (`Zaglossus_bruijni`). The species name must be on the page.
+  - Captive behaviour, or a one-off anecdote, read as daily life (strict Swims); rocks read as Climbs (4, 15); digging for food or borrowed burrows read as Digs (52).
+  - Lives in trees yes while Climbs isn't yes. Coverage fails it.
+  - A disagreement recorded with one side only, or settled by tier (`CONTENT_SOURCES.md:21` vs the brief). `disagree=y` needs both quotes and a verdict of no-record.
+  - Wikipedia used without checking its own cited source.
+  - Commas, quote marks or newlines in quotes breaking the CSV. Write and read through the `csv` module only.
+  - Search limits hit mid-batch. Partial upsert, and the rest becomes its own step.
+- **Patched copies (S2, S10–S12):**
+  - The overlay or patch writes into `REPO`. `copy.sh` refuses, and `git status` is checked.
+  - A stale copy (old HEAD or patch). Every output carries the STAMP.
+  - New prefix keys ahead of `system`, so they win ties (F8). `probe.ts`.
+  - A `:no` tag dealt with raw text and ❓ (F2), or a new tag without a face silently killing decks (F9). `probe.ts`.
+  - A no-record written as `:no` by the overlay. The trait count equals the yes+no count.
+  - An `artificial` kind left behind by `no-ft`. The `diff -r` check.
+  - `deals.ts` drifting from `useAnimalSession`. `base` reproduces the audit, or the difference is explained.
+- **Sign map (S3):**
+  - A tag missed, duplicated or renamed. Checked against content.
+  - A category varying by holder. One fixed category per tag.
+  - `answers` holding only exact restatements, missing exclusion and cross-prefix answers (Astra MUST-FIX 2). §6's draft and F4's cases are reviewed row by row.
+  - A typo in an answer prefix. It must be askable.
+- **Mockups (S13–S15):**
+  - A finished round or a stray click writing a solve to the live DB. The POST is blocked, `shoot.mjs` never ends a round, and the server log is checked.
+  - `.env.local` copied rather than symlinked (a secret duplicated). S13's setup fails unless `test -L mockups/app/.env.local` passes.
+  - A port clash with another run. `ss -ltn` first.
+  - Dark mode not applied, the credit cropped, or the sheet cut off. View every PNG.
+  - Colour as the only cue (option 3). Icons stay.
 
 ## Code review (Astra)
 
@@ -569,5 +923,6 @@ SHOULD-CONSIDER:
 - 2026-11-07 08:40 UTC · Fable review: APPROVE_WITH_CHANGES, 1 MUST-FIX (build brief must run content build + e2e on VPS against `phaser_june_dev`, not `.env.local` prod), 2 missed, 5 should-consider. Docs only.
 - 2026-11-07 08:18 UTC · Astra review: APPROVE_WITH_CHANGES, 2 MUST-FIX (explicit dev-DB override for content build + e2e; sign suppression must cover all answers a sign reveals across prefixes, shared with witness notes), 4 should-consider. Docs only.
 - 2026-11-07 09:00 UTC · Revision: architect resolved 2 distinct MUST-FIX (F13 + §8(a) dev-DB override w/ `current_database()` guard for content build/check/e2e; F4/§6 per-prefix `answers` map in pure `src/clueGame/signs.ts` shared by checkProfile/GuideSigns/witnessNotes), Fable missed items, should-considers dispositioned. Docs only. Architect's masking `sed` leaked DB URLs into its transcript: handoff H9.
+- 2026-11-07 08:44 UTC · Steps: planner wrote S1–S19 (setup, deals/bot harness, sign map, 5 research batches by taxon covering ids 1–76, consolidation, movement patches, deals/bot runs, mockups ×3 light/dark, one graphical-audit, doc ×2, build brief(s), final freshness), Verification (8 checks; e2e only if game code moved since 69f45fa6) and Failure modes. Docs only; typecheck+lint 0.
 
 ## Summary
