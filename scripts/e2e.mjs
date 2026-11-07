@@ -191,6 +191,38 @@ async function main() {
         observer.observe(document.querySelector('table[aria-label="Evidence"] tbody'), { childList: true });
         window.__stopWatchingRows = () => { observer.disconnect(); return changes; };
       };
+      // The home globe's spin (window.__globe, dev only): one sample a frame from here until stopped, and the fps.
+      window.__watchGlobe = () => {
+        const samples = window.__globeSamples = [];
+        let on = true;
+        const tick = () => {
+          if (!on) return;
+          const map = window.__globe;
+          if (map) samples.push({ t: performance.now(), lng: map.getCenter().lng, zoom: map.getZoom(), moving: map.isMoving() });
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+        window.__stopWatchingGlobe = () => {
+          on = false;
+          const span = samples.length > 1 ? samples.at(-1).t - samples[0].t : 0;
+          return { samples, fps: span ? Math.round((samples.length - 1) * 1000 / span) : 0 };
+        };
+      };
+      // The spin's speed over one window, re-anchored at its start (so the anchor stays near the centre, off the limb):
+      // degrees of longitude a second at the view's centre, and how fast that ground crosses the screen.
+      window.__globeRate = async (ms = 500) => {
+        const map = window.__globe;
+        const frame = () => new Promise(res => requestAnimationFrame(res));
+        await frame();
+        const anchor = map.getCenter();
+        const x0 = map.project(anchor).x;
+        const t0 = performance.now();
+        await new Promise(res => setTimeout(res, ms));
+        await frame();
+        const s = (performance.now() - t0) / 1000;
+        const dLng = ((map.getCenter().lng - anchor.lng + 540) % 360) - 180;
+        return { degPerS: dLng / s, pxPerS: (x0 - map.project(anchor).x) / s, zoom: map.getZoom() };
+      };
     ` });
 
     const goto = async url => {
@@ -249,8 +281,251 @@ async function main() {
     report.place = { key: place.key, name: place.name, animals: place.speciesIds.length };
     const listed = await waitFor(() => document.querySelectorAll('ul button').length, 'the continent list', 30_000).catch(() => 0);
     check('the globe lists the continents', listed === continents.length, `${listed} rows shown, ${continents.length} continents from /api/places`);
+    const listedAt = Date.now();
     await sleep(1500);
     await screenshot('01-globe.png');
+
+    // 1b. The globe's spin (plan 2026-11-07-globe-spin-resume): input pauses it, it rests, then eases back in.
+    // Real touches and keys through CDP at the globe's centre. A deterministic gesture holds still 300 ms before
+    // lifting, so it leaves no momentum; only the fling lifts while moving.
+    const IDLE_MS = 3000, EASE_MS = 1500, FULL_ZOOM = 1; // mirror of src/components/globe/globeSpin.ts; change both
+    const IDLE_WINDOW = [IDLE_MS - 500, IDLE_MS + 4000]; // the pause before the spin returns, as measured
+    const STILL_DEG = 1e-6;
+    const inIdleWindow = gap => gap >= IDLE_WINDOW[0] && gap <= IDLE_WINDOW[1];
+    const dLng = (from, to) => ((to - from + 540) % 360) - 180;
+    const pageNow = () => evaluate(() => performance.now());
+    const globeView = () => evaluate(() => ({ lng: window.__globe.getCenter().lng, zoom: window.__globe.getZoom() }));
+    // Each sample's lng unwrapped across ±180, and its kind: momentum (the map is moving: a gesture or its ease),
+    // spin (not moving, yet lng changed since the sample before) or still.
+    const classify = samples => {
+      let shift = 0;
+      const unwrapped = samples.map((sample, i) => {
+        if (i) shift -= 360 * Math.round((sample.lng - samples[i - 1].lng) / 360);
+        return { ...sample, lng: sample.lng + shift };
+      });
+      return unwrapped.map((sample, i) => ({ ...sample, kind: sample.moving ? 'momentum' : i && Math.abs(sample.lng - unwrapped[i - 1].lng) >= STILL_DEG ? 'spin' : 'still' }));
+    };
+    const watchGlobe = () => evaluate(() => window.__watchGlobe());
+    const stopWatchingGlobe = async () => {
+      const { samples, fps } = await evaluate(() => window.__stopWatchingGlobe());
+      return { samples: classify(samples), fps };
+    };
+    const isStill = samples => samples.length > 1 && samples.every(sample => Math.abs(sample.lng - samples[0].lng) < STILL_DEG && sample.zoom === samples[0].zoom);
+    /** Watches (already started) until the first spin sample, then `after` ms more; gives up after `ms`. */
+    const untilSpin = async (ms, after = 0) => {
+      const end = Date.now() + ms;
+      for (let seen = []; Date.now() < end; await sleep(100)) {
+        seen = seen.concat(await evaluate(from => window.__globeSamples.slice(from), seen.length));
+        if (classify(seen).some(sample => sample.kind === 'spin')) break;
+      }
+      await sleep(after);
+      return stopWatchingGlobe();
+    };
+    /** The spin's return: its first sample, the still one before it (where the player left the view) and the rest before it, from `since` or the last input-driven move. */
+    const spinReturn = (samples, since) => {
+      const i = samples.findIndex(sample => sample.kind === 'spin');
+      if (i < 1) return null;
+      const lastMoving = samples.slice(0, i).findLast(sample => sample.kind === 'momentum');
+      return { first: samples[i], rest: samples[i - 1], gap: Math.round(samples[i].t - Math.max(since, lastMoving?.t ?? -Infinity)) };
+    };
+    const touch = (type, points = []) => page('Input.dispatchTouchEvent', { type, touchPoints: points.map(([x, y], id) => ({ x, y, id })) });
+    const mouse = (type, x, y) => page('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1 });
+    const key = async (keyName, keyCode) => {
+      for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: keyName, code: keyName, windowsVirtualKeyCode: keyCode });
+    };
+    await waitFor(() => Boolean(window.__globe), 'the globe (window.__globe; is this a dev build?)');
+    const [cx, cy, globeTop] = await evaluate(() => {
+      const box = document.querySelector('section[aria-label="Globe"]').getBoundingClientRect();
+      return [Math.round(box.left + box.width / 2), Math.round(box.top + box.height / 2), Math.round(box.top)];
+    });
+    const centreHit = await evaluate((x, y) => document.elementFromPoint(x, y)?.className ?? null, cx, cy);
+
+    await watchGlobe();
+    const firstSpin = spinReturn((await untilSpin(Math.max(0, 10_000 - (Date.now() - listedAt)))).samples, 0);
+    const startRate = firstSpin ? await evaluate(() => window.__globeRate(1000)) : null;
+    check('the globe spins on its own', Boolean(firstSpin) && startRate.degPerS > 0, JSON.stringify({ degPerS: startRate?.degPerS.toFixed(2), within10s: Boolean(firstSpin) }));
+
+    const beforeDrag = await globeView();
+    await touch('touchStart', [[cx, cy]]);
+    for (let x = 10; x <= 150; x += 10) {
+      await touch('touchMove', [[cx + x, cy]]);
+      await sleep(16);
+    }
+    await sleep(300);
+    const dragged = dLng(beforeDrag.lng, (await globeView()).lng);
+    check('a drag moves the globe while it was spinning', dragged < -10, JSON.stringify({ dLng: dragged.toFixed(1), at: [cx, cy], hit: centreHit }));
+
+    await watchGlobe();
+    await sleep(IDLE_MS + 1000);
+    await screenshot('01b-globe-held.png');
+    const held = await stopWatchingGlobe();
+    check('a finger holding the globe keeps it still', isStill(held.samples), JSON.stringify({ heldMs: IDLE_MS + 1000, samples: held.samples.length, fps: held.fps, dLng: held.samples.length ? dLng(held.samples[0].lng, held.samples.at(-1).lng) : null }));
+    await touch('touchEnd');
+
+    await watchGlobe();
+    await touch('touchStart', [[cx + 80, cy]]);
+    for (let x = 40; x <= 160; x += 40) {
+      await sleep(16);
+      await touch('touchMove', [[cx + 80 - x, cy]]);
+    }
+    await touch('touchEnd');
+    const flungAt = await pageNow();
+    // Headless Chrome on a slow GPU (SwiftShader) draws the moving globe at a few fps, and MapLibre's inertia keeps only
+    // moves from the last 160 ms, so a fling there may get no momentum: the rest counts from the later of the lift and the momentum's end.
+    const fling = await untilSpin(5000 + IDLE_WINDOW[1], 1000);
+    const flingReturn = spinReturn(fling.samples, flungAt);
+    const momentum = fling.samples.filter(sample => sample.kind === 'momentum' && sample.t > flungAt);
+    const flungDeg = flingReturn ? flingReturn.rest.lng - fling.samples[0].lng : 0;
+    check('after a fling, the globe rests about 3 s once its momentum ends, then spins again', flungDeg > 10 && inIdleWindow(flingReturn.gap), JSON.stringify({ flungDeg: flungDeg.toFixed(1), momentumMs: momentum.length ? Math.round(momentum.at(-1).t - flungAt) : 0, restMs: flingReturn?.gap, window: IDLE_WINDOW, fps: fling.fps }));
+
+    // The steady speed, after the ease: the baseline for the zoomed-in check.
+    let baseRate = null;
+    let easeIn = null;
+    if (flingReturn) {
+      const { first, rest } = flingReturn;
+      const later = fling.samples.find(sample => sample.t >= rest.t + 250);
+      easeIn = later ? (later.lng - rest.lng) / ((later.t - rest.t) / 1000) : null;
+      await sleep(Math.max(0, first.t + EASE_MS + 200 - await pageNow()));
+      baseRate = await evaluate(() => window.__globeRate(1500)); // several frames even at a few fps
+    }
+    await screenshot('01c-globe-spin-back.png');
+    const spinBack = flingReturn && { jumpDeg: Math.abs(flingReturn.first.lng - flingReturn.rest.lng), zoomChange: Math.abs(flingReturn.first.zoom - flingReturn.rest.zoom), easeInDegPerS: easeIn, degPerS0: baseRate?.degPerS, pxPerS0: baseRate?.pxPerS, zoom0: baseRate?.zoom };
+    // A snap would land somewhere else; the eased first step at a few fps moves up to ~0.15°.
+    check('the spin comes back where the player left it, at their zoom, easing in', Boolean(spinBack) && spinBack.jumpDeg < 0.5 && spinBack.zoomChange < 1e-6 && easeIn !== null && baseRate.degPerS > 0 && easeIn < 0.4 * baseRate.degPerS, JSON.stringify(spinBack));
+
+    await evaluate(() => document.querySelector('.maplibregl-canvas').focus());
+    const beforeKey = await globeView();
+    const keyAt = await pageNow();
+    await key('ArrowLeft', 37);
+    await watchGlobe();
+    await sleep(1000);
+    const keyed = dLng(beforeKey.lng, (await globeView()).lng);
+    const keyReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, keyAt);
+    check('arrow keys move the globe while it spins, then the spin returns', keyed < -5 && Boolean(keyReturn) && inIdleWindow(keyReturn.gap), JSON.stringify({ dLng: keyed.toFixed(1), restMs: keyReturn?.gap, window: IDLE_WINDOW }));
+
+    // Two fingers spread 60 -> 240 px apart (zoom +2), then hold still.
+    const beforePinch = await globeView();
+    await touch('touchStart', [[cx - 30, cy], [cx + 30, cy]]);
+    for (let half = 45; half <= 120; half += 15) {
+      await sleep(16);
+      await touch('touchMove', [[cx - half, cy], [cx + half, cy]]);
+    }
+    await sleep(300);
+    await watchGlobe();
+    await sleep(1000);
+    const pinchHeld = await stopWatchingGlobe();
+    const pinchZoom = (await globeView()).zoom - beforePinch.zoom;
+    check('a pinch zooms in and holds the globe still', pinchZoom >= 1.5 && isStill(pinchHeld.samples), JSON.stringify({ zoomFrom: beforePinch.zoom.toFixed(2), dZoom: pinchZoom.toFixed(2), samples: pinchHeld.samples.length, fps: pinchHeld.fps }));
+
+    // Lift finger 2 only: CDP releases the points a touchMove no longer lists.
+    await touch('touchMove', [[cx - 120, cy]]);
+    await watchGlobe();
+    await sleep(IDLE_MS + 1000);
+    const halfHeld = await stopWatchingGlobe();
+    await touch('touchEnd');
+    const liftedAt = await pageNow();
+    await watchGlobe();
+    const liftReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, liftedAt);
+    check('lifting one finger of a pinch keeps the globe still while the other stays down', isStill(halfHeld.samples) && Boolean(liftReturn) && inIdleWindow(liftReturn.gap), JSON.stringify({ heldMs: IDLE_MS + 1000, samples: halfHeld.samples.length, restMs: liftReturn?.gap, window: IDLE_WINDOW }));
+
+    // Ratios against check 5's baseline, so the headless frame rate cancels out.
+    let zoomRate = null;
+    if (liftReturn && baseRate) {
+      await sleep(Math.max(0, liftReturn.first.t + EASE_MS + 200 - await pageNow()));
+      zoomRate = await evaluate(() => window.__globeRate(1500));
+    }
+    await screenshot('01d-globe-zoomed-spin.png');
+    const zoomed = zoomRate && {
+      zoom0: baseRate.zoom, zoom1: zoomRate.zoom, degPerS1: zoomRate.degPerS, pxPerS1: zoomRate.pxPerS,
+      degRatio: zoomRate.degPerS / baseRate.degPerS, wantDegRatio: 2 ** -(zoomRate.zoom - Math.max(baseRate.zoom, FULL_ZOOM)),
+      pxRatio: zoomRate.pxPerS / baseRate.pxPerS,
+    };
+    check('zoomed in, the spin is slower in degrees but about as fast on screen', Boolean(zoomed) && Math.abs(zoomed.degRatio / zoomed.wantDegRatio - 1) <= 0.3 && zoomed.pxRatio >= 0.7 && zoomed.pxRatio <= 1.4, JSON.stringify(zoomed));
+
+    // Pick the continent to play: the globe flies to it, then holds still.
+    await evaluate(name => [...document.querySelectorAll('ul button')].find(button => button.textContent.includes(name)).click(), place.name);
+    await waitFor(() => !window.__globe.isMoving() && Boolean(document.querySelector('button[aria-label="Back to all places"]')), 'the pick\'s flight to end', 15_000);
+    await watchGlobe();
+    await sleep(IDLE_MS + EASE_MS + 1000);
+    const picked = await stopWatchingGlobe();
+    check('a picked place holds the globe still', isStill(picked.samples), JSON.stringify({ place: place.key, heldMs: IDLE_MS + EASE_MS + 1000, samples: picked.samples.length, zoom: picked.samples[0]?.zoom.toFixed(2) }));
+
+    const backAt = await pageNow();
+    await watchGlobe();
+    await evaluate(() => document.querySelector('button[aria-label="Back to all places"]').click());
+    const backReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, backAt);
+    check('back to all places lets the spin return after the pause', Boolean(backReturn) && inIdleWindow(backReturn.gap), JSON.stringify({ restMs: backReturn?.gap, window: IDLE_WINDOW }));
+
+    // Released off the globe, over the header, then held still: MapLibre ends its pan only on a mouseup over the map,
+    // so the controller forwards the release; without that the drag stays active and the spin never returns.
+    const off = [40, globeTop - 20];
+    const offHit = await evaluate((x, y) => document.elementFromPoint(x, y)?.getAttribute('alt') ?? document.elementFromPoint(x, y)?.tagName ?? null, ...off);
+    const beforeMouse = await globeView();
+    await mouse('mousePressed', cx, cy);
+    for (let i = 1; i <= 10; i++) {
+      await mouse('mouseMoved', Math.round(cx + (off[0] - cx) * i / 10), Math.round(cy + (off[1] - cy) * i / 10));
+      await sleep(16);
+    }
+    await sleep(300);
+    const mouseDragged = dLng(beforeMouse.lng, (await globeView()).lng);
+    await mouse('mouseReleased', ...off);
+    const releasedAt = await pageNow();
+    await watchGlobe();
+    const mouseReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, releasedAt);
+    check('a mouse drag released off the globe lets the spin return', Math.abs(mouseDragged) > 5 && Boolean(mouseReturn) && inIdleWindow(mouseReturn.gap), JSON.stringify({ dLng: mouseDragged.toFixed(1), releasedOn: offHit, restMs: mouseReturn?.gap, window: IDLE_WINDOW }));
+
+    // Reduced motion, last in the block: the emulation is cleared before the game.
+    const reduceMotion = on => page('Emulation.setEmulatedMedia', { features: on ? [{ name: 'prefers-reduced-motion', value: 'reduce' }] : [] });
+    const spinningBefore = Boolean(mouseReturn);
+    await reduceMotion(true);
+    await sleep(300);
+    await watchGlobe();
+    await sleep(1000);
+    const reduced = await stopWatchingGlobe();
+    check('turning reduced motion on stops the spin at once', spinningBefore && isStill(reduced.samples), JSON.stringify({ spinningBefore, samples: reduced.samples.length, fps: reduced.fps }));
+
+    await goto(`${BASE}/`);
+    await waitFor(() => Boolean(window.__globe) && document.querySelectorAll('ul button').length > 0, 'the globe after a reload', 30_000);
+    await watchGlobe();
+    await sleep(4500);
+    const reducedLoad = await stopWatchingGlobe();
+    const beforeReducedDrag = await globeView();
+    await touch('touchStart', [[cx, cy]]);
+    for (let x = 10; x <= 150; x += 10) {
+      await touch('touchMove', [[cx + x, cy]]);
+      await sleep(16);
+    }
+    await sleep(300);
+    await touch('touchEnd');
+    const reducedDragged = dLng(beforeReducedDrag.lng, (await globeView()).lng);
+    await watchGlobe();
+    await sleep(5000);
+    const reducedAfter = await stopWatchingGlobe();
+    await reduceMotion(false);
+    check('with reduced motion the globe never spins', isStill(reducedLoad.samples) && reducedDragged < -10 && isStill(reducedAfter.samples), JSON.stringify({ loadSamples: reducedLoad.samples.length, dLng: reducedDragged.toFixed(1), afterSamples: reducedAfter.samples.length }));
+
+    // A tap while the map still loads: its idle pause outlives the load. The land data is held back so the tap
+    // comes first; if the map has loaded by the tap anyway, the check fails rather than pass without testing.
+    let heldLand = null;
+    browser.on(message => { if (message.sessionId === sessionId && message.method === 'Fetch.requestPaused') heldLand = message.params.requestId; });
+    await page('Fetch.enable', { patterns: [{ urlPattern: '*world-land.geojson*' }] });
+    await goto(`${BASE}/`);
+    await waitFor(() => Boolean(window.__globe), 'the globe after a reload', 30_000);
+    for (const end = Date.now() + 15_000; !heldLand && Date.now() < end;) await sleep(50);
+    await evaluate(() => { window.__globeLoadAt = null; window.__globe.once('load', () => { window.__globeLoadAt = performance.now(); }); });
+    await touch('touchStart', [[cx, cy]]);
+    await sleep(100);
+    await touch('touchEnd');
+    const tapAt = await pageNow();
+    const loadedAtTap = await evaluate(() => window.__globe.loaded());
+    await sleep(500);
+    if (heldLand) await page('Fetch.continueRequest', { requestId: heldLand });
+    await page('Fetch.disable');
+    await watchGlobe();
+    const loadReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 5000)).samples, tapAt);
+    const loadAt = await evaluate(() => window.__globeLoadAt);
+    const loadGap = loadAt === null ? null : Math.round(loadAt - tapAt);
+    check('a tap just before the globe loads keeps its idle pause', Boolean(heldLand) && !loadedAtTap && loadGap > 0 && Boolean(loadReturn) && inIdleWindow(loadReturn.gap), JSON.stringify({ landHeld: Boolean(heldLand), loadedAtTap, loadMsAfterTap: loadGap, restMs: loadReturn?.gap, window: IDLE_WINDOW }));
 
     // 2. The animal board for that continent (plan 044).
     // A ?seed= game is never saved, so each load deals the same round 1 afresh (localStorage carries over).
