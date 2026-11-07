@@ -66,7 +66,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -74,6 +74,11 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+On `69f45fa6` (= `origin/main`), 2026-11-07 UTC. No migrations to run (live DB, schema unchanged by this mission).
+- `npm ci`: ok. `npm run typecheck`: exit 0. `npm run lint`: exit 0. `npm test`: 48/48 pass.
+- `npm run e2e:fresh`: 1512/1512 checks, 4 rounds (seed 7). Artifact `e2e-artifacts/2026-11-07T07-54-33-821Z-seed7/` (gitignored).
+- E2E needs `CHROME_PATH=/srv/critter-ai/agent-state/missions/globe-spin-resume/chrome-nosandbox.sh` (Playwright Chromium + `--no-sandbox`); default `/usr/bin/google-chrome` isn't installed here. Wait for other missions' E2E runs first (one at a time).
 
 ## Architecture
 
@@ -94,5 +99,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-07 08:03 UTC · Baseline: typecheck/lint ok, unit 48/48, e2e:fresh 1512/1512.
 
 ## Summary
