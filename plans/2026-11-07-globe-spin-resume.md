@@ -480,6 +480,14 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- Rebased on `origin/main` `4418143d` (PR #61, docs only); full Verification re-run on `cd13bae3`: typecheck/lint ok, unit 48/48, e2e:fresh 1527/1527 (no console errors/failed requests), build ok, `rg __globe .next/static` rg=1, maplibre chunk present. `e2e-final/` replaced with this run. PR CI (check, e2e) passed.
+- PR #62 merged: merge commit `2b2838b2`.
+- `deploy critter-connect` last line: `deploy critter-connect: live at https://critterconnect.org` (`deploy/check.sh` all OK). `version.txt` = `2b2838b2de6fe6c7b852776043f4fd2252dd29f7`.
+- Smoke: `/` 200, `/explore?seed=1` 200, `/api/places` 200. Live globe (390×844 touch, `tools/live-smoke.mjs`): spins on its own, holds under a held finger, stays still in the idle pause, spin returns after idle, no `__globe` in the 27 loaded scripts. Shots + `report.json`: `/srv/critter-ai/agent-state/missions/globe-spin-resume/live-smoke/`.
+- Deploy log: `/srv/critter-ai/agent-state/missions/globe-spin-resume/deploy.log`.
+
+Result: done
+
 ## Decisions
 
 - S1: E2E failures caused by load from another mission's balance bot are rerun once the box is quiet, not treated as regressions (first S1 run: 1505/1512, 7 game row-timing checks on `/explore`, which the globe doesn't touch, while a 400-round bot held ~1 CPU; rerun on a quiet box: 1512/1512).
@@ -516,6 +524,7 @@ SHOULD-CONSIDER:
 - 2026-11-07 14:00 UTC · S6: off-globe mouse release forwarded to the map (ends MapLibre's pan), window blur clears the press; check 12 no longer moves the mouse after release. typecheck/lint ok; e2e:fresh 1526/1526, no console errors/failed requests, check 12 rest 3.0 s (`e2e-s6/`).
 - 2026-11-07 14:25 UTC · S7: `pause()` clears `timer`; `load` begins only when no idle pause is pending. New check 15 (tap while the land data is held back; load 910 ms after tap, spin rest 3.4 s). typecheck/lint ok; e2e:fresh 1527/1527, no console errors/failed requests (`e2e-s7/`).
 - 2026-11-07 13:43 UTC · S8: final Verification on `ba23ffdc`: typecheck/lint ok, unit 48/48, e2e:fresh 1527/1527 (no console errors/failed requests), build ok, `rg __globe .next/static` rg=1, maplibre chunk present. `origin/main` unchanged since S5 (4418143d). `e2e-final/` replaced, `e2e-s7/` deleted.
+- 2026-11-07 14:08 UTC · Release: rebased on 4418143d, Verification 1527/1527 again, PR #62 CI passed and merged (`2b2838b2`), deployed (version.txt matches), live smoke 5/5 (spin, hold, idle pause, resume, no `__globe`).
 
 ## Summary
 
@@ -531,3 +540,4 @@ The home globe's slow spin now pauses on any input and comes back by itself; bef
 - **Artifacts**: `/srv/critter-ai/agent-state/missions/globe-spin-resume/e2e-final/` (`report.json` + PNGs; key shots `01b-globe-held.png`, `01c-globe-spin-back.png`, `01d-globe-zoomed-spin.png`). DoD captures, including a desktop frame series: `.../spin-shots/`. Reproduce: `CHROME_PATH=/srv/critter-ai/agent-state/missions/globe-spin-resume/chrome-nosandbox.sh npm run e2e:fresh`.
 - **Left for the owner** (Astra SHOULD-CONSIDER): the fling check passes with `momentumMs: 0`, since headless SwiftShader's 3–5 fps leaves MapLibre's 160 ms inertia buffer empty; momentum is covered only through the key-ease path (same `easeTo(…, {originalEvent})`; S2 decision).
 - Needs no production content build (code only).
+- **Released**: PR #62 merged (`2b2838b2`) and deployed to play.critterconnect.org; live smoke passed (see Release).
