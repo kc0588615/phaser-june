@@ -100,7 +100,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -108,6 +108,12 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+From `87e6689b` on `origin/main` `69f45fa6` (fetched 07:34 UTC; branch already on it, no rebase).
+- Install: `node_modules` present, `npm ls --depth=0` clean. Migrate: n/a (no migration history; DB is live `phaser_june`, design-only mission, nothing to apply).
+- `npm run typecheck` 0, `npm run lint` 0, `npm test` 48/48.
+- `npm run e2e:fresh` (CHROME_PATH = no-sandbox wrapper, see Decisions): run 1 1509/1512, 3 timing checks (row-slide press, waiting re-order click, round 1 move 5 sparkle; known VPS flake, cf. plan 2026-11-06-auto-rule-out-default S1); run 2 1512/1512, same 4 rounds (Hairy Frog +310, Hirola escaped, Golden-rumped Sengi +50, African Forest Elephant +110).
+- Artifact: `/srv/critter-ai/agent-state/missions/moves-and-signs-design/baseline-e2e/` (report.json, screenshots, both logs). Repro: `CHROME_PATH=<that folder>/../chrome-nosandbox.sh npm run e2e:fresh` (seed 7).
 
 ## Architecture
 
@@ -127,6 +133,10 @@ Out:
 
 ## Decisions
 
+- 2026-11-07 Baseline: `/usr/bin/google-chrome` absent and Playwright Chromium dies sandboxed (Ubuntu 24.04 userns); E2E uses `agent-state/missions/moves-and-signs-design/chrome-nosandbox.sh` (adds `--no-sandbox`) via `CHROME_PATH`. No repo change.
+
 ## Log
+
+- 2026-11-07 07:55 UTC · Baseline: on latest origin/main; typecheck/lint ok, unit 48/48, e2e 1512/1512 (2nd run; 1st 3 timing flakes). Artifact `baseline-e2e/`.
 
 ## Summary
