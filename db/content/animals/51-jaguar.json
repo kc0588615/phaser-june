@@ -135,9 +135,6 @@
     {
       "category": "behavior",
       "text": "It is an excellent swimmer and usually lives near rivers, lagoons or swamps.",
-      "tags": [
-        "swimmer"
-      ],
       "source": "adw"
     },
     {
@@ -152,9 +149,6 @@
     {
       "category": "behavior",
       "text": "It can climb trees to stay safe or to hunt.",
-      "tags": [
-        "climber"
-      ],
       "source": "adw"
     },
     {

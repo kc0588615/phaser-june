@@ -93,7 +93,8 @@
       "category": "diet",
       "text": "It grazes on native grasses near its burrows.",
       "tags": [
-        "grazer"
+        "grazer",
+        "burrower"
       ],
       "source": "iucn"
     },
@@ -125,7 +126,10 @@
     {
       "category": "habitat",
       "text": "It lives in open eucalyptus woodland with deep, sandy soil for digging.",
-      "source": "iucn"
+      "source": "iucn",
+      "tags": [
+        "burrower"
+      ]
     },
     {
       "category": "geography",

@@ -135,7 +135,10 @@
     {
       "category": "behavior",
       "text": "Even though it lives in forests, it never climbs trees.",
-      "source": "adw"
+      "source": "adw",
+      "tags": [
+        "never_climbs"
+      ]
     },
     {
       "category": "conservation",

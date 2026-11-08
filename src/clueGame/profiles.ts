@@ -7,6 +7,7 @@
 import type { SpeciesClueCategory } from '@/clueGame/categories';
 import { renderCitation, type CitationSource, type CitedPage } from '@/clueGame/citations';
 import type { ContentRows } from '@/clueGame/pool';
+import { signProblems } from '@/clueGame/signs';
 import { FAMILY_NAMES, ORDER_NAMES } from '@/clueGame/speciesInfo';
 import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, prefixOf } from '@/clueGame/traits';
 
@@ -354,6 +355,8 @@ export function checkProfile(profile: AnimalProfile, sources: readonly Pick<Cont
     cite(`facts[${i}]`, fact.source, fact.url);
   }
   if ((profile.facts ?? []).filter(fact => fact.category === 'key_fact').length === 0) problems.push('add at least one key_fact for the reveal card');
+  // Signs last: profileClues needs a well-formed profile (plan 055 T3).
+  if (problems.length === 0) problems.push(...signProblems(profile.clues, new Set(profileClues(profile).flatMap(clue => clue.tags))));
   return problems;
 }
 

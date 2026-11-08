@@ -97,7 +97,8 @@
       "category": "behavior",
       "text": "It builds several leaf nests on the forest floor and sleeps in a different one each night.",
       "tags": [
-        "builds_nests"
+        "sleeping_nests",
+        "forest_floor"
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Golden-rumped_sengi"
@@ -106,7 +107,8 @@
       "category": "diet",
       "text": "It hunts through thick fallen leaves on the forest floor.",
       "tags": [
-        "leaf_litter"
+        "leaf_litter",
+        "forest_floor"
       ],
       "source": "iucn"
     },

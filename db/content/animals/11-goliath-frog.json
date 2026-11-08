@@ -68,9 +68,6 @@
     {
       "category": "morphology",
       "text": "It is the biggest frog on Earth, up to 32 cm long.",
-      "tags": [
-        "giant_frog"
-      ],
       "source": "adw"
     },
     {
@@ -98,7 +95,7 @@
       "category": "behavior",
       "text": "It rests on wet, mossy rocks by rivers and waterfalls.",
       "tags": [
-        "rock_basker"
+        "rests_by_waterfalls"
       ],
       "source": "adw"
     },

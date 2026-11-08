@@ -82,7 +82,8 @@
       "category": "morphology",
       "text": "Its long, golden-brown tail helps it balance in the trees.",
       "tags": [
-        "long_tail"
+        "long_tail",
+        "climber"
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
@@ -91,7 +92,6 @@
       "category": "behavior",
       "text": "It lives in the treetops, gripping branches with strong arms and hooked claws.",
       "tags": [
-        "tree_dweller",
         "climber"
       ],
       "source": "wikipedia",

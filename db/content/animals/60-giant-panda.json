@@ -108,7 +108,7 @@
       "category": "behavior",
       "text": "It feeds on the ground, but it is a good tree climber.",
       "tags": [
-        "climber"
+        "feeds_on_ground"
       ],
       "source": "adw"
     },

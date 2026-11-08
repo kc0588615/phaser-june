@@ -111,9 +111,6 @@
     {
       "category": "diet",
       "text": "It licks sweet nectar from red hot poker flowers.",
-      "tags": [
-        "nectar_drinker"
-      ],
       "source": "literature",
       "url": "https://doi.org/10.1002/ecy.4470"
     },
@@ -121,7 +118,8 @@
       "category": "habitat",
       "text": "It lives only on high mountain plateaus, above where trees can grow.",
       "tags": [
-        "high_mountains"
+        "high_mountains",
+        "above_tree_line"
       ],
       "source": "iucn"
     },

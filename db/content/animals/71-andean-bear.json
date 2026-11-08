@@ -93,7 +93,7 @@
       "text": "It is a great climber and spends lots of time in trees.",
       "tags": [
         "climber",
-        "tree_dweller"
+        "often_in_trees"
       ],
       "source": "adw"
     },
@@ -101,7 +101,8 @@
       "category": "behavior",
       "text": "It builds platforms, like nests, in fruit trees, where it feeds and sleeps.",
       "tags": [
-        "builds_nests"
+        "sleeping_nests",
+        "climber"
       ],
       "source": "adw"
     },

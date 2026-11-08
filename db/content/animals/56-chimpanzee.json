@@ -108,7 +108,8 @@
       "category": "behavior",
       "text": "Every night it builds a fresh nest of leafy branches in a tree to sleep in.",
       "tags": [
-        "builds_nests"
+        "sleeping_nests",
+        "climber"
       ],
       "source": "adw"
     },

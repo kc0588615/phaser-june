@@ -102,7 +102,9 @@
       "category": "behavior",
       "text": "From October to April it rests buried on the bottom of rivers and lakes.",
       "tags": [
-        "winter_rest"
+        "winter_rest",
+        "buries_itself",
+        "rests_on_bottom"
       ],
       "source": "adw"
     },

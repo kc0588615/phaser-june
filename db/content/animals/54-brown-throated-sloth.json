@@ -91,7 +91,6 @@
       "category": "behavior",
       "text": "It moves very slowly and spends almost all its life high in the treetops.",
       "tags": [
-        "tree_dweller",
         "slow_mover"
       ],
       "source": "adw"
@@ -108,7 +107,7 @@
       "category": "behavior",
       "text": "It seldom walks on the ground, but it can swim well.",
       "tags": [
-        "swimmer"
+        "seldom_on_ground"
       ],
       "source": "adw"
     },

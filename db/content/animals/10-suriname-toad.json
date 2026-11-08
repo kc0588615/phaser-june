@@ -103,7 +103,7 @@
       "category": "behavior",
       "text": "It almost never leaves the water, resting on the bottom of murky ponds.",
       "tags": [
-        "fully_aquatic"
+        "rests_on_bottom"
       ],
       "source": "adw"
     },
@@ -119,8 +119,7 @@
       "category": "reproduction",
       "text": "Its eggs sink into pockets in the mother's back and hatch there as tiny toads, with no tadpole stage.",
       "tags": [
-        "mother_carries_young",
-        "no_tadpoles"
+        "mother_carries_young"
       ],
       "source": "amphibiaweb"
     },

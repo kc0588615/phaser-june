@@ -467,7 +467,7 @@ Deviation from the architecture's 8-step order (sessions too big): its step 3 is
   - `signs.ts`: an entry per new tag (category by T5's majority rule; `implies`/`denies` where definite). Retired tags stay.
   - `apply.ts` part B with `--dry-run`: guards A1–A3 (Failure modes), applies in memory, runs `signProblems` over the 76.
   - Checks: static checks; `M/tools/run.sh M/content/apply.ts --dry-run` reports 0 sign problems and every row matched once; it also prints tags left with one holder (witness-note loss, for S8). No content written.
-- [ ] S7. **Apply sign edits, update `sign-map.csv`, wire `checkProfile` (T5 B, T6, T3).**
+- [x] S7. **Apply sign edits, update `sign-map.csv`, wire `checkProfile` (T5 B, T6, T3).**
   - Run `apply.ts` for real, then again (no diff).
   - `sign-map.csv` (T6, by the script): uses/holders/note categories recomputed, rows for new tags (`rule` "055: replaces <old>"), "fixed in 055" on fixed `misleads`/`restates` cells, every `category` asserted equal to `SIGNS`.
   - `profiles.ts` `checkProfile`: append `signProblems` when no shape problems (T3).
@@ -591,6 +591,7 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - S6 · Swim words on land animals (25, 44, 51) dropped, not reworded: Swims isn't asked (owner) and any swim/river word still reads as fresh water. 28 keeps `trunk`, 30 `slow_mover`, 54 `seldom_on_ground`. Other drops (no evidence word that isn't the answer): 6 `tree_dweller`, 8 `internal_fertilization`, 10 `no_tadpoles`, 11 `giant_frog`, 17 `fully_aquatic`, 20 `seasonal_streams`, 32 `coastal_dunes` and `sand_swimmer`, 33 `nectar_drinker`, 51 `climber`, 58 `coalitions`, 62 `forest_streams`, 75 `crevice_hider`. Plan 055 lists them.
 - S6 · Witness impact (dry run): shared tags 96 → 94. Lost or shrunk: `swimmer` 9 → 3, `tree_dweller` 11 → 0, `climber` 11 → 8, `fully_aquatic` 5 → 3, `coastal_dunes`, `forest_streams`, `mane`, `nectar_drinker` 2 → ≤1, `crevice_hider`/`snorkel_nose` 3 → 2. S8 measures the per-round effect.
 - S6 · Note text out of scope, noted only: 20's note says "dry savanna", but 20 has no savanna habitat; 54's town note says it "lives in trees" (tag `town_dweller`, unchanged).
+- S7 · `sign-map.csv` updated by `M/content/sign-map-update.ts` (idempotent): 216 rows = `SIGNS` (205 + 11 new), every category equal to `SIGNS`. `can_swim` row dropped (Swims not built, never shipped, not in `SIGNS`). Tags no note holds now keep their row with uses 0 and `rule` "…; 055: retired, no note holds it". "fixed in 055: <ids> retagged" goes on a `misleads` cell for the holders whose notes lost the tag; on a `restates` cell only once no note holds the tag (`tree_dweller`), since `climber`/`swimmer`/`burrower` still restate unasked prefixes. New rows' `answers` read from `SIGNS` (`implies …; denies …`).
 
 ## Log
 
@@ -606,5 +607,6 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - 2026-11-08 06:25 UTC · S4: `Sign` + `Animal.signs` built at load (`signsOf` → `Sign[]`), `CategoryMark.tsx`, guide rows hold lines then signs (row shows if either; 045 hiding unchanged), `GuideSigns` + paging gone; e2e: GuideSigns checks/measuring/photo hack removed, E1, E2, light/dark shots. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs, sign-check F-assertions pass; dev E2E 1563/1563 (`M/e2e-s4/`), shots in `M/shots/`.
 - 2026-11-08 06:40 UTC · S5: `categoryOf`; category mark on "Its answers" rows (`data-answer-tag`), grid tiles (+ `aria-label` "Category: question"), witness notes (`noteCategories`); e2e E3 (tile ↔ answer row ↔ heading, same `lucide-*`) and E4. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; dev E2E 1565/1565 (`M/e2e-s5/`), shots refreshed.
 - 2026-11-08 06:44 UTC · S6: `tag-edits.csv` (54 rows) + 11 new `SIGNS` entries; apply.ts part B (A1-A3 guards) dry run: 54 rows once, 0 sign problems, no content written. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs, sign-check F-assertions pass. No E2E (no behaviour change).
+- 2026-11-08 07:05 UTC · S7: apply.ts run for real (54 rows, 42 files; rerun no diff), `sign-map.csv` recomputed (216 rows, categories = `SIGNS`), `checkProfile` appends `signProblems` (unknown tag now fails the build gate; checked in memory). typecheck, lint, 66/66 tests, content preview 0 PROBLEMs, sign-check 0 flags on 76 + F-assertions pass, no `artificial`, V1.6 ok. No E2E (DB unchanged).
 
 ## Summary

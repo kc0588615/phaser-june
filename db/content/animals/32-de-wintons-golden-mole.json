@@ -60,8 +60,7 @@
       "category": "behavior",
       "text": "It 'swims' through loose sand instead of digging lasting tunnels.",
       "tags": [
-        "burrower",
-        "sand_swimmer"
+        "burrower"
       ],
       "source": "ngo"
     },
@@ -76,9 +75,6 @@
     {
       "category": "habitat",
       "text": "It lives in sand dunes along the coast.",
-      "tags": [
-        "coastal_dunes"
-      ],
       "source": "iucn"
     },
     {

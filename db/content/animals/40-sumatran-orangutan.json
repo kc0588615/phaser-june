@@ -105,7 +105,8 @@
       "category": "behavior",
       "text": "It builds a nest of branches in the trees to sleep in each night.",
       "tags": [
-        "builds_nests"
+        "sleeping_nests",
+        "climber"
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Orangutan"
@@ -114,8 +115,8 @@
       "category": "behavior",
       "text": "It lives almost entirely in the trees; females almost never touch the ground.",
       "tags": [
-        "tree_dweller",
-        "climber"
+        "climber",
+        "seldom_on_ground"
       ],
       "source": "iucn"
     },

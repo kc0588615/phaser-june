@@ -145,7 +145,8 @@
       "category": "behavior",
       "text": "If it can't dig away from danger, it stands up on its back legs and tail and defends itself with its claws.",
       "tags": [
-        "stands_on_hind_legs"
+        "stands_on_hind_legs",
+        "burrower"
       ],
       "source": "adw"
     },
