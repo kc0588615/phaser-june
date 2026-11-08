@@ -117,7 +117,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -426,7 +426,150 @@ One pass, on 447e9317 (the code is unchanged on this branch).
 
 ## Steps
 
+`M` = `/srv/critter-ai/agent-state/missions/moves-and-signs-build`. `STATE` = design's folder (read-only). **Static checks** = Verification V1 items 1–4. **Dev E2E** = Verification V2 (dev copy, no content build). Content files reach the game only through a content build, so E2E before S9 plays new code on old dev rows (window a).
+Deviation from the architecture's 8-step order (sessions too big): its step 3 is split into S3–S5 (no throwaway code: `signsOf` keeps `string[]` until S4); its step 4 into S6 (decide) and S7 (apply); E5 moves to S1 with the rule it checks; the dev content build and probe (S9) come before the audit (S10) and docs (S11), because the audit needs a trees-seed sheet. The accepted cosmetic risk window (brief) opens at S9; Verification rebuilds. Record this under Decisions in S9.
+
+- [ ] S1. **Trees question rule, rules version, saved-round fit (T1, T10, E5, E6).**
+  - `src/clueGame/traits.ts`: `trees` in `EXCLUSIVE_PREFIXES`; `NEVER_ASKED_VALUE`, `neverAsked` with its doc line.
+  - `src/clueGame/questionMatch.ts`: `PREFIX_CATEGORY.trees = 'habits'` after `social`; `QUESTION_TEXT`/`SHORT_TEXT`/`COLUMN_LABEL` for `trees:yes`; `questionsFor` skips `neverAsked`.
+  - `src/clueGame/animalBoard.ts`: `fullTable` filters `!neverAsked`; `ANIMAL_RULES.version` `'055-0'` (re-read `origin/main` first); new `roundStillFits(book, round)` beside `witnessNotes` (rows first, then `[...notes, ...notesLeft]` vs fresh `witnessNotes` on text/tags/fits).
+  - `src/components/animalBoard/useAnimalSession.ts:122-125`: resume through `roundStillFits` (inline row check moves out).
+  - `src/clueGame/clueFaces.ts`: `'trees:yes': '🌲'` on the habits line (signs helpers stay until S3).
+  - `src/clueGame/profiles.ts`: `YesNo`, `traits.trees?: Sourced<YesNo>`, `TREES_TEXT`, `trait('behavior','trees',…)` after social, `TRAIT_VALUES.trees`.
+  - `scripts/e2e.mjs`: E5 (no column tag ends `:no`, every round); E6 at `:1786` (append old-content `tree_dweller` note to the save's `notesLeft`, reload, expect fresh deal: `end` null, `movesUsed` 0, saved seed).
+  - Checks: static checks; Dev E2E → `M/e2e-s1/` (delete `M/baseline-e2e`): E5, E6 and the existing "a reload resumes the round…" checks pass.
+- [ ] S2. **Content part A: `trees` ×71, Farms & towns ×20, test pair (T5 A, finding 1).**
+  - Copy `STATE/tools/run.sh` to `M/tools/run.sh` with `REPO=/srv/critter-ai/worktrees/moves-and-signs-build`.
+  - Write `docs/research/2026-11-07-moves-and-signs/trees-notes.csv` (`animal_id,verdict,note`; 71 rows from `STATE/research/moves.csv` `lives_in_trees`; grade 6–12, trees vs ground words only, no unglossed science term).
+  - Write `M/content/apply.ts` part A (T5): `traits.trees` after `social`, `url` only for the 8 keys with no page; verdicts checked against `moves.csv`; drop `artificial`/`artificial:*` from `habitats`; `content.ts` format; ends printing `checkProfile` problems. Run it via `M/tools/run.sh`, then once more (no diff = idempotent).
+  - `M/tools/pairs.ts`: inseparable pairs per place (`tellsApart(fullTable(book,[a,b],place),2)`); move the guard at `tests/clueGame/animalBoard.test.ts:50-52` to a remaining pair, or delete those lines if none.
+  - Checks: static checks (0 PROBLEMs); `rg -l '"artificial' db/content/animals` empty; V1 item 6 prints `{yes:10,no:61}` and no-record 13, 24, 45, 56, 71. No E2E (DB unchanged).
+- [ ] S3. **`src/clueGame/signs.ts`: table and checks, not yet wired (T2).**
+  - First write `M/tools/sign-check.ts` (Failure modes F1–F10 as assertions on small inline fixtures, then the acceptance run over the 76 from `readProfiles()`); it fails until `signs.ts` exists.
+  - `signs.ts`: header comment (code is authoritative; `sign-map.csv` is the research record); `SIGNS` = `sign-map.csv` minus `can_swim` (205; `category` from the CSV; `implies`/`denies` hand-encoded from `answers` only for definite values of asked prefixes; `restates` only `tree_dweller → trees:yes`); `signCategory` (throws naming the tag); `noteCategories`; `signProblems` (a)(b)(c). `signPhrase` and `signsOf` move here from `clueFaces.ts` unchanged (`string[]`); `AnimalSheets.tsx` import follows.
+  - `src/clueGame/deduction.ts`: export `tagOutcome`, parameter `ReadonlySet<string>`.
+  - Acceptance: `M/tools/run.sh M/tools/sign-check.ts > M/content/sign-check-s3.txt` shows exactly the 33 contradictions and 11 restating uses of T2. Read each extra/missing flag per T2's rules; record kept extras ("found by `signProblems`") and any weakened entry under Decisions.
+  - Checks: static checks; sign-check F-assertions pass. No E2E (no behaviour change).
+- [ ] S4. **Signs inside the field guide (T2 load check, T4 guide, E1, E2, shots).**
+  - `questionMatch.ts`: `Sign {tag,text,category}` beside `FieldNote`; `Animal.signs: Sign[]`. `signs.ts`: `signsOf` → `Sign[]` (open tags, tag order, none filtered). `src/clueGame/questionMatchContent.ts` `buildAnimal`: `signs: signsOf(tags)`.
+  - New `src/components/animalBoard/CategoryMark.tsx` (T4: `CATEGORY_ICON`, `data-category-mark`, word printed or `sr-only`, no new colour).
+  - `AnimalSheets.tsx`: delete `GuideSigns`, its paging, `SIGN_PAGE_MS`, the `useMemo(signsOf)`, now-unused imports; `GUIDE` → `CHARGE_CATEGORIES` + `CATEGORY_LABELS`; guide rows per T4 (`data-guide-cat`, `CategoryMark` heading, `data-guide-line`, `ul[data-signs]`, `li[data-sign]`; row shows if lines or chips; `asked` filter unchanged).
+  - `scripts/e2e.mjs`: remove the two `GuideSigns` checks (`:986-988`), their measuring (`:918-922`) and the photo-width hack (`:950-968`); pool fetch (`:637`) gives open tags; add E1, E2; shots `02d-field-guide-{light,dark}.png`, `02e-field-guide-rows-{light,dark}.png` (theme switch as `:1969-1987`).
+  - Checks: static checks; Dev E2E → `M/e2e-s4/` (E1, E2 and the drawer-height check pass); copy the 4 shots to `M/shots/`. Judge the photo size from them; record if changed.
+- [ ] S5. **One mark per category on answers rows, tiles and witness notes (T4, E3, E4).**
+  - `questionMatch.ts`: `categoryOf(tag)` (throws when no category; existing inline uses untouched).
+  - `AnimalSheets.tsx`: "Its answers" `<li data-answer-tag>` with a small mark above the question; `NotesList` marks per `noteCategories` (desktop side notes too).
+  - `EvidenceGrid.tsx`: mark before each label (`word={false}`); button `aria-label` `${CATEGORY_LABELS[c]}: ${order.question}` + `, highlighted` suffix. Check no e2e selector reads the old column label (none at 447e9317; `:897` reads row pills).
+  - `scripts/e2e.mjs`: E3 (tile ↔ answer row ↔ heading: category and `lucide-*` class); E4 at the notes check (`:1516`).
+  - Checks: static checks; Dev E2E → `M/e2e-s5/` (E1–E6 pass); refresh `M/shots/`. Look at the 54 px column with "Lives in trees" in mind (fallback "In trees" in S10).
+- [ ] S6. **Decide every sign edit: `tag-edits.csv` and new `SIGNS` entries (T5 B, decisions only).**
+  - Build `docs/research/2026-11-07-moves-and-signs/tag-edits.csv` (`animal_id,note,from,to,kind,reason`), one row per changed note: `c` rows of `STATE/out/retags.csv` and `note-tags.csv` (skip `can_swim`; skip 26 `stays_underground`, 42 `above_tree_line`, 54 `tree_dweller`; re-decide 4, 15 `rock_climber`, 59 `climbing_tail`; merge same-note rows), then the 33 contradictions, 11 restating uses and kept extras from `M/content/sign-check-s3.txt`. Pick tags in T5's order 1–5; drops listed in `reason`.
+  - `signs.ts`: an entry per new tag (category by T5's majority rule; `implies`/`denies` where definite). Retired tags stay.
+  - `apply.ts` part B with `--dry-run`: guards A1–A3 (Failure modes), applies in memory, runs `signProblems` over the 76.
+  - Checks: static checks; `M/tools/run.sh M/content/apply.ts --dry-run` reports 0 sign problems and every row matched once; it also prints tags left with one holder (witness-note loss, for S8). No content written.
+- [ ] S7. **Apply sign edits, update `sign-map.csv`, wire `checkProfile` (T5 B, T6, T3).**
+  - Run `apply.ts` for real, then again (no diff).
+  - `sign-map.csv` (T6, by the script): uses/holders/note categories recomputed, rows for new tags (`rule` "055: replaces <old>"), "fixed in 055" on fixed `misleads`/`restates` cells, every `category` asserted equal to `SIGNS`.
+  - `profiles.ts` `checkProfile`: append `signProblems` when no shape problems (T3).
+  - Checks: static checks (0 PROBLEMs now includes signs); `M/tools/run.sh M/tools/sign-check.ts` flags 0 on the 76 and F-assertions pass; `rg -l '"artificial' db/content/animals` empty. No E2E (DB unchanged, UI unchanged).
+- [ ] S8. **Metrics: witness notes and balance bot, before and after (T7).**
+  - Before tree: `git worktree add --detach /tmp/mns-before 447e9317`, symlink this worktree's `node_modules`; remove it at the end.
+  - `M/tools/witness.ts` (from `STATE/tools/deals.ts`'s loop): world + each continent with ≥12 animals; mean notes per round, rounds with none, tagged notes whose tag set has ≥2 holders. `ROOT=/tmp/mns-before M/tools/run.sh … > M/metrics/witness-before.md`; at HEAD `> witness-after.md`. Compare with the design's move-c "without rule 2" (world 2.28, Africa 2.02, Asia 2.02, North America 1.09, South America 2.0).
+  - Bot, one run at a time, in each tree: `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 400 --seed 44 --places africa,asia,north-america,south-america > M/metrics/bot-{before,after}.txt 2>&1`. Table via a copy of `STATE/tools/botsum.py` → `M/metrics/summary.md`: find rate and moves left per continent and player, after vs before, beside `STATE/bot/summary.md`'s `no-ft` and `move-c`.
+  - Write the reading in `M/metrics/summary.md`: how much easier, plainly; bot reads no signs/photos; changes come from `trees`, Farms & towns, witness notes, `travelOf` (finding 9); North America shouldn't repeat −3.9 (rule 2); a gap >1.5 moves or >2 pts vs move-c gets a sentence. No rule changes.
+  - Checks: both bot runs exit 0; `git status` shows no repo change.
+- [ ] S9. **Dev content build, trees-dealt seed, trees-seed E2E (proof).**
+  - `M/tools/probe-seeds.mjs`: copy of `STATE/tools/probe-seeds.mjs`, import `/srv/critter-ai/worktrees/moves-and-signs-build/scripts/cdp.mjs`, filter `/^trees:/`; it starts and stops its own `next dev` as `scripts/e2e-fresh.mjs` does (`NEXT_DIST_DIR=.next-e2e`, port 3102 after `ss -ltn`).
+  - In the V3 guarded subshell: `content -- build`, `content -- check`, then `CHROME_PATH=M/chrome-nosandbox.sh node M/tools/probe-seeds.mjs continent:asia,continent:south-america 30 > M/probe/trees-seeds.json`; pick the first seed/place whose round 1 deals `trees:yes`; then e2e:fresh with `E2E_SEED`/`E2E_PLACE` set to it.
+  - Record seed, place and commands under Decisions (plan 055 copies them in S11).
+  - Checks: guard passes; build and check exit 0; Dev E2E → `M/e2e-s9/` passes, with a "column per clue" check listing `trees:yes` (V4) and E6 now an old save against new content; refresh `M/shots/` from this run.
+- [ ] S10. **`graphical-audit` pass against `GUI.md`.**
+  - Run the skill (`.agents/skills/graphical-audit`) on the finished sheet, grid and notes, using `M/shots/` and the S9 board shot (390 px, light and dark); write findings to `M/audit.md`.
+  - Fix within the theme (`src/styles/globals.css` for local decisions; no new colour; colour never the only cue; WCAG 2.2 AA). Tree pictures: if 🌲 on a Habits tile points the eye at Habitat's `Trees` heading, Habitat → lucide `Mountain` (one `CATEGORY_ICON` entry); column label clamp → "In trees". Record each call under Decisions.
+  - Checks: static checks (theme contrast in lint); if code changed, Dev E2E with the S9 seed/place → `M/e2e-s10/` and refresh `M/shots/`.
+- [ ] S11. **Docs and plan 055 (Goal 7).**
+  - `docs/CONTENT_SOURCES.md`: `trees` row and written rule (doc section 2), evidence rule (a no needs a quote; disagreeing sources = no record), artificial class skipped (near lines 24, 47), sign rule (evidence from its note, never a question's answer, never contradicts the holder's traits), `signs.ts` is authoritative.
+  - `docs/DATABASE_ACCESS.md:202-203` per original brief A Goal 9. `docs/CLUE_MATCH.md`, `CONTEXT.md`: signs live under their category in the guide, never hidden; one icon per category; 045's guide-line hiding stays; the trees question; Farms & towns no longer asked. Repo `AGENTS.md` "Rules (pure)" list gains `signs`.
+  - New `plans/055-moves-and-signs.md`: picks used; Decisions (finding 13's moved lines, files outside the brief's list: `useAnimalSession.ts`, `questionMatchContent.ts`, `deduction.ts` export; `travelOf` now walks 8 animals; paraphrase rule; step-order deviation; audit calls); the old → new tag table per animal printed from `tag-edits.csv`, dropped tags listed; bot table and witness counts from `M/metrics/`; dealt-proof seed, place and commands; shot paths; Summary draft (diff stat and final artifact filled at Verification).
+  - Checks: static checks; links in edited docs resolve (`rg` the paths).
+- [ ] S12. **Release guard tool and handoff item (T9).**
+  - `M/tools/prod-tags.ts`: fetch `https://play.critterconnect.org/api/clue-game/pool/`, collect every open tag in `compareTags`, print missing from `SIGNS` (exit 1 if any). Run it; add any missing tag to `SIGNS` (static checks after).
+  - Add to `/srv/critter-ai/handoff/critter-connect.md` under `## Open`, exact `~/AGENTS.md` format:
+    ```
+    ### H10 · Production content build for 055
+    Status: waiting on you
+    From: moves-and-signs-build · <YYYY-MM-DD>
+    Blocks: brief B (ft-cleanup)
+
+    **Why:** 055's code reads the new content, but prod keeps the old rows until the production content build. Content before the deploy would let old code read new rows, so it must come after.
+
+    **Steps:**
+    1. Wait until the 055 PR is merged and deployed: `curl https://play.critterconnect.org/version.txt` shows the PR's merge commit.
+    2. In WSL, on a fresh `main` (`git pull --ff-only`): `npm run content -- build`.
+    3. Reply `done` below so the control room can start brief B.
+
+    **Your reply:**
+    - `done` once the build has run
+    ```
+  - Checks: `prod-tags.ts` exits 0; handoff item parses (`grep -n '^### H10' …`, `Status:` line second).
+
 ## Verification
+
+Run after the Astra code review (runner's unit, not a step), in this order, from the repo root, one heavy job at a time. Known VPS flake: 1–3 timing checks (row-slide press, re-order click, sparkle) can fail on a run; rerun once, and a check failing twice is real. Disk: keep at most two E2E artifact folders in `M` (latest `e2e-s*` and `final-e2e/`); delete `baseline-e2e/` and older `e2e-s*` when writing a new one.
+
+**V1. Static (no database)**, each exit 0:
+1. `npm run typecheck`
+2. `npm run lint` (eslint + theme contrast)
+3. `npm test` (all pass)
+4. `npm run content -- preview`: 0 PROBLEMs (includes `signProblems` via `checkProfile`); and `M/tools/run.sh M/tools/sign-check.ts`: 0 flags on 76, F-assertions pass.
+5. `rg -l '"artificial' db/content/animals` prints nothing.
+6. `node -e 'const fs=require("fs"),d="db/content/animals",c={yes:0,no:0},n=[];for(const f of fs.readdirSync(d)){const v=JSON.parse(fs.readFileSync(d+"/"+f)).traits?.trees?.value;v?c[v]++:n.push(f)}console.log(c,n)'` prints `{ yes: 10, no: 61 }` and files 13, 24, 45, 56, 71.
+
+**V2. Dev E2E (steps; no content build).** Never `.env.local`, never print a connection string or `cat` the file; if the guard fails, stop and add a handoff item to refresh the file.
+```
+( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+  [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+  CHROME_PATH=/srv/critter-ai/agent-state/missions/moves-and-signs-build/chrome-nosandbox.sh npm run e2e:fresh )
+M=/srv/critter-ai/agent-state/missions/moves-and-signs-build; rm -rf $M/baseline-e2e $M/e2e-s*
+cp -r "$(ls -d e2e-artifacts/*/ | tail -1)" $M/e2e-s<N>
+```
+
+**V3. Final database checks, dev copy only** (the original brief A's block; `<seed>`/`<place>` from S9's Decision):
+```
+( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+  [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+  npm run content -- build && npm run content -- check \
+    && E2E_SEED=<seed> E2E_PLACE=<place> CHROME_PATH=/srv/critter-ai/agent-state/missions/moves-and-signs-build/chrome-nosandbox.sh npm run e2e:fresh )
+cp -r "$(ls -d e2e-artifacts/*/ | tail -1)" /srv/critter-ai/agent-state/missions/moves-and-signs-build/final-e2e
+```
+E2E scenarios: the existing suite (globe → continent → 4 rounds → resume → journal → sources) plus E1 signs under their category row, none beside the photo, none hidden; E2 a dealt question's guide lines hidden while its category's signs show; E3 tile ↔ answer row ↔ heading same icon; E4 witness-note marks; E5 no `:no` column; E6 old-content save not resumed (here truly old save vs new rows).
+
+**V4. Artifact must show** (`M/final-e2e/report.json`):
+```
+node -e 'const r=require(process.argv[1]),bad=r.checks.filter(c=>!c.ok),t=r.checks.some(c=>c.ok&&/column per clue/.test(c.name)&&c.detail.includes("trees:yes"));console.log(r.checks.length,"checks",bad.length,"failed; trees:yes dealt:",t);process.exit(bad.length||!t?1:0)' /srv/critter-ai/agent-state/missions/moves-and-signs-build/final-e2e/report.json
+```
+0 failed, `trees:yes dealt: true`, and E1–E6 check names present. Copy its `02d-field-guide-{light,dark}.png` and `02e-field-guide-rows-{light,dark}.png` to `M/shots/` (390 px, during play). Reproduce: V3 with the same seed and place.
+
+**V5. Release guard and record:** `M/tools/run.sh M/tools/prod-tags.ts` exits 0 (rerun right before `gh pr merge` in the release unit). Plan 055 Summary gets `git diff --stat origin/main...HEAD`, the `M/final-e2e/` path, shot paths, and "production content build waits on the owner (H10)".
+
+**Release (runner's unit):** rebase on `origin/main`, rerun V1–V5, PR, `gh pr merge --merge`, `deploy critter-connect`; smoke `curl -sL -o /dev/null -w '%{http_code}' https://play.critterconnect.org/explore/` = 200 and `curl https://play.critterconnect.org/version.txt` = merge commit.
+
+## Failure modes
+
+Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything else is E2E. Written before the code (S3, S6).
+- **Signs (`signs.ts`, F):**
+  - F1 an open tag missing from `SIGNS`: `signProblems` (a) names it; `signsOf`/`signCategory` throw naming it.
+  - F2 a shipped tag dropped from `SIGNS` (prod's old rows fail the load): every tag in `sign-map.csv` minus `can_swim` is in `SIGNS`; S12/V5 check prod's pool.
+  - F3 `implies` on an exclusive prefix where the holder has another value → flagged; on a complete prefix the holder lacks → flagged; holder has no record of the prefix → not flagged.
+  - F4 a `denies` tag in the record → flagged; absent → not.
+  - F5 `restates` on an asked prefix → flagged with `questionText`; entries other than `tree_dweller` carry no `restates`.
+  - F6 colon (trait) tags on notes treated as signs → `signsOf` skips any tag with `:`.
+  - F7 a note with no tags → no sign, no problem (stays untagged).
+  - F8 `signProblems` on a profile with shape problems → not run (`problems.length === 0` guard), so `profileClues` never throws inside `checkProfile`.
+  - F9 `noteCategories` repeats a category or breaks `CHARGE_CATEGORIES` order.
+  - F10 a `SIGNS` category differs from `sign-map.csv`'s (T6 assertion, S7).
+- **Content script (`apply.ts`, A):** A1 a note text matches 0 or 2+ notes → stop; A2 a note's tags equal neither `from` nor `to` → stop; A3 a `to` tag not in `SIGNS` → stop; A4 a trees verdict differing from `moves.csv`, or a value for 13, 24, 45, 56, 71 → stop; A5 `url` set where the profile has the key's page (or missing where it hasn't) → `checkProfile` flags; A6 format drift (key order, trailing newline) → second run shows a diff; A7 any `artificial` left → V1 item 5.
+- **Resume (`roundStillFits`, R; covered by E6 and the existing resume checks):** R1 a save with different note text/tags/fits resumes; R2 an unchanged save fails (wrong order of `notes`+`notesLeft`, or `full`/`source` compared); R3 a saved suspect missing from the book reaches `witnessNotes` and throws (rows must be checked first); R4 an ended round's stale save resumes instead of dealing round 1 from the saved seed.
 
 ## Code review (Astra)
 
@@ -441,5 +584,6 @@ One pass, on 447e9317 (the code is unchanged on this branch).
 - 2026-11-08 05:25 UTC · Fable review: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (throw-site, YAGNI restates, commit csvs, tree icon clash, merge steps 3-4); plan-only.
 - 2026-11-08 05:28 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (saved-round witness notes vs fresh content across delayed content build), 2 SHOULD-CONSIDER; plan-only.
 - 2026-11-08 05:36 UTC · Revision: architect fixed Astra MUST-FIX (T10 `roundStillFits` invalidates saves whose witness notes no longer match; E2E E6), accepted 5 SC, rejected tree-icon SC4 for now; steps now 8; plan-only.
+- 2026-11-08 05:52 UTC · Steps: planner wrote 12 steps (arch steps 3, 4 split; content build + probe moved before audit/docs), Verification V1-V5, Failure modes F/A/R; plan-only.
 
 ## Summary
