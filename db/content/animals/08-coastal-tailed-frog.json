@@ -80,6 +80,16 @@
       "source": "adw"
     },
     {
+      "category": "morphology",
+      "text": "In the breeding season, males' forearms grow much bigger.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its back can be cream, gray, red or black, often with dark streaks and blotches.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "habitat",
       "text": "It lives in clear, cold mountain streams beside old forests.",
       "tags": [
@@ -124,6 +134,11 @@
       "source": "government"
     },
     {
+      "category": "key_fact",
+      "text": "Fertilizing its eggs inside the body makes sure they get fertilized in fast-flowing streams.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "life_description",
       "text": "Tadpoles take 1 to 4 years to become frogs.",
       "source": "adw"
@@ -134,14 +149,30 @@
       "source": "adw"
     },
     {
+      "category": "life_description",
+      "text": "Young frogs take 7 to 8 years to be ready to breed.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "It stays active through the winter, just more slowly.",
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It spends most of its life in water, but adults may come onto land to hunt on cool, wet nights.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "threat",
+      "text": "Logging near its streams may be a major cause of its decline. More frogs live where a strip of trees is left along the bank.",
+      "source": "amphibiaweb"
     }
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/54414/196332997",
     "adw": "https://animaldiversity.org/accounts/Ascaphus_truei/",
+    "amphibiaweb": "https://amphibiaweb.org/species/2049",
     "government": "https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/cosewic-assessments-status-reports/coastal-tailed-frog-ascaphus-truei-2011.html"
   },
   "range": {

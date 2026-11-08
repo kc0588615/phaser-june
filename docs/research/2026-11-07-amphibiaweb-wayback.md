@@ -82,13 +82,55 @@ None. Its no-records (lifespan, activity, young, social) aren't in the account.
 
 #### Trees
 
+**Yes.** It lives in trees and sleeps on leaves.
+> "This frog is arboreal and shelters on the underside of a broad leaf during the day"
+
 #### Filled traits
+
+None. Its no-record (social) isn't settled by the account: it says only that males defend calling spots.
+> "Males make aggressive calls, to deter other males from intruding onto their territories"
+
+#### Existing AmphibiaWeb values (checked)
+
+- `young: many`, note "A clutch has about 40 green eggs.", found.
+  > "Clutches consist of about 40 green eggs"
+- Clue "It lays its eggs on a leaf over water, so the tadpoles drop into the pond when they hatch." (`eggs_over_water`), found.
+  > "Since the egg clutches are attached to vegetation overhanging the water, hatching tadpoles generally fall into the water below as soon as they hatch"
+- Fact "If a snake or wasp attacks its eggs, the tadpoles can hatch up to 30% early and escape into the water.", found.
+  > "Snake attack induces embryos to hatch up to 30% early"
+  > "Wasp predation, like snake predation, induces early and rapid hatching"
+
+Agrees with ADW (same tier, kept as ADW): red eyes, orange feet, active at night, froglets that change color, males shaking branches.
+> "orange hands and feet"
+> "Agalychnis callidryas is nocturnal."
+> "they are green by day and change to purplish or reddish brown at night"
+> "perform tremulation displays by shaking a branch rapidly with their hind legs"
 
 #### New clues
 
+- morphology, `vertical_pupils` (as 08): "Its red eyes have vertical, slit-shaped pupils."
+  > "protuberant red eyes, with vertical pupils"
+- morphology, no tag: "When it shuts its eyes, see-through lower eyelids with a gold net pattern cover them."
+  > "When this frog closes its eyes, transparent lower eyelids marked with a network of gold are apparent"
+- behavior, no tag: "By day it rests under a broad leaf with its legs tucked under its body."
+  > "shelters on the underside of a broad leaf during the day and during the dry season, with limbs folded underneath its body"
+
 #### New facts
 
+- key_fact: "Its unhatched tadpoles can tell a snake attack from a rainstorm by the pattern of the shaking."
+  > "Embryos are able to distinguish between the potentially lethal event of a snake attack and the relatively non-dangerous event of a rainstorm by the duration and timing of resulting vibrations"
+- key_fact: "Its tadpoles can survive out of water for up to 20 hours."
+  > "Tadpoles are able to live out of water for up to 20 hours"
+- behavior: "A female can lay up to five clutches of eggs in one night."
+  > "Females may lay multiple clutches (up to five) in a single night"
+- life_description: "Before laying, the female carries the male into the pond and soaks up water through her skin to make the jelly around her eggs."
+  > "Once amplexed, a female will carry the amplectant male into the water"
+  > "allow the female to absorb water through her skin, into her bladder, in order to make the jelly mass surrounding the clutch of eggs"
+
 #### Disagreements
+
+- CITES: the IUCN clue says trade has been controlled since 2008; AmphibiaWeb says the Appendix II listing came on 21 March 2010. IUCN (tier 1) kept; noted under Decisions.
+  > "received CITES protection, under Appendix II on March 21, 2010"
 
 ### 07 Hairy Frog (*Trichobatrachus robustus*)
 
@@ -149,13 +191,49 @@ None. Diet: the account only notes a captive meal, so the Wikipedia invertebrate
 
 #### Trees
 
+**No.** It lives in and beside cold, fast streams.
+> "Tailed frogs are primarily aquatic"
+> "Associated with cold, fast-moving streams with cobbled bottoms and emergent boulders"
+
 #### Filled traits
+
+None. Its no-records (young, social) aren't in the account: it says the eggs go "in strings" but gives no count.
+> "Eggs are deposited in strings under rocks in fast-moving streams."
+
+Agrees with ADW (same tier, kept as ADW): no eardrums, vertical pupils, no call, the male's "tail", the sucker-mouth tadpoles, cold streams, internal fertilization, 1 to 4 years as a tadpole, active at night.
+> "Head lacks tympanum, pupil is vertical"
+> "Ascaphus is non-vocal."
+> "Males have a tail-like extension of the cloaca"
+> "Larvae have a distinctively large, round mouth, modified for suction, which they use to cling to streamside rocks"
+> "Larvae take between 1 to 4 years to metamorphose"
+> "adults may emerge to forage on land in cool, wet conditions, especially at night"
+
+Kept as the COSEWIC report (tier 3): the key fact on its old family. AmphibiaWeb states the first half, not the second (the Rocky Mountain tailed frog), so the whole line stays with its source.
+> "Ascaphus is the only living representative of a basal lineage of anurans"
 
 #### New clues
 
+- morphology, no tag: "In the breeding season, males' forearms grow much bigger."
+  > "during breeding season show greatly enlarged forearms"
+- morphology, no tag: "Its back can be cream, gray, red or black, often with dark streaks and blotches."
+  > "ground color may be cream, grey, red, or black"
+  > "Dorsum may show a variable pattern of dark streaks and blotches"
+
 #### New facts
 
+- key_fact: "Fertilizing its eggs inside the body makes sure they get fertilized in fast-flowing streams."
+  > "Its internal fertilization (an adaption to ensure fertilization in fast moving streams) is unique among frogs."
+- life_description: "Young frogs take 7 to 8 years to be ready to breed."
+  > "Juveniles are sexually mature in 7-8 years."
+- behavior: "It spends most of its life in water, but adults may come onto land to hunt on cool, wet nights."
+  > "Tailed frogs are primarily aquatic; adults may emerge to forage on land in cool, wet conditions, especially at night."
+- threat: "Logging near its streams may be a major cause of its decline. More frogs live where a strip of trees is left along the bank."
+  > "Habitat modification due to timber harvesting may be a major cause of declines in Ascaphus."
+  > "the presence of a tree-lined buffer zone was significantly correlated with Tailed frog abundance"
+
 #### Disagreements
+
+None. "Unique among frogs" is AmphibiaWeb's wording; the new fact leaves it out, since the existing clue already says "unlike most frogs".
 
 ### 09 Dyeing Poison Dart Frog (*Dendrobates tinctorius*)
 
@@ -165,13 +243,48 @@ None. Diet: the account only notes a captive meal, so the Wikipedia invertebrate
 
 #### Trees
 
+**No.** It stays on the ground, though it can climb a few metres.
+> "It usually stays on the ground, but is also found at heights up to 5 m in trees."
+
 #### Filled traits
+
+- `young: few`, note "A clutch has only 2 to 6 eggs."
+  > "a clutch of 2-6 eggs are laid"
+
+Agrees with ADW (same tier, kept as ADW): active by day; eggs hatch in about two weeks.
+> "This species is diurnal."
+> "The eggs hatch within 14 to 18 days"
 
 #### New clues
 
+- morphology, no tag: "Its arms and legs are a deep blue-black."
+  > "blue-black arms and legs"
+- morphology, no tag: "Males have bigger finger pads than females."
+  > "Males have noticeably larger finger discs than females."
+- habitat, no tag: "It needs cool, rocky streams in wet forest, and hides under rocks and moss nearby."
+  > "requires rocky streams of running water, which are relatively cool"
+  > "is found under cover, such as rocks and moss, near streams"
+- reproduction, no tag: "In courtship the female strokes the male's snout and back, then he leads her to a spot to lay eggs."
+  > "The female is attracted by his calls and strokes the male's snout and back"
+  > "The male then leads the female to his chosen spot"
+
 #### New facts
 
+- key_fact: "Up close its colors warn predators, but from far away the pattern blends into the leaf litter."
+  > "the bright color patterns may simultaneously scream "Here I am!" to nearby would-be predators, yet be relatively undetectable to predators farther away"
+- key_fact: "A blue form was once named as a separate species, until DNA showed it is the same species."
+  > "one that was formerly known as Dendrobates azureus"
+  > "DNA analysis has shown that these forms are conspecific"
+- behavior: "Its tadpoles often eat each other."
+  > "Tadpoles of Dendrobates tinctorius are phytotelmic and often cannibalistic."
+- behavior: "Tracked by radio, fathers carried their tadpoles farther, and to more pools, than expected."
+  > "they moved their offsprings farther and to many more water sources than expected, with little regard to suitable, nearby pools"
+  > "Examining the spatial patterns of the far-ranging fathers"
+
 #### Disagreements
+
+- Who carries the tadpoles: the IUCN clue says the father; AmphibiaWeb says both parents. IUCN (tier 1) kept (`father_carries_young`).
+  > "the tadpoles are carried to water pools within bromeliad or other plant leaf axils or crevices by both the female and the male"
 
 ### 10 Suriname Toad (*Pipa pipa*)
 

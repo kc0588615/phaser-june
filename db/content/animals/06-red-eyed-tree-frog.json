@@ -88,6 +88,19 @@
       "source": "adw"
     },
     {
+      "category": "morphology",
+      "text": "Its red eyes have vertical, slit-shaped pupils.",
+      "tags": [
+        "vertical_pupils"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "When it shuts its eyes, see-through lower eyelids with a gold net pattern cover them.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "It lives in trees near ponds.",
       "tags": [
@@ -102,6 +115,11 @@
         "startle_display"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "By day it rests under a broad leaf with its legs tucked under its body.",
+      "source": "amphibiaweb"
     },
     {
       "category": "reproduction",
@@ -134,14 +152,34 @@
       "source": "adw"
     },
     {
+      "category": "key_fact",
+      "text": "Its unhatched tadpoles can tell a snake attack from a rainstorm by the pattern of the shaking.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its tadpoles can survive out of water for up to 20 hours.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "Young froglets can change their skin color between day and night.",
       "source": "adw"
     },
     {
+      "category": "behavior",
+      "text": "A female can lay up to five clutches of eggs in one night.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "life_description",
       "text": "Tadpoles live in the water for several weeks before they turn into froglets.",
       "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Before laying, the female carries the male into the pond and soaks up water through her skin to make the jelly around her eggs.",
+      "source": "amphibiaweb"
     },
     {
       "category": "threat",
