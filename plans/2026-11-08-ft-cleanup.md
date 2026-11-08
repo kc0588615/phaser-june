@@ -53,7 +53,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none): none needed
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -146,6 +146,8 @@ SHOULD-CONSIDER: none
 
 ## Revision notes
 
+None needed: Fable and Astra both APPROVE with 0 MUST-FIX. Fable's SHOULD-CONSIDER 2-5 go to the `planner` for Steps/Verification (record `CONTENT_SOURCES.md` widening under Decisions; partial-line edits keep surrounding entries; rounds match and pre-deploy live gate are hard pass/stop conditions).
+
 ## Steps
 
 ## Verification
@@ -162,5 +164,6 @@ SHOULD-CONSIDER: none
 - 2026-11-08 21:50 UTC: Architecture. `architect`: 13 code lines + 2 doc clauses go; no union-keyed types or positional deps; no version bump; Verification adds preview diff + rounds comparison. Plan-only edit.
 - 2026-11-08 22:00 UTC: Fable review. `architecture-reviewer`: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (for Steps: hard-pass rounds match + live gate, partial-line edits, record CONTENT_SOURCES widening). Plan-only edit.
 - 2026-11-08 22:10 UTC: Astra review. APPROVE, 0 MUST-FIX, 0 SHOULD-CONSIDER. Plan-only edit.
+- 2026-11-08 22:15 UTC: Revision. None needed (0 MUST-FIX); Fable SHOULD-CONSIDERs handed to Steps. Plan-only edit.
 
 ## Summary
