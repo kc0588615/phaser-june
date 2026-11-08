@@ -189,7 +189,7 @@ SHOULD-CONSIDER: none
 
 `M=/srv/critter-ai/agent-state/missions/frog-fact-fixes`. V1–V5 are under Verification. Repo root; one heavy job at a time.
 
-- [ ] S1. **Content edits, research record, plan 057; one commit.** Exactly Target design 1–5; nothing else:
+- [x] S1. **Content edits, research record, plan 057; one commit.** Exactly Target design 1–5; nothing else:
   - `db/content/animals/06-red-eyed-tree-frog.json` `clues[9]` (lines 138-142) → TD1. `db/content/animals/11-goliath-frog.json` `clues[5]` (lines 102-109) → TD2, deleting the `tags` key. Same positions, 2-space JSON, `\n` at EOF.
   - `docs/research/2026-11-07-moves-and-signs/sign-map.csv:204` → TD3, verbatim.
   - `docs/research/2026-11-07-amphibiaweb-wayback.md`: on the bullet at `:200`, replace the last sentence ("IUCN (tier 1) kept; noted under Decisions.") with TD4's "**Resolved 2026-11-08 (plan 057):** …" sentence. On the bullet at `:458`, replace "Same tier, ADW clue kept; worth the owner's look, since `voiceless` also tags 08, which truly has no call." with TD4's resolution sentence plus the ADW attribution. The ADW quote stays inline in the prose. Don't touch any `> "` line.
@@ -295,6 +295,10 @@ node -e 'const [a,b]=process.argv.slice(1).map(f=>require(require("path").resolv
 
 ## Decisions
 
+- S1 · Goliath line kept verbatim on amphibiaweb (Architecture finding 2): AW backs the claim (it calls, how, open mouth); "no vocal sac" is ADW's, true and uncontested, recorded in the research note; one source per clue.
+- S1 · No ANIMAL_RULES.version bump (finding 5): deals read only prefixed traits (unchanged); the tag only reaches witness notes, which roundStillFits re-deals.
+- S1 · V2 diff has one extra hunk (lines 2-5, npm's `> critter-connect@… content` banner): `preview-before.txt` was captured without `-s`. Not content; the content diff is exactly the two clue hunks (now at 216/414 after the banner offset).
+
 ## Log
 
 - 2026-11-08 23:20 UTC · Baseline: typecheck/lint/66 tests/preview 0; dev-copy e2e:fresh seed 7 Africa 1565/1565 (`baseline-e2e/`).
@@ -303,5 +307,6 @@ node -e 'const [a,b]=process.argv.slice(1).map(f=>require(require("path").resolv
 - 2026-11-08 23:35 UTC · Astra review: APPROVE_WITH_CHANGES; 1 MUST-FIX (H11 needs a fresh prod dump before `content -- build`) for Revision. Doc-only, no checks needed.
 - 2026-11-08 23:55 UTC · Revision: architect added fresh prod dump (`pg-backup.sh`, "no `backup ok`, no build") as H11 step 2; adopted Fable SC 1-3. Resolves Astra MUST-FIX 1. Doc-only, no checks needed.
 - 2026-11-08 23:41 UTC · Steps: planner wrote S1 (content edits + plan 057) and S2 (dev-copy build/check/e2e + H11), V1–V5 + release smoke; corrected H11 step 3 (counts come from `content -- check`). Doc-only; quote check still 274/0.
+- 2026-11-09 00:05 UTC · S1: 06 + 11 clues on amphibiaweb, `voiceless` off 11, sign-map row, 2 research bullets resolved, plan 057. V1 all pass (66/66, voiceless = 08 only, quotes 274/0, JSON ok, scope ok, code untouched); V2 exit 0, 0 PROBLEM, 0 cite warn, diff = 2 clue lines.
 
 ## Summary

@@ -197,7 +197,7 @@ Agrees with ADW (same tier, kept as ADW): red eyes, orange feet, active at night
 
 #### Disagreements
 
-- CITES: the IUCN clue says trade has been controlled since 2008; AmphibiaWeb says the Appendix II listing came on 21 March 2010. IUCN (tier 1) kept; noted under Decisions.
+- CITES: the IUCN clue says trade has been controlled since 2008; AmphibiaWeb says the Appendix II listing came on 21 March 2010. **Resolved 2026-11-08 (plan 057):** the owner checked the CITES Checklist (Appendix II from 2010); the clue now says since 2010, sourced to AmphibiaWeb.
   > "received CITES protection, under Appendix II on March 21, 2010"
 
 ### 07 Hairy Frog (*Trichobatrachus robustus*)
@@ -455,7 +455,7 @@ Agrees with ADW (same tier, kept as ADW): biggest frog, up to 32 cm and about 3.
 
 #### Disagreements
 
-- Calls: the ADW clue says it "can't croak" (no vocal sac) and males whistle with open mouths (`voiceless`). AmphibiaWeb agrees on the whistles and the open mouth, but says older claims that adults don't call were wrong: it has several calls, even a deep roar. Same tier, ADW clue kept; worth the owner's look, since `voiceless` also tags 08, which truly has no call.
+- Calls: the ADW clue says it "can't croak" (no vocal sac) and males whistle with open mouths (`voiceless`). AmphibiaWeb agrees on the whistles and the open mouth, but says older claims that adults don't call were wrong: it has several calls, even a deep roar. **Resolved 2026-11-08 (plan 057):** the clue now says it calls, sourced to AmphibiaWeb, and `voiceless` is dropped from 11. "No vocal sac" is ADW's ("Goliath frogs do not have vocal sacs").
   > "Despite previous assertions that adults do not call"
   > "including brief whistles, chirping, and even a “sighing deep roar”"
   > "the advertisement call of C. goliath is produced with the mouth open"

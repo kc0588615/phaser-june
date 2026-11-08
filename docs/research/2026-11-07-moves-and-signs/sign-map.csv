@@ -201,7 +201,7 @@ underwater_breathing,3,2 62 75,behavior=1 morphology=2,Body,majority,system: wat
 uses_tools,2,40 56,behavior=1 diet=1,Habits,majority,,,
 venomous,1,49,morphology=1,Body,majority,,,
 vertical_pupils,2,6 8,morphology=2,Body,majority,,,
-voiceless,2,8 11,behavior=2,Habits,majority,,,
+voiceless,1,8,behavior=1,Habits,majority,,,"11: it calls (whistles, chirps, a roar; AmphibiaWeb), ""voiceless"" reads as no call; fixed in 057: tag dropped from 11"
 walks_on_knuckles,3,52 55 56,behavior=2 morphology=1,Habits,majority,,,
 walks_upright,1,63,behavior=1,Habits,majority,,,
 warning_colors,2,9 76,morphology=2,Body,majority,,,
