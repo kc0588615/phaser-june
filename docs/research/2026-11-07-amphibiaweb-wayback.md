@@ -609,8 +609,9 @@ Still no record:
 
 - key_fact: "Its family line may go back 130 to 180 million years, to the age of dinosaurs."
   > "estimated to have originated in the Jurassic, 130-180 million years ago"
-- key_fact: "Its scientific name comes from Sanskrit: nasika means 'nose' and batrachus means 'frog'."
-  > "In Sanskrit, nasika means "nose" and batrachus means "frog,""
+- key_fact: "Its genus name, Nasikabatrachus, means 'nose frog'."
+  > "nasika means "nose" and batrachus means "frog,""
+  - Language left out: AmphibiaWeb calls both words Sanskrit, but *batrachus* is Greek (*batrachos*). No reachable tiered page states the split (current Wikipedia has no etymology; Biju & Bossuyt 2003, Nature, is paywalled), so the fact names only the meaning (step 19).
 - behavior: "Its tadpoles leave the water at night, wriggling onto wet rock to feed."
   > "tadpoles are known to feed out of the water at night, using their strengthened abdominal muscles to move onto surfaces with extremely shallow water flow"
 - threat: "People catch and eat thousands of its tadpoles each year."
