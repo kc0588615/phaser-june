@@ -335,55 +335,78 @@
     "cite": "Brown, M. 2025. \"Zaglossus bruijni\" (On-line), Animal Diversity Web."
   },
   "https://animals.sandiegozoo.org/animals/giant-anteater": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "San Diego Zoo Wildlife Alliance. n.d. Giant Anteater. San Diego Zoo Animals & Plants."
   },
   "https://animals.sandiegozoo.org/animals/okapi": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "San Diego Zoo Wildlife Alliance. n.d. Okapi. San Diego Zoo Animals & Plants."
   },
   "https://animals.sandiegozoo.org/animals/tapir": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "San Diego Zoo Wildlife Alliance. n.d. Tapir. San Diego Zoo Animals & Plants."
   },
   "https://doi.org/10.1002/ajpa.23936": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Hartstone‐Rose, A., Dickinson, E., Boettcher, M. L., & Herrel, A. (2019). A primate with a Panda’s thumb: The anatomy of the pseudothumb of Daubentonia madagascariensis. American Journal of Physical Anthropology, 171(1), 8–16. https://doi.org/10.1002/ajpa.23936"
   },
   "https://doi.org/10.1002/ece3.5257": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Turvey, S. T., Marr, M. M., Barnes, I., Brace, S., Tapley, B., Murphy, R. W., Zhao, E., & Cunningham, A. A. (2019). Historical museum collections clarify the evolutionary history of cryptic species radiation in the world’s largest amphibians. Ecology and Evolution, 9(18), 10070–10084. https://doi.org/10.1002/ece3.5257",
+    "license": "CC BY 4.0"
   },
   "https://doi.org/10.1002/ecy.4470": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Lai, S., Léandri‐Breton, D.-J., Lesaffre, A., Samune, A., Marino, J., & Sillero‐Zubiri, C. (2024). Canids as pollinators? Nectar foraging by Ethiopian wolves may contribute to the pollination of Kniphofia foliosa. Ecology, 105(12). https://doi.org/10.1002/ecy.4470",
+    "license": "CC BY 4.0"
   },
   "https://doi.org/10.1007/s10531-023-02728-2": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Mynhardt, S., Matthew, E., le Roux, J. P., Little, I., Bloomer, P., & Theron, C. (2023). Environmental DNA from soil reveals the presence of a “lost” Afrotherian species. Biodiversity and Conservation, 33(1), 31–50. https://doi.org/10.1007/s10531-023-02728-2",
+    "license": "CC BY 4.0"
   },
   "https://doi.org/10.1016/B978-0-12-815507-3.00010-1": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Hoffmann, M., Nixon, S., Alempijevic, D., Ayebare, S., Bruce, T., Davenport, T. R. B., Hart, J., Hart, T., Hega, M., Maisels, F., Mills, D., & Ndjassi, C. (2020). Giant pangolin Smutsia gigantea (Illiger, 1815). Pangolins, 157–173. https://doi.org/10.1016/B978-0-12-815507-3.00010-1"
   },
   "https://doi.org/10.1016/j.cub.2021.09.032": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "De Gregorio, C., Valente, D., Raimondi, T., Torti, V., Miaretsoa, L., Friard, O., Giacoma, C., Ravignani, A., & Gamba, M. (2021). Categorical rhythms in a singing primate. Current Biology, 31(20), R1379–R1380. https://doi.org/10.1016/j.cub.2021.09.032"
   },
   "https://doi.org/10.1016/j.cub.2025.04.019": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Eleuteri, V., van der Werff, J., Wilhelm, W., Soldati, A., Crockford, C., Desai, N., Fedurek, P., Fitzgerald, M., Graham, K. E., Koops, K., Pruetz, J., Samuni, L., Slocombe, K., Stoeger, A., Wilson, M. L., Wittig, R. M., Zuberbühler, K., Camara, H. D., Mamy, G., et al. (2025). Chimpanzee drumming shows rhythmicity and subspecies variation. Current Biology, 35(10), 2448–2456. https://doi.org/10.1016/j.cub.2025.04.019",
+    "license": "CC BY 4.0"
   },
   "https://doi.org/10.1038/nature12295": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Wilson, A. M., Lowe, J. C., Roskilly, K., Hudson, P. E., Golabek, K. A., & McNutt, J. W. (2013). Locomotion dynamics of hunting in wild cheetahs. Nature, 498(7453), 185–189. https://doi.org/10.1038/nature12295"
   },
   "https://doi.org/10.1098/rspb.2017.1347": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Ihle, K. E., Hutter, P., & Tschirren, B. (2017). Increased prenatal maternal investment reduces inbreeding depression in offspring. Proceedings of the Royal Society B: Biological Sciences, 284(1860), 20171347. https://doi.org/10.1098/rspb.2017.1347"
   },
   "https://doi.org/10.1111/aje.13279": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Ndiaye, M. M., Drouilly, M., Senghor, A. A., Thiaw, O., Ingram, D. J., Shirley, M. H., Strampelli, P., Marti, C. M., & Henschel, P. (2024). Rediscovery of the endangered giant pangolin (Smutsia gigantea) in Senegal after 24 years. African Journal of Ecology, 62(2). https://doi.org/10.1111/aje.13279"
   },
   "https://doi.org/10.1126/science.abe7389": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Campbell-Staton, S. C., Arnold, B. J., Gonçalves, D., Granli, P., Poole, J., Long, R. A., & Pringle, R. M. (2021). Ivory poaching and the rapid evolution of tusklessness in African elephants. Science, 374(6566), 483–487. https://doi.org/10.1126/science.abe7389"
   },
   "https://doi.org/10.11646/zootaxa.3510.1.3": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Zachariah, A., Abraham, R. K., Das, S., Jayan, K. C., & Altig, R. (2012). A detailed account of the reproductive strategy and developmental stages of Nasikabatrachus sahyadrensis (Anura: Nasikabatrachidae), the only extant member of an archaic frog lineage. Zootaxa, 3510(1). https://doi.org/10.11646/zootaxa.3510.1.3"
   },
   "https://doi.org/10.3389/fphys.2020.00637": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Weyer, N. M., Fuller, A., Haw, A. J., Meyer, L. C. R., Mitchell, D., Picker, M., Rey, B., & Hetem, R. S. (2020). Increased Diurnal Activity Is Indicative of Energy Deficit in a Nocturnal Mammal, the Aardvark. Frontiers in Physiology, 11. https://doi.org/10.3389/fphys.2020.00637",
+    "license": "CC BY 4.0"
   },
   "https://doi.org/10.3897/zookeys.255.3774": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Helgen, K. M., Portela Miguez, R., Kohen, J., & Helgen, L. (2012). Twentieth century occurrence of the Long-Beaked Echidna Zaglossus bruijnii in the Kimberley region of Australia. ZooKeys, 255, 103–132. https://doi.org/10.3897/zookeys.255.3774",
+    "license": "CC BY 3.0"
   },
   "https://en.wikipedia.org/wiki/Aardvark": {
     "accessed": "2026-09-27"
@@ -545,31 +568,40 @@
     "accessed": "2026-09-25"
   },
   "https://ewt.org/found-iridescent-blind-mole": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Endangered Wildlife Trust. 2023. FOUND: Iridescent blind mole with super-hearing powers rediscovered ‘swimming’ through sand dunes of South Africa."
   },
   "https://galapagosconservation.org.uk/about-galapagos/islands/pinta": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Galapagos Conservation Trust. 2023. Pinta."
   },
   "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Chinese Giant Salamanders (Andrias spp.) Fact Sheet. c2019. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
   "https://ielc.libguides.com/sdzg/factsheets/giantpanda/behavior": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Giant Panda (Ailuropoda melanoleuca) Fact Sheet. c2001-2025. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
   "https://ielc.libguides.com/sdzg/factsheets/tapirs/characteristics": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Tapirs (extant/living species; Tapirus spp.) Fact Sheet. c2009-2019. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
   "https://iucn-tftsg.org/cbftt/species-accounts/centrochelys-sulcata-110": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Petrozzi, F., Hema, E.M., Demaya, G.S., Benansio, J.S., Eniang, E.A., Diagne, T., Segniagbeto, G.H., and Luiselli, L. 2020. Centrochelys sulcata (Miller 1779) – African Spurred Tortoise, Grooved Tortoise, Sahel Tortoise, Tortue Sillonnée. In: Rhodin, A.G.J., Iverson, J.B., van Dijk, P.P., Stanford, C.B., Goode, E.V., Buhlmann, K.A., and Mittermeier, R.A. (Eds.). Conservation Biology of Freshwater Turtles and Tortoises: A Compilation Project of the IUCN/SSC Tortoise and Freshwater Turtle Specialist Group. Chelonian Research Monographs 5(14):110.1–16. doi: 10.3854/crm.5.110.sulcata.v1.2020."
   },
   "https://iucn-tftsg.org/cbftt/species-accounts/malacochersus-tornieri-107": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Mwaya, R.T., Moll, D., Malonza, P.K., and Ngwava, J.M. 2018. Malacochersus tornieri (Siebenrock 1903) – Pancake Tortoise, Tornier’s Tortoise, Soft-shelled Tortoise, Crevice Tortoise, Kobe Ya Mawe, Kobe Kama Chapati. In: Rhodin, A.G.J., Iverson, J.B., van Dijk, P.P., Stanford, C.B., Goode, E.V., Buhlmann, K.A., Pritchard, P.C.H., and Mittermeier, R.A. (Eds.). Conservation Biology of Freshwater Turtles and Tortoises: A Compilation Project of the IUCN/SSC Tortoise and Freshwater Turtle Specialist Group. Chelonian Research Monographs 5(12):107.1–15. doi: 10.3854/crm.5.107.tornieri.v1.2018."
   },
   "https://kids.nationalgeographic.com/animals/mammals/facts/aye-aye": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "National Geographic Kids. n.d. Aye-Aye."
   },
   "https://nas.er.usgs.gov/queries/FactSheet.aspx?speciesID=2728": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "U.S. Geological Survey, 2026, Pipa pipa (Linnaeus, 1758): Nonindigenous Aquatic Species Database, Gainesville, FL, Revision Date: 8/6/2013."
   },
   "https://nationalzoo.si.edu/animals/cheetah": {
     "accessed": "2026-09-27"
@@ -590,37 +622,49 @@
     "accessed": "2026-09-25"
   },
   "https://newsapp.abc.net.au/newsapp/2025-10-27/conservation-success-for-rare-queensland-wombat/105934066": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "McCray, D. 2025. Northern hairy-nosed wombat joeys mark conservation success for rare Queensland animal. ABC News (Australia)."
   },
   "https://pmc.ncbi.nlm.nih.gov/articles/PMC4814056": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Senevirathne, G., Thomas, A., Kerney, R., Hanken, J., Biju, S. D., & Meegaskumbura, M. (2016). From Clinging to Digging: The Postembryonic Skeletal Ontogeny of the Indian Purple Frog, Nasikabatrachus sahyadrensis (Anura: Nasikabatrachidae). Plos One, 11(3), e0151114. https://doi.org/10.1371/journal.pone.0151114",
+    "license": "CC BY 4.0"
   },
   "https://wwf.ca/stories/19-amazing-tiger-facts-global-tiger-day": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "WWF-Canada. 2016. 19 amazing tiger facts for Global Tiger Day."
   },
   "https://www-cdn.abcnews.com/US/scientists-confirmed-existence-200-million-year-species-thought/story?id=122773046": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Jacobo, J. 2025. How scientists confirmed the existence of 200-million-year-old species thought to be extinct. ABC News."
   },
   "https://www.australianwildlife.org/animals/northern-hairy-nosed-wombat": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Australian Wildlife Conservancy. 2025. Northern Hairy-nosed Wombat."
   },
   "https://www.bbc.com/news/articles/cq819y09g2lo": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Briggs, H. 2026. Viral squeaky frog is now at risk of extinction. BBC News."
   },
   "https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/cosewic-assessments-status-reports/coastal-tailed-frog-ascaphus-truei-2011.html": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "COSEWIC. 2012. COSEWIC Assessment and Status Report on the Coastal Tailed Frog Ascaphus truei in Canada – 2011. Environment and Climate Change Canada."
   },
   "https://www.eurekalert.org/news-releases/598865": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Penn State. 2013. Endangered lemurs' complete genomes are sequenced and analyzed for conservation efforts. EurekAlert!"
   },
   "https://www.fws.gov/press-release/2024-11/advancements-black-footed-ferret-conservation-continue-new-offspring-cloned": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "U.S. Fish & Wildlife Service. 2024. Advancements for Black-footed Ferret Conservation Continue with New Offspring from Cloned Ferret."
   },
   "https://www.fws.gov/project/qas-black-footed-ferret-cloning-research-update": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "U.S. Fish & Wildlife Service. 2024. Q&As: Black-footed Ferret Cloning Research Update."
   },
   "https://www.galapagos.org/newsroom/a-homecoming-for-floreana": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Galápagos Conservancy. 2026. A Homecoming for Floreana."
   },
   "https://www.iucnredlist.org/species/10826/115565566": {
     "accessed": "2026-09-27",
@@ -919,36 +963,48 @@
     "cite": "Cota, M., Guntoro, J., Horne, B.D., Kusrini, M.D., Krishnasamy, K. & Shepherd, C. 2021. Heosemys spinosa. The IUCN Red List of Threatened Species 2021: e.T9942A3152508. https://dx.doi.org/10.2305/IUCN.UK.2021-2.RLTS.T9942A3152508.en."
   },
   "https://www.nationalgeographic.com/animals/mammals/facts/sunda-pangolin": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "National Geographic. 2020. Sunda pangolin, facts and photos."
   },
   "https://www.nbcnews.com/science/science-news/not-so-lonesome-gal-pagos-tortoise-subspecies-thought-extinct-lives-n1128941": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Chow, D. 2020. Not so 'Lonesome?' Galápagos tortoise subspecies thought extinct lives on. NBC News."
   },
   "https://www.pib.gov.in/PressReleasePage.aspx?PRID=1860055": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Press Information Bureau, Government of India. 2022. PM releases wild Cheetahs - which had become extinct from India - in Kuno National Park."
   },
   "https://www.qld.gov.au/environment/plants-animals/conservation/threatened-species/featured-projects/northern-hairy-nosed-wombat2/northern-hairy-nosed-wombat/about-northern-hairy-nosed-wombats": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "The State of Queensland. 2021. About northern hairy-nosed wombats. Northern hairy-nosed wombat project, qld.gov.au.",
+    "license": "CC BY 4.0"
   },
   "https://www.science.org/content/article/watch-ethiopian-wolves-drink-flower-nectar-first-large-carnivore": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Wilcox, C. 2024. Watch Ethiopian wolves drink flower nectar, a first for a large carnivore. Science."
   },
   "https://www.smithsonianmag.com/smart-news/elizabeth-ann-first-cloned-black-footed-ferret-180977065": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Fox, A. 2021. Elizabeth Ann Is the First Cloned Black-Footed Ferret. Smithsonian Magazine."
   },
   "https://www.stateoftheenvironment.detsi.qld.gov.au/biodiversity/case-studies/northern-hairy-nosed-wombat": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Queensland Government. 2025. Northern Hairy-Nosed Wombat. State of the Environment Report 2024."
   },
   "https://www.theguardian.com/environment/2023/nov/30/back-from-the-brink-de-wintons-golden-mole-feared-extinct-rediscovered-after-86-years-aoe": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Weston, P. 2023. Back from the brink: sand-swimming golden mole, feared extinct, rediscovered after 86 years. The Guardian."
   },
   "https://www.turtleconservancy.org/outreach/death-of-a-mythical-giant": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Sargent, A. 2019. Death of a Mythical Giant. Turtle Conservancy."
   },
   "https://www.wildcru.org/species/ethiopian-wolves": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "WildCRU. 2024. Ethiopian wolves."
   },
   "https://www.worldwildlife.org/news/magazine/spring-2021/meet-the-aye-aye-the-worlds-weirdest-primate": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "World Wildlife Fund. 2021. Meet the aye-aye, the world's weirdest primate. World Wildlife magazine, Spring 2021."
   }
 }
