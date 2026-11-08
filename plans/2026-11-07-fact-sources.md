@@ -379,7 +379,7 @@ Every step:
   - Check: E2E, every check passes (baseline was 1526/1527), including `round 3 move 10: a right guess just scouted sparkles`. Artifact `$STATE/e2e-s1/`.
   - Keep the baseline's `report.json` as `$STATE/baseline-report.json`, then delete `$STATE/baseline-e2e/`.
   - Still red: do a narrow run (`E2E_ROUNDS=3`) with temporary add/clear timestamps (not committed), fix what it shows, and record it under Decisions.
-- [ ] 2. **Wayback batch A: IDs, 15 snapshots, research skeleton (no app code).**
+- [x] 2. **Wayback batch A: IDs, 15 snapshots, research skeleton (no app code).**
   - **IDs:** 03 4322, 05 4524, 06 616 and 16 6197 come from the profiles. Find the other 11 with one Wikidata SPARQL query on the "AmphibiaWeb Species ID" property (confirm its label first), matching on `scientificName`. Fallback: the Wikipedia API's external links. Never ask AmphibiaWeb.
   - **Per species (§4):** a CDX query for the newest status-200 snapshot, then fetch `https://web.archive.org/web/<ts>id_/<original>` into `$STATE/wayback/<profile>.html`. If there is none, try the `amphib_query` CDX; failing that, record "no snapshot". About 30 to 45 requests in all.
   - **Extract:** `$STATE/tools/wayback_text.py` turns each `.html` into `<profile>.txt`. `$STATE/wayback/index.json` holds, per profile: `{ id, idFrom, original, timestamp, archive, citeLine, license }`, with the licence and its version taken from the page footer.
@@ -645,6 +645,9 @@ Pool join and `validatePool` (step 5):
 
 - 2026-11-08 (steps): Wayback fetch (step 2) before citation code: the 4 existing AmphibiaWeb pages need snapshot `cite` before `checkCitations` passes. Added `citations.test.ts` (content checks a playtest can't see; failure modes F1-F18 written first), a 1280x800 E2E check (main loop at 390 px never renders `#side-notes`), and `npm run build` in steps 5/18 (proves citations bundle without `db/`).
 
+- 2026-11-08 (step 2): AmphibiaWeb licence = **CC BY-NC 4.0**. Species pages have no licence footer (plan assumed one); they link `/data/datause.html`, so read its one Wayback snapshot (`20251006003414`, 2 extra requests), which states CC-BY-NC and links `creativecommons.org/licenses/by-nc/4.0`. Not bulk; the policy page itself points to Wayback for archived species pages.
+- 2026-11-08 (step 2): `citeLine` = the page's "Species Account Citation:" line minus its trailing "Accessed <snapshot date>." (crawler's render date; F10 would reject it). `index.json` `read` = 2026-11-08, the `accessed` for step 4.
+
 ## Log
 
 - 2026-11-08 00:05 UTC: Baseline. typecheck, lint, test (48/48), content check pass; e2e:fresh 1526/1527 (pre-existing sparkle check fails at round 3 move 10, deterministic).
@@ -655,5 +658,6 @@ Pool join and `validatePool` (step 5):
 - 2026-11-08 00:41 UTC: Revision. `architect` resolved 5 MUST-FIX + Fable MISSED: cite errors only AmphibiaWeb/Wikipedia (others warn); ADW CC BY-NC-SA 3.0 (terms at /about/use_conditions/); absent `citations` → `{}` in pool loader; page-level licence override; hide StatusTicker facts/NotesList during review. Plan-only, no checks needed.
 - 2026-11-08 00:52 UTC: Steps. `planner` wrote 18 steps, Verification, Failure modes F1-F18, risks. Plan-only, no checks needed.
 - 2026-11-08 01:04 UTC: Step 1. Sparkle fix: reveal clear-timer only clears the set it was armed for (`AnimalGame.tsx:216`). typecheck, lint, test pass; e2e:fresh 1527/1527 (round 3 move 10 sparkle check now ok). Artifact `$STATE/e2e-s1/`; baseline kept as `baseline-report.json`.
+- 2026-11-08 01:10 UTC: Step 2. IDs: 4 profile + 11 Wikidata P5036 (all 15 agree). 15/15 snapshots via CDX (newest 2024-12 to 2026-03), 30 requests + 2 for data-use page, 0 429s, no no-snapshot species. `index.json` 15 entries, every `citeLine` in its `.txt` (grep -F 15/15). Research skeleton `docs/research/2026-11-07-amphibiaweb-wayback.md`. typecheck, lint pass.
 
 ## Summary
