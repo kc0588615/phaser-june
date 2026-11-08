@@ -12,6 +12,30 @@ Mission `fact-sources`. AmphibiaWeb's species accounts for the game's 15 amphibi
 - **Citation:** each page's "Species Account Citation:" line, verbatim without its trailing "Accessed <snapshot date>." (that date is the page generating itself for the crawler; the game adds its own). The site-wide form on the same page is "AmphibiaWeb. <year>. <https://amphibiaweb.org> University of California, Berkeley, CA, USA. Accessed <date>."; the species line is the more specific one, so it is the one used.
 - **Tier:** AmphibiaWeb is tier 2. IUCN (tier 1) wins a disagreement (keep it, note both here); against ADW keep the existing value and note both; against Wikipedia, AmphibiaWeb replaces it.
 
+## Summary
+
+All 15 amphibians had a snapshot. Trees: the answer each account gives to "Does it climb trees?", for moves-and-signs-build (quotes under each animal).
+
+| Animal | AmphibiaWeb ID | Snapshot | Trees | No-records filled | New clues | New facts |
+|---|---|---|---|---|---|---|
+| 03 Darwin's frog | 4322 | 17 Jun 2025 | no | none | 2 | 4 |
+| 05 Wallace's flying frog | 4524 | 4 Dec 2024 | yes | none | 1 | 3 |
+| 06 Red-eyed tree frog | 616 | 9 Mar 2026 | yes | none | 3 | 4 |
+| 07 Hairy frog | 1506 | 16 Jan 2025 | no record | none | 2 | 2 |
+| 08 Coastal tailed frog | 2049 | 7 Dec 2024 | no | none | 2 | 4 |
+| 09 Dyeing poison dart frog | 1646 | 18 Sep 2025 | no | young: few | 4 | 4 |
+| 10 Suriname toad | 5234 | 13 Feb 2026 | no | none | 3 | 3 |
+| 11 Goliath frog | 4691 | 8 Dec 2024 | no | none | 3 | 4 |
+| 13 Madagascar tomato frog | 5530 | 27 Jan 2025 | no record | none | 2 | 3 |
+| 14 Desert rain frog | 2375 | 12 Dec 2025 | no | size: tiny, diet: insects | 2 | 3 |
+| 16 Purple frog | 6197 | 6 Feb 2025 | no | young: many | 3 | 4 (+1 rewritten) |
+| 62 Chinese giant salamander | 3858 | 24 Jan 2025 | no | none | 3 | 4 |
+| 74 Axolotl | 3842 | 15 Feb 2026 | no | none | 3 | 4 |
+| 75 Hellbender | 3861 | 3 Dec 2025 | no | none | 3 | 4 |
+| 76 Golden poison frog | 1707 | 28 Nov 2025 | no | none | 2 | 4 |
+
+New open tags: none (every new clue reuses an existing tag or adds no open tag). The 12 AmphibiaWeb values the profiles had before (03, 05, 06, 16) were checked against the snapshots; two lost a word not in the snapshot ("damp" for 03, "big for a tree frog" for 05).
+
 ## Animals
 
 ### 03 Darwin Frog (*Rhinoderma darwinii*)

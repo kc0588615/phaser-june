@@ -522,7 +522,7 @@ Every step:
     - the 5 screenshots exist and show closed and open in both themes (look at them);
     - log `probeMs` and the total run time. The CI e2e job times out at 15 min, so keep the local run at or under about 11 min;
     - artifact `$STATE/e2e-s16/`.
-- [ ] 17. **Docs.**
+- [x] 17. **Docs.**
   - **`docs/CONTENT_SOURCES.md`**, a new "Citations" section:
     - the `citations.json` fields and how to record each: `cite` verbatim, without its "Accessed …"; what `accessed` means (for pages from before this mission it is the date the page entered the content, a proxy, not a verified read); the `archive` viewer URL; the page licence override;
     - the §1 table, with each source's guidance URL and licence URL;
@@ -696,5 +696,6 @@ Pool join and `validatePool` (step 5):
 - 2026-11-08 03:12 UTC: Step 14. `numberSources` (per page, 1..n first use) in `citations.ts`; new `FactsWithSources` (marks, closed `<details>` Sources, click/Enter opens + focuses entry); round-end card uses it with `pool.citations`. Manual look (dev server, seed 7 hairy frog): marks 1/2 repeat per page, 2 entries, mark click opens Sources and focuses entry 2. typecheck, lint pass; test 66/66; e2e:fresh 1527/1527, artifact `$STATE/e2e-s14/` (e2e-s5 deleted).
 - 2026-11-08 03:25 UTC: Step 15. `keyFacts` returns `{ text, source }` (dedup by text, first source); journal uses `FactsWithSources` with `pool.citations`; during review the StatusTicker gets no facts (remount key `end-<n>`) and desktop `#side-notes` is hidden; dead `LogEntryText.tsx` deleted, `WithBlanks` moved to its own file. typecheck, lint pass; test 66/66; e2e:fresh 1527/1527 (10m24s), artifact `$STATE/e2e-s15/` (e2e-s14 deleted); `05-journal.png` shows marks + closed Sources (1).
 - 2026-11-08 03:45 UTC: Step 16. `scripts/e2e.mjs`: Sources checks on 4 round-end cards, both journal views (6 lists) and the AmphibiaWeb card (numbers 1..n by first use = entries, closed `Sources (n)`, tap + Enter open and focus the entry in view); review hides ticker facts and side notes (phone + 1280 px, with play control); AmphibiaWeb probe seed 4, north-america, species 06, 9.3 s; 5 screenshots looked at. typecheck, lint, test pass; e2e:fresh 1558/1558 (31 `sources:` checks), 666 s (s15 619 s, CI limit 15 min). Artifact `$STATE/e2e-s16/`.
+- 2026-11-08 04:10 UTC: Step 17. `CONTENT_SOURCES.md` "Citations" section (fields, per-source table with guidance + licence URLs, errors vs warnings, release order, Wikipedia share-alike, Wayback route); "AmphibiaWeb blocks bots" line replaced; workflow mentions `checkCitations` / `cite warn`. `AGENTS.md` Content line, `CLUE_MATCH.md` Data + Content rows (pool `citations`). Research file: Summary table (15 animals, trees, fills, counts). Guidance/licence URLs checked 200 (IUCN terms via CDX). lint pass; `check_quotes.py` 274 quotes 0 misses; `rg citations.json` hits all three docs.
 
 ## Summary

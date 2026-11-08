@@ -21,8 +21,8 @@ No sign-in needed; every finished round, solved or lost, is saved to `clue_match
 | Rules (pure) | `src/clueGame/animalBoard.ts` (suspects, clue orders, marks, release), `animalSession.ts` (the trail: rounds, hearts, score, streak), `questionMatch.ts` (questions, book, columns), `gems.ts` (gem color ↔ category) |
 | Content → rules data | `src/clueGame/questionMatchContent.ts` (traits, regions, family tree names, field notes with blanks, sources), `regions.ts` (every country → UN region with kid names → continent) |
 | Board | `src/game/`: `ClueBoardScene.ts` (seeded 7×7 board), `BoardModel.ts` (swaps, matches, toys, the rare note gem), `BoardView.ts` (sprites, toy effects), `toyTextures.ts` (toy looks), `sfx.ts` (sounds), `BoardController.ts` (swipe, tap, keyboard, cascade loop) |
-| Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `GET /api/clue-game/range?species=<id>`, `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`), `GET /api/clue-game/journal` (a signed-in player's solves) |
-| Content | `db/content/` (profiles + source registry, docs/CONTENT_SOURCES.md), `scripts/content.ts` (`npm run content`), `src/clueGame/profiles.ts` (profile → rows) |
+| Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`; its `citations` map page URL → citation, joined from `db/content/citations.json` at read time), `GET /api/clue-game/range?species=<id>`, `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`), `GET /api/clue-game/journal` (a signed-in player's solves) |
+| Content | `db/content/` (profiles, source registry, `citations.json` page citations; docs/CONTENT_SOURCES.md), `scripts/content.ts` (`npm run content`), `src/clueGame/profiles.ts` (profile → rows) |
 | Balance | `scripts/balance-044.ts` (seeded bot on the real rules and board) |
 | Tests | `tests/clueGame/*`, `tests/game/*`; `npm run e2e` |
 
