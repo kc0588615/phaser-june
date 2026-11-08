@@ -97,7 +97,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -310,6 +310,20 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. **Cached-pool compatibility (§2).** Existing cached responses lack `citations`; making it required creates a crash path for new clients. Define compatibility explicitly: normalize absent metadata or version the endpoint. An individual missing-entry fallback is insufficient.
+2. **Licences belong to pages too (§1).** Registry-only licensing cannot represent mixed publishers under `literature`, `government`, or `ngo`. The existing [aardvark paper](https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2020.00637/full) declares CC BY, while the plan assigns literature no licence. Allow page-level licence overrides with registry defaults.
+3. **Post-round coverage is incomplete (Finding 1, §3).** `StatusTicker` and desktop `NotesList` remain visible after rounds ([AnimalGame.tsx](/srv/critter-ai/worktrees/fact-sources/src/components/animalBoard/AnimalGame.tsx:502)). Include their completed-round facts in the sourcing design, or hide those duplicate surfaces during review.
+
+SHOULD-CONSIDER:
+
+1. Distinguish Git introduction dates from verified access dates; they represent different provenance.
+2. Document the ongoing release dependency: deploy citation metadata before publishing content that references it, and retain metadata needed by existing live rows.
+3. Reject missing source identities during content validation; checking only rows already carrying `source` allows uncited facts through.
+
 ## Revision notes
 
 ## Steps
@@ -327,5 +341,7 @@ SHOULD-CONSIDER:
 - 2026-11-08 00:05 UTC: Baseline. typecheck, lint, test (48/48), content check pass; e2e:fresh 1526/1527 (pre-existing sparkle check fails at round 3 move 10, deterministic).
 - 2026-11-08 00:40 UTC: Architecture. `architect` wrote findings + design: citation templates in `sources.json` + new `citations.json` joined at read time (no schema change), shared `FactsWithSources` UI, sparkle E2E failure = reveal clear-timer race in `AnimalGame.tsx` (one-line fix), Wayback via CDX (availability API 429). Plan-only, no checks needed.
 - 2026-11-08 01:00 UTC: Fable review. APPROVE_WITH_CHANGES, 2 MUST-FIX (non-AmphibiaWeb/Wikipedia cite = warning not error; settle ADW licence CC BY-NC-SA 3.0) + stale-pool tolerance note. Plan-only, no checks needed.
+
+- 2026-11-08 01:30 UTC: Astra review. APPROVE_WITH_CHANGES, 3 MUST-FIX (stale cached pool without `citations`; page-level licence overrides; StatusTicker/NotesList post-round coverage). Plan-only, no checks needed.
 
 ## Summary
