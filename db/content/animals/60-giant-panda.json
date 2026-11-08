@@ -51,6 +51,11 @@
       "value": "alone",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It lives mainly on the ground, though it climbs well.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"
@@ -103,7 +108,7 @@
       "category": "behavior",
       "text": "It feeds on the ground, but it is a good tree climber.",
       "tags": [
-        "climber"
+        "feeds_on_ground"
       ],
       "source": "adw"
     },

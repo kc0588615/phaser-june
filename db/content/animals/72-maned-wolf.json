@@ -31,10 +31,7 @@
     "grassland:tropical_dry",
     "grassland:tropical_seasonally_wet",
     "wetlands",
-    "wetlands:bogs_marshes",
-    "artificial",
-    "artificial:arable",
-    "artificial:pasture"
+    "wetlands:bogs_marshes"
   ],
   "elevation": [
     0,
@@ -64,6 +61,11 @@
       "value": "pairs",
       "note": "A pair shares a home area, but hunts, travels and rests apart.",
       "source": "adw"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It walks and trots on the ground.",
+      "source": "wikipedia"
     },
     "birth": {
       "value": "live",

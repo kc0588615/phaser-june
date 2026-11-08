@@ -7,6 +7,7 @@
 import type { ContinentKey } from '@/clueGame/regions';
 import { REGIONS } from '@/clueGame/regions';
 import { hash32 } from '@/lib/seededRng';
+import { neverAsked } from '@/clueGame/traits';
 
 export const CHARGE_CATEGORIES = ['body', 'habits', 'habitat', 'range', 'life'] as const;
 export type ChargeCategory = typeof CHARGE_CATEGORIES[number];
@@ -21,7 +22,7 @@ export const CATEGORY_LABELS: Record<GemKind, string> = {
 /** Which category asks about each trait prefix. */
 export const PREFIX_CATEGORY: Record<string, ChargeCategory> = {
   size: 'body', covering: 'body',
-  diet: 'habits', activity: 'habits', social: 'habits',
+  diet: 'habits', activity: 'habits', social: 'habits', trees: 'habits',
   system: 'habitat', habitat: 'habitat',
   region: 'range',
   birth: 'life', young: 'life', lifespan: 'life',
@@ -34,6 +35,8 @@ export type FamilyTreeRank = typeof FAMILY_TREE_RANKS[number];
 export interface Source { name: string; url: string | null }
 /** `text` may have blanks where a word would name the animal; `full` is the whole note, for after the round; `tags`: the hand-written clue's tags (plan 044 witness notes). */
 export interface FieldNote { text: string; full?: string; source: Source; tags?: readonly string[] }
+/** A sign: one open tag of an animal's clues (digging_claws), as a phrase, under the question category it bears on (plan 055). */
+export interface Sign { tag: string; text: string; category: ChargeCategory }
 export interface RankName { latin: string; plain: string | null }
 
 export interface Animal {
@@ -55,6 +58,8 @@ export interface Animal {
   revealNotes: FieldNote[];
   /** Field guide lines by category, plus 'family' (class, order, family; never the genus), each with the question tags it records. */
   guide: Record<ChargeCategory | 'family', Array<{ text: string; tags: readonly string[] }>>;
+  /** Its signs, in tag order; every one shows in the guide under its category, never hidden (plan 055). */
+  signs: Sign[];
   /** Every tag on its clues, trait tags and open ones like digging_claws (plan 044: what its field guide records). */
   tags?: readonly string[];
 }
@@ -141,6 +146,7 @@ const QUESTION_TEXT: Record<string, string> = {
   'activity:day': 'Is it mainly active in the day?', 'activity:night': 'Is it mainly active at night?',
   'activity:twilight': 'Is it mainly active at dawn and dusk?', 'activity:any': 'Is it active both day and night?',
   'social:alone': 'Does it live alone?', 'social:pairs': 'Does it live in pairs or small families?', 'social:groups': 'Does it live in groups?',
+  'trees:yes': 'Does it live in trees?',
   'birth:eggs': 'Does it lay eggs?', 'birth:live': 'Does it give birth to live young?',
   'young:one': 'Does it have just 1 or 2 young at a time?', 'young:few': 'Does it have 3 to 10 young at a time?', 'young:many': 'Does it have more than 10 young at once?',
   'lifespan:short': 'Does it live less than 5 years?', 'lifespan:medium': 'Does it live 5 to 20 years?', 'lifespan:long': 'Can it live more than 20 years?',
@@ -161,6 +167,7 @@ const SHORT_TEXT: Record<string, string> = {
   'diet:plants': 'Eats only plants?', 'diet:meat': 'Eats only meat?', 'diet:insects': 'Eats mostly bugs?', 'diet:mixed': 'Eats plants and animals?',
   'activity:day': 'Out in the day?', 'activity:night': 'Out at night?', 'activity:twilight': 'Out at dawn and dusk?', 'activity:any': 'Out day and night?',
   'social:alone': 'Lives alone?', 'social:pairs': 'Lives in pairs?', 'social:groups': 'Lives in groups?',
+  'trees:yes': 'Lives in trees?',
   'birth:eggs': 'Lays eggs?', 'birth:live': 'Gives birth to live young?',
   'young:one': '1 or 2 young at a time?', 'young:few': '3 to 10 young at a time?', 'young:many': 'Over 10 young at once?',
   'lifespan:short': 'Lives under 5 years?', 'lifespan:medium': 'Lives 5 to 20 years?', 'lifespan:long': 'Lives over 20 years?',
@@ -172,6 +179,13 @@ const SHORT_TEXT: Record<string, string> = {
 };
 
 export const prefixOf = (tag: string): string => tag.slice(0, tag.indexOf(':'));
+
+/** The question category of an asked tag, so its tile, answer row and guide heading share one mark. Throws on a tag no question asks. */
+export function categoryOf(tag: string): ChargeCategory {
+  const category = PREFIX_CATEGORY[prefixOf(tag)];
+  if (!category) throw new Error(`no question category for "${tag}"`);
+  return category;
+}
 
 export function questionText(tag: string): string {
   if (tag.startsWith('region:')) return `Does it live in ${REGIONS[tag.slice(7)]?.name ?? tag.slice(7)}?`;
@@ -190,7 +204,7 @@ const COLUMN_LABEL: Record<string, string> = {
   'covering:fur': 'Fur', 'covering:spines': 'Spines', 'covering:scales': 'Scales', 'covering:armor': 'Bony armor', 'covering:shell': 'Shell', 'covering:skin': 'Bare skin',
   'diet:plants': 'Only plants', 'diet:meat': 'Only meat', 'diet:insects': 'Mostly bugs', 'diet:mixed': 'Plants & animals',
   'activity:day': 'Day', 'activity:night': 'Night', 'activity:twilight': 'Dawn & dusk', 'activity:any': 'Day & night',
-  'social:alone': 'Alone', 'social:pairs': 'Pairs', 'social:groups': 'Groups',
+  'social:alone': 'Alone', 'social:pairs': 'Pairs', 'social:groups': 'Groups', 'trees:yes': 'Lives in trees',
   'birth:eggs': 'Lays eggs', 'birth:live': 'Live young',
   'young:one': '1–2 young', 'young:few': '3–10 young', 'young:many': '10+ young',
   'lifespan:short': 'Under 5 years', 'lifespan:medium': '5–20 years', 'lifespan:long': '20+ years',
@@ -438,7 +452,7 @@ export function questionsFor(book: Book, state: RoundState): Record<ChargeCatego
   for (const id of ids) for (const set of book.traits.get(id)!.values()) for (const tag of set) tags.add(tag);
   for (const tag of tags) {
     const category = PREFIX_CATEGORY[prefixOf(tag)];
-    if (!category || asked.has(tag)) continue;
+    if (!category || neverAsked(tag) || asked.has(tag)) continue;
     if (state.place && category === 'range' && REGIONS[tag.slice(7)]?.continent !== state.place) continue;
     let has = 0, lacks = 0, unknown = 0;
     for (const id of ids) {

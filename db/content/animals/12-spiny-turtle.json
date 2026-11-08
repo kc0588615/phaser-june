@@ -51,6 +51,12 @@
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Spiny_turtle"
     },
+    "trees": {
+      "value": "no",
+      "note": "Adults walk on the ground among fallen leaves.",
+      "source": "government",
+      "url": "https://www.nparks.gov.sg/florafaunaweb/fauna/0/6/06"
+    },
     "young": {
       "value": "one",
       "note": "A female lays 1 or 2 eggs at a time, up to three times a year.",
@@ -80,7 +86,8 @@
       "text": "By day it hides buried in fallen leaves, where its brown shell blends in.",
       "tags": [
         "leaf_litter",
-        "camouflage"
+        "camouflage",
+        "buries_itself"
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Spiny_turtle"

@@ -23,10 +23,7 @@
     "forest:tropical_dry",
     "forest:tropical_moist_lowland",
     "forest:tropical_swamp",
-    "forest:tropical_moist_montane",
-    "artificial",
-    "artificial:plantations",
-    "artificial:urban"
+    "forest:tropical_moist_montane"
   ],
   "elevation": [
     0,
@@ -55,6 +52,11 @@
     },
     "social": {
       "value": "alone",
+      "source": "adw"
+    },
+    "trees": {
+      "value": "yes",
+      "note": "It spends most of its life high in the treetops.",
       "source": "adw"
     },
     "birth": {
@@ -89,7 +91,6 @@
       "category": "behavior",
       "text": "It moves very slowly and spends almost all its life high in the treetops.",
       "tags": [
-        "tree_dweller",
         "slow_mover"
       ],
       "source": "adw"
@@ -106,7 +107,7 @@
       "category": "behavior",
       "text": "It seldom walks on the ground, but it can swim well.",
       "tags": [
-        "swimmer"
+        "seldom_on_ground"
       ],
       "source": "adw"
     },

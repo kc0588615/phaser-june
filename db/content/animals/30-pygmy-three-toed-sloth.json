@@ -47,6 +47,11 @@
       "value": "alone",
       "source": "adw"
     },
+    "trees": {
+      "value": "yes",
+      "note": "It lives mainly in trees, though it can walk on the ground.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"
@@ -71,7 +76,6 @@
       "category": "behavior",
       "text": "It moves very slowly and spends most of its life up in the trees.",
       "tags": [
-        "tree_dweller",
         "slow_mover"
       ],
       "source": "adw"
@@ -89,7 +93,7 @@
       "category": "behavior",
       "text": "It is slow in the trees, but it can swim.",
       "tags": [
-        "swimmer"
+        "slow_mover"
       ],
       "source": "adw"
     },

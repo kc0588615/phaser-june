@@ -25,13 +25,7 @@
     "wetlands",
     "wetlands:bogs_marshes",
     "wetlands:permanent_marshes",
-    "wetlands:seasonal_marshes",
-    "artificial",
-    "artificial:arable",
-    "artificial:plantations",
-    "artificial:gardens",
-    "artificial:urban",
-    "artificial:degraded_forest"
+    "wetlands:seasonal_marshes"
   ],
   "elevation": [
     0,

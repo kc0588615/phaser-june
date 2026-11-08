@@ -43,6 +43,11 @@
       "note": "In the dry season, many gather together in the river pools that are left.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It stays down low and never climbs up into trees.",
+      "source": "adw"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"
@@ -81,9 +86,6 @@
     {
       "category": "behavior",
       "text": "Males never leave the water, and females come out only to lay eggs.",
-      "tags": [
-        "fully_aquatic"
-      ],
       "source": "adw"
     },
     {

@@ -54,6 +54,12 @@
       "value": "alone",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "Unlike some pangolins, it lives on the ground, not in trees.",
+      "source": "ngo",
+      "url": "https://savepangolins.org/what-is-a-pangolin/"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

@@ -67,6 +67,11 @@
       "value": "alone",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It sleeps and feeds on the ground, reaching no higher than 1.5 meters.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

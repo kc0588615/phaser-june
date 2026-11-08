@@ -58,6 +58,11 @@
       "value": "groups",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It walks on the ground and never climbs.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

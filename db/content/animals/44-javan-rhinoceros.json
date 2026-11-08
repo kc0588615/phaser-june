@@ -48,6 +48,11 @@
       "note": "Mothers stay with their young.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It moves on the ground and rests in mud pools.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"
@@ -99,9 +104,6 @@
     {
       "category": "behavior",
       "text": "It is a good swimmer.",
-      "tags": [
-        "swimmer"
-      ],
       "source": "adw"
     },
     {

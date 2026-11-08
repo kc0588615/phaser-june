@@ -47,6 +47,11 @@
       "value": "alone",
       "source": "ngo"
     },
+    "trees": {
+      "value": "no",
+      "note": "It spends most of its time underground in burrows.",
+      "source": "ngo"
+    },
     "birth": {
       "value": "live",
       "source": "ngo"
@@ -88,7 +93,8 @@
       "category": "diet",
       "text": "It grazes on native grasses near its burrows.",
       "tags": [
-        "grazer"
+        "grazer",
+        "burrower"
       ],
       "source": "iucn"
     },
@@ -120,7 +126,10 @@
     {
       "category": "habitat",
       "text": "It lives in open eucalyptus woodland with deep, sandy soil for digging.",
-      "source": "iucn"
+      "source": "iucn",
+      "tags": [
+        "burrower"
+      ]
     },
     {
       "category": "geography",

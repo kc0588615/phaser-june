@@ -56,6 +56,11 @@
       "note": "Herds are usually 10 to 20 gazelles.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It lives on the ground and is built for running.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

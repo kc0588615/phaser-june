@@ -44,6 +44,11 @@
       "note": "It is out mostly in the early morning and in the rainy season.",
       "source": "tftsg"
     },
+    "trees": {
+      "value": "no",
+      "note": "It digs deep burrows, some up to 15 meters long.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "eggs",
       "source": "tftsg"
@@ -95,9 +100,6 @@
     {
       "category": "habitat",
       "text": "It lives in dry savanna, often along streams that only flow in the rainy season.",
-      "tags": [
-        "seasonal_streams"
-      ],
       "source": "tftsg"
     },
     {

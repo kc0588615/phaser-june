@@ -47,6 +47,11 @@
       "note": "It is sometimes active at night too.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It lives on the ground and hides in gaps between stones.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "live",
       "source": "wikipedia",

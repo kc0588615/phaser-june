@@ -54,6 +54,11 @@
       "note": "It lives in small family colonies.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It spends much of its time underground in burrows.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"
@@ -99,7 +104,10 @@
     {
       "category": "behavior",
       "text": "It digs its burrows under big rocks, and uses the rocks as lookouts.",
-      "source": "iucn"
+      "source": "iucn",
+      "tags": [
+        "burrower"
+      ]
     },
     {
       "category": "habitat",

@@ -51,6 +51,11 @@
       "note": "It comes out to feed in the early morning.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It squeezes into narrow cracks to hide.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "eggs",
       "source": "iucn"
@@ -95,7 +100,7 @@
       "category": "behavior",
       "text": "It is a good climber: some have been found in cracks high up on tall boulders.",
       "tags": [
-        "climber"
+        "climbs_boulders"
       ],
       "source": "iucn"
     },

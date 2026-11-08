@@ -37,6 +37,11 @@
       "note": "Mostly termites, which it catches underground.",
       "source": "amphibiaweb"
     },
+    "trees": {
+      "value": "no",
+      "note": "It spends most of the year deep below ground, 1 to 4 meters down.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "eggs",
       "source": "literature"

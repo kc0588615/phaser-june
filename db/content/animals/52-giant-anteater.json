@@ -34,10 +34,7 @@
     "shrubland:tropical_high_altitude",
     "grassland",
     "grassland:tropical_dry",
-    "grassland:tropical_seasonally_wet",
-    "artificial",
-    "artificial:plantations",
-    "artificial:urban"
+    "grassland:tropical_seasonally_wet"
   ],
   "elevation": [
     0,
@@ -66,6 +63,11 @@
     },
     "social": {
       "value": "alone",
+      "source": "iucn"
+    },
+    "trees": {
+      "value": "no",
+      "note": "This anteater lives on the ground.",
       "source": "iucn"
     },
     "birth": {

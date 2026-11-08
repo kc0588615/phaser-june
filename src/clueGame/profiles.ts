@@ -7,6 +7,7 @@
 import type { SpeciesClueCategory } from '@/clueGame/categories';
 import { renderCitation, type CitationSource, type CitedPage } from '@/clueGame/citations';
 import type { ContentRows } from '@/clueGame/pool';
+import { signProblems } from '@/clueGame/signs';
 import { FAMILY_NAMES, ORDER_NAMES } from '@/clueGame/speciesInfo';
 import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, prefixOf } from '@/clueGame/traits';
 
@@ -17,6 +18,7 @@ export type Activity = 'day' | 'night' | 'twilight' | 'any';
 export type Birth = 'eggs' | 'live';
 export type Young = 'one' | 'few' | 'many';
 export type Social = 'alone' | 'pairs' | 'groups';
+export type YesNo = 'yes' | 'no';
 export type Covering = 'fur' | 'spines' | 'scales' | 'armor' | 'shell' | 'skin';
 export type System = 'terrestrial' | 'freshwater' | 'marine';
 export type RedListCode = 'LC' | 'NT' | 'VU' | 'EN' | 'CR' | 'EW' | 'EX' | 'DD';
@@ -48,6 +50,7 @@ export interface AnimalProfile {
     birth?: Sourced<Birth>;
     young?: Sourced<Young>;
     social?: Sourced<Social>;
+    trees?: Sourced<YesNo>;
     covering?: Sourced<Covering>;
   };
   /** Written by `npm run content -- ranges` from the range maps (realms with at least 10% of the range; globe countries). */
@@ -184,6 +187,11 @@ const SOCIAL_TEXT: Record<Social, string> = {
   groups: 'It lives in groups.',
 };
 
+const TREES_TEXT: Record<YesNo, string> = {
+  yes: 'It lives in trees.',
+  no: "It doesn't live in trees.",
+};
+
 const BIRTH_TEXT: Record<Birth, string> = {
   eggs: 'It lays eggs.',
   live: 'It gives birth to live young.',
@@ -273,6 +281,7 @@ export function profileClues(profile: AnimalProfile): ClueDraft[] {
   trait('diet', 'diet', traits.diet, DIET_TEXT);
   trait('behavior', 'activity', traits.activity, ACTIVITY_TEXT);
   trait('behavior', 'social', traits.social, SOCIAL_TEXT);
+  trait('behavior', 'trees', traits.trees, TREES_TEXT);
   trait('reproduction', 'birth', traits.birth, BIRTH_TEXT);
   trait('reproduction', 'young', traits.young, YOUNG_TEXT);
   trait('reproduction', 'lifespan', traits.lifespan, LIFESPAN_TEXT);
@@ -299,6 +308,7 @@ export function isHandWrittenClue({ category, text, tags }: { category: string; 
 const TRAIT_VALUES: Record<keyof AnimalProfile['traits'], readonly string[]> = {
   size: Object.keys(SIZE_TEXT), lifespan: Object.keys(LIFESPAN_TEXT), diet: Object.keys(DIET_TEXT), activity: Object.keys(ACTIVITY_TEXT),
   birth: Object.keys(BIRTH_TEXT), young: Object.keys(YOUNG_TEXT), social: Object.keys(SOCIAL_TEXT), covering: Object.keys(COVERING_TEXT),
+  trees: Object.keys(TREES_TEXT),
 };
 const CLUE_CATEGORIES = ['habitat', 'morphology', 'diet', 'behavior', 'reproduction', 'taxonomy', 'key_fact', 'geography', 'conservation'];
 const FACT_CATEGORIES = ['key_fact', 'behavior', 'diet_prey', 'diet_flora', 'life_description', 'threat'];
@@ -345,6 +355,8 @@ export function checkProfile(profile: AnimalProfile, sources: readonly Pick<Cont
     cite(`facts[${i}]`, fact.source, fact.url);
   }
   if ((profile.facts ?? []).filter(fact => fact.category === 'key_fact').length === 0) problems.push('add at least one key_fact for the reveal card');
+  // Signs last: profileClues needs a well-formed profile (plan 055 T3).
+  if (problems.length === 0) problems.push(...signProblems(profile.clues, new Set(profileClues(profile).flatMap(clue => clue.tags))));
   return problems;
 }
 

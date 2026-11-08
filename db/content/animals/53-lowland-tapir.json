@@ -66,6 +66,11 @@
       "note": "Mothers travel with their young.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It walks on the ground and never climbs.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"
@@ -102,7 +107,7 @@
       "category": "morphology",
       "text": "A short, stiff mane runs along a hump on the back of its head and neck.",
       "tags": [
-        "mane"
+        "neck_hump"
       ],
       "source": "adw"
     },

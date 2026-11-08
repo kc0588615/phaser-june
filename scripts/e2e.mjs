@@ -36,6 +36,9 @@ const check = (name, ok, detail = '') => {
 };
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const KEEP_RUNS = 10;
+/** Which category asks each trait prefix, as the game says (PREFIX_CATEGORY): what the player should see on screen. */
+const CATEGORY = { size: 'body', covering: 'body', diet: 'habits', activity: 'habits', social: 'habits', trees: 'habits', system: 'habitat', habitat: 'habitat', region: 'range', birth: 'life', young: 'life', lifespan: 'life' };
+const CATEGORY_WORD = { body: 'Body', habits: 'Habits', habitat: 'Habitat', range: 'Range', life: 'Life cycle' };
 /** The grid's sort, from `rows` facts (window.__gridFacts): out below; no contradiction above any; more matches higher; then the card's number. */
 const sortFacts = (facts, view = fact => fact) => [...facts]
   .sort((a, b) => a.out - b.out || view(a).contradicted - view(b).contradicted || view(b).matches - view(a).matches || a.number - b.number)
@@ -634,7 +637,18 @@ async function main() {
     };
     await loadBoard();
     await screenshot('02-board.png');
-    const poolSpecies = new Map((await evaluate(async () => (await (await fetch('/api/clue-game/pool/')).json()).species.map(s => [s.id, { name: s.commonName, scientificName: s.scientificName, family: s.family, genus: s.genus }]))));
+    const poolData = await evaluate(async () => {
+      const pool = await (await fetch('/api/clue-game/pool/')).json();
+      // Each animal's signs: the open tags (no colon) on its clues.
+      const open = {};
+      for (const clue of pool.clues) for (const tag of clue.compareTags) if (!tag.includes(':')) (open[clue.speciesId] ??= new Set()).add(tag);
+      return {
+        species: pool.species.map(s => [s.id, { name: s.commonName, scientificName: s.scientificName, family: s.family, genus: s.genus }]),
+        open: Object.entries(open).map(([id, tags]) => [Number(id), [...tags]]),
+      };
+    });
+    const poolSpecies = new Map(poolData.species);
+    const openTags = new Map(poolData.open);
     const names = new Map([...poolSpecies].map(([id, species]) => [id, species.name]));
     const sound = await evaluate(async () => {
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -753,6 +767,8 @@ async function main() {
         mystery: document.querySelector('table[aria-label="Evidence"] tr[data-mystery] th')?.textContent ?? '',
       }));
       check(`round ${n}: the evidence grid has a row per suspect and a column per clue`, screen.rows.join() === start.suspects.join() && screen.columns.join() === start.orders.map(order => order.tag).join(), JSON.stringify(screen));
+      // A yes/no trait's `no` is recorded, never asked (plan 055: trees:no).
+      check(`round ${n}: no column asks a "no" value`, screen.columns.every(tag => !tag.endsWith(':no')), screen.columns.join());
       check(`round ${n}: the grid doesn't name the mystery while it's hidden`, screen.mystery.includes('On camera') && !screen.mystery.includes(mysteryName), screen.mystery);
       if (n === 1) {
         // Tap an animal's tile: it's picked in the grid (its actions in the status line); tap again to drop it.
@@ -860,6 +876,26 @@ async function main() {
         });
         await sleep(1000); // its photo loads
         await screenshot('02d-field-guide.png');
+        // Plan 055: the sheet during play, light and dark: its top, then scrolled to the guide's category rows.
+        { const theme = await evaluate(() => ({ data: document.documentElement.dataset.theme ?? null, stored: localStorage.getItem('critter-connect:theme') }));
+          for (const mode of ['light', 'dark']) {
+            for (const [shot, rows] of [['02d-field-guide', false], ['02e-field-guide-rows', true]]) {
+              await evaluate(({ mode, rows }) => {
+                document.documentElement.dataset.theme = mode;
+                localStorage.setItem('critter-connect:theme', mode);
+                const first = document.querySelector('[role=dialog] [data-guide-cat] dt');
+                if (rows) first?.scrollIntoView({ block: 'start' });
+                else document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' });
+              }, { mode, rows });
+              await sleep(300);
+              await screenshot(`${shot}-${mode}.png`);
+            }
+          }
+          await evaluate(({ data, stored }) => {
+            if (data) document.documentElement.dataset.theme = data; else delete document.documentElement.dataset.theme;
+            if (stored) localStorage.setItem('critter-connect:theme', stored); else localStorage.removeItem('critter-connect:theme');
+            document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' });
+          }, theme); }
         await evaluate(async () => {
           [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
           await new Promise(resolve => setTimeout(resolve, 250));
@@ -910,16 +946,10 @@ async function main() {
         const flip = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
           const heights = new Set();
-          const overflow = [];
           const current = () => {
             const h2 = document.querySelector('[role=dialog] h2');
             // drawer height / top of the scrolling body (the photo row sits at its top)
             heights.add(`${Math.round(h2.closest('.rounded-t-m').getBoundingClientRect().height)}/${Math.round(header().nextElementSibling.getBoundingClientRect().top)}`);
-            // A long sign list takes turns in pages beside the photo; the page showing must fit there.
-            const signs = document.querySelector('[role=dialog] [data-guide-signs]');
-            const chips = [...(signs?.querySelector('ul.inset-0')?.children ?? [])];
-            // ...and a short last page keeps its chips one line tall (not stretched to fill the space).
-            if (chips.some(chip => chip.getBoundingClientRect().bottom > signs.getBoundingClientRect().bottom + 1 || chip.getBoundingClientRect().height > 2 * parseFloat(getComputedStyle(chip).lineHeight))) overflow.push(h2.textContent);
             return Number(document.querySelector('[role=dialog] [data-guide-number][aria-current]')?.dataset.guideNumber);
           };
           const drag = async (el, dx, dy = 0, stepMs = 16) => {
@@ -945,27 +975,6 @@ async function main() {
           document.querySelector('[role=dialog] [data-guide-number][aria-current]').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await wait(300); result.key = current();
           document.querySelector('[role=dialog] [data-guide-number="5"]').click(); await wait(300);
           document.querySelector('[role=dialog] [data-guide-number="5"]').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await wait(300); result.wrapped = current();
-          result.heights = [...heights];
-          result.overflow = overflow;
-          // Signs in pages take turns on their own; a tap pauses them, another resumes and moves on.
-          const signs = () => document.querySelector('[role=dialog] [data-guide-signs]');
-          // A smaller photo leaves room for fewer signs, so this animal's split into pages (as a long list would).
-          const figure = row().querySelector('figure');
-          figure.style.width = '32px';
-          await wait(300);
-          if (Number(signs()?.dataset.guideSigns) > 1) {
-            const counter = () => signs().previousElementSibling.textContent;
-            const pause = () => signs().querySelector('button[aria-label="Pause the signs"]');
-            const tap = el => { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' })); el.click(); };
-            const first = counter();
-            await wait(5600);
-            const turned = counter();
-            tap(pause()); await wait(5600);
-            const held = counter(), pressed = pause().getAttribute('aria-pressed');
-            tap(pause()); await wait(600);
-            result.signPages = { first, turned, held, pressed, resumed: counter(), unpressed: pause().getAttribute('aria-pressed') };
-          }
-          figure.style.width = '';
           // The longest name in the content (30 chars) fits whole without moving the body.
           const name = document.querySelector('[role=dialog] [data-guide-name]');
           name.textContent = 'Yangtze Giant Softshell Turtle';
@@ -983,10 +992,77 @@ async function main() {
         check('field guide: its numbers jump, a swipe on the title row flips, ←/→ flip and wrap 5 -> 1', flip.tapped === 4 && flip.header === 3 && flip.key === 4 && flip.wrapped === 1, JSON.stringify(flip));
         check('field guide: both neighbours\' photos peek at the sides', flip.peeks === 2, JSON.stringify(flip));
         check('field guide: the drawer keeps one height and its photo row one place through all 5 and the longest name', flip.heights.length === 1, JSON.stringify(flip));
-        check('field guide: the signs showing fit beside the photo, chips one line tall', flip.overflow.length === 0, JSON.stringify(flip));
-        { const p = flip.signPages;
-          check('field guide: signs in pages turn on their own, a tap pauses them, another resumes and moves on', p && p.turned !== p.first && p.held === p.turned && p.pressed === 'true' && p.resumed !== p.held && p.unpressed === 'false', JSON.stringify(p ?? 'signs never split into pages')); }
         check('field guide: the longest name shows whole', !flip.longName.clipped, JSON.stringify(flip));
+        // Plan 055: each of the 5 guides, during play. Signs sit under their category's row, none beside the photo, none
+        // hidden; the guide's own lines for a dealt question stay hidden (plan 045) while that category's signs show.
+        let sheetTiles = [];
+        const sheets = await evaluate(async () => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          // A category mark as the e2e sees it: its category and its icon's lucide-* class.
+          window.__mark = el => { const mark = el.querySelector('[data-category-mark]'); return { cat: mark?.dataset.categoryMark ?? null, icon: [...(mark?.querySelector('svg')?.classList ?? [])].filter(c => c.startsWith('lucide-')).sort().join(' ') }; };
+          window.__tiles = [...document.querySelectorAll('table[aria-label="Evidence"] thead th[data-tag]')].map(th => ({ tag: th.dataset.tag, label: th.querySelector('button')?.getAttribute('aria-label') ?? '', ...window.__mark(th) }));
+          await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
+          const { suspects } = window.__cc.clue();
+          const read = [];
+          for (let i = 1; i <= suspects.length; i++) {
+            document.querySelector(`[role=dialog] [data-guide-number="${i}"]`).click();
+            await wait(300);
+            const dialog = document.querySelector('[role=dialog]');
+            read.push({
+              id: suspects[i - 1],
+              status: window.__cc.clue().status,
+              besidePhoto: dialog.querySelectorAll('[data-guide-swipe] [data-sign]').length,
+              signs: [...dialog.querySelectorAll('[data-sign]')].map(li => ({ tag: li.dataset.sign, row: li.closest('[data-guide-cat]')?.dataset.guideCat ?? null, inList: Boolean(li.closest('ul[data-signs]')) })),
+              rows: [...dialog.querySelectorAll('[data-guide-cat]')].map(row => ({ cat: row.dataset.guideCat, mark: row.querySelector('dt [data-category-mark]')?.dataset.categoryMark ?? null, lines: row.querySelectorAll('[data-guide-line]').length, signs: row.querySelectorAll('[data-sign]').length })),
+              linePrefixes: [...dialog.querySelectorAll('[data-guide-line]')].flatMap(line => line.dataset.guideLine.split(' ').filter(Boolean)),
+              answers: [...dialog.querySelectorAll('[data-answer-tag]')].map(li => ({ tag: li.dataset.answerTag, ...window.__mark(li) })),
+              headings: [...dialog.querySelectorAll('[data-guide-cat] dt')].map(dt => window.__mark(dt)),
+            });
+          }
+          [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
+          await wait(300);
+          const pressed = document.querySelector('table[aria-label="Evidence"] button[data-pill][aria-pressed="true"]');
+          if (pressed) pressed.click(); // drop the pick the guide made
+          await wait(150);
+          return { read, tiles: window.__tiles };
+        }).then(({ read, tiles }) => { sheetTiles = tiles; return read; });
+        { const dealt = start.orders.map(order => order.tag.split(':')[0]);
+          const rowOf = new Map();
+          const bad = sheets.flatMap(sheet => {
+            const shown = sheet.signs.map(sign => sign.tag).sort().join();
+            const want = [...(openTags.get(sheet.id) ?? [])].sort().join();
+            const problems = [];
+            if (sheet.status !== 'playing') problems.push('not playing');
+            if (sheet.besidePhoto > 0) problems.push(`${sheet.besidePhoto} beside the photo`);
+            if (shown !== want) problems.push(`shown ${shown} != its signs ${want}`);
+            for (const sign of sheet.signs) {
+              if (!sign.row || !sign.inList) problems.push(`${sign.tag} outside a category row`);
+              if (rowOf.has(sign.tag) && rowOf.get(sign.tag) !== sign.row) problems.push(`${sign.tag} under ${sign.row} here, ${rowOf.get(sign.tag)} elsewhere`);
+              rowOf.set(sign.tag, sign.row);
+            }
+            for (const row of sheet.rows) if (row.mark !== row.cat || (row.lines === 0 && row.signs === 0)) problems.push(`row ${row.cat}: mark ${row.mark}, ${row.lines} lines, ${row.signs} signs`);
+            return problems.length ? [{ id: sheet.id, problems }] : [];
+          });
+          check('field guide: every sign shows under its category\'s row, none beside the photo, none hidden', sheets.length === 5 && bad.length === 0, JSON.stringify(bad.length ? bad : sheets.map(sheet => [sheet.id, sheet.signs.length])));
+          const leaked = sheets.flatMap(sheet => sheet.linePrefixes.filter(prefix => dealt.includes(prefix)).map(prefix => `${sheet.id}:${prefix}`));
+          const bearing = sheets.flatMap(sheet => dealt.filter(prefix => sheet.signs.some(sign => sign.row === CATEGORY[prefix])).map(prefix => `${sheet.id}:${prefix}`));
+          check('field guide: a dealt question\'s guide lines stay hidden while its category\'s signs show', leaked.length === 0 && bearing.length > 0, JSON.stringify({ dealt, leaked, bearing }));
+          // E3: each question tile, its "Its answers" row and its category's guide heading carry the same mark.
+          const iconOf = new Map(sheets.flatMap(sheet => sheet.headings).filter(h => h.cat).map(h => [h.cat, h.icon]));
+          const mismatched = sheetTiles.flatMap(tile => {
+            const problems = [];
+            if (tile.cat !== CATEGORY[tile.tag.split(':')[0]] || !tile.icon) problems.push(`tile ${tile.cat} ${tile.icon}`);
+            if (!tile.label.startsWith(`${CATEGORY_WORD[tile.cat]}: `)) problems.push(`label "${tile.label}"`);
+            for (const sheet of sheets) {
+              const row = sheet.answers.find(answer => answer.tag === tile.tag);
+              if (!row || row.cat !== tile.cat || row.icon !== tile.icon) problems.push(`${sheet.id} answer ${JSON.stringify(row)}`);
+            }
+            if (iconOf.has(tile.cat) && iconOf.get(tile.cat) !== tile.icon) problems.push(`heading ${iconOf.get(tile.cat)}`);
+            return problems.length ? [{ tag: tile.tag, problems }] : [];
+          });
+          const headingMatches = sheetTiles.filter(tile => iconOf.get(tile.cat) === tile.icon).length;
+          const headingsOneIcon = sheets.every(sheet => sheet.headings.every(h => !iconOf.has(h.cat) || iconOf.get(h.cat) === h.icon));
+          check('each question tile, its answer row and its guide heading carry the same category icon', sheetTiles.length === start.orders.length && mismatched.length === 0 && headingMatches > 0 && headingsOneIcon, JSON.stringify({ mismatched, headingMatches, tiles: sheetTiles.map(tile => [tile.tag, tile.cat, tile.icon]) })); }
         // A long press on a board tile opens the field guide too.
         const tileHeld = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -1510,11 +1586,13 @@ async function main() {
             book?.click();
             await new Promise(resolve => setTimeout(resolve, 250));
             const text = document.querySelector('[role=dialog]')?.innerText ?? '';
+            const marks = [...document.querySelectorAll('[role=dialog] ol > li')].map(li => [...li.querySelectorAll('[data-category-mark]')].map(mark => mark.dataset.categoryMark));
             [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
-            return { text, ...corner };
+            return { text, marks, ...corner };
           });
           check(`round ${n}: a witness note says how many of the 5 field guides agree`, /of 5\s+field guides say this too/.test(notes.text), notes.text.slice(0, 120));
-          check(`round ${n}: the Mystery cell opens the witness notes, counts them and pulses`, notes.inRow && notes.count === String(state.notes) && notes.label.includes(`${state.notes} witness note`) && notes.flash, JSON.stringify({ ...notes, text: undefined }));
+          check(`round ${n}: each witness note carries one mark per category of its signs, none repeated`, notes.marks.length === state.notes && notes.marks.every(cats => cats.length > 0 && new Set(cats).size === cats.length), JSON.stringify(notes.marks));
+          check(`round ${n}: the Mystery cell opens the witness notes, counts them and pulses`, notes.inRow && notes.count === String(state.notes) && notes.label.includes(`${state.notes} witness note`) && notes.flash, JSON.stringify({ ...notes, text: undefined, marks: undefined }));
           await screenshot('02c-notes.png');
         }
       }
@@ -1781,6 +1859,19 @@ async function main() {
     await waitFor(boardReady, 'the resumed end card', 60_000);
     const fromSave = await replayRows();
     check('a reload draws the round-end order from the save', reversed.length > 0 && sameList(fromSave, reversed), JSON.stringify({ reversed, shown: fromSave }));
+    // Plan 055: a save whose witness notes the content would no longer deal (here a note on the retired tag tree_dweller,
+    // as an old-content save holds) isn't resumed: a fresh round 1 is dealt from the saved seed.
+    const staleSeed = await evaluate(() => {
+      const saved = JSON.parse(sessionStorage.getItem('cc:explore:game'));
+      saved.session.round.notesLeft.push({ text: 'It sleeps high in the trees.', tags: ['tree_dweller'], fits: 2, source: { name: 'Old content', url: null } });
+      sessionStorage.setItem('cc:explore:game', JSON.stringify(saved));
+      return saved.seed;
+    });
+    await page('Page.reload');
+    await waitFor(() => document.readyState === 'complete', 'the reload');
+    await waitFor(boardReady, 'the board after a stale save', 60_000);
+    const afterStale = await evaluate(() => { const clue = window.__cc.clue(); return { end: clue.end, movesUsed: clue.movesUsed, roundNo: clue.roundNo, seed: clue.seed }; });
+    check('a save whose witness notes no longer fit the content deals a fresh round, not a resume', afterStale.end === null && afterStale.movesUsed === 0 && afterStale.roundNo === 1 && afterStale.seed === staleSeed, JSON.stringify({ ...afterStale, staleSeed }));
     const solves = raw => Object.values(JSON.parse(raw ?? '{}')).find(entry => entry.commonName === mysteryName)?.timesSolved ?? 0;
     check('the resumed round, named right, is written to the journal once', ended.end?.outcome === 'found' && solves(ended.journal) === solves(journalBefore) + 1, JSON.stringify({ mysteryName, before: solves(journalBefore), after: solves(ended.journal), outcome: ended.end?.outcome }));
     check('a reload on the round-end card resumes it without writing the journal again', Boolean(ended.end) && JSON.stringify(afterEnd.end) === JSON.stringify(ended.end) && afterEnd.journal === ended.journal, JSON.stringify({ ended: ended.end?.outcome ?? null, after: afterEnd.end?.outcome ?? null, sameJournal: afterEnd.journal === ended.journal }));
@@ -1854,7 +1945,6 @@ async function main() {
     // every look-alike's first two questions pencilled right, 1 out: the bonus caps at 50, a second star, a Sharp eye
     // badge on the card and in the journal. 'taken back': 3 out, then 2 brought back before the name: the multiplier
     // stays the fewest still in (2), not 4 (054-1). A single pencil never earns Sharp eye (it needs 4, 054-1).
-    const CATEGORY = { size: 'body', covering: 'body', diet: 'habits', activity: 'habits', social: 'habits', system: 'habitat', habitat: 'habitat', region: 'range', birth: 'life', young: 'life', lifespan: 'life' };
     const WEIGHT = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
     for (const [scenario, out] of [['right', 1], ['right, 3 out', 3], ['mixed', 1], ['nobody out', 0], ['wrong animal', 1], ['sharp', 1], ['taken back', 3]]) {
       await goto(`${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(report.place.key)}`);

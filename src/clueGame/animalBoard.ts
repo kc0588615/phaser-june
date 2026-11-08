@@ -18,6 +18,7 @@ import {
   type Animal, type Book, type ChargeCategory, type FieldNote,
 } from '@/clueGame/questionMatch';
 import { clueFace } from '@/clueGame/clueFaces';
+import { neverAsked } from '@/clueGame/traits';
 import { REGIONS, type ContinentKey } from '@/clueGame/regions';
 import { hash32 } from '@/lib/seededRng';
 
@@ -56,7 +57,7 @@ export interface AnimalRules {
  * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '054-1', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
+  version: '055-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 
@@ -88,6 +89,7 @@ export function fullTable(book: Book, set: readonly number[], place: ContinentKe
   const tags = new Set<string>();
   for (const id of set) for (const [prefix, values] of book.traits.get(id)!) if (PREFIX_CATEGORY[prefix]) for (const tag of values) tags.add(tag);
   const ordered = [...tags]
+    .filter(tag => !neverAsked(tag))
     .filter(tag => !(prefixOf(tag) === 'region' && place && REGIONS[tag.slice(7)]?.continent !== place))
     .sort((a, b) => QUESTION_PREFIXES.indexOf(prefixOf(a)) - QUESTION_PREFIXES.indexOf(prefixOf(b)) || a.localeCompare(b));
   const splits = new Set<string>();
@@ -170,6 +172,22 @@ export function witnessNotes(book: Book, suspects: readonly number[], mysteryId:
     const fits = suspects.filter(id => note.tags!.every(tag => animal(book, id).tags?.includes(tag))).length;
     return fits >= 2 && fits < suspects.length ? [{ ...note, fits }] : [];
   });
+}
+
+/**
+ * Content can change between visits (the owner's content build lands after the deploy): a saved round resumes only if
+ * the book would deal it the same clue rows and witness notes now. Rows first, so witnessNotes never meets an id the
+ * book lacks; notes compare on what the player reads (text, tags, fits), so a citation edit alone keeps the round.
+ */
+export function roundStillFits(book: Book, round: AnimalRound): boolean {
+  const rowsFit = round.orders.every(order => round.suspects.every((id, i) =>
+    book.traits.get(id)?.get(prefixOf(order.tag))?.has(order.tag) === order.row[i]));
+  if (!rowsFit) return false;
+  const saved = [...round.notes, ...round.notesLeft];
+  const fresh = witnessNotes(book, round.suspects, round.mysteryId);
+  const same = (a: WitnessNote, b: WitnessNote) =>
+    a.text === b.text && a.fits === b.fits && (a.tags ?? []).join('|') === (b.tags ?? []).join('|');
+  return saved.length === fresh.length && saved.every((note, i) => same(note, fresh[i]));
 }
 
 /**

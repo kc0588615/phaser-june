@@ -44,6 +44,11 @@
       "value": "night",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It stays down low, hiding under stones.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"
@@ -116,9 +121,6 @@
     {
       "category": "reproduction",
       "text": "Unlike most frogs, its eggs are fertilized inside the female's body.",
-      "tags": [
-        "internal_fertilization"
-      ],
       "source": "adw"
     },
     {

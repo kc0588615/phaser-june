@@ -22,8 +22,9 @@ Rules:
 - Take each fact from the highest tier that states it. When sources disagree, the higher tier wins (ADW's Asian elephant gestation "18 to 23 weeks" lost to Smithsonian's 18 to 22 months).
 - Every trait, clue and fact names its `source` key. `url` points to the exact page when it isn't the profile's page for that key (a news story, a DOI).
 - Red List data comes from the latest assessment; `redList.url` is its page. `year` is the year published.
-- Habitats are IUCN classes and level-2 kinds, marginal ones included. Add a kind the IUCN text supports but its table omits (the Sunda pangolin's "lowland dipterocarp forest"), so a clue can't wrongly rule the animal out. Never add one no source supports.
+- Habitats are IUCN classes and level-2 kinds, marginal ones included. Add a kind the IUCN text supports but its table omits (the Sunda pangolin's "lowland dipterocarp forest"), so a clue can't wrongly rule the animal out. Never add one no source supports. Skip the `artificial` class (Farms & towns) and its kinds: the game no longer asks it (plan 055), so profiles don't record it.
 - Leave a trait out when no source documents it. Missing data never rules a candidate out.
+- A yes/no trait (`trees`) needs a source for a `no` just as for a `yes`: a quote that rules it out. When two sources disagree on it, leave it out (no record), rather than taking the higher tier.
 - Photos: Wikimedia Commons, public domain, CC0, CC BY or CC BY-SA only, credited. A real photo of the right species; no photo beats a wrong one. `"photo": null` marks "checked, none" so `photos` skips it (the extinct Floreana tortoise: Commons only has other Galápagos tortoises under its old shared name).
 
 ## From profile to clues
@@ -36,7 +37,7 @@ Every animal gets template clues from its shared traits, so decoys share them an
 | Habitat | land/fresh water/sea, IUCN habitat classes, their kinds, elevation |
 | Range | realms (≥10% of the range), then the globe countries (≥5% or 5,000 km²) |
 | Body | covering, size |
-| Behavior & diet | diet, activity, social life |
+| Behavior & diet | diet, activity, social life, lives in trees |
 | Life cycle | eggs or live birth, young per litter, lifespan |
 | Conservation | Red List category (year), trend |
 
@@ -44,7 +45,7 @@ Every animal gets template clues from its shared traits, so decoys share them an
 
 `prefix:value`, lowercase. How a clue's tag compares with a candidate (`src/clueGame/deduction.ts`):
 
-- **One value per animal** (exclusive): `class`, `order`, `family`, `genus`, `size`, `lifespan`, `diet`, `activity`, `birth`, `young`, `social`, `covering`. Another value rules the candidate out.
+- **One value per animal** (exclusive): `class`, `order`, `family`, `genus`, `size`, `lifespan`, `diet`, `activity`, `birth`, `young`, `social`, `covering`, `trees`. Another value rules the candidate out.
 - **Full list** (complete, one source for every animal): `realm`, `country`, `system`, `habitat`, and each habitat class as the prefix of its kinds (`forest:tropical_moist_lowland`). A candidate with some values but not this one is ruled out.
 - **Open traits** (no prefix): written in `clues[].tags`. A candidate without the tag has "no record", which proves nothing. Reuse a tag when two animals truly share the trait; that is what makes look-alikes confusing (`burrower`: frogs, tortoises, pangolin, wombat; `pouch`: marsupials and the echidna; `stripes`: tiger, okapi, zebra). Unique tags are the late "aha" clues.
 
@@ -59,6 +60,19 @@ Trait values (templates in `profiles.ts`):
 | activity | day, night, twilight, any |
 | social | alone, pairs, groups |
 | covering | fur, spines, scales, armor, shell, skin (mostly bare) |
+| trees | yes, no (only `yes` is ever asked: "Does it live in trees?"; `no` records the answer) |
+
+`trees` (plan 055; rules written before the research, `docs/research/2026-11-07-moves-and-signs.md` §2): **yes** when it spends most of its active life up in trees: it feeds and rests or sleeps there, and comes down rarely. The source must say "arboreal", "lives in trees", "spends most of its time in the canopy" or the like. **No** when a source says it lives mostly on the ground, underground or in water; an animal that climbs but lives mostly on the ground is a no (with a quote) or no record. Its `note` uses only ground, branch or burrow words (no habitat, water, diet, size, day/night, social or birth words), because it shows whenever its own question isn't dealt.
+
+### Signs
+
+A clue's open tags are its **signs**: each shows as a phrase (`digging_claws` → "digging claws") in the field guide under one question category, and is never hidden during play. `SIGNS` in `src/clueGame/signs.ts` is the vocabulary and is authoritative: it gives each tag its category and what its plain reading says about the traits. A new tag needs its entry there; `checkProfile` (so `content -- preview` and `build`) flags an open tag missing from it, a sign that contradicts its holder's traits, and one that restates an asked answer. `docs/research/2026-11-07-moves-and-signs/sign-map.csv` is the research record it came from. Retired tags stay in `SIGNS` so new code still loads rows an older content build wrote.
+
+The sign rule:
+- A sign names evidence from its own note, in the note's own words ("sleeps high in trees", "seldom on ground"), never a question's answer (`tree_dweller` is "Lives in trees: yes" and is retired).
+- It never contradicts its holder's traits on a plain reading: `swimmer` on a land-only animal reads as fresh water, `builds_nests` on a live-born mammal reads as eggs, `climber` on a `trees: no` animal reads as trees yes.
+- If no evidence word in the note fits, drop the tag (the note stays untagged); never invent one.
+- Reuse a shared tag where notes say the same thing: a witness note shows only when two suspects share its tag (plan 044).
 
 Look-alike decoys are the animals sharing the most traits, rare ones weighted most (`similarity` in `src/clueGame/round.ts`).
 

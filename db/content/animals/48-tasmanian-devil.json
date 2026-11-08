@@ -24,10 +24,7 @@
     "shrubland",
     "shrubland:temperate",
     "grassland",
-    "caves",
-    "artificial",
-    "artificial:arable",
-    "artificial:pasture"
+    "caves"
   ],
   "traits": {
     "covering": {
@@ -52,6 +49,11 @@
     "social": {
       "value": "alone",
       "source": "adw"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It makes its den on or under the ground, and adults climb poorly.",
+      "source": "iucn"
     },
     "birth": {
       "value": "live",

@@ -52,6 +52,11 @@
       "value": "alone",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It walks on the ground below the tall trees.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

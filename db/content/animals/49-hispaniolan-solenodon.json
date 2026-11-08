@@ -22,12 +22,7 @@
     "forest",
     "forest:tropical_dry",
     "shrubland",
-    "caves",
-    "artificial",
-    "artificial:arable",
-    "artificial:pasture",
-    "artificial:plantations",
-    "artificial:degraded_forest"
+    "caves"
   ],
   "elevation": [
     13,
@@ -57,6 +52,11 @@
       "value": "groups",
       "note": "Up to eight may share one den.",
       "source": "iucn"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It digs tunnels under the soil and fallen leaves.",
+      "source": "adw"
     },
     "birth": {
       "value": "live",

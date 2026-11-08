@@ -20,8 +20,12 @@ export type Taxonomy = Record<TaxonomyRank, string | null>;
 
 /** One value per species. */
 export const EXCLUSIVE_PREFIXES = new Set<string>([
-  ...TAXONOMY_RANKS, 'size', 'lifespan', 'diet', 'activity', 'birth', 'young', 'social', 'covering',
+  ...TAXONOMY_RANKS, 'size', 'lifespan', 'diet', 'activity', 'birth', 'young', 'social', 'covering', 'trees',
 ]);
+
+/** A yes/no trait's `no` records an answer but is never asked; its `yes` question splits the same way. */
+export const NEVER_ASKED_VALUE = 'no';
+export const neverAsked = (tag: string): boolean => tag.endsWith(`:${NEVER_ASKED_VALUE}`);
 
 /** IUCN habitat classes (level 1); each class name is also the prefix of its level-2 kinds, e.g. forest:tropical_moist_lowland. */
 export const HABITAT_CLASSES = ['forest', 'savanna', 'shrubland', 'grassland', 'wetlands', 'rocky', 'caves', 'desert', 'marine', 'artificial'] as const;

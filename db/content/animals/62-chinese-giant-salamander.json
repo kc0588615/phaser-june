@@ -53,6 +53,11 @@
       "value": "alone",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It stays down low all its life and never climbs.",
+      "source": "adw"
+    },
     "birth": {
       "value": "eggs",
       "source": "iucn"
@@ -149,8 +154,7 @@
       "category": "habitat",
       "text": "It lives in clear, cool mountain streams in steep valleys, often with forest and caves in the rocky banks.",
       "tags": [
-        "cold_streams",
-        "forest_streams"
+        "cold_streams"
       ],
       "source": "iucn"
     },

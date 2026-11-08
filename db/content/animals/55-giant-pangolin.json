@@ -57,6 +57,11 @@
       "value": "alone",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It rests on the ground, under piles of plants, fallen roots or in burrows.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "live",
       "source": "iucn"
@@ -130,7 +135,10 @@
     {
       "category": "behavior",
       "text": "Even though it lives in forests, it never climbs trees.",
-      "source": "adw"
+      "source": "adw",
+      "tags": [
+        "never_climbs"
+      ]
     },
     {
       "category": "conservation",

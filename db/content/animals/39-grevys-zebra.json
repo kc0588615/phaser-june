@@ -49,6 +49,11 @@
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Gr%C3%A9vy%27s_zebra"
     },
+    "trees": {
+      "value": "no",
+      "note": "It walks and runs on the ground.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

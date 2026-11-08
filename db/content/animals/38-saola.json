@@ -48,6 +48,11 @@
       "note": "Villagers sometimes see two or three together.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It walks on the ground and doesn't climb.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

@@ -53,6 +53,11 @@
       "note": "A family group is a mated pair and up to four of their young.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "yes",
+      "note": "It lives high up in the trees.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"
@@ -84,7 +89,6 @@
       "category": "behavior",
       "text": "It clings upright to tree trunks and travels by leaping from trunk to trunk.",
       "tags": [
-        "tree_dweller",
         "big_leaper"
       ],
       "source": "adw"

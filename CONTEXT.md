@@ -78,12 +78,16 @@ A recorded fact about an animal that questions can ask about, such as size, diet
 _Avoid_: tag
 
 **Field guide**:
-A suspect's own record: its traits, its answers to the round's questions, and its signs. Opened by holding its photo.
+A suspect's own record: its traits, its answers to the round's questions, and its signs, grouped under the five question categories (Body, Habits, Habitat, Range, Life cycle). While playing, its lines about the round's four questions are hidden; its signs never are. Opened by holding its photo.
 _Avoid_: profile, card, dossier
 
 **Sign**:
-A short phrase from a suspect's field guide about something it does or has (digging claws, raids termite mounds).
+A short phrase from a suspect's field guide about something it does or has (digging claws, raids termite mounds), shown under the category it helps answer. Evidence to weigh, never a question's answer in other words, and never hidden.
 _Avoid_: tag, hint
+
+**Category mark**:
+The small icon and word for one of the five question categories (an eye for Body, a paw for Habits, a mountain for Habitat, a pin for Range, a baby for Life cycle). The same mark sits on a question in the grid, the field guide's heading for that category, its "Its answers" row and witness notes, linking a question to the signs that bear on it. Not the face, which names one question.
+_Avoid_: category icon, badge
 
 **Scout**:
 Showing a suspect's own answer to a question by clearing that question's clue gem next to its tile. Until scouted, a suspect's answers are hidden ("?"). A line or blast gem whose clear reaches the tile also scouts its own color there (rules 047-1).

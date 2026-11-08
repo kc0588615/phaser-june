@@ -52,6 +52,11 @@
       "note": "A male lives with 7 or 8 females and their young; herds can join up into the hundreds.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It lives on the ground and runs to escape danger.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

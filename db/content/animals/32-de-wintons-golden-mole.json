@@ -20,9 +20,7 @@
   ],
   "habitats": [
     "shrubland",
-    "shrubland:tropical_dry",
-    "artificial",
-    "artificial:urban"
+    "shrubland:tropical_dry"
   ],
   "traits": {
     "covering": {
@@ -35,6 +33,12 @@
       "note": "Golden moles feed on insects and earthworms.",
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Golden_mole"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It spends nearly its whole life underground.",
+      "source": "news",
+      "url": "https://theconversation.com/golden-mole-that-swims-through-sand-is-rediscovered-in-south-africa-after-86-years-219022"
     },
     "birth": {
       "value": "live",
@@ -56,8 +60,7 @@
       "category": "behavior",
       "text": "It 'swims' through loose sand instead of digging lasting tunnels.",
       "tags": [
-        "burrower",
-        "sand_swimmer"
+        "burrower"
       ],
       "source": "ngo"
     },
@@ -72,9 +75,6 @@
     {
       "category": "habitat",
       "text": "It lives in sand dunes along the coast.",
-      "tags": [
-        "coastal_dunes"
-      ],
       "source": "iucn"
     },
     {

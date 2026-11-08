@@ -52,6 +52,11 @@
       "note": "In summer, groups can hold up to 600 monkeys.",
       "source": "adw"
     },
+    "trees": {
+      "value": "yes",
+      "note": "One study found it spends about 97 percent of its time in trees.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

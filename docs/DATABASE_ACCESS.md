@@ -199,8 +199,11 @@ NEXT_PUBLIC_CLERK_SIGN_IN_URL=...
 NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=...
 ```
 
-The role's login was set 2026-10-18; its password is only in the VPS
-`.env.local` (rotate: `\password critter_dev`). The live app connects as
+The role's login was set 2026-10-18. Its password is in the Oracle VPS's
+`/srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy` (the old
+`.env.local` above, kept outside git; agents export it in a subshell that first checks
+`current_database()` is `phaser_june_dev`) and in CI's `E2E_DATABASE_URL` secret
+(rotate: `\password critter_dev`, then update both). The live app connects as
 `critter_app` straight to the db container, not through PgBouncer (seen
 2026-10-18 from its client address), so a PgBouncer restart doesn't touch it.
 

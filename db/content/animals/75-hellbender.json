@@ -46,6 +46,11 @@
       "value": "alone",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It hides under flat rocks and never climbs.",
+      "source": "adw"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"
@@ -105,7 +110,6 @@
       "category": "behavior",
       "text": "By day it hides under a big flat rock on the stream bed, and it defends that rock from other hellbenders.",
       "tags": [
-        "crevice_hider",
         "territorial"
       ],
       "source": "adw"

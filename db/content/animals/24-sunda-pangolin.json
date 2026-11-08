@@ -26,14 +26,7 @@
     "forest:tropical_swamp",
     "forest:tropical_moist_montane",
     "shrubland",
-    "shrubland:tropical_moist",
-    "artificial",
-    "artificial:arable",
-    "artificial:pasture",
-    "artificial:plantations",
-    "artificial:gardens",
-    "artificial:urban",
-    "artificial:degraded_forest"
+    "shrubland:tropical_moist"
   ],
   "elevation": [
     0,

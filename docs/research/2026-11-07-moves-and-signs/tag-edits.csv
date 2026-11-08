@@ -1,0 +1,55 @@
+animal_id,note,from,to,kind,reason
+1,It has yellow scales on its legs and tail.,yellow_scales,yellow_legs,misleading,"covering shell, ""scales"" reads as scales; the note: yellow on its legs and tail"
+2,From October to April it rests buried on the bottom of rivers and lakes.,winter_rest,winter_rest buries_itself rests_on_bottom,note-tag,"design note tag buries_itself (""rests buried""); rests_on_bottom shared with 10 (""rests ... on the bottom"")"
+4,It is a poor swimmer but a good rock climber.,climber,,retag,"design rock_climber re-decided: rock words read as rocky places (4 has none), climber reads as trees yes (4: no); nothing fits, dropped"
+5,It lives high in the trees and only climbs down to breed.,tree_dweller,climber,restating,"tree_dweller restates trees yes; the note: ""only climbs down"" (existing tag)"
+6,It lives in trees near ponds.,tree_dweller,,restating,"tree_dweller restates trees yes; the note says nothing else, dropped"
+7,"In the breeding season, males grow thin, hair-like frills of skin on their sides and thighs.",hair_like_frills,side_frills,misleading,"covering skin, ""hair-like"" reads as fur; the note: frills on their sides"
+8,"Unlike most frogs, its eggs are fertilized inside the female's body.",internal_fertilization,,misleading,"birth eggs, internal fertilization reads as live birth; the rest of the note names eggs, dropped"
+10,"It almost never leaves the water, resting on the bottom of murky ponds.",fully_aquatic,rests_on_bottom,misleading,"system land, habitat forest, fully_aquatic reads as water only; the note: ""resting on the bottom"" (shared with 2)"
+10,"Its eggs sink into pockets in the mother's back and hatch there as tiny toads, with no tadpole stage.",mother_carries_young no_tadpoles,mother_carries_young,misleading,"birth eggs, no_tadpoles reads as live birth; its other words name eggs or hatching, dropped"
+11,"It is the biggest frog on Earth, up to 32 cm long.",giant_frog,,misleading,"size medium, ""biggest frog"" reads as large; every word is a size, dropped"
+11,"It rests on wet, mossy rocks by rivers and waterfalls.",rock_basker,rests_by_waterfalls,misleading,"activity night, rock_basker reads as day; the note: rests by rivers and waterfalls"
+12,"By day it hides buried in fallen leaves, where its brown shell blends in.",leaf_litter camouflage,leaf_litter camouflage buries_itself,note-tag,"design note tag (""hides buried"")"
+14,It lives only on white sand dunes within about 10 km of the ocean.,coastal_dunes,sand_dunes,misleading,"no marine habitat, coastal_dunes reads as coast; the note: sand dunes (14 has desert)"
+15,It is a good climber: some have been found in cracks high up on tall boulders.,climber,climbs_boulders,retag,design rock_climber re-decided: climber reads as trees yes (15: no); the note: high up on tall boulders (15 has rocky)
+17,"Males never leave the water, and females come out only to lay eggs.",fully_aquatic,,misleading,"system land, fully_aquatic reads as water only; every word states the land/water answer or eggs, dropped"
+20,"It lives in dry savanna, often along streams that only flow in the rainy season.",seasonal_streams,,misleading,"no wetlands or fresh water, seasonal_streams reads as both; the note names savanna, which 20 lacks (note text out of scope), dropped"
+23,It sleeps all day in a ball-shaped nest of leaves high in the trees.,builds_nests tree_dweller,sleeping_nests sleeps_high_in_trees,misleading+restating,"builds_nests reads as eggs (birth live); tree_dweller restates trees yes; the note: a nest it sleeps in, high in the trees (shared with 35)"
+25,It is a strong swimmer and easily crosses rivers.,swimmer,,misleading,"system land, swimmer reads as fresh water; ""crosses rivers"" reads the same and swims is not asked, dropped"
+28,It is a good swimmer and can use its trunk as a snorkel.,swimmer snorkel_nose,trunk,misleading,"system land, no wetlands: swimmer and snorkel_nose read as a water animal; the note: its trunk (existing tag)"
+30,It moves very slowly and spends most of its life up in the trees.,tree_dweller slow_mover,slow_mover,restating,tree_dweller restates trees yes; keeps slow_mover
+30,"It is slow in the trees, but it can swim.",swimmer,slow_mover,misleading,"system land, no wetlands, swimmer reads as fresh water; the note: ""slow"" (existing tag)"
+31,It grazes on native grasses near its burrows.,grazer,grazer burrower,note-tag,"design note tag (""near its burrows"")"
+31,"It lives in open eucalyptus woodland with deep, sandy soil for digging.",,burrower,note-tag,"design note tag (""soil for digging"")"
+32,It 'swims' through loose sand instead of digging lasting tunnels.,burrower sand_swimmer,burrower,misleading,"sand_swimmer reads as fresh water; the note: moves through sand, keeps burrower"
+32,It lives in sand dunes along the coast.,coastal_dunes,,misleading,"no marine or desert habitat, coastal_dunes reads as both; ""sand dunes"" still reads as desert, dropped"
+33,It licks sweet nectar from red hot poker flowers.,nectar_drinker,,misleading,"diet meat only, nectar_drinker reads as not; every word is about nectar, dropped"
+33,"It lives only on high mountain plateaus, above where trees can grow.",high_mountains,high_mountains above_tree_line,note-tag,"design note tag (33: forest no, trees no)"
+35,It sleeps high in the trees and climbs down trunks headfirst.,tree_dweller climber,sleeps_high_in_trees climber,restating,tree_dweller restates trees yes; the note: sleeps high in the trees (shared with 23)
+37,"Its pouch opens backward, so it doesn't fill with dirt when it digs.",pouch backward_pouch,pouch backward_pouch burrower,note-tag,"design note tag (""when it digs"")"
+40,It builds a nest of branches in the trees to sleep in each night.,builds_nests,sleeping_nests climber,misleading+note-tag,builds_nests reads as eggs (birth live); the note: a nest to sleep in; design note tag climber
+40,It lives almost entirely in the trees; females almost never touch the ground.,tree_dweller climber,climber seldom_on_ground,restating,tree_dweller restates trees yes; the note: almost never touch the ground (shared with 54)
+42,"It digs its burrows under big rocks, and uses the rocks as lookouts.",,burrower,note-tag,"design note tag (""digs its burrows"")"
+43,"Its long, golden-brown tail helps it balance in the trees.",long_tail,long_tail climber,note-tag,"design note tag (""in the trees"")"
+43,"It lives in the treetops, gripping branches with strong arms and hooked claws.",tree_dweller climber,climber,restating,tree_dweller restates trees yes; keeps climber (gripping branches)
+44,It is a good swimmer.,swimmer,,misleading,"system land, no wetlands, swimmer reads as fresh water; nothing else in the note, dropped"
+45,"It roosts in groups in the branches of big, old forest trees.",tree_dweller,roosts_in_trees,retag,design retag (tree_dweller restates; roosting is what the note says)
+46,It builds several leaf nests on the forest floor and sleeps in a different one each night.,builds_nests,sleeping_nests forest_floor,misleading+note-tag,builds_nests reads as eggs (birth live); the note: nests it sleeps in; design note tag forest_floor
+46,It hunts through thick fallen leaves on the forest floor.,leaf_litter,leaf_litter forest_floor,note-tag,"design note tag (""on the forest floor"")"
+51,"It is an excellent swimmer and usually lives near rivers, lagoons or swamps.",swimmer,,misleading,"system land, swimmer reads as fresh water; ""rivers"" reads the same, dropped"
+51,It can climb trees to stay safe or to hunt.,climber,,misleading,"trees no, climber reads as trees yes; every word is about climbing trees, dropped"
+53,"A short, stiff mane runs along a hump on the back of its head and neck.",mane,neck_hump,misleading,"covering skin, mane reads as fur; the note: a hump on its head and neck"
+54,It moves very slowly and spends almost all its life high in the treetops.,tree_dweller slow_mover,slow_mover,restating,tree_dweller restates trees yes; keeps slow_mover
+54,"It seldom walks on the ground, but it can swim well.",swimmer,seldom_on_ground,misleading,"system land, no wetlands, swimmer reads as fresh water; the note: seldom walks on the ground (shared with 40); design tree_dweller note tag skipped"
+55,"Even though it lives in forests, it never climbs trees.",,never_climbs,note-tag,design note tag
+56,Every night it builds a fresh nest of leafy branches in a tree to sleep in.,builds_nests,sleeping_nests climber,misleading+note-tag,builds_nests reads as eggs (birth live); the note: a nest to sleep in; design note tag climber
+57,"If it can't dig away from danger, it stands up on its back legs and tail and defends itself with its claws.",stands_on_hind_legs,stands_on_hind_legs burrower,note-tag,"design note tag (""dig away"")"
+58,Brothers often stay together for life in a small team called a coalition.,coalitions,,misleading,"social alone, coalitions reads as groups; every word is about living together, dropped"
+59,Its thick tail is almost as long as its body and helps it climb trees.,long_tail climber,long_tail,retag,design climbing_tail re-decided: climbing reads as trees yes (59: no); keeps long_tail
+60,"It feeds on the ground, but it is a good tree climber.",climber,feeds_on_ground,misleading,"trees no, climber reads as trees yes; the note: feeds on the ground"
+61,It clings upright to tree trunks and travels by leaping from trunk to trunk.,tree_dweller big_leaper,big_leaper,restating,tree_dweller restates trees yes; keeps big_leaper (leaping from trunk to trunk)
+62,"It lives in clear, cool mountain streams in steep valleys, often with forest and caves in the rocky banks.",cold_streams forest_streams,cold_streams,misleading,"no forest habitat, forest_streams reads as forest (found by signProblems); keeps cold_streams"
+71,It is a great climber and spends lots of time in trees.,climber tree_dweller,climber often_in_trees,retag,"design retag (tree_dweller restates; ""lots of time"" is what the note says)"
+71,"It builds platforms, like nests, in fruit trees, where it feeds and sleeps.",builds_nests,sleeping_nests climber,misleading+note-tag,builds_nests reads as eggs (birth live); the note: platforms like nests where it sleeps; design note tag climber
+75,"By day it hides under a big flat rock on the stream bed, and it defends that rock from other hellbenders.",crevice_hider territorial,territorial,misleading,"no rocky habitat, crevice_hider reads as rocky places; ""under a rock"" reads the same, keeps territorial"

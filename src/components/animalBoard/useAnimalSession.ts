@@ -5,7 +5,7 @@
 // that walked off). The game in progress is saved for this tab between moves and resumed on the next load (savedGame.ts).
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
-  ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, doubleOf, headingOf, newAnimalRound, newTrail, pickSuspectSet, shownMismatch, shownMismatches, tileCells, travelOf,
+  ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, doubleOf, headingOf, newAnimalRound, newTrail, pickSuspectSet, roundStillFits, shownMismatch, shownMismatches, tileCells, travelOf,
   type AnimalRound,
 } from '@/clueGame/animalBoard';
 import { animalDebugSummary, animalSessionReducer, liveHighlights } from '@/clueGame/animalSession';
@@ -15,7 +15,6 @@ import type { CluePool, PoolSpecies } from '@/clueGame/pool';
 import { makeBook, poolFor, type Animal, type Book } from '@/clueGame/questionMatch';
 import { animalsFromPool } from '@/clueGame/questionMatchContent';
 import { continentOf, type ContinentKey } from '@/clueGame/regions';
-import { prefixOf } from '@/clueGame/traits';
 import { photoAt, speciesBadge } from '@/clueGame/speciesInfo';
 import { GRID_COLS, GRID_ROWS, type GemType } from '@/game/constants';
 import { EventBus, type BoardPin, type EventPayloads } from '@/game/EventBus';
@@ -120,9 +119,7 @@ export function useAnimalSession() {
         const data: Content = { pool, animals, book, place: continent ? place : null, continent, sets };
         setContent(data);
         const resume = saved && saved.requested === requested && saved.session.round.rules.version === ANIMAL_RULES.version
-          // Content can change between visits: every saved clue row must still match the animals' traits.
-          && saved.session.round.orders.every(order => saved.session.round.suspects.every((id, i) =>
-            book.traits.get(id)?.get(prefixOf(order.tag) ?? '')?.has(order.tag) === order.row[i])) ? saved : null;
+          && roundStillFits(book, saved.session.round) ? saved : null;
         if (resume) {
           // Later rounds don't replay the uninterrupted session exactly; they just shouldn't repeat round 1's deal.
           rng.current = mulberry32(hash32(`${seed}:${resume.session.roundNo}`));
