@@ -573,6 +573,16 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. `scripts/e2e.mjs:1866`: Also mutate an existing saved note without changing array length; appending only exercises the length mismatch.
+2. `tests/clueGame/content.test.ts:10`: Preserve the existing sign-validator failure fixtures in CI; valid-content checks alone cannot detect disabled validation.
+3. Refresh `origin/main` before PR. Sandbox blocked fetch; reviewed cached base `447e9317` through `f9722eac`.
+
 ## Release
 
 ## Decisions
@@ -598,6 +608,7 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - S10 · Audit (`M/audit.md`): Habitat's mark `Trees` → lucide `Mountain`. On the seed-1 Asia sheet the 🌲 "Lives in trees" tile (Habits, paw) sat beside a tree-marked Habitat heading, and "Desert"/"Fresh water" tiles carried trees: the tile → heading link pointed at the wrong category. The 🌲 face stays (owner's draft). Column label stays "Lives in trees" (two lines fit at 320 and 390 px; no "In trees" fallback). The two category captions share one `MARK_CAPTION` class. No other drift; no new colour.
 - S11 · Docs: `CONTEXT.md` gains a **Category mark** term (kept apart from **Face**, which names one question). The yes/no evidence rule (disagreeing sources = no record) is scoped to yes/no traits in `CONTENT_SOURCES.md`, since the general rule (higher tier wins) still holds for the rest. `DATABASE_ACCESS.md` now names the VPS dev-copy secrets file and CI's secret as the password's homes. Plan 055's tag table is printed from `tag-edits.csv`; its Summary is a draft until Verification.
 - S12 · `M/tools/prod-tags.ts` reads only clue `compareTags` (pool facts carry no tags). Live pool on 2026-11-08: 76 species, 2472 clues, 198 open tags, 0 missing from `SIGNS`, so no `SIGNS` change. H10 added to the handoff file.
+- Astra code review · APPROVE, no MUST-FIX. SC3 checked: `origin/main` fetched this session is still `447e9317`, the base reviewed. SC1/SC2 (e2e same-length note mutation; sign-validator failure fixtures in CI) not done here: SC2 would be a unit test after the code (owner rule), and E6 already proves an old save vs new rows; both go to the owner in the Summary.
 
 ## Log
 
@@ -619,5 +630,8 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - 2026-11-08 07:33 UTC · S10: graphical-audit on sheet, grid, notes (`M/audit.md`): Habitat mark → `Mountain` (tree picture clash with the 🌲 Habits tile), shared `MARK_CAPTION`; label kept. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; dev E2E seed 1 Asia 1501/1501, trees:yes dealt (`M/e2e-s10/`), shots refreshed.
 - 2026-11-08 07:36 UTC · S11: docs (CONTENT_SOURCES trees/evidence/artificial/sign rule, CLUE_MATCH, CONTEXT, DATABASE_ACCESS, AGENTS) + new `plans/055-moves-and-signs.md`. typecheck, lint, 66/66 tests; every cited path exists, `#signs` anchor resolves.
 - 2026-11-08 07:37 UTC · S12: `M/tools/prod-tags.ts` release guard vs live pool: 198 open tags, 0 missing from SIGNS (exit 0); handoff H10 (prod content build after deploy) added, parses. typecheck, lint ok; no repo code change.
+- 2026-11-08 07:43 UTC · Astra code review: APPROVE, 0 MUST-FIX, 3 SHOULD-CONSIDER (recorded; SC3 base verified fresh at 447e9317); plan-only.
 
 ## Summary
+
+For the owner (Astra code review SHOULD-CONSIDER, not done): e2e E6 could also mutate a saved note in place (same array length), not only append one (`scripts/e2e.mjs:1866`); CI could keep failure fixtures for the sign validator (`tests/clueGame/content.test.ts:10`).
