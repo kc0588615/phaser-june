@@ -56,7 +56,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -141,6 +141,28 @@ Verification hooks for the planner: typecheck, lint, `npm test` 66/66, `content 
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE
+
+Checked every cited line against the worktree (`1d924348`). All findings hold:
+- 06 clue is `clues[9]` (line 138-142, `iucn`, "since 2008"); `sources.amphibiaweb` = `…/species/616`, full entry at `citations.json:67-71`. `checkCitations` keys on `pageUrl` (profile page when no `url`), so no new entry. Clue shape `{category,text,tags?,source,url?}` (`profiles.ts:59`), no per-clue quote field.
+- 11 clue is `clues[5]` (line 102-109); `…/species/4691` entry at `citations.json:52-56`. Other untagged clues in 11 omit the `tags` key (5 of 10), so dropping the key matches.
+- `voiceless` stays in `SIGNS` (`signs.ts:230`; header says retired tags are kept). `habits` has no implies/denies, so `signProblems` can't fire. `witnessNotes` needs `fits >= 2`, so 08's lone note is never dealt (same as `whistle_calls,1,70`). No minimum-holder rule anywhere.
+- Habits = `clueCategories ['behavior','diet']`, `deduces: true` (`categories.ts:27`); 11 keeps `rests_by_waterfalls` plus `activity`, `social`, `trees` and `diet` traits, so `validatePool.ts:91-96` stays silent.
+- No version bump: `animalBoard.ts:25-26` + 056 precedent; deals read only prefixed traits; `roundStillFits` compares note text/tags/fits and re-deals.
+- `check_quotes.py` today: 274 quotes, 0 misses. Only `> "…"` lines are checked, so prose edits to `:200` and `:458` are safe; the three 11 quotes and the 06 quote already match the snapshot. AW 4691 snapshot has no "sac"; ADW has "do not have vocal sacs". Keeping the ADW quote in prose (not a `> "` line) is correct.
+- DB counts from `preview-before.txt`: 2478 clues, 2087 tagged (→ 2086), 491 facts. Row ids: 06 clue is the 35th built row → **635**; 11 clue is the 27th → **1127**. Both confirmed.
+- Baseline e2e round 1 has Goliath Frog as a suspect; 08 is `realm:nearctic`, not in Africa.
+- No other stale references in the repo (only the closed `plans/2026-11-07-fact-sources.md`, correctly left alone). Next plan number 057 and handoff H11 are both free.
+
+MUST-FIX: none
+
+MISSED: none
+
+SHOULD-CONSIDER:
+1. Plan 057 should say explicitly that `content -- build` on live before or after the deploy is both safe (both AW pages already cited, `voiceless` still in SIGNS), so the "after the deploy" in H11 is the brief's preference, not a constraint.
+2. In the H11 spot check, give the exact SQL (`select id, label, source_key, compare_tags from species_deduction_clues where id in (635, 1127)`) so the owner can paste it.
+3. The 11 research bullet rewrite is long; keep it to one sentence of resolution plus the ADW attribution, since the clue text itself is already in the profile and plan 057.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -159,5 +181,6 @@ Verification hooks for the planner: typecheck, lint, `npm test` 66/66, `content 
 
 - 2026-11-08 23:20 UTC · Baseline: typecheck/lint/66 tests/preview 0; dev-copy e2e:fresh seed 7 Africa 1565/1565 (`baseline-e2e/`).
 - 2026-11-08 23:35 UTC · Architecture: architect wrote findings + target design (content-only: 2 clues on `amphibiaweb`, drop `voiceless` from 11, CSV row, 2 research bullets, plan 057; no code, no citations.json, no version bump). Doc-only, no checks needed.
+- 2026-11-08 23:45 UTC · Fable review: APPROVE, no MUST-FIX; 3 SHOULD-CONSIDER (H11 order note, spot-check SQL, shorter 11 bullet) for the planner. Doc-only, no checks needed.
 
 ## Summary
