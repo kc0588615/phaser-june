@@ -196,7 +196,7 @@ SHOULD-CONSIDER: none
   - New `plans/057-frog-fact-fixes.md` per TD5, in 056's shape. Its Verification line holds S1's static results; S2 adds the E2E line.
   - In this plan, under **Decisions**: (a) `S1 · Goliath line kept verbatim on amphibiaweb (Architecture finding 2): AW backs the claim (it calls, how, open mouth); "no vocal sac" is ADW's, true and uncontested, recorded in the research note; one source per clue.` (b) `S1 · No ANIMAL_RULES.version bump (finding 5): deals read only prefixed traits (unchanged); the tag only reaches witness notes, which roundStillFits re-deals.`
   - Checks: V1 (all items), V2. No DB, no E2E. Commit the 2 JSONs, CSV, research note, plan 057 and this plan, then push.
-- [ ] S2. **Dev-copy build, check and E2E; handoff H11.**
+- [x] S2. **Dev-copy build, check and E2E; handoff H11.**
   - Run V3 and V4. V4 reads the newest run in `e2e-artifacts/` (gitignored, self-pruning). Don't copy it into `$M`; the disk rule leaves room only for `baseline-e2e` and `final-e2e`. Hard pass: V3 shows the expected check and spot-check lines, and V4 exits 0. If `rounds` differ: no release. Record it under Decisions, find the cause, and add a fix step or a handoff item.
   - Append H11 to `/srv/critter-ai/handoff/critter-connect.md` under `## Open`, in the exact `~/AGENTS.md` item format:
     - Title `### H11 · Production content build for the frog fixes`, `Status: waiting on you`, `From: frog-fact-fixes · <UTC date>`, `Blocks: the two fixed clues reaching players (the mission doesn't wait on it)`.
@@ -298,6 +298,7 @@ node -e 'const [a,b]=process.argv.slice(1).map(f=>require(require("path").resolv
 - S1 · Goliath line kept verbatim on amphibiaweb (Architecture finding 2): AW backs the claim (it calls, how, open mouth); "no vocal sac" is ADW's, true and uncontested, recorded in the research note; one source per clue.
 - S1 · No ANIMAL_RULES.version bump (finding 5): deals read only prefixed traits (unchanged); the tag only reaches witness notes, which roundStillFits re-deals.
 - S1 · V2 diff has one extra hunk (lines 2-5, npm's `> critter-connect@… content` banner): `preview-before.txt` was captured without `-s`. Not content; the content diff is exactly the two clue hunks (now at 216/414 after the banner offset).
+- S2 · H11 step 3 differs from TD6.3: content -- build prints no table counts; counts come from content -- check.
 
 ## Log
 
@@ -308,5 +309,6 @@ node -e 'const [a,b]=process.argv.slice(1).map(f=>require(require("path").resolv
 - 2026-11-08 23:55 UTC · Revision: architect added fresh prod dump (`pg-backup.sh`, "no `backup ok`, no build") as H11 step 2; adopted Fable SC 1-3. Resolves Astra MUST-FIX 1. Doc-only, no checks needed.
 - 2026-11-08 23:41 UTC · Steps: planner wrote S1 (content edits + plan 057) and S2 (dev-copy build/check/e2e + H11), V1–V5 + release smoke; corrected H11 step 3 (counts come from `content -- check`). Doc-only; quote check still 274/0.
 - 2026-11-09 00:05 UTC · S1: 06 + 11 clues on amphibiaweb, `voiceless` off 11, sign-map row, 2 research bullets resolved, plan 057. V1 all pass (66/66, voiceless = 08 only, quotes 274/0, JSON ok, scope ok, code untouched); V2 exit 0, 0 PROBLEM, 0 cite warn, diff = 2 clue lines.
+- 2026-11-08 23:55 UTC · S2: dev copy (guard = phaser_june_dev) build 0 cite warn; check 76 playable, 2478 clues (2086 deductive), 491 facts, 0/0; rows 635/1127 new text on amphibiaweb, 1127 no tags; voiceless = 8. e2e:fresh seed 7 Africa 1565/1565; V4 0 failed, 0 console errors, rounds same as baseline: true. H11 added to handoff.
 
 ## Summary
