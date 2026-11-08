@@ -536,7 +536,12 @@ Every step:
   - **`docs/CLUE_MATCH.md`:** add the pool's `citations`, if the file documents the pool shape (`rg`).
   - **Research file:** a final pass, with all 15 animals and the trees table; `check_quotes.py` finds 0 misses.
   - Check: lint passes; `check_quotes.py` passes; `rg citations.json` hits all three docs.
-- [ ] 18. **Final Verification.** Do this once `## Code review (Astra)` is recorded and its MUST-FIX steps are done.
+- [ ] 18. **Astra MUST-FIX 1: wild-dog sneeze citation.** `65-african-wild-dog.json:155` cites `10.1098/rspb.2017.1347` (Ihle et al., quail inbreeding; wrong DOI since plan 040, `df1b28dc`). The paper is Walker, Walker, Brown, Lee, Mukherjee & McNutt (2017), "Sneeze to leave", Proc. R. Soc. B 284: 20170347, `https://doi.org/10.1098/rspb.2017.0347`.
+  - Set the fact's `url` to the new DOI; add its `citations.json` entry (doi.org APA, tidied as step 13; `license` from Crossref `vor` if any; `accessed` = today). Keep the old entry (§2: the live row keeps a citation until the owner's build). Check the paper supports the fact text ("more sneezes, more likely to set off"); reword to the paper if not.
+  - Check: preview 0 PROBLEM, 0 cite warn; scratch-check 0 errors; typecheck, lint, test pass.
+- [ ] 19. **Astra MUST-FIX 2: purple frog name fact.** `16-purple-frog.json:133` says both *nasika* and *batrachus* are Sanskrit; *batrachus* is Greek (AmphibiaWeb's own wording is wrong). Reword to a line the cited page supports and that is true: prefer "Its genus name means 'nose frog': *nasika* is Sanskrit for 'nose' and *batrachus* Greek for 'frog'" cited to a reachable page that states the split (original description or the 2024 Zool. J. Linn. Soc. paper, with its `citations.json` entry); if none is reachable, drop the language claim and keep AmphibiaWeb ("Its genus name means 'nose frog'"). Fix the research file's note and quote to match.
+  - Check: `check_quotes.py` 0 misses; preview 0 PROBLEM, 0 cite warn; scratch-check 0 errors; typecheck, lint, test pass.
+- [ ] 20. **Final Verification.** Do this once `## Code review (Astra)` is recorded and its MUST-FIX steps are done.
   - Run `## Verification` and save the artifact to `$STATE/final-e2e/`.
   - Write the Summary:
     - per animal, the no-records filled and the clues and facts added;
@@ -639,11 +644,26 @@ Pool join and `validatePool` (step 5):
 
 ## Code review (Astra)
 
+2026-11-08, `astra-review --code origin/main` (exit 0):
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. [db/content/citations.json:387](/srv/critter-ai/worktrees/fact-sources/db/content/citations.json:387): Wild-dog sneezing fact gets an unrelated quail-paper citation. Correct the profile URL and citation to Walker et al., [*Sneeze to leave*](https://cronfa.swansea.ac.uk/Record/cronfa35440), DOI `10.1098/rspb.2017.0347`.
+2. [db/content/animals/16-purple-frog.json:133](/srv/critter-ai/worktrees/fact-sources/db/content/animals/16-purple-frog.json:133): New fact incorrectly attributes both name components to Sanskrit. *Nasika* is Sanskrit; *batrachus* is Greek. Correct the wording and research note; [primary taxonomic literature](https://academic.oup.com/zoolinnean/article/202/1/zlad167/7422624) confirms the distinction.
+
+SHOULD-CONSIDER:
+
+- [AnimalGame.tsx:517](/srv/critter-ai/worktrees/fact-sources/src/components/animalBoard/AnimalGame.tsx:517): Hide mobile witness notes when review starts. Opening them during the final cascade can leave uncited notes above the completed-round card. Add E2E coverage for that transition.
+
+Both MUST-FIX checked and real: steps 18 and 19. SHOULD-CONSIDER goes to the Summary.
+
 ## Release
 
 ## Decisions
 
-- 2026-11-08 (steps): Wayback fetch (step 2) before citation code: the 4 existing AmphibiaWeb pages need snapshot `cite` before `checkCitations` passes. Added `citations.test.ts` (content checks a playtest can't see; failure modes F1-F18 written first), a 1280x800 E2E check (main loop at 390 px never renders `#side-notes`), and `npm run build` in steps 5/18 (proves citations bundle without `db/`).
+- 2026-11-08 (steps): Wayback fetch (step 2) before citation code: the 4 existing AmphibiaWeb pages need snapshot `cite` before `checkCitations` passes. Added `citations.test.ts` (content checks a playtest can't see; failure modes F1-F18 written first), a 1280x800 E2E check (main loop at 390 px never renders `#side-notes`), and `npm run build` in steps 5/20 (proves citations bundle without `db/`).
 
 - 2026-11-08 (step 2): AmphibiaWeb licence = **CC BY-NC 4.0**. Species pages have no licence footer (plan assumed one); they link `/data/datause.html`, so read its one Wayback snapshot (`20251006003414`, 2 extra requests), which states CC-BY-NC and links `creativecommons.org/licenses/by-nc/4.0`. Not bulk; the policy page itself points to Wayback for archived species pages.
 - 2026-11-08 (step 2): `citeLine` = the page's "Species Account Citation:" line minus its trailing "Accessed <snapshot date>." (crawler's render date; F10 would reject it). `index.json` `read` = 2026-11-08, the `accessed` for step 4.
@@ -697,5 +717,6 @@ Pool join and `validatePool` (step 5):
 - 2026-11-08 03:25 UTC: Step 15. `keyFacts` returns `{ text, source }` (dedup by text, first source); journal uses `FactsWithSources` with `pool.citations`; during review the StatusTicker gets no facts (remount key `end-<n>`) and desktop `#side-notes` is hidden; dead `LogEntryText.tsx` deleted, `WithBlanks` moved to its own file. typecheck, lint pass; test 66/66; e2e:fresh 1527/1527 (10m24s), artifact `$STATE/e2e-s15/` (e2e-s14 deleted); `05-journal.png` shows marks + closed Sources (1).
 - 2026-11-08 03:45 UTC: Step 16. `scripts/e2e.mjs`: Sources checks on 4 round-end cards, both journal views (6 lists) and the AmphibiaWeb card (numbers 1..n by first use = entries, closed `Sources (n)`, tap + Enter open and focus the entry in view); review hides ticker facts and side notes (phone + 1280 px, with play control); AmphibiaWeb probe seed 4, north-america, species 06, 9.3 s; 5 screenshots looked at. typecheck, lint, test pass; e2e:fresh 1558/1558 (31 `sources:` checks), 666 s (s15 619 s, CI limit 15 min). Artifact `$STATE/e2e-s16/`.
 - 2026-11-08 03:42 UTC: Step 17. `CONTENT_SOURCES.md` "Citations" section (fields, per-source table with guidance + licence URLs, errors vs warnings, release order, Wikipedia share-alike, Wayback route); "AmphibiaWeb blocks bots" line replaced; workflow mentions `checkCitations` / `cite warn`. `AGENTS.md` Content line, `CLUE_MATCH.md` Data + Content rows (pool `citations`). Research file: Summary table (15 animals, trees, fills, counts). Guidance/licence URLs checked 200 (IUCN terms via CDX). lint pass; `check_quotes.py` 274 quotes 0 misses; `rg citations.json` hits all three docs.
+- 2026-11-08 03:48 UTC: Code review (Astra). APPROVE_WITH_CHANGES, 2 MUST-FIX (wild-dog sneeze fact cites wrong DOI, pre-existing; purple frog "batrachus" called Sanskrit), both checked real -> steps 18, 19 (Final Verification now 20); 1 SHOULD-CONSIDER (mobile witness notes opened in final cascade stay above round-end card) for the Summary. Plan-only, no checks needed.
 
 ## Summary
