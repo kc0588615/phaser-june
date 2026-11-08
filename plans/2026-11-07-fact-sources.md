@@ -342,6 +342,6 @@ SHOULD-CONSIDER:
 - 2026-11-08 00:40 UTC: Architecture. `architect` wrote findings + design: citation templates in `sources.json` + new `citations.json` joined at read time (no schema change), shared `FactsWithSources` UI, sparkle E2E failure = reveal clear-timer race in `AnimalGame.tsx` (one-line fix), Wayback via CDX (availability API 429). Plan-only, no checks needed.
 - 2026-11-08 01:00 UTC: Fable review. APPROVE_WITH_CHANGES, 2 MUST-FIX (non-AmphibiaWeb/Wikipedia cite = warning not error; settle ADW licence CC BY-NC-SA 3.0) + stale-pool tolerance note. Plan-only, no checks needed.
 
-- 2026-11-08 01:30 UTC: Astra review. APPROVE_WITH_CHANGES, 3 MUST-FIX (stale cached pool without `citations`; page-level licence overrides; StatusTicker/NotesList post-round coverage). Plan-only, no checks needed.
+- 2026-11-08 00:33 UTC: Astra review. APPROVE_WITH_CHANGES, 3 MUST-FIX (stale cached pool without `citations`; page-level licence overrides; StatusTicker/NotesList post-round coverage). Plan-only, no checks needed.
 
 ## Summary
