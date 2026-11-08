@@ -376,6 +376,6 @@ Declined: Fable SC1 (a dev-bridge seed → mystery hook). `deal` draws from the 
 - 2026-11-08 01:00 UTC: Fable review. APPROVE_WITH_CHANGES, 2 MUST-FIX (non-AmphibiaWeb/Wikipedia cite = warning not error; settle ADW licence CC BY-NC-SA 3.0) + stale-pool tolerance note. Plan-only, no checks needed.
 
 - 2026-11-08 00:33 UTC: Astra review. APPROVE_WITH_CHANGES, 3 MUST-FIX (stale cached pool without `citations`; page-level licence overrides; StatusTicker/NotesList post-round coverage). Plan-only, no checks needed.
-- 2026-11-08 01:55 UTC: Revision. `architect` resolved 5 MUST-FIX + Fable MISSED: cite errors only AmphibiaWeb/Wikipedia (others warn); ADW CC BY-NC-SA 3.0 (terms at /about/use_conditions/); absent `citations` → `{}` in pool loader; page-level licence override; hide StatusTicker facts/NotesList during review. Plan-only, no checks needed.
+- 2026-11-08 00:41 UTC: Revision. `architect` resolved 5 MUST-FIX + Fable MISSED: cite errors only AmphibiaWeb/Wikipedia (others warn); ADW CC BY-NC-SA 3.0 (terms at /about/use_conditions/); absent `citations` → `{}` in pool loader; page-level licence override; hide StatusTicker facts/NotesList during review. Plan-only, no checks needed.
 
 ## Summary
