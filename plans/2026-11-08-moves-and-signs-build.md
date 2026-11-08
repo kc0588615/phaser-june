@@ -492,7 +492,7 @@ Deviation from the architecture's 8-step order (sessions too big): its step 3 is
   - `docs/DATABASE_ACCESS.md:202-203` per original brief A Goal 9. `docs/CLUE_MATCH.md`, `CONTEXT.md`: signs live under their category in the guide, never hidden; one icon per category; 045's guide-line hiding stays; the trees question; Farms & towns no longer asked. Repo `AGENTS.md` "Rules (pure)" list gains `signs`.
   - New `plans/055-moves-and-signs.md`: picks used; Decisions (finding 13's moved lines, files outside the brief's list: `useAnimalSession.ts`, `questionMatchContent.ts`, `deduction.ts` export; `travelOf` now walks 8 animals; paraphrase rule; step-order deviation; audit calls); the old → new tag table per animal printed from `tag-edits.csv`, dropped tags listed; bot table and witness counts from `M/metrics/`; dealt-proof seed, place and commands; shot paths; Summary draft (diff stat and final artifact filled at Verification).
   - Checks: static checks; links in edited docs resolve (`rg` the paths).
-- [ ] S12. **Release guard tool and handoff item (T9).**
+- [x] S12. **Release guard tool and handoff item (T9).**
   - `M/tools/prod-tags.ts`: fetch `https://play.critterconnect.org/api/clue-game/pool/`, collect every open tag in `compareTags`, print missing from `SIGNS` (exit 1 if any). Run it; add any missing tag to `SIGNS` (static checks after).
   - Add to `/srv/critter-ai/handoff/critter-connect.md` under `## Open`, exact `~/AGENTS.md` format:
     ```
@@ -597,6 +597,7 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - S9 · Dealt proof: **seed 1, place `continent:asia`** (round 1: size:huge, trees:yes, region:east-asia, region:southeast-asia). Probe `M/tools/probe-seeds.mjs` (own `next dev`, `.next-e2e`) over Asia and South America seeds 1–30 → `M/probe/trees-seeds.json`; trees:yes dealt in many Asia seeds (1, 2, 3, 5, 6, …). Commands, in the V3 guarded subshell: `npm run content -- build && npm run content -- check`, then `CHROME_PATH=M/chrome-nosandbox.sh node M/tools/probe-seeds.mjs continent:asia,continent:south-america 30 > M/probe/trees-seeds.json`, then `E2E_SEED=1 E2E_PLACE=continent:asia CHROME_PATH=M/chrome-nosandbox.sh npm run e2e:fresh`.
 - S10 · Audit (`M/audit.md`): Habitat's mark `Trees` → lucide `Mountain`. On the seed-1 Asia sheet the 🌲 "Lives in trees" tile (Habits, paw) sat beside a tree-marked Habitat heading, and "Desert"/"Fresh water" tiles carried trees: the tile → heading link pointed at the wrong category. The 🌲 face stays (owner's draft). Column label stays "Lives in trees" (two lines fit at 320 and 390 px; no "In trees" fallback). The two category captions share one `MARK_CAPTION` class. No other drift; no new colour.
 - S11 · Docs: `CONTEXT.md` gains a **Category mark** term (kept apart from **Face**, which names one question). The yes/no evidence rule (disagreeing sources = no record) is scoped to yes/no traits in `CONTENT_SOURCES.md`, since the general rule (higher tier wins) still holds for the rest. `DATABASE_ACCESS.md` now names the VPS dev-copy secrets file and CI's secret as the password's homes. Plan 055's tag table is printed from `tag-edits.csv`; its Summary is a draft until Verification.
+- S12 · `M/tools/prod-tags.ts` reads only clue `compareTags` (pool facts carry no tags). Live pool on 2026-11-08: 76 species, 2472 clues, 198 open tags, 0 missing from `SIGNS`, so no `SIGNS` change. H10 added to the handoff file.
 
 ## Log
 
@@ -617,5 +618,6 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - 2026-11-08 07:20 UTC · S9: guarded dev-copy `content -- build` (76 species, 2478 clues) + `check` (0 errors); probe → trees:yes on Asia seed 1; e2e:fresh seed 1 Asia 1501/1501 (`M/e2e-s9/`), V4 one-liner: 0 failed, trees:yes dealt true; E6 now an old save vs new rows, passes. Shots refreshed in `M/shots/`.
 - 2026-11-08 07:33 UTC · S10: graphical-audit on sheet, grid, notes (`M/audit.md`): Habitat mark → `Mountain` (tree picture clash with the 🌲 Habits tile), shared `MARK_CAPTION`; label kept. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; dev E2E seed 1 Asia 1501/1501, trees:yes dealt (`M/e2e-s10/`), shots refreshed.
 - 2026-11-08 07:36 UTC · S11: docs (CONTENT_SOURCES trees/evidence/artificial/sign rule, CLUE_MATCH, CONTEXT, DATABASE_ACCESS, AGENTS) + new `plans/055-moves-and-signs.md`. typecheck, lint, 66/66 tests; every cited path exists, `#signs` anchor resolves.
+- 2026-11-08 07:37 UTC · S12: `M/tools/prod-tags.ts` release guard vs live pool: 198 open tags, 0 missing from SIGNS (exit 0); handoff H10 (prod content build after deploy) added, parses. typecheck, lint ok; no repo code change.
 
 ## Summary
