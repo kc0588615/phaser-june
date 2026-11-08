@@ -164,7 +164,7 @@ None needed: Fable and Astra both APPROVE with 0 MUST-FIX. Fable's SHOULD-CONSID
     - New `plans/056-ft-cleanup.md`, ~15 lines, style of 052/053: what went (sites above); why now (H10 prod build 2026-11-08, live gate 0 of 2478); `ANIMAL_RULES.version` stays `055-0` and why (Architecture); side effect (`artificial:*` hand-written tag no longer reserved; the `CONTENT_SOURCES.md` rule and unknown-habitat check cover it); notes left unedited (Architecture "Notes, not edits"); a Verification line (S2 and the final run fill it).
     - This plan, **Decisions**: `S1 · docs/CONTENT_SOURCES.md:25 edited, outside the brief's named docs (Fable SC2): same intent, one clause; its old reason ("not asked") understated the new behaviour (now rejected as an unknown habitat).`
   - Checks: V1, V2. No E2E (S2). Commit code + docs + plan 056 + this plan; push.
-- [ ] S2. **Dev-copy E2E; `rounds` = baseline.**
+- [x] S2. **Dev-copy E2E; `rounds` = baseline.**
   - V3 with `<out>` = `e2e-s2`, then V4 on it. Hard pass: V4 exit 0. `rounds` differ: no release; record under Decisions, find the cause, add a fix step or a handoff item.
   - Record the V4 line in plan 056's Verification line and **Log**. If `next dev` rewrote its `AGENTS.md` block, commit it (repo rule). Commit, push.
 
@@ -242,5 +242,6 @@ Must show `explore: 200` and `version.txt = merge commit`.
 - 2026-11-08 22:25 UTC: Steps. `planner`: S1 (13 code lines, 2 doc clauses, plan 056, V1+V2), S2 (dev-copy e2e, rounds = baseline hard pass); V1-V5 + Release (live gate hard stop). Planner dry-ran gate cmds (dev copy + live: 0). Plan-only edit.
 
 - 2026-11-08 22:40 UTC: S1. 13 `artificial` code lines gone (numstat 1/1, 1/3, 1/1, 0/8), 2 doc clauses, plan 056. V1: typecheck/lint/test(66/66) 0, `rg` empty, db untouched. V2: preview exit 0, unchanged vs before, 0 PROBLEM.
+- 2026-11-08 22:00 UTC: S2. V3 dev copy (db guard + gate 0): 1565/1565; V4: 1565 checks (baseline 1565), 0 failed, 0 console errors, 0 failed requests; rounds same as baseline: true. Artifact `$M/e2e-s2/`. No AGENTS.md rewrite.
 
 ## Summary

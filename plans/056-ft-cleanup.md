@@ -22,4 +22,4 @@ A hand-written clue tag `artificial:<kind>` is no longer "reserved" (`profiles.t
 `tests/clueGame/animalBoard.test.ts` comment "since Farms & towns left 54" (history); `signs.ts` `town_dweller` (a content sign); `traits.ts` comment "IUCN habitat classes (level 1)".
 
 ## Verification
-Static: typecheck, lint, `npm test` 66/66; `rg artificial src db/content` empty; content preview identical to before, 0 PROBLEM. E2E (dev copy, seed 7, Africa): pending S2.
+Static: typecheck, lint, `npm test` 66/66; `rg artificial src db/content` empty; content preview identical to before, 0 PROBLEM. E2E (dev copy `phaser_june_dev`, seed 7, Africa): 1565/1565 checks, 0 console errors, rounds identical to baseline.
