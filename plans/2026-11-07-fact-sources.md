@@ -2,7 +2,7 @@
 mission: fact-sources
 project: critter-connect
 branch: agent/fact-sources
-status: active
+status: done
 started: 2026-11-07 23:41 UTC
 ---
 
@@ -541,7 +541,7 @@ Every step:
   - Check: preview 0 PROBLEM, 0 cite warn; scratch-check 0 errors; typecheck, lint, test pass.
 - [x] 19. **Astra MUST-FIX 2: purple frog name fact.** `16-purple-frog.json:133` says both *nasika* and *batrachus* are Sanskrit; *batrachus* is Greek (AmphibiaWeb's own wording is wrong). Reword to a line the cited page supports and that is true: prefer "Its genus name means 'nose frog': *nasika* is Sanskrit for 'nose' and *batrachus* Greek for 'frog'" cited to a reachable page that states the split (original description or the 2024 Zool. J. Linn. Soc. paper, with its `citations.json` entry); if none is reachable, drop the language claim and keep AmphibiaWeb ("Its genus name means 'nose frog'"). Fix the research file's note and quote to match.
   - Check: `check_quotes.py` 0 misses; preview 0 PROBLEM, 0 cite warn; scratch-check 0 errors; typecheck, lint, test pass.
-- [ ] 20. **Final Verification.** Do this once `## Code review (Astra)` is recorded and its MUST-FIX steps are done.
+- [x] 20. **Final Verification.** Do this once `## Code review (Astra)` is recorded and its MUST-FIX steps are done.
   - Run `## Verification` and save the artifact to `$STATE/final-e2e/`.
   - Write the Summary:
     - per animal, the no-records filled and the clues and facts added;
@@ -723,4 +723,42 @@ Both MUST-FIX checked and real: steps 18 and 19. SHOULD-CONSIDER goes to the Sum
 - 2026-11-08 03:50 UTC: Step 18. Wild-dog sneeze fact -> `10.1098/rspb.2017.0347` (Walker et al. 2017) + `citations.json` entry; fact reworded to the abstract (rally, not hunt). preview 0 PROBLEM / 0 cite warn; scratch-check 0 errors 0 warnings; typecheck, lint pass; test 66/66.
 - 2026-11-08 03:53 UTC: Step 19, purple frog name fact drops the wrong 'Sanskrit' claim (no reachable source for the split; fallback per step). check_quotes 274/0 misses; preview 0 PROBLEM, 0 cite warn; scratch-check 0 errors; typecheck, lint, test pass.
 
+- 2026-11-08 04:10 UTC: Step 20, Final Verification on `5c81c828`. typecheck, lint pass; test 66/66; preview 0 PROBLEM, 0 cite warn; scratch-check build 2472 clues / 491 facts, 0 errors 0 warnings; live `content -- check` 0 errors (2430 clues / 437 facts: live lags until owner's content build); `npm run build` ok, AmphibiaWeb in `.next/server`; e2e:fresh 1558/1558 (31 `sources:` checks, AW probe seed 4, species 06), all 5 `10-*`/`11-*` screenshots; `check_quotes.py` 274 / 0 misses. Artifact `$STATE/final-e2e/` (e2e-s16 deleted).
+
 ## Summary
+
+Facts after a round (round-end card, Field Journal) now end in numbered marks; a closed **Sources (n)** list below gives each source once with a full citation, licence and link; tapping a mark opens Sources and focuses its entry. Citations: `db/content/citations.json` (250+ pages: ADW, IUCN, Wikipedia, AmphibiaWeb, literature, news, NGOs, government), templates in `sources.json`, joined into the pool at read time (no schema change). Sparkle E2E race fixed (step 1).
+
+**AmphibiaWeb (Wayback snapshots, all 15 found; CC BY-NC 4.0, "Reworded for this game."):**
+
+| Animal | No-records filled | Clues + | Facts + |
+|---|---|---|---|
+| 03 Darwin's frog | none | 2 | 4 |
+| 05 Wallace's flying frog | none | 1 | 3 |
+| 06 Red-eyed tree frog | none | 3 | 4 |
+| 07 Hairy frog | none | 2 | 2 |
+| 08 Coastal tailed frog | none | 2 | 4 |
+| 09 Dyeing poison dart frog | young: few | 4 | 4 |
+| 10 Suriname toad | none | 3 | 3 |
+| 11 Goliath frog | none | 3 | 4 |
+| 13 Madagascar tomato frog | none | 2 | 3 |
+| 14 Desert rain frog | size: tiny, diet: insects | 2 | 3 |
+| 16 Purple frog | young: many | 3 | 4 (+1 rewritten) |
+| 62 Chinese giant salamander | none | 3 | 4 |
+| 74 Axolotl | none | 3 | 4 |
+| 75 Hellbender | none | 3 | 4 |
+| 76 Golden poison frog | none | 2 | 4 |
+
+Totals: +38 written clues (+4 from the filled traits), +54 facts (2430 → 2472 clues, 437 → 491 facts). Trees answers per animal in `docs/research/2026-11-07-amphibiaweb-wayback.md` for moves-and-signs-build. 09 `young: few` splits it from 76; inseparable-pair test moved to Saola/orangutan.
+
+**New open tags:** none.
+
+**Reviews:** architecture: Fable APPROVE_WITH_CHANGES, Astra APPROVE_WITH_CHANGES (all MUST-FIX resolved in Revision). Code: Astra APPROVE_WITH_CHANGES, 2 MUST-FIX fixed (steps 18 wild-dog DOI, 19 purple frog etymology).
+
+**SHOULD-CONSIDER (Astra, not done):** hide mobile witness notes when review starts; opening them during the final cascade can leave uncited notes above the round-end card (`AnimalGame.tsx:517`).
+
+**Owner checks (in Decisions):** 06 CITES date (IUCN 2008 vs AW 2010); Goliath frog `voiceless` clue vs AW calls; 11 IUCN cite lines (4 fallback, 7 maybe missing errata note).
+
+**Verification:** all pass on `5c81c828`; e2e 1558/1558. Artifact `/srv/critter-ai/agent-state/missions/fact-sources/final-e2e/` (`report.json`, screenshots, `e2e.log`, `COMMAND.txt`).
+
+**Live lag:** live DB has 2430 clues / 437 facts; new AmphibiaWeb rows go live only after **the owner runs `npm run content -- build` from WSL** (after the deploy). Citations for existing rows ship with the deploy. For ~11 min after deploy an old cached pool without `citations` may answer (tolerated: shows names + links).
