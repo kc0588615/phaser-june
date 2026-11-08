@@ -1,8 +1,10 @@
-// Citation rendering: data bugs a playtest can't see (failure modes F1-F10 in
+// Citation rendering and checks: data bugs a playtest can't see (failure modes F1-F15 in
 // plans/2026-11-07-fact-sources.md, written before the code).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { formatDay, renderCitation, type CitationSource } from '@/clueGame/citations';
+import { checkCitations, type AnimalProfile } from '@/clueGame/profiles';
+import { profiles, sources } from './contentPool';
 
 const amphibiaweb: CitationSource = { key: 'amphibiaweb', name: 'AmphibiaWeb', citeAs: '{cite} Accessed {accessed}.', license: 'CC BY-NC 4.0' };
 const iucn: CitationSource = { key: 'iucn', name: 'IUCN Red List', citeAs: '{cite} Accessed on {accessed}.' };
@@ -69,4 +71,40 @@ test('F9: formatDay uses no Date or locale', () => {
 test('F10: a cite that still carries its own access date throws', () => {
   const cite = 'Sandoval, M. 2015. "Rhinoderma darwinii" (On-line), Animal Diversity Web. Accessed November 08, 2026 at https://animaldiversity.org/accounts/Rhinoderma_darwinii/';
   assert.throws(() => renderCitation({ ...iucn, key: 'adw' }, 'https://animaldiversity.org/accounts/Rhinoderma_darwinii/', { accessed: '2026-11-08', cite }), /Accessed/);
+});
+
+// checkCitations (F11-F15): every clue and fact page needs a dated entry; only full keys need a cite.
+const base = profiles.find(profile => profile.clues.length && profile.facts.length)!;
+const IUCN = 'https://www.iucnredlist.org/species/1/2';
+const ADW = 'https://animaldiversity.org/accounts/X/';
+const profile = (overrides: Partial<AnimalProfile>): AnimalProfile => ({ ...base, traits: {}, clues: [], facts: [], sources: { iucn: IUCN, adw: ADW, amphibiaweb: AW_URL }, ...overrides });
+const day = { accessed: '2026-11-08' };
+
+test('F11: a clue or fact page with no entry is an error naming it', () => {
+  const p = profile({ clues: [{ category: 'behavior', text: 'A.', source: 'iucn' }], facts: [{ category: 'key_fact', text: 'B.', source: 'adw' }] });
+  assert.deepEqual(checkCitations(p, sources, {}).errors, [`clues[0]: no citations.json entry for ${IUCN}`, `facts[0]: no citations.json entry for ${ADW}`]);
+});
+
+test("F12: an override url is checked, not the profile's page", () => {
+  const other = 'https://animaldiversity.org/accounts/Y/';
+  const p = profile({ facts: [{ category: 'key_fact', text: 'B.', source: 'adw', url: other }] });
+  assert.deepEqual(checkCitations(p, sources, { [other]: { ...day, cite: 'Y.' } }), { errors: [], warnings: [] });
+  assert.deepEqual(checkCitations(p, sources, { [ADW]: { ...day, cite: 'X.' } }).errors, [`facts[0]: no citations.json entry for ${other}`]);
+});
+
+test('F13: traits and iucn_range are not checked', () => {
+  const p = profile({ traits: { size: { value: 'small', source: 'iucn' } }, clues: [{ category: 'geography', text: 'A.', source: 'iucn_range' }] });
+  assert.deepEqual(checkCitations(p, sources, {}), { errors: [], warnings: [] });
+});
+
+test('F14: a non-full key with no cite warns; a full key errors', () => {
+  const p = profile({ clues: [{ category: 'behavior', text: 'A.', source: 'iucn' }], facts: [{ category: 'key_fact', text: 'B.', source: 'amphibiaweb' }] });
+  assert.deepEqual(checkCitations(p, sources, { [IUCN]: day, [AW_URL]: day }), {
+    errors: [`facts[0]: no full amphibiaweb citation for ${AW_URL} (missing cite)`],
+    warnings: [`clues[0]: iucn page ${IUCN} has no cite line yet; shows the fallback`],
+  });
+});
+
+test('F15: an entry no profile cites gives nothing', () => {
+  assert.deepEqual(checkCitations(profile({}), sources, { 'https://example.org/unused': day }), { errors: [], warnings: [] });
 });

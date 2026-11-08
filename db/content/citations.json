@@ -1,0 +1,760 @@
+{
+  "https://amphibiaweb.org/species/4322": {
+    "accessed": "2026-11-08",
+    "archive": "https://web.archive.org/web/20250617172314/https://amphibiaweb.org/species/4322",
+    "cite": "AmphibiaWeb 2023 Rhinoderma darwinii: Darwin's Frog <https://amphibiaweb.org/species/4322> University of California, Berkeley, CA, USA."
+  },
+  "https://amphibiaweb.org/species/4524": {
+    "accessed": "2026-11-08",
+    "archive": "https://web.archive.org/web/20241204224823/https://amphibiaweb.org/species/4524",
+    "cite": "AmphibiaWeb 2022 Rhacophorus nigropalmatus: Wallace's Flying Frog <https://amphibiaweb.org/species/4524> University of California, Berkeley, CA, USA."
+  },
+  "https://amphibiaweb.org/species/616": {
+    "accessed": "2026-11-08",
+    "archive": "https://web.archive.org/web/20260309190537/https://amphibiaweb.org/species/616",
+    "cite": "AmphibiaWeb 2026 Agalychnis callidryas: Red-Eyed Tree Frog <https://amphibiaweb.org/species/616> University of California, Berkeley, CA, USA."
+  },
+  "https://amphibiaweb.org/species/6197": {
+    "accessed": "2026-11-08",
+    "archive": "https://web.archive.org/web/20250206190752/https://amphibiaweb.org/species/6197",
+    "cite": "AmphibiaWeb 2021 Nasikabatrachus sahyadrensis: Purple Frog <https://amphibiaweb.org/species/6197> University of California, Berkeley, CA, USA."
+  },
+  "https://animaldiversity.org/accounts/Acinonyx_jubatus/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Addax_nasomaculatus/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Agalychnis_callidryas/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Ailuropoda_melanoleuca/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Ailurus_fulgens/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Ambystoma_mexicanum/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Andrias_davidianus/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Apalone_spinifera/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Ascaphus_truei/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Astrochelys_radiata/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Beatragus_hunteri/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Bradypus_pygmaeus/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Bradypus_variegatus/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Canis_simensis/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Carettochelys_insculpta/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Chrysocyon_brachyurus/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Conraua_goliath/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Cryptobranchus_alleganiensis/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Daubentonia_madagascariensis/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Dendrobates_tinctorius/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Dendrolagus_goodfellowi/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Diceros_bicornis/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Dyscophus_antongilii/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Elephas_maximus/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Emydoidea_blandingii/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Equus_grevyi/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Indri_indri/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Lasiorhinus_krefftii/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Loxodonta_africana/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Loxodonta_cyclotis/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Lycaon_pictus/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Macrotis_lagotis/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Manis_crassicaudata/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Manis_gigantea/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Manis_javanica/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Manis_temminckii/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Marmota_vancouverensis/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Mustela_nigripes/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Myrmecophaga_tridactyla/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Nanger_dama/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Okapia_johnstoni/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Orycteropus_afer/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Pan_troglodytes/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Panthera_onca/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Panthera_tigris/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Phyllobates_terribilis/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Pipa_pipa/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Platysternon_megacephalum/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Pongo_abelii/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Priodontes_maximus/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Pseudoryx_nghetinhensis/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Pteronura_brasiliensis/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Pteropus_livingstonii/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Rhacophorus_nigropalmatus/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Rhinoceros_sondaicus/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Rhinoderma_darwinii/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Rhinopithecus_roxellana/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Rhynchocyon_chrysopygus/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Sarcophilus_harrisii/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Solenodon_paradoxus/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animaldiversity.org/accounts/Tapirus_bairdii/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Tapirus_terrestris/": {
+    "accessed": "2026-09-27"
+  },
+  "https://animaldiversity.org/accounts/Tremarctos_ornatus/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Zaglossus_bartoni/": {
+    "accessed": "2026-09-29"
+  },
+  "https://animaldiversity.org/accounts/Zaglossus_bruijni/": {
+    "accessed": "2026-09-25"
+  },
+  "https://animals.sandiegozoo.org/animals/giant-anteater": {
+    "accessed": "2026-09-27"
+  },
+  "https://animals.sandiegozoo.org/animals/okapi": {
+    "accessed": "2026-09-25"
+  },
+  "https://animals.sandiegozoo.org/animals/tapir": {
+    "accessed": "2026-09-27"
+  },
+  "https://doi.org/10.1002/ajpa.23936": {
+    "accessed": "2026-09-25"
+  },
+  "https://doi.org/10.1002/ece3.5257": {
+    "accessed": "2026-09-27"
+  },
+  "https://doi.org/10.1002/ecy.4470": {
+    "accessed": "2026-09-25"
+  },
+  "https://doi.org/10.1007/s10531-023-02728-2": {
+    "accessed": "2026-09-25"
+  },
+  "https://doi.org/10.1016/B978-0-12-815507-3.00010-1": {
+    "accessed": "2026-09-27"
+  },
+  "https://doi.org/10.1016/j.cub.2021.09.032": {
+    "accessed": "2026-09-27"
+  },
+  "https://doi.org/10.1016/j.cub.2025.04.019": {
+    "accessed": "2026-09-27"
+  },
+  "https://doi.org/10.1038/nature12295": {
+    "accessed": "2026-09-27"
+  },
+  "https://doi.org/10.1098/rspb.2017.1347": {
+    "accessed": "2026-09-29"
+  },
+  "https://doi.org/10.1111/aje.13279": {
+    "accessed": "2026-09-27"
+  },
+  "https://doi.org/10.1126/science.abe7389": {
+    "accessed": "2026-09-29"
+  },
+  "https://doi.org/10.11646/zootaxa.3510.1.3": {
+    "accessed": "2026-09-25"
+  },
+  "https://doi.org/10.3389/fphys.2020.00637": {
+    "accessed": "2026-09-27"
+  },
+  "https://doi.org/10.3897/zookeys.255.3774": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Aardvark": {
+    "accessed": "2026-09-27"
+  },
+  "https://en.wikipedia.org/wiki/African_bush_elephant": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/African_forest_elephant": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/African_spurred_tortoise": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/African_wild_dog": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Asian_elephant": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Axolotl": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Baird's_tapir": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Black_rhinoceros": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Brown-throated_sloth": {
+    "accessed": "2026-09-27"
+  },
+  "https://en.wikipedia.org/wiki/Chimpanzee": {
+    "accessed": "2026-09-27"
+  },
+  "https://en.wikipedia.org/wiki/Chinese_giant_salamander": {
+    "accessed": "2026-09-27"
+  },
+  "https://en.wikipedia.org/wiki/Dama_gazelle": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Darwin%27s_frog": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Eastern_long-beaked_echidna": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Giant_armadillo": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Giant_otter": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Giant_panda": {
+    "accessed": "2026-09-27"
+  },
+  "https://en.wikipedia.org/wiki/Giant_pangolin": {
+    "accessed": "2026-09-27"
+  },
+  "https://en.wikipedia.org/wiki/Golden-rumped_sengi": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Golden_poison_frog": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Golden_snub-nosed_monkey": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Gr%C3%A9vy%27s_zebra": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Greater_bilby": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Ground_pangolin": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Hairy_frog": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Hellbender": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Hirola": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Hispaniolan_solenodon": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Ili_pika": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Indri": {
+    "accessed": "2026-09-27"
+  },
+  "https://en.wikipedia.org/wiki/Jaguar": {
+    "accessed": "2026-09-27"
+  },
+  "https://en.wikipedia.org/wiki/Javan_rhinoceros": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Livingstone%27s_fruit_bat": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Maned_wolf": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Orangutan": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Purple_frog": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Pygmy_three-toed_sloth": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Red_panda": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Rodent": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Saola": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Sengi": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Sloth": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/South_American_tapir": {
+    "accessed": "2026-09-27"
+  },
+  "https://en.wikipedia.org/wiki/Spectacled_bear": {
+    "accessed": "2026-09-29"
+  },
+  "https://en.wikipedia.org/wiki/Spiny_turtle": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Sumatran_orangutan": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Sunda_pangolin": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Tasmanian_devil": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Tu%27i_Malila": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Vancouver_Island_marmot": {
+    "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Wallace%27s_flying_frog": {
+    "accessed": "2026-09-25"
+  },
+  "https://ewt.org/found-iridescent-blind-mole": {
+    "accessed": "2026-09-25"
+  },
+  "https://galapagosconservation.org.uk/about-galapagos/islands/pinta": {
+    "accessed": "2026-09-25"
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics": {
+    "accessed": "2026-09-27"
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/giantpanda/behavior": {
+    "accessed": "2026-09-27"
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/tapirs/characteristics": {
+    "accessed": "2026-09-27"
+  },
+  "https://iucn-tftsg.org/cbftt/species-accounts/centrochelys-sulcata-110": {
+    "accessed": "2026-09-25"
+  },
+  "https://iucn-tftsg.org/cbftt/species-accounts/malacochersus-tornieri-107": {
+    "accessed": "2026-09-25"
+  },
+  "https://kids.nationalgeographic.com/animals/mammals/facts/aye-aye": {
+    "accessed": "2026-09-25"
+  },
+  "https://nas.er.usgs.gov/queries/FactSheet.aspx?speciesID=2728": {
+    "accessed": "2026-09-25"
+  },
+  "https://nationalzoo.si.edu/animals/cheetah": {
+    "accessed": "2026-09-27"
+  },
+  "https://nationalzoo.si.edu/animals/giant-anteater": {
+    "accessed": "2026-09-27"
+  },
+  "https://nationalzoo.si.edu/animals/giant-panda": {
+    "accessed": "2026-09-27"
+  },
+  "https://nationalzoo.si.edu/animals/news/just-how-big-are-tigers-what-does-tiger-poop-look-and-more-tiger-facts": {
+    "accessed": "2026-09-25"
+  },
+  "https://nationalzoo.si.edu/animals/tiger": {
+    "accessed": "2026-09-25"
+  },
+  "https://nationalzoo.si.edu/news/asian-elephant-pregnant-smithsonians-national-zoo-and-conservation-biology-institute": {
+    "accessed": "2026-09-25"
+  },
+  "https://newsapp.abc.net.au/newsapp/2025-10-27/conservation-success-for-rare-queensland-wombat/105934066": {
+    "accessed": "2026-09-25"
+  },
+  "https://pmc.ncbi.nlm.nih.gov/articles/PMC4814056": {
+    "accessed": "2026-09-25"
+  },
+  "https://wwf.ca/stories/19-amazing-tiger-facts-global-tiger-day": {
+    "accessed": "2026-09-25"
+  },
+  "https://www-cdn.abcnews.com/US/scientists-confirmed-existence-200-million-year-species-thought/story?id=122773046": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.australianwildlife.org/animals/northern-hairy-nosed-wombat": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.bbc.com/news/articles/cq819y09g2lo": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/cosewic-assessments-status-reports/coastal-tailed-frog-ascaphus-truei-2011.html": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.eurekalert.org/news-releases/598865": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.fws.gov/press-release/2024-11/advancements-black-footed-ferret-conservation-continue-new-offspring-cloned": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.fws.gov/project/qas-black-footed-ferret-cloning-research-update": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.galapagos.org/newsroom/a-homecoming-for-floreana": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/10826/115565566": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/1095/53947343": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/11343/21959050": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/121097935/259045437": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/12436/221299510": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/12650/21967189": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/12696/508210": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/12761/123583998": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/12762/123584478": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/12763/123584856": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/12765/123585768": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/12828/22259184": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/136552/21964496": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/14020/45200314": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/14224/210444314": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/15050/45179204": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/15188/51140517": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/15933/129038584": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/15953/123791436": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/15955/214862019": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/163423/1006958": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/163451/161722123": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/17585/1423706": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/179010104/48438418": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/181007989/204404464": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/181008073/223031019": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/18144/244101181": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/18597/166485696": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/18711/244867206": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/18732/276948980": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/19495/18493900": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/19513/79809372": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/19596/196491153": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/19705/21287265": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/20321/22327218": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/21474/45174127": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/219/259025524": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/22066/123792952": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/23179/21964204": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/3038/210442893": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/3070/248906550": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/3748/10051312": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/3898/2884984": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/39621/2931537": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/40540/10331066": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/41504/21286437": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/4819/88135664": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/512/50180603": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/5263/96062132": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/54443/18361006": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/55204/61395760": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/55264/85887889": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/55290/3028059": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/5748/21287143": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/58051/166098621": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/58163/85900348": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/59008/64129329": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/59077/82473431": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/61925/210445926": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/6234/50185297": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/6302/115560793": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/6429/21957524": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/6557/152728945": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/6937/84159360": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/712/121745669": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.iucnredlist.org/species/714/110023718": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/7140/45818198": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/7709/155088836": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/7950/89624491": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/8968/280381412": {
+    "accessed": "2026-09-29"
+  },
+  "https://www.iucnredlist.org/species/9014/12950491": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/9017/217759270": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/9023/3149101": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.iucnredlist.org/species/9942/3152508": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.nationalgeographic.com/animals/mammals/facts/sunda-pangolin": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.nbcnews.com/science/science-news/not-so-lonesome-gal-pagos-tortoise-subspecies-thought-extinct-lives-n1128941": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.pib.gov.in/PressReleasePage.aspx?PRID=1860055": {
+    "accessed": "2026-09-27"
+  },
+  "https://www.qld.gov.au/environment/plants-animals/conservation/threatened-species/featured-projects/northern-hairy-nosed-wombat2/northern-hairy-nosed-wombat/about-northern-hairy-nosed-wombats": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.science.org/content/article/watch-ethiopian-wolves-drink-flower-nectar-first-large-carnivore": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.smithsonianmag.com/smart-news/elizabeth-ann-first-cloned-black-footed-ferret-180977065": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.stateoftheenvironment.detsi.qld.gov.au/biodiversity/case-studies/northern-hairy-nosed-wombat": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.theguardian.com/environment/2023/nov/30/back-from-the-brink-de-wintons-golden-mole-feared-extinct-rediscovered-after-86-years-aoe": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.turtleconservancy.org/outreach/death-of-a-mythical-giant": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.wildcru.org/species/ethiopian-wolves": {
+    "accessed": "2026-09-25"
+  },
+  "https://www.worldwildlife.org/news/magazine/spring-2021/meet-the-aye-aye-the-worlds-weirdest-primate": {
+    "accessed": "2026-09-25"
+  }
+}

@@ -7,14 +7,15 @@
 //   npm run content -- photos   a Wikimedia Commons photo for profiles without one
 //   npm run content -- preview [name]   the clues and facts profiles make, and their problems
 // CLUE_USE_TUNNEL=1 connects through the agent SSH tunnel (127.0.0.1:55432).
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import type postgres from 'postgres';
 import { buildCluePool } from '../src/lib/cluePool';
 import { validatePool } from '../src/clueGame/validatePool';
-import { checkProfile, contentRowsFromProfiles, type AnimalProfile, type ContentSource } from '../src/clueGame/profiles';
-import { ANIMALS_DIR, CONTENT_DIR, readProfiles } from '../src/lib/contentProfiles';
+import { checkCitations, checkProfile, contentRowsFromProfiles, type AnimalProfile } from '../src/clueGame/profiles';
+import { citedPages, contentSources as sources } from '../src/lib/contentCitations';
+import { ANIMALS_DIR, readProfiles } from '../src/lib/contentProfiles';
 import { connect, run } from './connect';
 import { findPhoto } from './photos';
 
@@ -74,12 +75,14 @@ run(async () => {
   if (!['build', 'check', 'ranges', 'photos', 'preview'].includes(mode)) throw new Error('Choose build, check, ranges, photos or preview.');
 
   if (mode === 'preview') {
-    const sources = JSON.parse(await readFile(path.join(CONTENT_DIR, 'sources.json'), 'utf8')) as ContentSource[];
     const profiles = (await readProfiles()).map(entry => entry.profile).filter(profile => !filter || profile.commonName.toLowerCase().includes(filter.toLowerCase()));
     const rows = contentRowsFromProfiles(profiles);
     for (const profile of profiles) {
       console.log(`\n## ${profile.id} ${profile.commonName}`);
       for (const problem of checkProfile(profile, sources)) console.log(`  PROBLEM ${problem}`);
+      const { errors, warnings } = checkCitations(profile, sources, citedPages);
+      for (const problem of errors) console.log(`  PROBLEM ${problem}`);
+      for (const warning of warnings) console.log(`  cite warn ${warning}`);
       for (const clue of rows.clues.filter(row => row.species_id === profile.id)) console.log(`  ${clue.category}/${clue.reveal_order} [${clue.compare_tags.join(', ')}] ${clue.label}`);
       for (const fact of rows.facts.filter(row => row.species_id === profile.id)) console.log(`  fact ${fact.category}: ${fact.fact_text}`);
     }
@@ -123,10 +126,11 @@ run(async () => {
       return;
     }
 
-    const sources = JSON.parse(await readFile(path.join(CONTENT_DIR, 'sources.json'), 'utf8')) as ContentSource[];
     const profiles = (await readProfiles()).map(entry => entry.profile);
-    const problems = profiles.flatMap(profile => checkProfile(profile, sources).map(problem => `${profile.commonName}: ${problem}`));
+    const citations = profiles.map(profile => ({ profile, ...checkCitations(profile, sources, citedPages) }));
+    const problems = citations.flatMap(({ profile, errors }) => [...checkProfile(profile, sources), ...errors].map(problem => `${profile.commonName}: ${problem}`));
     if (problems.length) throw new Error(`Fix the profiles first:\n${problems.join('\n')}`);
+    console.log(`${citations.reduce((sum, { warnings }) => sum + warnings.length, 0)} citation warnings (see preview).`);
     const rows = contentRowsFromProfiles(profiles);
     await sql.begin(async tx => {
       await tx.unsafe('DELETE FROM species_facts');
