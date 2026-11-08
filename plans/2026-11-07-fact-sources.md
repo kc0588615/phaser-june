@@ -417,7 +417,7 @@ Every step:
     - log the count from `grep -c 'cite warn'` (non-full keys with no `cite` yet);
     - `scratch-check.sh` passes;
     - the entry count equals the distinct page count (about 250).
-- [ ] 5. **Pool join, `validatePool` rule, old-pool tolerance (tests first).**
+- [x] 5. **Pool join, `validatePool` rule, old-pool tolerance (tests first).**
   - First add F16 to F18 to `citations.test.ts`; they must fail. Then write the code:
   - **Pool join:**
     - `ContentRows` clues and facts gain `source_key?`;
@@ -649,6 +649,7 @@ Pool join and `validatePool` (step 5):
 - 2026-11-08 (step 2): `citeLine` = the page's "Species Account Citation:" line minus its trailing "Accessed <snapshot date>." (crawler's render date; F10 would reject it). `index.json` `read` = 2026-11-08, the `accessed` for step 4.
 - 2026-11-08 (step 3): scratch DB URL = `PGHOST=/var/run/postgresql DATABASE_URL=postgres:///fact_sources_scratch` (peer auth). postgres.js ignores `?host=` and takes the socket dir from `PGHOST` only when the URL has no host. Every source has a `citeAs`; a source without one would fall back to `{name}. Accessed {accessed}.`. F10 rejects any `cite` containing the word "Accessed", not only a trailing one (simpler, and no real line uses it otherwise).
 - 2026-11-08 (step 4): `checkCitations` turns a `renderCitation` throw (bad date, archive, placeholder) into an error naming the item, so `preview` lists it per animal instead of crashing; `build` still refuses. `scripts/balance-044.ts` also reads the registry through `contentCitations` (DRY; it was the third `sources.json` reader). `CONTENT_DIR` lost its last outside importer, so it's no longer exported. Old pages' `accessed` = first `git log -S` date in `db/content/animals/` (2026-09-25 154, 09-27 49, 09-29 43); the 4 AmphibiaWeb pages = snapshot read date 2026-11-08. Tool: `$STATE/tools/accessed-dates.mjs` (keeps existing entries if re-run).
+- 2026-11-08 (step 5): `poolFromRows` takes the citation data as a required second argument and names a row's source from the registry by `source_key` when the row has no `source_name` (DB rows get it from the join; rows built from profiles carry only the key). Without it the content-built test pool had no sources at all, so the new `validatePool` rule would have been vacuous in `npm test`; now it checks every fact and hand-written clue for real. A row whose key isn't in the bundled registry gets no citation (shows name + link; `validatePool` reports it).
 
 ## Log
 
@@ -663,5 +664,6 @@ Pool join and `validatePool` (step 5):
 - 2026-11-08 01:10 UTC: Step 2. IDs: 4 profile + 11 Wikidata P5036 (all 15 agree). 15/15 snapshots via CDX (newest 2024-12 to 2026-03), 30 requests + 2 for data-use page, 0 429s, no no-snapshot species. `index.json` 15 entries, every `citeLine` in its `.txt` (grep -F 15/15). Research skeleton `docs/research/2026-11-07-amphibiaweb-wayback.md`. typecheck, lint pass.
 - 2026-11-08 01:35 UTC: Step 3. `src/clueGame/citations.ts` (`renderCitation`, `formatDay`, `FULL_CITATION_KEYS`), tests F1-F10 first (failed on the missing module); `citeAs` on all 16 sources, `license` on amphibiaweb (CC BY-NC 4.0), adw, wikipedia; `load()` picks the six `content_sources` columns (without it the scratch build fails: `column "citeas" … does not exist`). `$STATE/tools/scratch-check.sh`: build 76 species / 2430 clues / 437 facts, check 0 errors 0 warnings, DB dropped. typecheck, lint pass; test 58/58.
 - 2026-11-08 02:05 UTC: Step 4. Tests F11-F15 first (failed: no `checkCitations`). `pageUrl` used by `checkProfile` + both row builders (rows dump `cmp` equal before/after); `checkCitations` beside `checkProfile`; `db/content/citations.json` 250 entries = 250 distinct clue/fact pages (adw 65, iucn 74, wikipedia 53, literature 15, news 10, ngo 8, government 7, smithsonian 6, sdzwa 6, amphibiaweb 4, tftsg 2); `src/lib/contentCitations.ts` used by content.ts, contentPool.ts, balance bot. preview: 0 PROBLEM, 823 `cite warn` (187 pages: adw, iucn, literature, news, ngo, government, sdzwa, tftsg; steps 11-13). scratch-check: build ok (823 citation warnings), check 0 errors. typecheck, lint pass; test 63/63.
+- 2026-11-08 01:33 UTC: Step 5. Tests F16-F18 first (failed). Pool join: `poolFromRows(rows, { registry, pages })` adds `citations` (DB query selects `source_key`); `validatePool` errors on a fact or hand-written clue without a source page or citation; client loader normalizes an old cached pool to `citations: {}`. test 66/66, typecheck, lint pass; live `content -- check` 0 errors 0 warnings; scratch-check build ok, 0 errors; `npm run build` ok, citations bundled in `.next/server`; e2e:fresh 1527/1527. Artifact `$STATE/e2e-s5/` (e2e-s1 deleted).
 
 ## Summary

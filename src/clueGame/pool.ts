@@ -1,6 +1,7 @@
 // Shape of GET /api/clue-game/pool: every species with clues, plus their clues and
 // facts, built from database rows (or the same rows in db/content/*.json).
 import type { SpeciesClueCategory } from '@/clueGame/categories';
+import { renderCitation, type CitationSource, type Citation, type CitedPage } from '@/clueGame/citations';
 
 /** A reusable Wikimedia Commons photo; the credit and license must be shown with it. */
 export interface SpeciesPhoto { url: string; credit: string; license: string; page: string }
@@ -47,7 +48,12 @@ export interface CluePool {
   species: PoolSpecies[];
   clues: PoolClue[];
   facts: PoolFact[];
+  /** Citation per cited page URL (clue and fact sources), for the Sources list after a round. */
+  citations: Record<string, Citation>;
 }
+
+/** The citation data joined into the pool: the source registry and the pages' entries. */
+export interface CitationData { registry: readonly CitationSource[]; pages: Readonly<Record<string, CitedPage>> }
 
 /** Content rows as stored (snake_case columns); extra columns are ignored. */
 export interface ContentRows {
@@ -56,17 +62,34 @@ export interface ContentRows {
     conservation_code: string | null; redlist_url?: string | null;
     photo_url?: string | null; photo_credit?: string | null; photo_license?: string | null; photo_page?: string | null;
   }>;
-  clues: Array<{ id: number; species_id: number; category: string; label: string; compare_tags: string[] | null; reveal_order: number; is_filtering: boolean; source_name?: string | null; source_url?: string | null }>;
-  facts: Array<{ id?: number; species_id: number; category: string; fact_text: string; sort_order: number; source_name?: string | null; source_url?: string | null }>;
+  clues: Array<{ id: number; species_id: number; category: string; label: string; compare_tags: string[] | null; reveal_order: number; is_filtering: boolean; source_key?: string | null; source_name?: string | null; source_url?: string | null }>;
+  facts: Array<{ id?: number; species_id: number; category: string; fact_text: string; sort_order: number; source_key?: string | null; source_name?: string | null; source_url?: string | null }>;
 }
 
-/** The pool: every species that has clues, with its clues and facts in reveal order. */
-export function poolFromRows({ species, clues, facts }: ContentRows): CluePool {
+type SourceColumns = { source_key?: string | null; source_name?: string | null; source_url?: string | null };
+
+/** The pool: every species that has clues, with its clues and facts in reveal order, and their pages' citations. */
+export function poolFromRows({ species, clues, facts }: ContentRows, { registry, pages }: CitationData): CluePool {
   const playable = new Set(clues.map(clue => clue.species_id));
   const byOrder = <T>(key: (row: T) => [number, string, number]) => (a: T, b: T) => {
     const [x, y] = [key(a), key(b)];
     return x[0] - y[0] || x[1].localeCompare(y[1]) || x[2] - y[2];
   };
+  const byKey = new Map(registry.map(source => [source.key, source]));
+  // DB rows carry the registry's name (joined); rows built from profiles carry only the key.
+  const sourceOf = (row: SourceColumns) => {
+    const name = row.source_name ?? (row.source_key ? byKey.get(row.source_key)?.name : undefined);
+    return name ? { name, url: row.source_url ?? null } : null;
+  };
+  // One citation per distinct clue or fact page that renders one: a full-citation source only when
+  // complete, any other with its fallback. A page without one shows as name + link.
+  const citations: Record<string, Citation> = {};
+  for (const { source_key: key, source_url: url } of [...clues, ...facts] as SourceColumns[]) {
+    const source = key ? byKey.get(key) : undefined;
+    if (!source || !url || url in citations) continue;
+    const { citation } = renderCitation(source, url, pages[url]);
+    if (citation) citations[url] = citation;
+  }
   return {
     species: species.filter(row => playable.has(row.id)).sort((a, b) => a.id - b.id).map(row => ({
       id: row.id, commonName: row.common_name, scientificName: row.scientific_name, className: row.class,
@@ -77,13 +100,14 @@ export function poolFromRows({ species, clues, facts }: ContentRows): CluePool {
     clues: [...clues].sort(byOrder(row => [row.species_id, row.category, row.reveal_order])).map(row => ({
       id: row.id, speciesId: row.species_id, category: row.category as SpeciesClueCategory, label: row.label,
       compareTags: row.compare_tags ?? [], revealOrder: row.reveal_order, isFiltering: row.is_filtering,
-      source: row.source_name ? { name: row.source_name, url: row.source_url ?? null } : null,
+      source: sourceOf(row),
     })),
     facts: facts.filter(row => playable.has(row.species_id)).sort(byOrder(row => [row.species_id, row.category, row.sort_order]))
       .map(row => ({
         ...(row.id !== undefined ? { id: row.id } : {}), speciesId: row.species_id, category: row.category, text: row.fact_text, sortOrder: row.sort_order,
-        source: row.source_name ? { name: row.source_name, url: row.source_url ?? null } : null,
+        source: sourceOf(row),
       })),
+    citations,
   };
 }
 

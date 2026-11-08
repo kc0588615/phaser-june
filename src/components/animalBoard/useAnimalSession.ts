@@ -98,7 +98,9 @@ export function useAnimalSession() {
     let cancelled = false;
     (async () => {
       try {
-        const pool = await getJson<CluePool>('/api/clue-game/pool/');
+        // A pool cached from before citations shipped (max-age 60 + stale 600) has none: treat as empty.
+        const fetched = await getJson<Omit<CluePool, 'citations'> & Partial<Pick<CluePool, 'citations'>>>('/api/clue-game/pool/');
+        const pool: CluePool = { ...fetched, citations: fetched.citations ?? {} };
         const animals = animalsFromPool(pool);
         const place = requested ? await loadPlace(requested) : null;
         if (cancelled) return;

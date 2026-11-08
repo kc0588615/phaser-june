@@ -1,10 +1,13 @@
-// Citation rendering and checks: data bugs a playtest can't see (failure modes F1-F15 in
+// Citation rendering and checks: data bugs a playtest can't see (failure modes F1-F18 in
 // plans/2026-11-07-fact-sources.md, written before the code).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { formatDay, renderCitation, type CitationSource } from '@/clueGame/citations';
 import { checkCitations, type AnimalProfile } from '@/clueGame/profiles';
+import { poolFromRows, type ContentRows } from '@/clueGame/pool';
+import { validatePool } from '@/clueGame/validatePool';
 import { profiles, sources } from './contentPool';
+import { clue, pool } from './testPool';
 
 const amphibiaweb: CitationSource = { key: 'amphibiaweb', name: 'AmphibiaWeb', citeAs: '{cite} Accessed {accessed}.', license: 'CC BY-NC 4.0' };
 const iucn: CitationSource = { key: 'iucn', name: 'IUCN Red List', citeAs: '{cite} Accessed on {accessed}.' };
@@ -107,4 +110,49 @@ test('F14: a non-full key with no cite warns; a full key errors', () => {
 
 test('F15: an entry no profile cites gives nothing', () => {
   assert.deepEqual(checkCitations(profile({}), sources, { 'https://example.org/unused': day }), { errors: [], warnings: [] });
+});
+
+// Pool join and validatePool (F16-F18): every fact and hand-written clue is cited in the pool.
+const cited = (url: string) => ({ name: 'IUCN Red List', url });
+const sourceErrors = (report: { errors: string[] }) => report.errors.filter(error => /source page|no citation/.test(error));
+
+test('F16: a fact or hand-written clue with no source page is an error; a template clue is not', () => {
+  const handWritten = clue(1, 'behavior', 'It hides under logs.', []);
+  const template = clue(1, 'habitat', 'It lives in fresh water.', ['system:freshwater'], 9);
+  const report = validatePool({
+    ...pool,
+    clues: [...pool.clues.filter(c => c.category !== 'key_fact'), handWritten, { ...template, source: null }],
+    facts: [{ speciesId: 1, category: 'key_fact', text: 'A.', sortOrder: 1 }, { speciesId: 1, category: 'key_fact', text: 'B.', sortOrder: 2, source: { name: 'IUCN Red List', url: null } }],
+    citations: {},
+  });
+  assert.deepEqual(sourceErrors(report), [
+    `clue ${handWritten.id} (Species 1, behavior): no source page`,
+    'fact (Species 1, key_fact 1): no source page',
+    'fact (Species 1, key_fact 2): no source page',
+  ]);
+});
+
+test('F17: a cited page missing from pool.citations is an error', () => {
+  const report = validatePool({
+    ...pool,
+    clues: pool.clues.filter(c => c.category !== 'key_fact'),
+    facts: [{ speciesId: 1, category: 'key_fact', text: 'A.', sortOrder: 1, source: cited(IUCN) }, { speciesId: 1, category: 'key_fact', text: 'B.', sortOrder: 2, source: cited(ADW) }],
+    citations: { [IUCN]: { text: 'X.', url: IUCN, license: null, archive: null } },
+  });
+  assert.deepEqual(sourceErrors(report), [`fact (Species 1, key_fact 2): no citation for ${ADW}`]);
+});
+
+test('F18: poolFromRows cites complete pages, falls back for non-full keys, skips incomplete full keys', () => {
+  const fact = (sort_order: number, source_key: string, source_url: string): ContentRows['facts'][number] =>
+    ({ species_id: 1, category: 'key_fact', fact_text: `Fact ${sort_order}.`, sort_order, source_key, source_name: source_key, source_url });
+  const rows: ContentRows = {
+    species: [{ id: 1, common_name: 'A', scientific_name: 'A a', class: 'AMPHIBIA', taxon_order: null, family: null, genus: null, conservation_code: null }],
+    clues: [{ id: 1, species_id: 1, category: 'behavior', label: 'It hops.', compare_tags: [], reveal_order: 1, is_filtering: false, source_key: 'iucn', source_name: 'IUCN Red List', source_url: IUCN }],
+    facts: [fact(1, 'amphibiaweb', AW_URL), fact(2, 'iucn', IUCN), fact(3, 'adw', ADW)],
+  };
+  const { citations } = poolFromRows(rows, { registry: [amphibiaweb, iucn, { key: 'adw', name: 'Animal Diversity Web', citeAs: '{cite} Accessed {accessed}.' }], pages: { [AW_URL]: day, [IUCN]: day, [ADW]: { ...day, cite: 'Y.' } } });
+  assert.deepEqual(citations, {
+    [IUCN]: { text: 'IUCN Red List. Accessed 8 Nov 2026.', url: IUCN, license: null, archive: null },
+    [ADW]: { text: 'Y. Accessed 8 Nov 2026.', url: ADW, license: null, archive: null },
+  });
 });

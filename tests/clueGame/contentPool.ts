@@ -8,5 +8,6 @@ const dir = path.join(process.cwd(), 'db/content');
 const read = (file: string) => JSON.parse(readFileSync(file, 'utf8'));
 export const profiles: AnimalProfile[] = readdirSync(path.join(dir, 'animals')).filter(file => file.endsWith('.json')).sort()
   .map(file => read(path.join(dir, 'animals', file)));
-export { citedPages, contentSources as sources } from '@/lib/contentCitations';
-export const contentPool = poolFromRows(contentRowsFromProfiles(profiles));
+import { citedPages, contentSources } from '@/lib/contentCitations';
+export { citedPages, contentSources as sources };
+export const contentPool = poolFromRows(contentRowsFromProfiles(profiles), { registry: contentSources, pages: citedPages });

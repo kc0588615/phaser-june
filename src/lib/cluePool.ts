@@ -3,6 +3,7 @@
 import { sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { poolFromRows, type CluePool, type ContentRows } from '@/clueGame/pool';
+import { citedPages, contentSources } from '@/lib/contentCitations';
 
 // The app singleton or a script's own client.
 type Database = PostgresJsDatabase<Record<string, unknown>>;
@@ -14,11 +15,11 @@ export async function buildCluePool(db: Database): Promise<CluePool> {
              photo_url, photo_credit, photo_license, photo_page
       FROM species`),
     db.execute<ContentRows['clues'][number]>(sql`
-      SELECT c.id, c.species_id, c.category, c.label, c.compare_tags, c.reveal_order, c.is_filtering, s.name AS source_name, coalesce(c.source_url, s.url) AS source_url
+      SELECT c.id, c.species_id, c.category, c.label, c.compare_tags, c.reveal_order, c.is_filtering, c.source_key, s.name AS source_name, coalesce(c.source_url, s.url) AS source_url
       FROM species_deduction_clues c LEFT JOIN content_sources s ON s.key = c.source_key`),
     db.execute<ContentRows['facts'][number]>(sql`
-      SELECT f.id, f.species_id, f.category, f.fact_text, f.sort_order, s.name AS source_name, coalesce(f.source_url, s.url) AS source_url
+      SELECT f.id, f.species_id, f.category, f.fact_text, f.sort_order, f.source_key, s.name AS source_name, coalesce(f.source_url, s.url) AS source_url
       FROM species_facts f LEFT JOIN content_sources s ON s.key = f.source_key`),
   ]);
-  return poolFromRows({ species: [...species], clues: [...clues], facts: [...facts] });
+  return poolFromRows({ species: [...species], clues: [...clues], facts: [...facts] }, { registry: contentSources, pages: citedPages });
 }

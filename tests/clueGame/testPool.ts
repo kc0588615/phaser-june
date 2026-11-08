@@ -53,6 +53,7 @@ export const pool: CluePool = {
     { speciesId: 1, category: 'key_fact', text: 'Males carry tadpoles in their vocal sac.', sortOrder: 1 },
     { speciesId: 1, category: 'key_fact', text: 'Discovered on a famous voyage.', sortOrder: 2 },
   ],
+  citations: {},
 };
 export const records = buildSpeciesRecords(pool);
 export const find = (label: string) => pool.clues.find(c => c.label === label)!;
