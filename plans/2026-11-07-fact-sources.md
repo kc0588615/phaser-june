@@ -456,7 +456,7 @@ Every step:
   - the research file covers all 15 animals: Trees for each, and the "no snapshot" ones stated as such;
   - run `check_quotes.py` over the whole file;
   - run the balance bot again and compare it with step 6's run in the Log. A worse deal or look-alike set goes under Decisions.
-- [ ] 11. **ADW cite lines (65 pages).**
+- [x] 11. **ADW cite lines (65 pages).**
   - Re-confirm that `https://animaldiversity.org/about/use_conditions/` still gives CC BY-NC-SA 3.0. A change goes into `sources.json` and under Decisions.
   - `curl` each ADW account page in `citations.json` into `$STATE/adw/`, one at a time, about 2 s apart.
   - A tool extracts the "To cite this page:" block into `cite`, without its trailing "Accessed …".
@@ -660,6 +660,7 @@ Pool join and `validatePool` (step 5):
 
 - 2026-11-08 (step 10): 74 axolotl: 3 Wikipedia facts AmphibiaWeb also states moved to it (name, banknote, Xochimilco counts), reworded to what it says; the banknote line drops its date (Wikipedia 2021 vs AW "as of Feb 2020", likely the announcement), so it's true either way. 62: AmphibiaWeb's account predates the 2019 split (includes the Pearl River); IUCN range fact kept. 75: IUCN "avoids water warmer than 20 °C" kept vs AW "sometimes 25 to 30 °C". No new open tags in B5: 74's diet clue reuses `ambush_hunter` (25, 51, 62), 75's tail clue `paddle_tail` (73).
 - 2026-11-08 (step 10): Balance vs step 6's run: careful found 98%→99% (africa), 97% (asia, same); 3★ 74%→75% / 55%→56%; expert same; moves-left percentiles same. Africa distinct suspect sets 23→22 (from B1 to B4; B5 itself changed nothing: `balance-before-b5` = `balance-after-b5`). Not a worse deal; no look-alike set got worse. The bot runs only africa and asia, so 74/75 (North America) aren't measured; e2e plays them.
+- 2026-11-08 (step 11): ADW licence re-checked 2026-11-08: `/about/use_conditions/` still links `creativecommons.org/licenses/by-nc-sa/3.0/`; `sources.json` unchanged. `cite` = the "To cite this page:" line up to "Animal Diversity Web." (ADW's own form `<Author> <year>. "<Species>" (On-line), Animal Diversity Web. Accessed <date> at <url>`; our template adds "Accessed <date>." and the link shows the URL). All 65 match that form. Tools: `$STATE/tools/adw_fetch.sh`, `adw_cite.py` (fails on a missing block or a URL mismatch).
 
 ## Log
 
@@ -684,5 +685,6 @@ Pool join and `validatePool` (step 5):
 - 2026-11-08 03:50 UTC: Step 9 (B4). 11: filled none (no no-records); +3 clues (one `egg_guarding`), +4 facts. 76: filled none (no no-records); size note + poison fact Wikipedia→AW, geography clue re-sourced; +2 clues (one `striped_young`), +4 facts. 03: filled none (no no-records); 4 existing AW values checked, 3 found, "damp" dropped from the 4th; +2 clues, +4 facts. Trees: 11 no, 76 no, 03 no. `check_quotes.py` 210 quotes 0 misses; preview 0 PROBLEM, 821 cite warn; scratch build 2463 clues / 479 facts, check 0 errors; typecheck, lint pass; test 66/66.
 
 - 2026-11-08 04:25 UTC: Step 10 (B5). 62: filled none (no no-records); +3 clues, +4 facts. 74: filled none; name, banknote, census facts Wikipedia→AW; +3 clues (one `ambush_hunter`), +4 facts. 75: filled none; +3 clues (one `paddle_tail`), +4 facts. Trees: 62 no, 74 no, 75 no; research file now covers all 15 (all had snapshots). `check_quotes.py` whole file 274 quotes 0 misses; preview 0 PROBLEM, 821 cite warn; scratch build 2472 clues / 491 facts, check 0 errors; typecheck, lint pass; test 66/66; balance unchanged by B5, vs step 6 flat or better (Decisions; `$STATE/balance-after-b5.txt`).
+- 2026-11-08 04:45 UTC: Step 11. ADW licence unchanged (CC BY-NC-SA 3.0). 65/65 account pages fetched (`$STATE/adw/`, 66 requests incl. use conditions, 2 s apart, all 200); 65 `cite` lines into `citations.json`. preview 0 PROBLEM, 395 cite warn (0 adw; iucn 307, rest literature/news/ngo/sdzwa/government/tftsg); scratch build 2472 clues / 491 facts, check 0 errors; typecheck, lint pass; test 66/66.
 
 ## Summary

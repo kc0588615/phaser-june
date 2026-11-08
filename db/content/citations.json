@@ -75,199 +75,264 @@
     "cite": "AmphibiaWeb 2021 Nasikabatrachus sahyadrensis: Purple Frog <https://amphibiaweb.org/species/6197> University of California, Berkeley, CA, USA."
   },
   "https://animaldiversity.org/accounts/Acinonyx_jubatus/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Lehnert, E. 2013. \"Acinonyx jubatus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Addax_nasomaculatus/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Altan, B. 2000. \"Addax nasomaculatus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Agalychnis_callidryas/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Manjunath, A. 2022. \"Agalychnis callidryas\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Ailuropoda_melanoleuca/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Bies, L. 2002. \"Ailuropoda melanoleuca\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Ailurus_fulgens/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Heath, T. and J. Platnick 2008. \"Ailurus fulgens\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Ambystoma_mexicanum/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Majchrzak, A. 2004. \"Ambystoma mexicanum\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Andrias_davidianus/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Hatch, L. 2020. \"Andrias davidianus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Apalone_spinifera/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Bartholomew, P. 2008. \"Apalone spinifera\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Ascaphus_truei/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Potter, A. 2012. \"Ascaphus truei\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Astrochelys_radiata/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Egeler, J. 2000. \"Astrochelys radiata\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Beatragus_hunteri/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Olney, H. 2002. \"Beatragus hunteri\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Bradypus_pygmaeus/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Guarino, F. 2009. \"Bradypus pygmaeus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Bradypus_variegatus/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Jung, H. 2011. \"Bradypus variegatus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Canis_simensis/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Bunker, A. 2007. \"Canis simensis\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Carettochelys_insculpta/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Patel, E. 2012. \"Carettochelys insculpta\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Chrysocyon_brachyurus/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Gorog, A. 1999. \"Chrysocyon brachyurus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Conraua_goliath/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Khandelwal, S. 2008. \"Conraua goliath\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Cryptobranchus_alleganiensis/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Pike, Z. 2015. \"Cryptobranchus alleganiensis\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Daubentonia_madagascariensis/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Boucher, E. 2007. \"Daubentonia madagascariensis\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Dendrobates_tinctorius/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Brown, J. 2004. \"Dendrobates tinctorius\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Dendrolagus_goodfellowi/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Johnson, S. 1999. \"Dendrolagus goodfellowi\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Diceros_bicornis/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Kurnit, J. 2009. \"Diceros bicornis\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Dyscophus_antongilii/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Rudolph, A. 2017. \"Dyscophus antongilii\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Elephas_maximus/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Karkala, N. 2016. \"Elephas maximus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Emydoidea_blandingii/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Grey, E. 2016. \"Emydoidea blandingii\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Equus_grevyi/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Hollingshead, A. 2010. \"Equus grevyi\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Indri_indri/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Lundrigan, B. and C. Katopol 2000. \"Indri indri\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Lasiorhinus_krefftii/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Schober, M. 1999. \"Lasiorhinus krefftii\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Loxodonta_africana/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Howard, M. 2017. \"Loxodonta africana\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Loxodonta_cyclotis/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Connor, T. 2009. \"Loxodonta cyclotis\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Lycaon_pictus/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Mulheisen, M.; C. Allen and C. Allen 2002. \"Lycaon pictus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Macrotis_lagotis/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Brown, E. 2011. \"Macrotis lagotis\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Manis_crassicaudata/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Clausen, K. 2020. \"Manis crassicaudata\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Manis_gigantea/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Gallagher Fenton, C. 2017. \"Manis gigantea\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Manis_javanica/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Breen, K. 2003. \"Manis javanica\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Manis_temminckii/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Marceau, J. 2000. \"Manis temminckii\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Marmota_vancouverensis/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Chapman, J. 2012. \"Marmota vancouverensis\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Mustela_nigripes/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Briercheck, K. and R. Csomos 2001. \"Mustela nigripes\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Myrmecophaga_tridactyla/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Woltanski, A. 2004. \"Myrmecophaga tridactyla\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Nanger_dama/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Villarreal, L. 2006. \"Nanger dama\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Okapia_johnstoni/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Aguilar, B. 2020. \"Okapia johnstoni\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Orycteropus_afer/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Ratzloff, E. 2011. \"Orycteropus afer\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Pan_troglodytes/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Shefferly, N. 2005. \"Pan troglodytes\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Panthera_onca/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Nogueira, J. 2009. \"Panthera onca\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Panthera_tigris/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Dacres, K. 2007. \"Panthera tigris\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Phyllobates_terribilis/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Alvarez, M. and M. Wiley 2011. \"Phyllobates terribilis\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Pipa_pipa/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Wandzel, K. 1999. \"Pipa pipa\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Platysternon_megacephalum/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Vereecke, M. 2001. \"Platysternon megacephalum\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Pongo_abelii/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Urban, K. 2008. \"Pongo abelii\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Priodontes_maximus/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Armitage, D. 2004. \"Priodontes maximus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Pseudoryx_nghetinhensis/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Holcomb, D. 2005. \"Pseudoryx nghetinhensis\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Pteronura_brasiliensis/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Bender, J. 2001. \"Pteronura brasiliensis\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Pteropus_livingstonii/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Dewey, T. and J. Long 2007. \"Pteropus livingstonii\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Rhacophorus_nigropalmatus/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Abbey, D. 2000. \"Rhacophorus nigropalmatus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Rhinoceros_sondaicus/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Crider, M. 2019. \"Rhinoceros sondaicus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Rhinoderma_darwinii/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Linsted, M. 2000. \"Rhinoderma darwinii\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Rhinopithecus_roxellana/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Munoz, P. 1999. \"Rhinopithecus roxellana\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Rhynchocyon_chrysopygus/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Jansa, S. 1999. \"Rhynchocyon chrysopygus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Sarcophilus_harrisii/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Fahey Dewey, B. and A. Kinder 2001. \"Sarcophilus harrisii\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Solenodon_paradoxus/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Eatroff, A. 2002. \"Solenodon paradoxus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Tapirus_bairdii/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Wells, J. 2009. \"Tapirus bairdii\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Tapirus_terrestris/": {
-    "accessed": "2026-09-27"
+    "accessed": "2026-09-27",
+    "cite": "Luxenberg, S. 2014. \"Tapirus terrestris\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Tremarctos_ornatus/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Fenner, K. 2012. \"Tremarctos ornatus\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Zaglossus_bartoni/": {
-    "accessed": "2026-09-29"
+    "accessed": "2026-09-29",
+    "cite": "Flynn, P. 2012. \"Zaglossus bartoni\" (On-line), Animal Diversity Web."
   },
   "https://animaldiversity.org/accounts/Zaglossus_bruijni/": {
-    "accessed": "2026-09-25"
+    "accessed": "2026-09-25",
+    "cite": "Brown, M. 2025. \"Zaglossus bruijni\" (On-line), Animal Diversity Web."
   },
   "https://animals.sandiegozoo.org/animals/giant-anteater": {
     "accessed": "2026-09-27"
