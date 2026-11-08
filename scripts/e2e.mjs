@@ -7,6 +7,8 @@
 //   e2e-artifacts/<run>/*.png         what the player saw
 //   (the newest 10 runs are kept)
 // Same seed and place, same mysteries and boards. Resume uses its own fixed seed.
+// Sources (plan 2026-11-07-fact-sources): every round-end card's and journal's fact numbers resolve to a closed
+// Sources list; an AmphibiaWeb-sourced animal (found by probing seeds) shows its full CC BY-NC citation.
 //
 //   npm run e2e:fresh  starts its own dev server (scripts/e2e-fresh.mjs)
 //   npm run e2e        against a running `npm run dev`. env: E2E_BASE_URL, E2E_SEED (7), E2E_RESUME_SEED (7), E2E_ROUNDS (4), E2E_PLACE (a place key), E2E_CPU_THROTTLE (slow Chrome down N times, like a CI runner), CHROME_PATH
@@ -119,6 +121,17 @@ async function main() {
         pill.dispatchEvent(new PointerEvent('pointerup', opts));
         pill.click();
         await new Promise(res => setTimeout(res, 400));
+      };
+      // Names an animal from its field guide ("It's this one!", then yes); returns the ask's text.
+      window.__nameIt = async id => {
+        await window.__holdPill(id);
+        document.querySelector('[role=dialog] button[data-name-it]')?.click();
+        await new Promise(res => setTimeout(res, 250));
+        const confirm = document.querySelector('[role=dialog] [data-name-confirm]');
+        const text = confirm?.innerText ?? '';
+        [...(confirm?.querySelectorAll('button') ?? [])].find(other => other.textContent !== 'Back')?.click();
+        await new Promise(res => setTimeout(res, 500));
+        return text;
       };
       // Polls instead of a fixed wait: a loaded machine runs a hold's timer late, and a finger lifted before it fires is a tap.
       window.__until = async (ok, ms = 4000) => { for (const end = Date.now() + ms; !ok() && Date.now() < end;) await new Promise(res => setTimeout(res, 30)); return ok(); };
@@ -248,6 +261,90 @@ async function main() {
       writeFileSync(path.join(outDir, name), Buffer.from(data, 'base64'));
       report.screenshots.push(name);
     };
+    // Sources (plan 2026-11-07-fact-sources §6). Every fact list in `scope`, in one DOM read: each line's source numbers,
+    // the Sources list's entries, whether it's open and its summary.
+    const CARD = 'section[aria-labelledby="end-title"]';
+    const JOURNAL = '[role=dialog]';
+    const readSources = scope => evaluate(scope => [...document.querySelectorAll(`${scope} ul[data-sourced-facts]`)].map(list => {
+      const details = list.nextElementSibling?.matches('details[data-sources]') ? list.nextElementSibling : null;
+      return {
+        lines: [...list.children].map(li => [...li.querySelectorAll('[data-source-mark]')].map(mark => Number(mark.dataset.sourceMark))),
+        entries: details ? [...details.querySelectorAll('[data-source-entry]')].map(entry => Number(entry.dataset.sourceEntry)) : [],
+        open: details?.open ?? null, summary: details?.querySelector('summary')?.textContent ?? null,
+      };
+    }), scope);
+    const sourcesProblem = list => {
+      if (list.lines.some(line => line.length !== 1)) return 'a fact line without exactly one number';
+      const order = [...new Set(list.lines.flat())];
+      const oneToN = order.map((_n, i) => i + 1);
+      if (!sameList(order, oneToN)) return 'the numbers don\'t run 1..n in order of first use';
+      if (!sameList(list.entries, oneToN)) return 'the numbers and the Sources entries differ';
+      if (list.open !== false) return 'Sources isn\'t closed at first';
+      if (list.summary !== `Sources (${list.entries.length})`) return 'the summary isn\'t "Sources (n)"';
+      return null;
+    };
+    // A number on the first list, tapped (`click`) or Enter on it (`Enter`, a real key press), with Sources closed first:
+    // Sources opens, focus is on that number's entry, and the entry is in its scroller's view.
+    const jumpToSource = async (scope, how) => {
+      const target = await evaluate(({ scope, how }) => {
+        const list = document.querySelector(`${scope} ul[data-sourced-facts]`);
+        const marks = [...(list?.querySelectorAll('[data-source-mark]') ?? [])];
+        if (!list?.nextElementSibling?.matches('details[data-sources]') || marks.length === 0) return null;
+        list.nextElementSibling.open = false;
+        // Enter goes to another number than the tap's, when there is one.
+        const mark = how === 'click' ? marks[0] : marks.findLast(other => other.dataset.sourceMark !== marks[0].dataset.sourceMark) ?? marks.at(-1);
+        if (how === 'click') mark.click(); else mark.focus();
+        return Number(mark.dataset.sourceMark);
+      }, { scope, how });
+      if (target === null) return null;
+      if (how === 'Enter') {
+        await page('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' });
+        await page('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+      }
+      return evaluate(async ({ scope, target }) => {
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const details = document.querySelector(`${scope} ul[data-sourced-facts]`).nextElementSibling;
+        const active = document.activeElement;
+        let scroller = active?.parentElement;
+        while (scroller && !(/auto|scroll/.test(getComputedStyle(scroller).overflowY) && scroller.scrollHeight > scroller.clientHeight)) scroller = scroller.parentElement;
+        const box = active.getBoundingClientRect();
+        const view = scroller?.getBoundingClientRect() ?? { top: 0, bottom: innerHeight };
+        return { target, open: details.open, focused: active?.dataset.sourceEntry ?? null, inSources: details.contains(active), inView: box.top >= Math.max(view.top, 0) - 1 && box.bottom <= Math.min(view.bottom, innerHeight) + 1 };
+      }, { scope, target });
+    };
+    /** The Sources checks on every fact list in `scope`; the jumps on its first. Returns how many lists it saw. */
+    const checkSources = async (label, scope, required = true) => {
+      const lists = await readSources(scope);
+      if (required || lists.length) {
+        const problems = lists.map(sourcesProblem);
+        check(`${label}: sources: every fact line has one number, the numbers run 1..n by first use and match the closed "Sources (n)" list`, lists.length > 0 && problems.every(problem => problem === null), JSON.stringify({ lists: lists.length, problems: problems.filter(Boolean), first: lists[0] }));
+      }
+      if (!lists.length) return 0;
+      for (const how of ['click', 'Enter']) {
+        const jump = await jumpToSource(scope, how);
+        check(`${label}: sources: ${how === 'click' ? 'tapping' : 'Enter on'} a number opens Sources and focuses its entry, in view`, Boolean(jump) && jump.open && jump.inSources && jump.focused === String(jump.target) && jump.inView, JSON.stringify(jump));
+      }
+      return lists.length;
+    };
+    // While the round-end card is open, the facts live on the card: the status line (sampled for one dwell, ~4 s) never
+    // rotates the clue facts, and the desktop witness notes aren't drawn.
+    const reviewHidesFacts = () => evaluate(async () => {
+      const seen = { samples: 0, ticker: false, clue: null, sideNotes: false };
+      for (const end = Date.now() + 4000; Date.now() < end; await new Promise(resolve => setTimeout(resolve, 200))) {
+        const ticker = document.querySelector('button[aria-label="Pause the clue line"]');
+        seen.samples++;
+        seen.ticker ||= Boolean(ticker);
+        seen.clue ??= ticker?.textContent.match(/Clue \d+ of \d+/)?.[0] ?? null;
+        seen.sideNotes ||= Boolean(document.getElementById('side-notes'));
+      }
+      return seen;
+    });
+    const sideNotesAt = async (width, height, mobile) => {
+      await page('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: mobile ? 2 : 1, mobile });
+      await sleep(800);
+      return evaluate(() => ({ wide: matchMedia('(min-width: 64rem)').matches, sideNotes: Boolean(document.getElementById('side-notes')) }));
+    };
+    const PHONE = [390, 844, true];
     // The menu's Auto rule-out switch, set to `on` (opens the menu unless it's already open, then closes it),
     // with what was stored on the device before and after.
     const autoSwitch = on => evaluate(async on => {
@@ -1508,6 +1605,15 @@ async function main() {
       check(`round ${n}: the round-end card covers the board only, the replay grid stays in view`, Boolean(below) && below.cardTop >= below.gridBottom - 1, JSON.stringify(below));
       await sleep(1500); // the Camera row slides back up and the photo pops in
       await screenshot(`04-round-${n}-end.png`);
+      await checkSources(`round ${n}`, CARD);
+      const review = await reviewHidesFacts();
+      check(`round ${n}: sources: while the card is open the status line shows no "Clue n of m" and there are no side notes`, review.ticker && review.clue === null && !review.sideNotes, JSON.stringify(review));
+      if (n === 1) {
+        // At 390 px the side notes are never drawn, so the review check needs a desktop width once.
+        const desk = await sideNotesAt(1280, 800, false);
+        await sideNotesAt(...PHONE);
+        check('sources: at 1280 px, the round-end card open, there are no side notes', desk.wide && !desk.sideNotes, JSON.stringify(desk));
+      }
       report.rounds.push({
         round: start.roundNo, mysteryId: start.mysteryId, mystery: mysteryName, suspects: start.suspects.map(id => names.get(id)),
         outcome: end?.outcome, lostBy: state.lostBy, stars: end?.stars, points: end?.points, movesUsed: state.movesUsed,
@@ -1542,6 +1648,7 @@ async function main() {
     });
     check('the journal counts the animals found (by release or by name)', journal.startsWith(`${journalFinds.size} of`), `${journal} (expected ${journalFinds.size})`);
     await screenshot('05-journal.png');
+    let journalSources = await checkSources('journal', JOURNAL, false);
 
     // 4. Resume: a game without ?seed= is saved for the tab; a reload picks it up (marks, pencil, released animals, gems, toys).
     await goto(`${BASE}/`); // the globe starts the next game fresh
@@ -1773,13 +1880,7 @@ async function main() {
         if (scenario === 'mixed') await pencil(others[1], !truth(others[1]));
         for (const id of others.slice(0, out)) { window.__keyMark(id, true); await wait(250); }
         if (scenario === 'taken back') for (const id of others.slice(1, 3)) { window.__keyMark(id, false); await wait(250); }
-        await window.__holdPill(scenario === 'wrong animal' ? others[3] : mysteryId);
-        document.querySelector('[role=dialog] button[data-name-it]')?.click();
-        await wait(250);
-        const confirm = document.querySelector('[role=dialog] [data-name-confirm]');
-        const text = confirm?.innerText ?? '';
-        [...(confirm?.querySelectorAll('button') ?? [])].find(other => other.textContent !== 'Back')?.click();
-        await wait(500);
+        const text = await window.__nameIt(scenario === 'wrong animal' ? others[3] : mysteryId);
         return { text, tag, streak: start.streak, clue: window.__cc.clue(), journalBefore };
       }, { scenario, out });
       const scored = out > 0;
@@ -1816,8 +1917,76 @@ async function main() {
         });
         check('pencil bonus (sharp): the Field Journal shows the Sharp eye badge', shown);
         await screenshot('09-journal-sharp-eye.png');
+        journalSources += await checkSources('journal (sharp eye)', JOURNAL, false);
+        await screenshot('11-journal-sources-open.png');
       }
       if (scenario === 'right') await screenshot('08-pencil-bonus-end.png');
+    }
+
+    check('sources: the journal showed a fact list with sources', journalSources > 0, `${journalSources} lists`);
+
+    // An AmphibiaWeb-sourced animal's card cites it in full (CC BY-NC). Whatever the database holds: the pool names the
+    // animals, the continent with the most of them is played, and the first seed that deals one as the mystery is named.
+    const probeStart = Date.now();
+    const amphibia = await evaluate(async () => {
+      const pool = await (await fetch('/api/clue-game/pool/')).json();
+      const { places } = await (await fetch('/api/places/')).json();
+      const ids = [...new Set(pool.facts.filter(fact => fact.source?.url && new URL(fact.source.url).hostname.endsWith('amphibiaweb.org') && pool.citations?.[fact.source.url]).map(fact => fact.speciesId))];
+      const [place] = places.filter(candidate => candidate.kind === 'continent')
+        .map(candidate => ({ key: candidate.key, ids: candidate.speciesIds.filter(id => ids.includes(id)) }))
+        .filter(candidate => candidate.ids.length > 0).sort((a, b) => b.ids.length - a.ids.length);
+      return { ids, place: place ?? null };
+    });
+    check('sources: the pool has AmphibiaWeb-sourced facts with their citations, on a continent', Boolean(amphibia.place), JSON.stringify(amphibia));
+    if (amphibia.place) {
+      let hit = null;
+      for (let seed = 1; seed <= 40 && !hit; seed++) {
+        await evaluate(() => { sessionStorage.removeItem('cc:explore:game'); localStorage.clear(); });
+        await goto(`${BASE}/explore/?seed=${seed}&place=${encodeURIComponent(amphibia.place.key)}`);
+        const mysteryId = await waitFor(() => window.__cc?.clue?.()?.mysteryId ?? null, 'a dealt round', 60_000);
+        if (amphibia.place.ids.includes(mysteryId)) hit = { seed, mysteryId };
+      }
+      const probeMs = Date.now() - probeStart;
+      report.sources = { amphibiaweb: { seed: hit?.seed ?? null, place: amphibia.place.key, speciesId: hit?.mysteryId ?? null, probeMs } };
+      console.log(`  sources: AmphibiaWeb probe ${probeMs} ms, seed ${hit?.seed ?? 'none'}`);
+      check('sources: a seed (1..40) deals an AmphibiaWeb-sourced animal as the mystery', Boolean(hit), JSON.stringify(report.sources.amphibiaweb));
+      if (hit) {
+        await waitFor(boardReady, 'a fresh board', 60_000);
+        await sleep(1500);
+        // The control for the review check: during play at 1280 px the side notes are drawn.
+        const playing = await sideNotesAt(1280, 800, false);
+        await sideNotesAt(...PHONE);
+        check('sources: at 1280 px during play the side notes are drawn (control for the review check)', playing.wide && playing.sideNotes, JSON.stringify(playing));
+        await evaluate(id => window.__nameIt(id), hit.mysteryId);
+        await waitFor(selector => document.querySelector(selector) && true, 'the round-end card', 10_000, CARD);
+        await sleep(1500);
+        await checkSources('AmphibiaWeb card', CARD);
+        const entry = await evaluate(selector => {
+          const li = [...document.querySelectorAll(`${selector} [data-source-entry]`)].find(item => [...item.querySelectorAll('a')].some(a => new URL(a.href).hostname.endsWith('amphibiaweb.org')));
+          return li?.textContent.replace(/\s+/g, ' ') ?? null;
+        }, CARD);
+        check('sources: the AmphibiaWeb entry cites AmphibiaWeb, CC BY-NC, reworded', Boolean(entry) && entry.includes('AmphibiaWeb') && entry.includes('License: CC BY-NC') && entry.includes('Reworded for this game.'), entry ?? 'no entry links to amphibiaweb.org');
+        // Closed and open, light and dark; the theme as it was afterwards.
+        const theme = await evaluate(() => ({ data: document.documentElement.dataset.theme ?? null, stored: localStorage.getItem('critter-connect:theme') }));
+        for (const mode of ['light', 'dark']) {
+          for (const open of [false, true]) {
+            await evaluate(({ selector, mode, open }) => {
+              document.documentElement.dataset.theme = mode;
+              localStorage.setItem('critter-connect:theme', mode);
+              const details = document.querySelector(`${selector} details[data-sources]`);
+              details.open = open;
+              const entry = [...details.querySelectorAll('[data-source-entry]')].find(item => [...item.querySelectorAll('a')].some(a => new URL(a.href).hostname.endsWith('amphibiaweb.org')));
+              (open ? entry : details).scrollIntoView({ block: 'nearest' });
+            }, { selector: CARD, mode, open });
+            await sleep(300);
+            await screenshot(`10-sources-${open ? 'open' : 'closed'}-${mode}.png`);
+          }
+        }
+        await evaluate(({ data, stored }) => {
+          if (data) document.documentElement.dataset.theme = data; else delete document.documentElement.dataset.theme;
+          if (stored) localStorage.setItem('critter-connect:theme', stored); else localStorage.removeItem('critter-connect:theme');
+        }, theme);
+      }
     }
 
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));

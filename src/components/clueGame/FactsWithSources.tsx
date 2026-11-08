@@ -35,7 +35,7 @@ export function FactsWithSources({ facts, citations, className = '', itemClassNa
   };
   return (
     <>
-      <ul className={`m-0 ${className}`}>
+      <ul className={`m-0 ${className}`} data-sourced-facts>
         {facts.map((fact, i) => {
           const n = marks[i];
           return (
