@@ -113,7 +113,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -128,6 +128,223 @@ From `origin/main` 447e9317 (fact-sources merged, PR #65), 2026-11-08.
 - `npm run e2e:fresh` against the dev copy (guarded block, guard `phaser_june_dev` ok; no content build), `CHROME_PATH` = no-sandbox wrapper: 1558/1558 checks, default seed 7. Artifact `/srv/critter-ai/agent-state/missions/moves-and-signs-build/baseline-e2e/` (`report.json` + screenshots); reproduce with the guarded block and `npm run e2e:fresh`.
 
 ## Architecture
+
+Read on `origin/main` 447e9317 (rules `054-1`, fact-sources merged). Line numbers below are 447e9317's.
+
+### Findings (by impact)
+
+1. **`npm test` breaks once `trees` content lands.** `tests/clueGame/animalBoard.test.ts:50-52` asserts Saola (38) and Sumatran Orangutan (40) never share a set. fact-sources moved this guard here (7df0aa5e, after the design read 69f45fa6), and `trees` splits that exact pair (38 no, 40 yes; design: 7 of 8 Asian trees rounds are this pair). Fix, in the content step: recompute the inseparable pairs (`tellsApart(fullTable(book, [a, b], place), 2)` per place). If one is left, move the guard to it; if not, delete the pair lines, because `tellsApart(deck, 5)` at `:45` still covers failure 5.
+2. **`trees:no` would be dealt** (a bug). `fullTable` (`animalBoard.ts:89-92`) and `questionsFor` (`questionMatch.ts:438-441`) make a question of every value of a `PREFIX_CATEGORY` prefix. `trees:no` sorts first, so it would show its raw tag and ❓. Fix: `neverAsked`, T1.
+3. **Deploy window vs a strict sign table.** Prod runs the new code on old rows until the owner's content build (`tree_dweller`, `builds_nests`, `swimmer` on land animals...). A table that dropped those tags would make the UI throw or file the signs under the wrong heading. Fix: `SIGNS` keeps every open tag ever shipped. Retired tags are flagged only by `signProblems`, never by the UI. Release adds the guard in T9.
+4. **Signs sit in the faces module, and paging exists only to fit them beside the photo.** `clueFaces.ts:33-37` (`signPhrase`; `signsOf` returns a `string[]` with no category) breaks SRP: that module is about gem pictures. `AnimalSheets.tsx:270-333` `GuideSigns` (ResizeObserver page split, hidden measuring copy, 5 s timer, pause button; `SIGN_PAGE_MS` `:41`, `useLayoutEffect`, `AnimatePresence` and `Pause` are used only here) can go once the signs move. Fix: T2 and T4.
+5. **The design's own new tags mislead or restate.** `retags.csv` gives `rock_climber` (4, 15) and `climbing_tail` (59). `note-tags.csv` gives `above_tree_line` (42), `stays_underground` (26) and `tree_dweller` (54, twice). Each of these is in `sign-map.csv`'s `misleads` or `restates` column. Goal 3 wins over Goal 2 for these rows, so they're decided again in the one tag-edit table (T5), not applied as written. Note tags existed to feed leak rules 1–2 (design rule 5). With those rules dropped, the rest still apply as the brief says, as evidence.
+6. **DRY: guide categories listed twice.** `AnimalSheets.tsx:34` `GUIDE` repeats `CHARGE_CATEGORIES` and `CATEGORY_LABELS` (`questionMatch.ts:11`, `:17-19`). Fix: use those two directly.
+7. **No query from a question to its category.** `PREFIX_CATEGORY[prefixOf(tag)]` is written inline at `questionMatch.ts:440,481`, `animalBoard.ts:133,472` and `balance-044.ts:93`, and the UI needs it in 3 new places. Fix: `categoryOf(tag): ChargeCategory` in `questionMatch.ts`, which throws when a tag has no category. Leave the existing inline uses alone (no churn).
+8. **A tile's accessible name overrides any mark text.** The column button's `aria-label` is the question (`EvidenceGrid.tsx:245`), so an sr-only category word inside it is never read. Fix: `aria-label={`${CATEGORY_LABELS[c]}: ${order.question}`}`.
+9. **`travelOf`'s inputs change.** `animalBoard.ts:199-205` reads `fully_aquatic` and `swimmer`. Fixing those misleading tags (10, 17; 25, 28, 30, 44, 51, 54) turns 8 animals from swimmers (they walk off the bottom) into walkers (they walk off a side). The function stays as the owner picked, and the new behaviour is more truthful. Record it in plan 055; the bot measures it.
+10. **Trait notes already leak other answers** (out of scope; noted only). A trait's `note` rides on its guide line, which hides only for its own prefix (01's young note "A female lays 9 to 38 round eggs" states `birth:eggs`). The new `trees` notes must not add more such leaks (T5).
+11. **Fine as is:**
+    - `isHandWrittenClue` and the reserved-tag check (`profiles.ts:292-297`, `:338`) follow `EXCLUSIVE_PREFIXES`. `trees` rows become guide lines, and a hand-written `trees:` tag is rejected, with no new code.
+    - Hiding works by prefix (`AnimalSheets.tsx:87`, `:99-102`), so dealing `trees:yes` hides both trees lines.
+    - `canTellApart`, `likeness` (`questionMatch.ts:301-323`) and `PENCIL_WEIGHT` (habits 3, `animalBoard.ts:433`) need nothing.
+    - `witnessNotes` (`animalBoard.ts:167-173`) fits notes by `animal.tags` (`questionMatchContent.ts:140`), which is unchanged.
+    - Every animal file is `JSON.stringify(p, null, 2) + '\n'` (`content.ts:23`).
+    - The duplicate `prefixOf` (`questionMatch.ts:174` vs `traits.ts:38`) is noted, not changed.
+12. **Facts checked against the evidence.**
+    - All 24 note texts in the `c` rows of `retags.csv` and `note-tags.csv` still match exactly.
+    - There are 20 `artificial` holders, as listed.
+    - Every `moves.csv` tree `source_key` is in `sources.json`. 63 tree rows' `url` is the profile's page for that key and 8 have no page, so those 8 get `url`; none conflict, so the brief's rule is exact.
+    - AmphibiaWeb exception: the only amphibian with no tree record is 13, and AmphibiaWeb has no record either, so none applies.
+    - Vocabulary: 198 open tags, 526 uses. The design counted 519; fact-sources added uses but no tags. All 198 are in `sign-map.csv`.
+13. **Moved since the briefs** (record under Decisions in plan 055):
+
+    | Brief cites | Now |
+    |---|---|
+    | `profiles.ts:93` / `:139-145` | `:95` / `:141-147` |
+    | `isHandWrittenClue` `:290-295`, reserved `:331`, `:310` | `:292-297`, `:338`, `pageUrl :307` / `checkProfile :312` |
+    | `AnimalSheets.tsx:86` (`asked`) | `:87` |
+    | `e2e.mjs:383` (grid column check) | `:755` |
+    | design deal/bot baselines (69f45fa6) | stale: fact-sources changed amphibian traits (09 `young: few`), so measure again on 447e9317 |
+    | `STATE/tools/probe-seeds.mjs`, `run.sh` | hard-wired to the design's mockup copy and worktree, and filters `climbs\|digs`: copy and adapt, don't run in place |
+
+    Unchanged: `traits.ts:22,27,30`, `questionMatch.ts:22,152,171,200`, `clueFaces.ts:15`, `animalBoard.ts:59` (`'054-1'`), `:199`, `:282`, `:433`, `DATABASE_ACCESS.md:202-203`.
+
+### Target design
+
+**T1. The `trees` trait, with one never-asked rule.**
+- `traits.ts`:
+  - Add `'trees'` to `EXCLUSIVE_PREFIXES` (`:22-24`).
+  - Add, next to it: `export const NEVER_ASKED_VALUE = 'no'` and `export const neverAsked = (tag: string): boolean => tag.endsWith(`:${NEVER_ASKED_VALUE}`)`, with the doc line "a yes/no trait's `no` records an answer but is never asked; its `yes` question splits the same way". This is the only place `no` is named.
+- `questionMatch.ts`:
+  - `PREFIX_CATEGORY`: `trees: 'habits'`, keyed after `social`.
+  - Texts: `QUESTION_TEXT` "Does it live in trees?", `SHORT_TEXT` "Lives in trees?" and `COLUMN_LABEL` "Lives in trees", for `trees:yes` only.
+  - `questionsFor` `:441`: `if (!category || neverAsked(tag) || asked.has(tag)) continue;`
+  - New `categoryOf(tag)` (finding 7).
+- `animalBoard.ts`:
+  - `fullTable` `:90-91`: filter `!neverAsked(tag)`.
+  - `ANIMAL_RULES.version` `'055-0'`.
+  - `travelOf` unchanged.
+- `clueFaces.ts`: `'trees:yes': '🌲'` on the habits line; delete `:33-37`.
+- `profiles.ts`:
+  - `export type YesNo = 'yes' | 'no'` and `traits.trees?: Sourced<YesNo>`.
+  - `TREES_TEXT` = { yes: "It lives in trees.", no: "It doesn't live in trees." }.
+  - `trait('behavior', 'trees', traits.trees, TREES_TEXT)` after `:275`, so it lands in Habits after social.
+  - `TRAIT_VALUES.trees`.
+
+**T2. `src/clueGame/signs.ts`** (pure; queries only). This is the vocabulary of open tags, and it's authoritative from 055 on.
+```ts
+export interface SignEntry {
+  category: ChargeCategory;
+  /** Trait tags its plain reading states: the holder's record must not rule them out (deduction's exclusive/complete conflict). */
+  implies?: readonly string[];
+  /** Trait tags its plain reading rules out: the holder must not hold them. */
+  denies?: readonly string[];
+  /** The trait tag its words simply are (tree_dweller -> trees:yes): never used while that trait's prefix is asked. */
+  restates?: string;
+}
+export const SIGNS: Readonly<Record<string, SignEntry>>;   // every open tag ever shipped, retired ones included (finding 3)
+export interface Sign { tag: string; text: string; category: ChargeCategory }
+export const signPhrase = (tag: string) => tag.replace(/_/g, ' ');                 // moved from clueFaces.ts
+export function signCategory(tag: string): ChargeCategory;                         // throws on a tag missing from SIGNS
+export function signsOf(tags: readonly string[] | undefined): Sign[];             // moved; open tags (no ':'), in tag order, none filtered
+export function noteCategories(tags: readonly string[] | undefined): ChargeCategory[]; // distinct, CHARGE_CATEGORIES order
+export function signProblems(clues: ReadonlyArray<{ tags?: readonly string[] }>, record: ReadonlySet<string>): string[];
+```
+- **Building the table, once:**
+  - Start from `sign-map.csv`. Drop `can_swim`, which leaves 205 entries: the 198 in content plus the design's 7 new tags. `category` comes from the CSV's `category` column, and `restates` from its `restates` column (`tree_dweller` → `trees:yes`; also `climber`, `burrower`, `swimmer` → `climbs/digs/swims:yes`, which stay dormant until those traits exist).
+  - Encode `implies` and `denies` by hand from the `answers` column, only where it gives a definite value of a prefix this game asks. Examples: `reddish_fur` implies `covering:fur`; `swimmer` implies `system:freshwater`; `fully_aquatic` denies `system:terrestrial`; `builds_nests` implies `birth:eggs`; `climber` implies `trees:yes`; `nectar_drinker` denies `diet:meat`. One line per entry, with no answers text and no counts.
+- **No per-tag phrase:** the tag is the phrase, and plan 044's phrase list was never needed.
+- **`signProblems` checks three things, mechanically:**
+  - (a) an open tag missing from `SIGNS`: "add it to SIGNS with its category";
+  - (b) a contradiction: some `implies` tag gets `exclusive-conflict` or `complete-conflict` from `tagOutcome(tag, record)` (`deduction.ts:17`, private today; export it and widen its parameter to `ReadonlySet<string>`, so the game's own comparison rule is reused), or some `denies` tag is in `record`;
+  - (c) "states an asked answer": `restates` is set and `PREFIX_CATEGORY[prefixOf(restates)]` exists. The message names `questionText(restates)` and says "tag what the note shows".
+
+  Whether a new tag's words merely restate an answer can't be decided mechanically beyond (c). For the tags this build adds, that's reviewed through the T5 rules and the old → new table in plan 055.
+- **Acceptance for the encoding,** before any tag edits (content with `trees`, after `artificial` is removed): `signProblems` over the 76 animals flags exactly 33 contradictions and 11 restating uses.
+  - Contradictions (the `misleads` pairs on tags in content, asked prefixes only):
+    - Body: `yellow_scales` 1; `hair_like_frills` 7; `giant_frog` 11; `mane` 53.
+    - Habits: `builds_nests` 23, 40, 46, 56, 71; `climber` 4, 15, 51, 59, 60; `coalitions` 58; `fully_aquatic` 10, 17; `nectar_drinker` 33; `rock_basker` 11; `sand_swimmer` 32; `snorkel_nose` 28; `swimmer` 25, 28, 30, 44, 51, 54.
+    - Habitat: `coastal_dunes` 14, 32; `crevice_hider` 75; `seasonal_streams` 20.
+    - Life cycle: `internal_fertilization` 8; `no_tadpoles` 10.
+  - Restating uses: `tree_dweller` on 5, 6, 23, 30, 35, 40, 43, 45, 54, 61, 71.
+  - An extra flag means the encoding is stronger than the design's judgment: weaken it and record that. It doesn't mean more retagging. A missing flag means strengthen it.
+
+**T3. `checkProfile`** (`profiles.ts:312-348`): at the end, `if (problems.length === 0) problems.push(...signProblems(profile.clues, new Set(profileClues(profile).flatMap(d => d.tags))))`.
+- It reuses `profileClues` for the record. The shape is checked first, because `profileClues` needs taxonomy, systems, habitats and redList. There's no import cycle: profiles → signs → deduction/traits, questionMatch.
+- `content -- build` already refuses profiles with problems (`content.ts:130-132`), so no unknown, contradicting or restating tag can reach a database.
+- `content.test.ts:10` covers it with no new test.
+
+**T4. Interface.**
+- **New `src/components/animalBoard/CategoryMark.tsx`:** `CATEGORY_ICON: Record<ChargeCategory, LucideIcon>` = { body `Eye`, habits `PawPrint`, habitat `Trees`, range `MapPin`, life `Baby` } (all present in lucide-react 0.525). Signature: `CategoryMark({ category, word = true, small = false, className = '' })`.
+  - Renders `<span data-category-mark={category} class="inline-flex items-center gap-xxs …">`: the icon `aria-hidden` (`h-3.5 w-3.5`, or `h-3 w-3` when `small`), then `CATEGORY_LABELS[category]`, printed or `sr-only`.
+  - Default stroke; text colour inherited (`text-neutral-7` at the call sites). No new colour.
+- **`SuspectSheet` (`AnimalSheets.tsx`):**
+  - Photo row: figure and peeks only. `GuideSigns`, the paging and their imports go. Size and position stay; the brief allows a smaller photo if it reads better (record).
+  - "Its answers": each `<li data-answer-tag={order.tag}>` puts `<CategoryMark category={categoryOf(order.tag)} small className="text-xxs font-medium uppercase …"/>` as a small line above the question (mockup option 1). Rows keep deal order, so they match the grid's column order.
+  - Guide: `CHARGE_CATEGORIES.flatMap(key => { lines = guide[key] minus lines with an asked prefix (unchanged); chips = signs.filter(s => s.category === key); show if lines.length || chips.length })`.
+  - Each row: `<div className="contents" data-guide-cat={key}><dt><CategoryMark category={key}/></dt><dd>` holding the lines `<span data-guide-line={line.tags.map(prefixOf).join(' ')}>`, then `<ul data-signs aria-label="{Label} signs">` with `<li data-sign={tag} className={CHIP}>`.
+  - Chips wrap and are never hidden or paged. `asked` and the line filter stay exactly as plan 045 has them.
+- **`EvidenceGrid.tsx`:**
+  - Before each label (`:249`): `<CategoryMark category={categoryOf(order.tag)} word={false} small className="mr-xxs align-[-1px]"/>`.
+  - Button `aria-label` per finding 8.
+  - The review grid gets the marks automatically.
+- **`NotesList`:** under each note's text, `noteCategories(note.tags).map(c => <CategoryMark small …/>)`, printed words, `text-xxs font-medium uppercase text-neutral-7`. This also covers the desktop side notes.
+
+**T5. Content for all 76 files: one-off script outside the repo.**
+- **Location:** `/srv/critter-ai/agent-state/missions/moves-and-signs-build/content/apply.ts`, run through a copy of `STATE/tools/run.sh` pointed at this worktree. It bundles repo imports with `@/`; `scripts/run-typescript.mjs` only runs files under `scripts/`.
+- **Inputs:** `moves.csv` (read-only), plus two tables the mission writes in that folder:
+  - `trees-notes.csv`: `animal_id, verdict, note` for the 71 values.
+  - `tag-edits.csv`: `animal_id, note (exact text), from (tags now), to (tags after), kind (retag | note-tag | restating | misleading), reason`.
+- **What it does:** reads profiles with `readProfiles()` and writes them in `content.ts`'s format.
+  - Sets `traits.trees = { value, note, source: source_key, url? }`, with `url` only for the 8 rows whose key has no page. The key goes after `social`, so diffs read cleanly.
+  - Removes `artificial` and `artificial:*` from `habitats`.
+  - Applies each `tag-edits` row: the note must match exactly once and its tags must equal `from` (or already equal `to`); otherwise it stops.
+  - Every `to` tag must be in `SIGNS` (it imports it). The script can be rerun safely.
+  - It ends by printing `checkProfile` problems (expect 0).
+- **Why a script:** about 140 edits across 76 files by hand would be error-prone and couldn't be reviewed or redone. The two tables record every decision, and plan 055's old → new table is printed from `tag-edits.csv`. It stays out of the repo because it's one-off: the content files themselves are the source of truth.
+- **`tag-edits.csv`, one row per changed note,** built from the `c` rows of `retags.csv` (5) and `note-tags.csv` (19), then corrected for Goal 3:
+  - skip `stays_underground` (26), `above_tree_line` on 42, and `tree_dweller` on 54;
+  - re-decide `rock_climber` (4, 15) and `climbing_tail` (59);
+  - merge rows that touch the same note (for example 40, 56 and 71: `builds_nests` plus the `climber` note tag);
+  - then fix the 33 contradictions and the 11 restating uses from T2.
+- **Picking a replacement tag, in this order:**
+  1. The note's own words support it. It adds no fact; it may paraphrase only so that one tag is shared by notes stating the same fact.
+  2. Reuse an existing tag the note supports, which keeps witness notes. Examples: 28 `snorkel_nose` → `trunk`; 59 drops `climber` and keeps `long_tail`; 30 and 54 drop `tree_dweller` and keep `slow_mover`.
+  3. Otherwise, one new tag shared by every note stating that fact (for example 23 and 35 both "sleep high in the trees").
+  4. Never an asked answer's own words: habitat class names, fresh water / sea / land, day / night, eggs / live young, alone / pairs / groups, covering words, sizes, "lives in trees". And it must pass `signProblems`.
+  5. If nothing fits, drop the tag (listed in plan 055).
+
+  New tags get their `SIGNS` entry in the same step, with the category set by the design's rule: the majority of their notes' categories, ties going by what the sign names.
+- **Rules for the `trees` notes:**
+  - Grade 6–12 plain words, and only trees vs ground (no habitat, water, diet or activity words; finding 10).
+  - No new science term without a `glossary.ts` entry (`CLUE_MATCH.md:70`).
+  - Verdicts are taken from `moves.csv`; the script checks them.
+
+**T6. Where the sign map lives now.** `signs.ts` `SIGNS` is the only source the code or checks read. The client needs it bundled, and content JSON is server-only by design (`contentCitations.ts:1-2`). `sign-map.csv` stays the design's research record, updated once by the T5 script so the brief is met:
+- uses, holders and note categories recomputed from content;
+- rows added for the new tags (`rule` = "055: replaces <old>");
+- "fixed in 055" added to the `misleads` and `restates` cells it fixed;
+- every row's `category` asserted equal to `SIGNS`.
+
+A header comment in `signs.ts` and a line in `CONTENT_SOURCES.md` say the code is authoritative.
+
+**T7. Metrics** (tools in the mission's state folder, not in the repo).
+- **Witness notes per round:** `tools/witness.ts`, adapted from `STATE/tools/deals.ts`'s loop.
+  - For the world and each continent with at least `MIN_PLACE_ANIMALS` (12) animals: every pool animal as seed → `pickSuspectSet(ANIMAL_RULES)` → each mystery in the set → `witnessNotes(...).length`.
+  - Reports the mean per round and the rounds with no note, plus a static count of tagged notes whose tag set is held by 2 or more animals.
+  - Run "before" in a detached temporary worktree of `origin/main` with `node_modules` symlinked, and "after" at HEAD. Compare with the design's move-c "without rule 2" column (world 2.28, Africa 2.02, Asia 2.02, North America 1.09, South America 2.0).
+- **Balance bot:** before and after in the same two trees: `--rounds 400 --seed 44 --places africa,asia,north-america,south-america`, shown beside `STATE/bot/summary.md`. Plan 055 must say plainly:
+  - The bot doesn't read signs or photos (design, Method), so "signs always show" isn't in its numbers. Its changes come from `trees`, Farms & towns going, witness notes and `travelOf` (finding 9).
+  - With no rule 2, North America shouldn't repeat the design's −3.9; that came from rule 2.
+
+**T8. E2E (`scripts/e2e.mjs`).**
+- **DOM hooks:** `[data-guide-cat]`, `[data-category-mark]`, `[data-guide-line]` (the line's prefixes), `ul[data-signs]` and `li[data-sign]`, `li[data-answer-tag]`. The existing `th[data-tag]` and `[data-guide-swipe]` stay; `[data-guide-signs]` goes.
+- **Removed:** the two `GuideSigns` checks (`:986` "signs showing fit beside the photo", `:987-988` "signs in pages turn…"), their measuring code (`:918-922`) and the photo-width hack (`:950-968`). The one-height drawer check stays.
+- **Added:** extend the pool fetch at `:637` to give each species its open tags. Then, during play in round 1, opening each of the 5 guides:
+  - E1 "every sign shows under its category's row, none beside the photo": no `[data-sign]` inside `[data-guide-swipe]`; each chip sits in a `[data-guide-cat]`; the chip tags equal the species' open tags, so none is hidden; a tag gets the same row category on every sheet.
+  - E2 "a dealt question's guide lines stay hidden while its category's signs show": no `[data-guide-line]` carries a dealt prefix, and at least one (suspect, dealt question) pair has chips in the row matching that question's mark.
+  - E3 "tile, answer row and guide heading carry the same category icon": for each column, the tile's mark and its `[data-answer-tag]` row's mark match in category and in the svg's `lucide-*` class; on sheets that show that category's heading, the heading's svg matches too; at least one heading matches per round.
+  - E4, at the existing notes check (`:1516`): each witness note has at least one `[data-category-mark]`, none repeated.
+  - E5: no column tag ends in `:no`.
+- **Screenshots:** `02d-field-guide-{light,dark}.png` (top of the sheet) and `02e-field-guide-rows-{light,dark}.png` (scrolled to the rows), using the `dataset.theme` switch the sources block uses (`:1969-1987`). Copy them to `/srv/critter-ai/agent-state/missions/moves-and-signs-build/`.
+- **During the build:** E2E on the dev copy plays new code on old rows, which is also the deploy-window proof.
+- **Final run:** after the dev content build, with the probe's trees seed. Copy the probe from `STATE/tools/probe-seeds.mjs` with the import changed to this repo's `scripts/cdp.mjs` and the filter `^trees:`. Run it inside the same guarded subshell against its own dev server on a free port in 3100–3102.
+
+**T9. Release guard.** Before merging, fetch `https://play.critterconnect.org/api/clue-game/pool/` (public, cached; no DB login) and check that every open tag in its `compareTags` is in `SIGNS`. If one is missing, add it before deploying.
+
+**Step order** (each step leaves the checks passing):
+1. T1 code and the version bump. No content yet, so nothing new is dealt.
+2. T5 part A (`trees` ×71, Farms & towns ×20) and finding 1's test change.
+3. `signs.ts` with the table, the moved functions and `signProblems`, not yet wired. `GuideSigns` temporarily maps `s.text`. Run the T2 acceptance (33 + 11).
+4. T4 interface, `categoryOf`, the T8 E2E changes and screenshots.
+5. T5 part B (`tag-edits.csv`, new `SIGNS` entries, the `sign-map.csv` update), then wire T3 (0 problems). Split restating and misleading into two steps if large.
+6. T7 metrics.
+7. Docs and plan 055.
+8. `graphical-audit`.
+9. Final verification: guarded block, probe and E2E; T9; the handoff item.
+
+### Rejected alternatives
+- Generate `signs.ts` from the CSV at build time, or read the CSV at runtime: a second source and a generator, and the client can't read a CSV.
+- `db/content/signs.json`: breaks the rule that content JSON is server-only; the client would need it bundled.
+- A per-tag `phrase` override: a second spelling to keep in sync. A tag is chosen to read as its phrase.
+- Detecting restating tags by matching tag words against question text: `tree_dweller` vs "Lives in trees" doesn't match, and it would flag existing evidence tags like `bamboo_forest`.
+- Checking contradictions through `restates` alone: it says nothing once rewording is done, and misses every misleading tag.
+- `signProblems` in `validatePool`: the brief puts it in `checkProfile`, and the build already gates on `checkProfile`.
+- Hand-editing the 76 files: can't be reviewed or redone, and risks format drift.
+- Regrouping "Its answers" by category (mockup option 2): breaks the row ↔ grid column order.
+- A `category` field on `Clue`/`ClueOrder`: it can be derived, and it would change the saved data shape.
+- A `YES_NO_PREFIXES` or movement-prefix constant: `EXCLUSIVE_PREFIXES` plus one never-asked value is enough (YAGNI).
+- Keeping chips beside the photo as well: the brief moves them, and a copy in both places would duplicate them.
+
+### Risks and open questions for reviewers
+- **Unknown tag → throw** (`signCategory`). Fail loud, made safe by keeping every shipped tag in `SIGNS`, by the build gate (T3) and by T9. The alternative is to skip the tag and log an error. Is throwing in render acceptable?
+- **Look-alike tree pictures:** 🌲 (Habits question) next to Habitat's lucide `Trees` icon and 🌳 Forest. Check the shots and the audit, and polish the face if they confuse.
+- **"Only words the note contains" vs shared vocabulary:** T5 allows a minimal paraphrase only to share one tag. The owner's own example "sleeps in branches" isn't literal either. Recorded as a Decision.
+- **Witness notes lost** where nothing shared fits (for example 44, "It is a good swimmer.", becomes untagged). T7 reports this; no rule change to make up for it.
+- **Implies/denies encoding is judgment.** It's anchored by T2's exact-match acceptance, and pairs beyond the design's list are out of scope.
+- **The `"Lives in trees"` label plus an icon in a 54 px column** may clamp. E3 and the shots will show it; "In trees" is the fallback polish.
+- **The sheet gets longer** (design: about +208 px at 390 px) and the signs fall below the fold. The drawer height is fixed, so the E2E height check holds. Some signs sit under a category other than the question they bear on (`fully_aquatic` is under Habits while "Fresh water" is a Habitat question): that's the design's rule, accepted by the owner, and only noted here.
+- **Dead vocabulary:** retired tags (no holders after 055) can leave `SIGNS` once prod's content build is done. That's an optional follow-up for brief B; brief B is otherwise unchanged.
 
 ## Architecture review (Fable)
 
@@ -148,5 +365,6 @@ From `origin/main` 447e9317 (fact-sources merged, PR #65), 2026-11-08.
 ## Log
 
 - 2026-11-08 04:50 UTC · Baseline: typecheck, lint, 66 unit tests, content preview, e2e:fresh on dev copy (1558/1558) all pass.
+- 2026-11-08 05:18 UTC · Architecture: architect wrote findings + target design (signs.ts table, CategoryMark, content script in STATE, 9-step order); plan-only, typecheck ok.
 
 ## Summary
