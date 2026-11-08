@@ -616,6 +616,6 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - 2026-11-08 07:20 UTC · S8: witness notes per round and balance bot (400 rounds, seed 44) before (447e9317) and after; `M/metrics/summary.md`. Both bot runs exit 0; repo unchanged (metrics in state folder only); before worktree removed.
 - 2026-11-08 07:20 UTC · S9: guarded dev-copy `content -- build` (76 species, 2478 clues) + `check` (0 errors); probe → trees:yes on Asia seed 1; e2e:fresh seed 1 Asia 1501/1501 (`M/e2e-s9/`), V4 one-liner: 0 failed, trees:yes dealt true; E6 now an old save vs new rows, passes. Shots refreshed in `M/shots/`.
 - 2026-11-08 07:33 UTC · S10: graphical-audit on sheet, grid, notes (`M/audit.md`): Habitat mark → `Mountain` (tree picture clash with the 🌲 Habits tile), shared `MARK_CAPTION`; label kept. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; dev E2E seed 1 Asia 1501/1501, trees:yes dealt (`M/e2e-s10/`), shots refreshed.
-- 2026-11-08 07:55 UTC · S11: docs (CONTENT_SOURCES trees/evidence/artificial/sign rule, CLUE_MATCH, CONTEXT, DATABASE_ACCESS, AGENTS) + new `plans/055-moves-and-signs.md`. typecheck, lint, 66/66 tests; every cited path exists, `#signs` anchor resolves.
+- 2026-11-08 07:36 UTC · S11: docs (CONTENT_SOURCES trees/evidence/artificial/sign rule, CLUE_MATCH, CONTEXT, DATABASE_ACCESS, AGENTS) + new `plans/055-moves-and-signs.md`. typecheck, lint, 66/66 tests; every cited path exists, `#signs` anchor resolves.
 
 ## Summary
