@@ -58,7 +58,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -121,9 +121,14 @@ Content-only fix: two clue objects, one CSV row, two research bullets, a short p
    `voiceless,1,8,behavior=1,Habits,majority,,,"11: it calls (whistles, chirps, a roar; AmphibiaWeb), ""voiceless"" reads as no call; fixed in 057: tag dropped from 11"`
 4. `docs/research/2026-11-07-amphibiaweb-wayback.md`: rewrite the two bullet lines only and keep every `> "` quote line under them unchanged:
    - `:200` → "CITES: … AmphibiaWeb says the Appendix II listing came on 21 March 2010. **Resolved 2026-11-08 (plan 057):** the owner checked the CITES Checklist (Appendix II from 2010); the clue now says since 2010, sourced to AmphibiaWeb."
-   - `:458` → "Calls: … **Resolved 2026-11-08 (plan 057):** owner's line "It has no vocal sac, but it still calls: whistles, chirps, even a deep roar, made with its mouth open.", sourced to AmphibiaWeb; `voiceless` dropped from 11 (08, which truly has no call, keeps it). AmphibiaWeb doesn't mention a vocal sac; that half is ADW's ("Goliath frogs do not have vocal sacs", the profile's ADW page)."
-5. New `plans/057-frog-fact-fixes.md`, in the shape of 056 (about 20 lines): what changed (the 2 clues, sources, tag), why (fact-sources Decisions steps 8 and 9, owner check 2026-11-08), sources (AW 616 and 4691 already cited; ADW backs "no vocal sac"), "No version bump" (finding 5), DB (finding 7, handoff H11), verification.
-6. Mission plan only (not code): the Decisions record the wording decision (finding 2), and the handoff file `/srv/critter-ai/handoff/critter-connect.md` gets **H11 · Production content build for the frog fixes**: after `version.txt` = merge commit, in WSL on fresh `main`, `npm run content -- build`. Expected: `0 citation warnings`, `species_deduction_clues: 2478 rows`, `species_facts: 491 rows`; optional `content -- check` = 2478 clues (2086 deductive), 491 facts, 0 errors. Spot check: rows 635 and 1127 carry the new labels, and `'voiceless' = any(compare_tags)` matches only species 8.
+   - `:458` → "Calls: … **Resolved 2026-11-08 (plan 057):** the clue now says it calls, sourced to AmphibiaWeb, and `voiceless` is dropped from 11. "No vocal sac" is ADW's ("Goliath frogs do not have vocal sacs")."
+5. New `plans/057-frog-fact-fixes.md`, in the shape of 056 (about 20 lines): what changed (the 2 clues, sources, tag), why (fact-sources Decisions steps 8 and 9, owner check 2026-11-08), sources (AW 616 and 4691 already cited; ADW backs "no vocal sac"), "No version bump" (finding 5), verification. DB line: no schema change; prod needs `content -- build` (handoff H11), which deletes and reloads every clue and fact, so a fresh production dump comes first (AGENTS.md:39). Before or after the deploy are both safe (both AW pages already cited, `voiceless` still in SIGNS); "after the deploy" is the brief's preference, not a constraint.
+6. Mission plan only (not code): the Decisions record the wording decision (finding 2), and the handoff file `/srv/critter-ai/handoff/critter-connect.md` gets **H11 · Production content build for the frog fixes**, with these steps:
+   1. Wait until `curl https://play.critterconnect.org/version.txt` = the merge commit.
+   2. **Fresh production dump** (the build has no backup of its own). From WSL: `ssh root@play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh` (the host `npm run deploy` uses; add `-i ~/.ssh/hetzner-vps` if the ssh config doesn't pick the key). Success = exit 0 and a last line `<UTC time> backup ok: /var/backups/critter-connect/daily/phaser_june-<stamp>.dump (<size>)`, about 90-120 MB. The script has already checked that the dump reads back (`pg_restore --list`). On anything else, stop and don't build. Restore steps: `docs/DEPLOY.md#backups` ("Restore drill"; for a real restore add `--clean --if-exists -d phaser_june`).
+   3. In WSL on a fresh `main` (`git pull --ff-only`): `npm run content -- build`. Expected: `0 citation warnings`, `species_deduction_clues: 2478 rows`, `species_facts: 491 rows`. Optional: `content -- check` = 2478 clues (2086 deductive), 491 facts, 0 errors.
+   4. Spot check: `./scripts/db "select id, label, source_key, compare_tags from species_deduction_clues where id in (635, 1127);"` shows the new labels, both `amphibiaweb`, and 1127 with `{}`. `./scripts/db "select distinct species_id from species_deduction_clues where 'voiceless' = any(compare_tags);"` returns only `8`.
+   5. Reply `done` with the dump's file name.
 
 Not changed: `db/content/citations.json`, `db/content/sources.json`, `src/**` (incl. `signs.ts`), `docs/CONTENT_SOURCES.md`, `plans/2026-11-07-fact-sources.md`, 08's profile.
 
@@ -175,6 +180,11 @@ SHOULD-CONSIDER: none
 
 ## Revision notes
 
+- **Astra MUST-FIX 1 (fresh prod dump before H11): resolved.** Target design 6 now gives H11 numbered steps, and the dump comes before `content -- build`. It names the exact command (`ssh root@play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`, the script's documented path, `docs/DEPLOY.md:69-74`, on the `deploy.sh` host from WSL), says what success looks like (exit 0 plus the script's `backup ok: …dump (<size>)` line; the script checks that the dump reads back) and gives the restore pointer (`docs/DEPLOY.md#backups`). The rule is "no `backup ok`, no build". Target design 5 has plan 057's DB line say the same.
+- Fable SHOULD-CONSIDER 1 adopted (item 5): building before or after the deploy is safe either way, and "after" is the brief's preference.
+- Fable SHOULD-CONSIDER 2 adopted (item 6.4): exact paste-ready spot-check SQL via `./scripts/db`, plus the `voiceless` query. The columns were checked against `db/schema.sql`.
+- Fable SHOULD-CONSIDER 3 adopted (item 4): the 11 research bullet is cut to one resolution sentence plus the ADW attribution.
+
 ## Steps
 
 ## Verification
@@ -191,5 +201,6 @@ SHOULD-CONSIDER: none
 - 2026-11-08 23:35 UTC · Architecture: architect wrote findings + target design (content-only: 2 clues on `amphibiaweb`, drop `voiceless` from 11, CSV row, 2 research bullets, plan 057; no code, no citations.json, no version bump). Doc-only, no checks needed.
 - 2026-11-08 23:45 UTC · Fable review: APPROVE, no MUST-FIX; 3 SHOULD-CONSIDER (H11 order note, spot-check SQL, shorter 11 bullet) for the planner. Doc-only, no checks needed.
 - 2026-11-08 23:35 UTC · Astra review: APPROVE_WITH_CHANGES; 1 MUST-FIX (H11 needs a fresh prod dump before `content -- build`) for Revision. Doc-only, no checks needed.
+- 2026-11-08 23:55 UTC · Revision: architect added fresh prod dump (`pg-backup.sh`, "no `backup ok`, no build") as H11 step 2; adopted Fable SC 1-3. Resolves Astra MUST-FIX 1. Doc-only, no checks needed.
 
 ## Summary
