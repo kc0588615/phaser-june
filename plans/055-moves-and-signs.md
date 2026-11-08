@@ -130,8 +130,9 @@ Shots (390 px, during play, light and dark), mission state `/srv/critter-ai/agen
 Code first, content after: the deploy ships 055 code on the old prod rows (every retired tag still in `SIGNS`; a release guard checks prod's pool tags against it), then the owner runs the production content build from WSL (handoff H10). Brief B (`ft-cleanup`) deletes the Farms & towns constants after that.
 
 ## Summary
-Draft; the diff stat and the final artifact are filled at Verification.
 - What changed, picks, seed, bot and witness tables, sign edits: above.
-- `git diff --stat origin/main...HEAD`: (at Verification)
-- Final E2E artifact: `/srv/critter-ai/agent-state/missions/moves-and-signs-build/final-e2e/` (at Verification)
+- `git diff --stat origin/main...HEAD` (base `447e9317`, at Verification): 100 files changed, 1958 insertions(+), 368 deletions(-).
+- Verification 2026-11-08: typecheck, lint, 66/66 unit tests, content preview 0 PROBLEMs, sign check 0 flags on 76; dev-copy `content -- build` (76 species, 2478 clues) + `check` 0 errors; `e2e:fresh` seed 1 Asia 1501/1501, trees:yes dealt, E1–E6 pass. Release guard: prod pool 198 open tags, 0 missing from `SIGNS`.
+- Final E2E artifact: `/srv/critter-ai/agent-state/missions/moves-and-signs-build/final-e2e/` (`report.json` + screenshots). Reproduce: the guarded commands under "Proof the trees question is dealt".
+- Shots: `/srv/critter-ai/agent-state/missions/moves-and-signs-build/shots/02d-field-guide-{light,dark}.png`, `02e-field-guide-rows-{light,dark}.png`.
 - Production content build waits on the owner (H10).

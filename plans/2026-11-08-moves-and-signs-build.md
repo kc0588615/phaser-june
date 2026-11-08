@@ -2,7 +2,7 @@
 mission: moves-and-signs-build
 project: critter-connect
 branch: agent/moves-and-signs-build
-status: active
+status: done
 started: 2026-11-08 04:43 UTC
 ---
 
@@ -631,7 +631,15 @@ SHOULD-CONSIDER:
 - 2026-11-08 07:36 UTC · S11: docs (CONTENT_SOURCES trees/evidence/artificial/sign rule, CLUE_MATCH, CONTEXT, DATABASE_ACCESS, AGENTS) + new `plans/055-moves-and-signs.md`. typecheck, lint, 66/66 tests; every cited path exists, `#signs` anchor resolves.
 - 2026-11-08 07:37 UTC · S12: `M/tools/prod-tags.ts` release guard vs live pool: 198 open tags, 0 missing from SIGNS (exit 0); handoff H10 (prod content build after deploy) added, parses. typecheck, lint ok; no repo code change.
 - 2026-11-08 07:43 UTC · Astra code review: APPROVE, 0 MUST-FIX, 3 SHOULD-CONSIDER (recorded; SC3 base verified fresh at 447e9317); plan-only.
+- 2026-11-08 07:58 UTC · Verification: V1 (typecheck, lint, 66/66 tests, preview 0 PROBLEMs, sign-check 0 flags, no `artificial`, trees 10/61 + 5 unset) pass; V3 guarded dev build 2478 clues + check 0 errors + e2e:fresh seed 1 Asia 1501/1501 (`M/final-e2e/`); V4 0 failed, trees:yes dealt, E1–E6 present; shots copied; V5 prod-tags 0 missing; plan 055 Summary filled.
 
 ## Summary
 
-For the owner (Astra code review SHOULD-CONSIDER, not done): e2e E6 could also mutate a saved note in place (same array length), not only append one (`scripts/e2e.mjs:1866`); CI could keep failure fixtures for the sign validator (`tests/clueGame/content.test.ts:10`).
+Built (plan `plans/055-moves-and-signs.md`, base `origin/main` 447e9317): "Lives in trees" asked in Habits (3-pt pencil weight, 10 yes / 61 no, `:no` never asked), Farms & towns removed from content (constants stay for brief B), signs moved inside the field guide under their category (paged GuideSigns gone, 045 guide-line hiding unchanged, no leak rules), one category mark on guide headings, "Its answers" rows, question tiles and witness notes; 54 sign edits (restating `tree_dweller` and misleading tags retagged or dropped, 11 new `SIGNS`), `signProblems` now gates the content build; saved rounds whose witness notes no longer fit the content deal fresh (`roundStillFits`, rules `055-0`).
+
+- Verification: all V1–V5 pass. Final E2E (dev copy, seed 1 `continent:asia`): 1501/1501, trees:yes dealt, E1–E6 pass. Artifact `/srv/critter-ai/agent-state/missions/moves-and-signs-build/final-e2e/report.json` + screenshots; shots in `.../shots/`.
+- Bot (400 rounds, seed 44): find rates within ±2 pts; careful moves left −0.2 to −1.6 (North America most, from fewer witness notes). Not easier. Witness notes a round: North America 1.78 → 1.00, others ±0.3 (`M/metrics/summary.md`).
+- Reviews: Fable APPROVE; Astra architecture APPROVE_WITH_CHANGES (1 MUST-FIX, fixed); Astra code APPROVE, 0 MUST-FIX.
+- `git diff --stat origin/main...HEAD`: 100 files, +1958 −368.
+- **Needs the production content build** (owner, WSL, after deploy): handoff H10. Until then prod plays 055 code on old rows (release guard: all 198 live tags in `SIGNS`).
+- For the owner (Astra code review SHOULD-CONSIDER, not done): e2e E6 could also mutate a saved note in place (same array length), not only append one (`scripts/e2e.mjs:1866`); CI could keep failure fixtures for the sign validator (`tests/clueGame/content.test.ts:10`).
