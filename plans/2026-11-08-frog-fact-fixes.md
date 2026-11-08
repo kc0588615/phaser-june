@@ -57,7 +57,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -165,6 +165,14 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. Add a successful fresh production dump as a prerequisite in H11 before `content -- build`. The build deletes and reloads all clues and facts; it performs no backup. Omitting this violates [AGENTS.md:39](/srv/critter-ai/worktrees/frog-fact-fixes/AGENTS.md:39), which requires a fresh dump before bulk writes. Transactional loading does not replace that requirement.
+
+SHOULD-CONSIDER: none
+
 ## Revision notes
 
 ## Steps
@@ -182,5 +190,6 @@ SHOULD-CONSIDER:
 - 2026-11-08 23:20 UTC · Baseline: typecheck/lint/66 tests/preview 0; dev-copy e2e:fresh seed 7 Africa 1565/1565 (`baseline-e2e/`).
 - 2026-11-08 23:35 UTC · Architecture: architect wrote findings + target design (content-only: 2 clues on `amphibiaweb`, drop `voiceless` from 11, CSV row, 2 research bullets, plan 057; no code, no citations.json, no version bump). Doc-only, no checks needed.
 - 2026-11-08 23:45 UTC · Fable review: APPROVE, no MUST-FIX; 3 SHOULD-CONSIDER (H11 order note, spot-check SQL, shorter 11 bullet) for the planner. Doc-only, no checks needed.
+- 2026-11-08 23:35 UTC · Astra review: APPROVE_WITH_CHANGES; 1 MUST-FIX (H11 needs a fresh prod dump before `content -- build`) for Revision. Doc-only, no checks needed.
 
 ## Summary
