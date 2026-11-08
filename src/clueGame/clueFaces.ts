@@ -12,7 +12,7 @@ const FACES: Record<string, string> = {
   'lifespan:short': '⏱️', 'lifespan:medium': '⏳', 'lifespan:long': '🕰️',
   'system:terrestrial': '🏞️', 'system:freshwater': '💧', 'system:marine': '🌊',
   'habitat:forest': '🌳', 'habitat:savanna': '🌾', 'habitat:shrubland': '🌿', 'habitat:grassland': '🌱', 'habitat:wetlands': '💦',
-  'habitat:rocky': '🪨', 'habitat:caves': '🕳️', 'habitat:desert': '🏜️', 'habitat:marine': '🏖️', 'habitat:artificial': '🏡',
+  'habitat:rocky': '🪨', 'habitat:caves': '🕳️', 'habitat:desert': '🏜️', 'habitat:marine': '🏖️',
 };
 
 /** Range questions point the way inside the continent, so two Range clues in a round look different. */

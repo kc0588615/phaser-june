@@ -152,7 +152,7 @@ None needed: Fable and Astra both APPROVE with 0 MUST-FIX. Fable's SHOULD-CONSID
 
 `M=/srv/critter-ai/agent-state/missions/ft-cleanup`. V1–V4 and `GATE` are under Verification.
 
-- [ ] S1. **Delete the 13 `artificial` lines, edit 2 doc clauses, write plan 056; one commit.**
+- [x] S1. **Delete the 13 `artificial` lines, edit 2 doc clauses, write plan 056; one commit.**
   - First, before any edit (code = `origin/main` `36dc1a5d`): `npm run -s content -- preview > $M/preview-before.txt 2>&1`; `grep -c PROBLEM` on it = 0. Kept in `M` so V2 works in later sessions.
   - Edits, exactly. Partial-line edits change only the named text; neighbouring entries stay on their lines, no reflow:
     - `src/clueGame/traits.ts:31`: `'marine', 'artificial'] as const;` → `'marine'] as const;`
@@ -230,6 +230,8 @@ Must show `explore: 200` and `version.txt = merge commit`.
 
 ## Decisions
 
+- S1 · docs/CONTENT_SOURCES.md:25 edited, outside the brief's named docs (Fable SC2): same intent, one clause; its old reason ("not asked") understated the new behaviour (now rejected as an unknown habitat).
+
 ## Log
 
 - 2026-11-08 21:40 UTC: Baseline. Live gate 0; typecheck/lint/test/preview 0; dev-copy e2e 1565/1565.
@@ -238,5 +240,7 @@ Must show `explore: 200` and `version.txt = merge commit`.
 - 2026-11-08 22:10 UTC: Astra review. APPROVE, 0 MUST-FIX, 0 SHOULD-CONSIDER. Plan-only edit.
 - 2026-11-08 22:15 UTC: Revision. None needed (0 MUST-FIX); Fable SHOULD-CONSIDERs handed to Steps. Plan-only edit.
 - 2026-11-08 22:25 UTC: Steps. `planner`: S1 (13 code lines, 2 doc clauses, plan 056, V1+V2), S2 (dev-copy e2e, rounds = baseline hard pass); V1-V5 + Release (live gate hard stop). Planner dry-ran gate cmds (dev copy + live: 0). Plan-only edit.
+
+- 2026-11-08 22:40 UTC: S1. 13 `artificial` code lines gone (numstat 1/1, 1/3, 1/1, 0/8), 2 doc clauses, plan 056. V1: typecheck/lint/test(66/66) 0, `rg` empty, db untouched. V2: preview exit 0, unchanged vs before, 0 PROBLEM.
 
 ## Summary
