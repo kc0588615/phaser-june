@@ -291,6 +291,18 @@ node -e 'const [a,b]=process.argv.slice(1).map(f=>require(require("path").resolv
 
 ## Code review (Astra)
 
+`astra-review --code origin/main` (exit 0), branch `7edc1a5a..f8fbe9c6`:
+
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. Refresh `origin/main` before opening the PR. Fetch was blocked by the read-only filesystem; review used local `7edc1a5a` through `f8fbe9c6`.
+
+SC 1 is covered by the release step (fetch + rebase on `origin/main`, rerun V1–V4); for the Summary.
+
 ## Release
 
 ## Decisions
@@ -310,5 +322,6 @@ node -e 'const [a,b]=process.argv.slice(1).map(f=>require(require("path").resolv
 - 2026-11-08 23:41 UTC · Steps: planner wrote S1 (content edits + plan 057) and S2 (dev-copy build/check/e2e + H11), V1–V5 + release smoke; corrected H11 step 3 (counts come from `content -- check`). Doc-only; quote check still 274/0.
 - 2026-11-09 00:05 UTC · S1: 06 + 11 clues on amphibiaweb, `voiceless` off 11, sign-map row, 2 research bullets resolved, plan 057. V1 all pass (66/66, voiceless = 08 only, quotes 274/0, JSON ok, scope ok, code untouched); V2 exit 0, 0 PROBLEM, 0 cite warn, diff = 2 clue lines.
 - 2026-11-08 23:55 UTC · S2: dev copy (guard = phaser_june_dev) build 0 cite warn; check 76 playable, 2478 clues (2086 deductive), 491 facts, 0/0; rows 635/1127 new text on amphibiaweb, 1127 no tags; voiceless = 8. e2e:fresh seed 7 Africa 1565/1565; V4 0 failed, 0 console errors, rounds same as baseline: true. H11 added to handoff.
+- 2026-11-09 00:15 UTC · Astra code review: APPROVE, no MUST-FIX; 1 SC (refresh origin/main before PR, already in release step). Doc-only, no checks needed.
 
 ## Summary
