@@ -585,6 +585,14 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- Base `origin/main` still 447e9317 (no rebase needed). Re-ran V1 (typecheck, lint, 66/66, preview 0 PROBLEMs, sign-check 0 flags, no `artificial`, trees 10/61 + 5 unset), V3 (guarded dev build 2478 clues, check 0 errors, e2e:fresh seed 1 Asia 1501/1501, `M/release-e2e/`), V4 (0 failed, trees:yes dealt), V5 prod-tags 0 missing (also rerun right before merge).
+- PR #66, CI `check` + `e2e` pass. Merge commit `36dc1a5d`.
+- Deploy: `deploy critter-connect: live at https://critterconnect.org` (log `/srv/critter-ai/agent-state/missions/moves-and-signs-build/deploy.log`).
+- Smoke: play `/`, `/explore/`, `/api/places`, `/api/clue-game/pool` 200 (pool 76 species); `version.txt` = `36dc1a5dc15b3a37836af92af881138e2506bcc5`; headless Chrome on live `/explore/?place=continent:asia&seed=1`: animals load, board + sheet render, no error text (055 code on old prod rows).
+- Production content build: owner, H10 (now unblocked).
+
+Result: done
+
 ## Decisions
 
 - S2 · `trees` notes (`trees-notes.csv`) use only ground/branch/burrow words: no habitat class, water, diet, size, day/night, social or birth words, since a trait note shows whenever its own question isn't dealt (finding 10). Fully aquatic animals (10, 17, 18, 62, 73, 74) get a plain "stays down low, never climbs" note for that reason.
@@ -632,6 +640,7 @@ SHOULD-CONSIDER:
 - 2026-11-08 07:37 UTC · S12: `M/tools/prod-tags.ts` release guard vs live pool: 198 open tags, 0 missing from SIGNS (exit 0); handoff H10 (prod content build after deploy) added, parses. typecheck, lint ok; no repo code change.
 - 2026-11-08 07:43 UTC · Astra code review: APPROVE, 0 MUST-FIX, 3 SHOULD-CONSIDER (recorded; SC3 base verified fresh at 447e9317); plan-only.
 - 2026-11-08 07:58 UTC · Verification: V1 (typecheck, lint, 66/66 tests, preview 0 PROBLEMs, sign-check 0 flags, no `artificial`, trees 10/61 + 5 unset) pass; V3 guarded dev build 2478 clues + check 0 errors + e2e:fresh seed 1 Asia 1501/1501 (`M/final-e2e/`); V4 0 failed, trees:yes dealt, E1–E6 present; shots copied; V5 prod-tags 0 missing; plan 055 Summary filled.
+- 2026-11-08 08:19 UTC · Release: V1/V3/V4/V5 rerun pass (1501/1501), PR #66 CI pass, merged 36dc1a5d, deployed; live version = merge commit, smoke 200s + live game loads.
 
 ## Summary
 
@@ -643,3 +652,4 @@ Built (plan `plans/055-moves-and-signs.md`, base `origin/main` 447e9317): "Lives
 - `git diff --stat origin/main...HEAD`: 100 files, +1958 −368.
 - **Needs the production content build** (owner, WSL, after deploy): handoff H10. Until then prod plays 055 code on old rows (release guard: all 198 live tags in `SIGNS`).
 - For the owner (Astra code review SHOULD-CONSIDER, not done): e2e E6 could also mutate a saved note in place (same array length), not only append one (`scripts/e2e.mjs:1866`); CI could keep failure fixtures for the sign validator (`tests/clueGame/content.test.ts:10`).
+- Released: PR #66 merged (`36dc1a5d`) and deployed; live `version.txt` = merge commit. Prod content build (H10) now waits on the owner.
