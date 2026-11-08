@@ -112,7 +112,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -120,6 +120,12 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+From `origin/main` 447e9317 (fact-sources merged, PR #65), 2026-11-08.
+- `npm ci`: ok (npm warns 4 install scripts not in allowScripts: esbuild ×2, @tailwindcss/oxide, unrs-resolver; builds and tests unaffected).
+- No migrations (schema baseline only; this mission changes no schema).
+- `npm run typecheck`, `npm run lint`: exit 0. `npm test`: 66/66 pass. `npm run content -- preview`: exit 0, 0 PROBLEMs.
+- `npm run e2e:fresh` against the dev copy (guarded block, guard `phaser_june_dev` ok; no content build), `CHROME_PATH` = no-sandbox wrapper: 1558/1558 checks, default seed 7. Artifact `/srv/critter-ai/agent-state/missions/moves-and-signs-build/baseline-e2e/` (`report.json` + screenshots); reproduce with the guarded block and `npm run e2e:fresh`.
 
 ## Architecture
 
@@ -140,5 +146,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-08 04:50 UTC · Baseline: typecheck, lint, 66 unit tests, content preview, e2e:fresh on dev copy (1558/1558) all pass.
 
 ## Summary
