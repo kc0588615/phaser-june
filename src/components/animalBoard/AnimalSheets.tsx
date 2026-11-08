@@ -8,7 +8,8 @@ import { ArrowUpRight, Ban, BookOpen, Camera, ChevronLeft, ChevronRight, CircleH
 import { animate, AnimatePresence, motion, useIsPresent, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
 import { PENCIL_POINTS, sharpEye, type AnimalRound } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
-import { clueFace, signsOf } from '@/clueGame/clueFaces';
+import { clueFace } from '@/clueGame/clueFaces';
+import { signsOf } from '@/clueGame/signs';
 import type { CluePool, PoolSpecies } from '@/clueGame/pool';
 import { prefixOf, type Animal } from '@/clueGame/questionMatch';
 import { FactsWithSources } from '@/components/clueGame/FactsWithSources';

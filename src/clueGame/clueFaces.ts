@@ -29,9 +29,3 @@ export function clueFace(tag: string): string {
   if (tag.startsWith('region:')) return REGION_FACES[tag.slice('region:'.length)] ?? '🧭';
   return FACES[tag] ?? '❓';
 }
-
-/** An open tag as a short phrase for a suspect's signs (digging_claws -> "digging claws"). */
-export const signPhrase = (tag: string): string => tag.replace(/_/g, ' ');
-
-/** A suspect's signs: the open tags its field guide records (not the question traits, which the clue chips show). */
-export const signsOf = (tags: readonly string[] | undefined): string[] => (tags ?? []).filter(tag => !tag.includes(':')).map(signPhrase);

@@ -12,9 +12,9 @@ import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, allTraits, clueTags, prefixOf, t
  */
 export type ClueFit = 'fits' | 'partial' | 'contradicts' | 'unknown';
 
-type TagOutcome = 'match' | 'exclusive-conflict' | 'complete-conflict' | 'unknown';
+export type TagOutcome = 'match' | 'exclusive-conflict' | 'complete-conflict' | 'unknown';
 
-function tagOutcome(tag: string, candidateTraits: Set<string>): TagOutcome {
+export function tagOutcome(tag: string, candidateTraits: ReadonlySet<string>): TagOutcome {
   if (candidateTraits.has(tag)) return 'match';
   const prefix = prefixOf(tag);
   if (!prefix || ![...candidateTraits].some(trait => prefixOf(trait) === prefix)) return 'unknown';

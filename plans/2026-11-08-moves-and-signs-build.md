@@ -444,7 +444,7 @@ Deviation from the architecture's 8-step order (sessions too big): its step 3 is
   - Write `M/content/apply.ts` part A (T5): `traits.trees` after `social`, `url` only for the 8 keys with no page; verdicts checked against `moves.csv`; drop `artificial`/`artificial:*` from `habitats`; `content.ts` format; ends printing `checkProfile` problems. Run it via `M/tools/run.sh`, then once more (no diff = idempotent).
   - `M/tools/pairs.ts`: inseparable pairs per place (`tellsApart(fullTable(book,[a,b],place),2)`); move the guard at `tests/clueGame/animalBoard.test.ts:50-52` to a remaining pair, or delete those lines if none.
   - Checks: static checks (0 PROBLEMs); `rg -l '"artificial' db/content/animals` empty; V1 item 6 prints `{yes:10,no:61}` and no-record 13, 24, 45, 56, 71. No E2E (DB unchanged).
-- [ ] S3. **`src/clueGame/signs.ts`: table and checks, not yet wired (T2).**
+- [x] S3. **`src/clueGame/signs.ts`: table and checks, not yet wired (T2).**
   - First write `M/tools/sign-check.ts` (Failure modes F1–F10 as assertions on small inline fixtures, then the acceptance run over the 76 from `readProfiles()`); it fails until `signs.ts` exists.
   - `signs.ts`: header comment (code is authoritative; `sign-map.csv` is the research record); `SIGNS` = `sign-map.csv` minus `can_swim` (205; `category` from the CSV; `implies`/`denies` hand-encoded from `answers` only for definite values of asked prefixes; `restates` only `tree_dweller → trees:yes`); `signCategory` (throws naming the tag); `noteCategories`; `signProblems` (a)(b)(c). `signPhrase` and `signsOf` move here from `clueFaces.ts` unchanged (`string[]`); `AnimalSheets.tsx` import follows.
   - `src/clueGame/deduction.ts`: export `tagOutcome`, parameter `ReadonlySet<string>`.
@@ -580,6 +580,8 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - S2 · `trees` notes (`trees-notes.csv`) use only ground/branch/burrow words: no habitat class, water, diet, size, day/night, social or birth words, since a trait note shows whenever its own question isn't dealt (finding 10). Fully aquatic animals (10, 17, 18, 62, 73, 74) get a plain "stays down low, never climbs" note for that reason.
 - S2 · `trees` goes after the last of covering/size/diet/activity/social in `traits` (not every profile has `social`), matching `profileClues` order.
 - S2 · Finding 1: after part A the only inseparable pair is North America's two sloths (30, 54; Farms & towns had split them). The test guard moved to that pair, scoped to `north-america` (they're separable elsewhere). Saola + Sumatran Orangutan are split by `trees`.
+- S3 · `SIGNS` encoding: a disjunction is written as `denies` ("giant" denies tiny/small/medium; plant eaters deny `diet:meat`/`diet:insects`; hunters deny `diet:plants`), so no OR-implies is needed. Water words that don't fix fresh vs sea (`feathery_gills`, `flippers`, `paddle_tail`, `underwater_breathing`) imply only `habitat:wetlands`; `brackish_water` and `eggs_over_water` imply no system. `sand_swimmer` implies `system:freshwater` (its plain reading, as the design's `misleads` says). No entry weakened.
+- S3 · Acceptance: exactly the T2 baseline (33 contradictions, 11 `tree_dweller` uses) plus one extra, kept as real: 62 `forest_streams` (note: "mountain streams … often with forest … in the banks"; record has no `habitat:forest`, the tag reads as forest yes). S6 retags it; plan 055 lists it as "found by `signProblems`". Output `M/content/sign-check-s3.txt`.
 
 ## Log
 
@@ -591,5 +593,6 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - 2026-11-08 05:52 UTC · Steps: planner wrote 12 steps (arch steps 3, 4 split; content build + probe moved before audit/docs), Verification V1-V5, Failure modes F/A/R; plan-only.
 - 2026-11-08 05:58 UTC · S1: `trees` trait + `neverAsked` (traits.ts), Habits question texts, `fullTable`/`questionsFor` skip `:no`, rules `055-0`, `roundStillFits` (rows, then witness notes) used by the resume, 🌲 face, profile `trees` trait; E2E E5 + E6. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; dev E2E 1563/1563 (`M/e2e-s1/`).
 - 2026-11-08 06:03 UTC · S2: `trees` on 71 (10 yes, 61 no; 8 with `url`), Farms & towns off 20, `trees-notes.csv` committed, apply.ts idempotent; pair guard → sloths (NA). typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; no `artificial` left; V1.6 ok. No E2E (DB unchanged).
+- 2026-11-08 06:25 UTC · S3: `signs.ts` (205-entry `SIGNS`, `signCategory`, `noteCategories`, `signProblems`; `signPhrase`/`signsOf` moved from clueFaces), `tagOutcome` exported; `M/tools/sign-check.ts` F1-F10 pass, acceptance 33+1 contradictions (62 `forest_streams` kept), 11 restating. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs. No E2E (no behaviour change).
 
 ## Summary
