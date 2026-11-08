@@ -50,7 +50,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -65,6 +65,66 @@ From `agent/ft-cleanup` @ `cd1d6007` (= `origin/main` `36dc1a5d` + mission start
 - `rg -n artificial src db/content`: 13 lines, exactly the brief's sites (`traits.ts:31`, `questionMatch.ts:158,178,214`, `clueFaces.ts:15`, `profiles.ts:98,144-150`); none in `db/content`.
 
 ## Architecture
+
+Read on `agent/ft-cleanup` = `origin/main` `36dc1a5d` + plan commits (`git fetch` 2026-11-08; `git diff origin/main HEAD` touches only this plan). `git grep -i artificial origin/main` outside `plans/` and `docs/research/`: 14 lines = the 13 code lines below + `docs/CONTENT_SOURCES.md:25`.
+
+### Findings
+
+**F1. Dead `artificial` constants (the brief's work).** KISS: they describe a class no content or live row holds (Baseline: `rg` 0 in `db/content`; live gate 0, which counts `habitat:artificial` and `artificial:%`). Fix: delete them. Exactly:
+- `src/clueGame/traits.ts:31`: `'artificial'`, the last item of `HABITAT_CLASSES` (`COMPLETE_PREFIXES`, `:34`, spreads it and follows).
+- `src/clueGame/questionMatch.ts:158` (`QUESTION_TEXT`) and `:178` (`SHORT_TEXT`): whole lines. `:214` (`COLUMN_LABEL`): only `, 'habitat:artificial': 'Farms & towns'`; `'habitat:marine': 'Coasts & sea',` stays on the line.
+- `src/clueGame/clueFaces.ts:15`: only `, 'habitat:artificial': '🏡'`; 🏡 is used nowhere else (`rg`).
+- `src/clueGame/profiles.ts:98` (`HABITAT_TEXT` class line) and `:144-150` (`HABITAT_KIND_TEXT`, 7 `artificial:` kind lines): whole lines.
+
+**F2. Verification gap (note, no edit).** `npm run content -- preview` exits 0 even when it prints `PROBLEM` lines (`scripts/content.ts:77-89` only logs; `build` throws at `:131-132`). So "preview exits 0" proves nothing alone: Verification must also check the output.
+
+Everything else in scope is fine; consumers checked below.
+
+### Consumers: removal compiles and changes nothing for content without `artificial`
+
+- **No union-keyed records, no exhaustiveness, no positions.** `HABITAT_CLASSES` has one consumer, `traits.ts:34` (spread into a `Set`, so order doesn't matter); no `typeof HABITAT_CLASSES[number]` type exists (`rg HabitatClass`: none). `QUESTION_TEXT`, `SHORT_TEXT`, `COLUMN_LABEL` (`questionMatch.ts:139,162,202`), `FACES` (`clueFaces.ts:4`), `HABITAT_TEXT`, `HABITAT_KIND_TEXT` (`profiles.ts:88,101`) are all `Record<string, string>` lookups with fallbacks (`questionText` → tag, `clueFace` → ❓, `profileClues:260-261` → template). Gem colors come from order index, not from faces. `PREFIX_ORDER` is `Object.keys(PREFIX_CATEGORY)` (`questionMatch.ts:23-30`), untouched.
+- **What's askable doesn't come from these tables.** It's `PREFIX_CATEGORY` by prefix (`habitat` stays) applied to content tags (`questionMatchContent.ts:85`, `animalBoard.ts:90`). With no `habitat:artificial` tag, it was never dealt; deck face-uniqueness (`animalBoard.ts:133`) only sees dealt tags.
+- **`COMPLETE_PREFIXES` readers.** `deduction.ts:22` (`tagOutcome`, and through it `fitClue` and `signProblems` implies), `profiles.ts:302` (`isHandWrittenClue`), `profiles.ts:348` (reserved tag check). Each changes only for a tag with prefix `artificial`: 0 in content, 0 live. No `SIGNS` implies or denies an `artificial` tag (`rg`). These three stay untouched, as the brief says.
+- **Content checks.** `checkProfile:335` now rejects `habitats: ["artificial" | "artificial:*"]` as `unknown habitat`, and `build` refuses it (`scripts/content.ts:131-132`): fail loud. One side effect, accepted: a hand-written clue tag `artificial:<kind>` is no longer "reserved" (`:348`). It isn't askable (no `PREFIX_CATEGORY`) and the `CONTENT_SOURCES.md:25` rule covers it. No guard added (brief: the checks stay as they are).
+- **Tests and scripts.** `tests/`: only a comment (`animalBoard.test.ts:50`), no fixture or assertion. `scripts/` (`balance-044.ts`, `e2e.mjs`, `content.ts`): no mention. Lint: no unused symbol is left (`HABITAT_CLASSES` still feeds `:34`).
+
+### `ANIMAL_RULES.version` stays `055-0` (`animalBoard.ts:60`)
+
+A deal reads the book (from the pool) and the rules. These constants only add text and faces for a tag no animal holds, and the comparison rules for a prefix no tag uses, so every deal, answer, note and score is identical (the e2e `rounds` comparison below checks this). Saved games: a round dealt with `habitat:artificial` before the content build already fails `roundStillFits` (`animalBoard.ts:182-191`, `useAnimalSession.ts:121-122`). A dealt tag is held by at least one suspect (`animalBoard.ts:90`), and the fresh book no longer has it, so such a round is re-dealt. Even if one were resumed, it would show the raw tag and ❓ without crashing (`categoryOf` reads prefix `habitat`). A bump would only throw away players' current saved games for nothing.
+
+### Docs (plans and `docs/research/` are history and stay)
+
+- `docs/CLUE_MATCH.md:54`: drop the clause `; Farms & towns is no longer asked`. The guide describes the current game, which no longer has the class; 055 holds the history.
+- `docs/CONTENT_SOURCES.md:25`: keep the skip rule, because IUCN tables still list Artificial and authors copy them. Change its reason to `the game doesn't know it (plans 055, 056): the content check rejects it as an unknown habitat.` This doc isn't among the brief's named ones, but the intent is the same and the edit is one clause.
+- `CONTEXT.md`, `README.md`: no mention. `plans/README.md`'s index stops at 053 (054 and 055 have no row), so 056 gets no row either.
+
+### Notes, not edits (brief's decision rule)
+
+- `tests/clueGame/animalBoard.test.ts:50` comment ("since Farms & towns left 54"): content history, still true.
+- `signs.ts:221` `town_dweller`: a content sign (held by 13 and 54), still shown; not dead code.
+- `traits.ts:30` comment "IUCN habitat classes (level 1)": still accurate, since the list was already a subset of IUCN's.
+
+### Target design: ordered edits (one commit: one concept, and no type ties force an order)
+
+0. Before editing, save `npm run content -- preview > /tmp/ft-preview-before.txt` (reads files only, no DB).
+1. `traits.ts:31`. 2. `questionMatch.ts:158,178,214`. 3. `clueFaces.ts:15`. 4. `profiles.ts:98,144-150` (exactly as F1).
+5. `docs/CLUE_MATCH.md:54`, `docs/CONTENT_SOURCES.md:25` as above.
+6. New `plans/056-ft-cleanup.md`, about 15 lines in the style of 052/053: what went, why now (H10 build, gate 0 on 2026-11-08), why there's no version bump, verification results.
+
+**Verification**
+- `rg -n artificial src db/content` prints nothing.
+- `npm run typecheck`, `npm run lint`, `npm test` (66/66) exit 0.
+- Preview: `diff /tmp/ft-preview-before.txt <(npm run content -- preview)` is empty (every generated row of all 76 profiles is unchanged), and `grep -c PROBLEM` = 0 (F2).
+- `npm run e2e:fresh` with the brief's guarded dev-copy block. Inside the guard, after `current_database()` = `phaser_june_dev`, run the same gate query on the dev copy and require 0, so the e2e really runs without `artificial`. Pass = all checks, 0 console errors. Compare `report.json` `rounds` with `baseline-e2e/report.json` (seed 7): they should be identical. If they differ, investigate before release.
+- Release: run the live gate query again just before `deploy critter-connect` (cheap, read-only). Then the brief's smoke: `/explore` 200, `version.txt` = merge commit.
+
+**Risk.** The only failure mode is `artificial` rows coming back to prod, for example a content build from a stale checkout. Their kind lines would then show as witness notes ("It also lives in towns or cities."), and a dealt `habitat:artificial` would show its raw tag and ❓. The pre-deploy gate covers this.
+
+### Rejected alternatives
+- Bump `ANIMAL_RULES.version`: no rule or deal changes, and it would drop saved games.
+- Add a guard so the reserved check still rejects `artificial:*` tags: it re-adds the knowledge being removed; the content rule and the `unknown habitat` check suffice.
+- Leave `CONTENT_SOURCES.md:25` unchanged: it's still true, but its reason ("not asked") understates the new behaviour (rejected).
+- Split into several commits: the sites don't depend on each other, but they're one change.
 
 ## Architecture review (Fable)
 
@@ -85,5 +145,6 @@ From `agent/ft-cleanup` @ `cd1d6007` (= `origin/main` `36dc1a5d` + mission start
 ## Log
 
 - 2026-11-08 21:40 UTC: Baseline. Live gate 0; typecheck/lint/test/preview 0; dev-copy e2e 1565/1565.
+- 2026-11-08 21:50 UTC: Architecture. `architect`: 13 code lines + 2 doc clauses go; no union-keyed types or positional deps; no version bump; Verification adds preview diff + rounds comparison. Plan-only edit.
 
 ## Summary
