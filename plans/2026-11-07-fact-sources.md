@@ -98,7 +98,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -113,11 +113,11 @@ From `2a725a40` (origin/main `35baf89b` + plan), 2026-11-07, DB = live `phaser_j
 
 ## Architecture
 
-Read at `20b697d1` (origin/main `35baf89b` + plan). Wayback tested from the VPS 2026-11-08 (§4).
+Read at `20b697d1` (origin/main `35baf89b` + plan). Wayback tested from the VPS 2026-11-08 (§4). Revised at `4fde20d6` after both reviews (see Revision notes).
 
 ### Findings (by impact)
 
-1. **No source shows after a round.** Round-end field notes (`src/components/animalBoard/AnimalSheets.tsx:535`, list `:635-642`) render `note.full ?? note.text` only, though every `FieldNote` carries `source` (`src/clueGame/questionMatch.ts:36`, built `questionMatchContent.ts:128-135`). Journal: `keyFacts` (`src/clueGame/pool.ts:101-106`) returns `string[]`, dropping `fact.source`; `JournalSheet.tsx:69-71` shows bare text. No other post-round fact surface: the field guide can't open while reviewing (`AnimalGame.tsx:474`, `onGuide={reviewing ? undefined : …}`), ticker and witness notes are during play, the globe shows no facts, the website is out. Fix: §3.
+1. **No source shows after a round.** Round-end field notes (`src/components/animalBoard/AnimalSheets.tsx:535`, list `:635-642`) render `note.full ?? note.text` only, though every `FieldNote` carries `source` (`src/clueGame/questionMatch.ts:36`, built `questionMatchContent.ts:128-135`). Journal: `keyFacts` (`src/clueGame/pool.ts:101-106`) returns `string[]`, dropping `fact.source`; `JournalSheet.tsx:69-71` shows bare text. Two play surfaces also stay on screen beside the card on md+ screens (on phones the card covers the ticker): the status line (`StatusTicker`, `AnimalGame.tsx:502`) keeps rotating the round's answers and witness notes, and from 64rem the desktop witness notes (`NotesList`, `:504-509`) keep listing the notes, both still blanked. Every note they show is one of the card's field notes (witness notes are drawn from `animal.notes`, `src/clueGame/animalBoard.ts:167-168`; the card lists `animal.notes` + `revealNotes`, `AnimalSheets.tsx:535`); answers are traits, which stay uncited like the field guide. No other post-round fact surface: the field guide can't open while reviewing (`AnimalGame.tsx:474`, `onGuide={reviewing ? undefined : …}`), nor can the phone notes drawer (`onNotes`, same line); the globe shows no facts; the website is out. Fix: §3 (number the card and journal, and hide the two duplicates during review).
 2. **No citation data.** Registry rows are `{key, tier, name, url, notes}` (`db/content/sources.json`, `db/schema.sql:21-28`); profiles map key → URL (`profiles.ts:58-59`); item `url` overrides add more pages. Clues and facts cite 250 distinct pages (iucn 74, adw 65, wikipedia 53, literature 15, news 10, ngo 8, government 7, smithsonian 6, sdzwa 6, amphibiaweb 4, tftsg 2). No author, year, licence or access date anywhere. Fix: §1.
 3. **E2E red on main: a timer race drops the sparkle (UI bug; not test logic, not content).** `AnimalGame.tsx:213-217`: the previous reveal's clear timer calls `setReveal(NO_REVEAL)`. If it fires between move N's `setReveal(before => before ∪ scouted)` (`:333`, run in a passive effect) and the commit whose effect cleanup would cancel it, React applies the add and then the clear, so the right guess just scouted never sparkles. Evidence from the baseline report: in round 3, move 8 scouted (re-arming the 3,100 ms timer), move 9 scouted nothing, and move 10 scouted `57:region:southern-africa` about 3.1 to 3.5 s later (settles 965,056 and 968,552 ms). At move 10 `sparkling` is `[]`, without even the older keys, and only an emptied set explains that. `data-guess="right"` was set (the "shows right or wrong" check passed), so content and `called` are correct, and every other sparkle check in the run passes. It repeats because seed 7 replays the same timings. Fix: clear only the set the timer was armed for: `setTimeout(() => setReveal(current => (current === reveal ? NO_REVEAL : current)), REVEAL_MS)`. The check at `scripts/e2e.mjs:1403` stays as written, because it states the product rule. If it still fails after the fix, log reveal add and clear times on a narrow run (`E2E_ROUNDS=3`) before changing anything else.
 4. **New `sources.json` fields would break the owner's prod content build.** `load()` (`scripts/content.ts:26-36`) inserts every key of `rows[0]` as a column. `content_sources` has no column for a template or licence, so the build would fail with "column does not exist". Fix: at `content.ts:134`, load an explicit, typed pick of the table's six columns. The proof is a scratch-DB build (§7), because the mission may not build into live.
@@ -134,34 +134,37 @@ Fine as is:
 
 **§1 Citation data (no schema change; joined at read time)**
 
-- **`db/content/sources.json`**: every entry gains `citeAs` (a template). Entries whose source has a licence also gain `license`. Placeholders: `{name}` (the registry name), `{cite}` (the page's line), `{title}` (the URL's last path segment, decoded, with `_` turned into spaces; Wikipedia only) and `{accessed}` (formatted `8 Nov 2026`). A placeholder the page lacks counts as a missing field; an unknown placeholder is an error.
-- **New `db/content/citations.json`**: `{ "<page url>": { accessed, cite?, archive? } }`, with one entry per page that a profile's clue or fact cites. Traits are left out (they show only in the field guide during play), and so is iucn_range, as today. Keys are the exact URL the build writes to `source_url` (`pageUrl`). It is one global file because a citation belongs to its page: pages are shared across animals, override URLs need a home, and the server bundles one file instead of 76.
-  - `accessed` (`YYYY-MM-DD`): the day the page, or its archived copy, was read for this content. For existing pages, use the date the URL first entered `db/content/animals/` (`git log --reverse --format=%as -S<url>`), set by a one-off script kept in the state folder. For new pages, use the day read.
+- **`db/content/sources.json`**: every entry gains `citeAs` (a template). Entries whose source has one licence for all its pages also gain `license` (the default). Placeholders: `{name}` (the registry name), `{cite}` (the page's line), `{title}` (the URL's last path segment, decoded, with `_` turned into spaces; Wikipedia only) and `{accessed}` (formatted `8 Nov 2026`). A placeholder the page lacks counts as a missing field; an unknown placeholder is an error.
+- **New `db/content/citations.json`**: `{ "<page url>": { accessed, cite?, archive?, license? } }`, with one entry per page that a profile's clue or fact cites. Traits are left out (they show only in the field guide during play), and so is iucn_range, as today. Keys are the exact URL the build writes to `source_url` (`pageUrl`). It is one global file because a citation belongs to its page: pages are shared across animals, override URLs need a home, and the server bundles one file instead of 76.
+  - `accessed` (`YYYY-MM-DD`): for a new page, the day it (or its archived copy) was read. For an existing page, the date its URL first entered `db/content/animals/` (`git log --reverse --format=%as -S<url>`), set by a one-off script kept in the state folder: the day the content was taken from it, a proxy, not a re-verified read. `CONTENT_SOURCES.md` says so, and re-reading a page later moves the date to that day.
   - `cite`: the page's own published citation line, verbatim, without its trailing "Accessed …" (the template adds ours).
   - `archive`: `https://web.archive.org/web/<14-digit ts>/<url>` (the viewer URL). Its date is parsed from the timestamp, and a bad format is an error.
+  - `license`: the page's own licence, when it declares one; it overrides the registry default. Mixed-publisher keys (literature, government, ngo, news) have no default, so only pages that state a licence show one (e.g. the Frontiers aardvark paper, `10.3389/fphys.2020.00637`: CC BY, version from the page).
 - **Templates and where each form comes from.** Record each guidance URL in `docs/CONTENT_SOURCES.md`.
 
-| key | `citeAs` | `cite` comes from | `license` |
+| key | `citeAs` | `cite` comes from | default `license` |
 |---|---|---|---|
 | amphibiaweb | `{cite} Accessed {accessed}.` | the species page's "Citation:" line on the snapshot (site form: brief) | CC BY-NC, version from the snapshot footer |
 | iucn | `{cite} Accessed on {accessed}.` | the assessment's "Citation" on the staging details page (CONTENT_SOURCES "Research access"); IUCN "How to cite" | none |
-| adw | `{cite} Accessed {accessed}.` | the account's "To cite this page:" block (curl works) | look up ADW's terms |
+| adw | `{cite} Accessed {accessed}.` | the account's "To cite this page:" block (curl works) | CC BY-NC-SA 3.0 (`https://animaldiversity.org/about/use_conditions/`, which links `creativecommons.org/licenses/by-nc-sa/3.0/`; checked 2026-11-08) |
 | wikipedia | `"{title}." Wikipedia, The Free Encyclopedia. Accessed {accessed}.` | Wikipedia:Citing Wikipedia; Wikipedia:Reusing Wikipedia content | CC BY-SA 4.0 |
-| literature | `{cite}` | `curl -LH 'Accept: text/x-bibliography; style=apa' https://doi.org/<doi>` | none |
+| literature | `{cite}` | `curl -LH 'Accept: text/x-bibliography; style=apa' https://doi.org/<doi>` | none (page `license`) |
 | tftsg, sdzwa | `{cite} Accessed {accessed}.` | the account's suggested citation; the fact sheet's "How to cite" | none |
-| news, ngo, government | `{cite} Accessed {accessed}.` | `<Publisher>. <Year>. <Title>.` from the page (the registry names are generic) | none |
+| news, ngo, government | `{cite} Accessed {accessed}.` | `<Publisher>. <Year>. <Title>.` from the page (the registry names are generic) | none (page `license`) |
 | smithsonian and unused keys | `{name}. Accessed {accessed}.` | none | none |
 
 - **Code.**
-  - `src/clueGame/citations.ts` (pure, new):
+  - `src/clueGame/citations.ts` (pure, new; client-safe, imports nothing from `profiles.ts`):
     - types `CitedPage` and `Citation { text; url; license: string | null; archive: { url; date } | null }`;
-    - `renderCitation(source, url, page)` returns `{ citation } | { missing: string[] }`;
+    - `FULL_CITATION_KEYS = ['amphibiaweb', 'wikipedia']`: the keys whose citation must be complete (the brief; their licences require attribution);
+    - `renderCitation(source, url, page)` returns `{ citation: Citation | null; missing: string[] }`. No page entry: `citation: null`, `missing: ['accessed']`. A placeholder the page lacks: for a full-citation key, `citation: null`; for any other key, the fallback `{name}. Accessed {accessed}.` with `missing` naming what fell back. `license` is `page.license ?? source.license ?? null`. An unknown placeholder or a bad `accessed`/`archive` throws (a data bug; `npm test` hits it);
     - `formatDay(iso)` uses a fixed month list, no `toLocale*`;
     - `numberSources` (§3).
   - `src/lib/contentCitations.ts` (new) imports both JSON files, typed. JSON imports are bundled by Next and esbuild, and the run image has no `db/` folder (`Dockerfile:29-38`). It is used by `buildCluePool`, `content.ts` and the tests, which drop their own `sources.json` reads.
-- **Checks.** Both fail on an AmphibiaWeb or Wikipedia line without a full citation, and on any other source.
-  - `checkProfile(profile, registry, pages)` (`profiles.ts:305`, run by `preview`, `build` and `npm test`): for each clue and fact page, `renderCitation` must miss nothing. Example problem: `facts[4]: no full amphibiaweb citation for <url> (missing cite)`.
-  - `validatePool` (`content -- check` on the live DB): each fact and hand-written clue (`isHandWrittenClue`) that has a `source` needs `pool.citations[source.url]`. On live, this proves `citations.json` covers every live row.
+- **Checks.** Errors only where the brief asks (AmphibiaWeb, Wikipedia) plus a dated entry for every page; a missing `cite` elsewhere is a warning, so the owner's `content -- build` never waits on ~190 hand-collected lines.
+  - `checkCitations(profile, registry, pages) → { errors; warnings }` (new, in `profiles.ts` beside `checkProfile`, whose signature stays as is; uses `pageUrl`): for each clue and fact page, `renderCitation`. `citation: null` is an error (`facts[4]: no full amphibiaweb citation for <url> (missing cite)`, or `clues[2]: no citations.json entry for <url>`); a non-empty `missing` with a citation is a warning (`clues[2]: iucn page <url> has no cite line yet; shows the fallback`). `preview` prints both per animal; `build` throws on errors (as `checkProfile`) and prints the warning count; `npm test` (`tests/clueGame/content.test.ts`) asserts no errors.
+  - `validatePool` (`content -- check`): every fact and hand-written clue (`isHandWrittenClue`) needs a `source` with a URL (a missing one is an error, not skipped) and `pool.citations[url]`. Non-full keys always render once their page has an entry, so this errors exactly where `checkCitations` errors.
+  - On live, `check` reads rows from the owner's last prod build. An error there for a row this branch's profiles no longer have (his build lags `main`) is not this mission's to fix: record it under Decisions and in the Summary as "needs the prod content build", not a blocker. This branch's content is gated by the scratch-DB build and check (§7).
 - **Reworded:** no flag. Every line is rewritten for grades 6 to 12 (CONTENT_SOURCES copy rule), so every entry ends with "Reworded for this game."
 - **If AmphibiaWeb grants access later:** same shape, with no `archive`.
 
@@ -171,25 +174,31 @@ Profiles and `citations.json` go through `content -- build`, whose rows (`source
 
 On read:
 - `buildCluePool` (`src/lib/cluePool.ts:17`, `:20`) also selects `source_key` (`ContentRows` gains `source_key?`).
-- It calls `poolFromRows(rows, { registry, pages })`, which adds `citations: Record<url, Citation>`: one entry for each distinct (key, url) among clue and fact rows that renders completely. That is about 260 pages, roughly 60 KB; text on every row would add about 0.5 MB.
-- `PoolClue.source` and `PoolFact.source` stay `{ name, url }`, and the rules types (`Source`, `FieldNote`) don't change. The join is for display only, so saved sessions don't grow (`savedGame.ts:19`; witness notes hold `source`).
-- `CluePool.citations` is required; the `tests/clueGame/testPool.ts` fixture gets `{}`.
+- It calls `poolFromRows(rows, { registry, pages })`, which adds `citations: Record<url, Citation>`: one entry for each distinct (key, url) among clue and fact rows for which `renderCitation` gives a citation (full keys only when complete, others with the fallback if need be). That is about 260 pages, roughly 60 KB; text on every row would add about 0.5 MB.
+- `PoolClue.source` and `PoolFact.source` stay `{ name, url }`, and the rules types (`Source`, `FieldNote`) don't change. The join is for display only, so saved sessions don't grow (`src/components/animalBoard/savedGame.ts:18`, `session`; witness notes hold `source`).
+- `CluePool.citations` is required on what the server builds; the `tests/clueGame/testPool.ts` fixture gets `{}`.
 
 On the client:
+- **Old cached pools.** `/api/clue-game/pool/` is `max-age=60, stale-while-revalidate=600` (`route.ts:13`), and `getJson` keeps the first answer for the page load, so for about 11 min after the deploy a new client can get a pool without `citations`. The one client loader (`useAnimalSession.ts:101`) normalizes it: it reads the response as `Omit<CluePool, 'citations'> & Partial<Pick<CluePool, 'citations'>>` and builds `{ ...fetched, citations: fetched.citations ?? {} }`, with a comment saying why. Everything after it (`AnimalGame`, `RoundEndSheet`, `JournalSheet`, `keyFacts`) sees a required map; a page without an entry already renders as numbered name + link (§3), so an old pool shows numbers and plain entries and never throws. Old clients ignore the new field.
 - `AnimalGame` passes `pool.citations` to `RoundEndSheet` as a new prop; `JournalSheet` already has `pool`.
 - `keyFacts` returns `Array<{ text: string; source: Source | null }>`, de-duplicated by text with the first source kept.
 
-When it goes live: citations for existing rows ship with the deploy. The new AmphibiaWeb rows reach players only after the owner's prod content build, and their pages are already in the deployed `citations.json`. No existing URL may change in this mission, or that live row would lose its citation until the build. The live `check` catches it.
+When it goes live: citations for existing rows ship with the deploy. The new AmphibiaWeb rows reach players only after the owner's prod content build, and their pages are already in the deployed `citations.json`. No existing URL may change in this mission, or that live row would lose its citation until the build; the live `check` catches it. The standing rule, written into `CONTENT_SOURCES.md`: a page's `citations.json` entry lands in the same commit as the profile that cites it, the app deploy goes out before (or with) the content build that adds those rows, and an entry stays while any live row still cites its page (until the owner's next build).
 
 **§3 UI**
 
-- **`numberSources(sources) → { marks: Array<number | null>; list: Source[] }`** (in `citations.ts`): a source's identity is its `url`, or its `name` if it has no URL. That gives one number per cited page (two Wikipedia articles are two sources), numbered 1..n in order of first use.
+- **`numberSources(sources) → { marks: Array<number | null>; list: Source[] }`** (in `citations.ts`): a source's identity is its `url`, or its `name` if it has no URL. That gives one number per cited page (two Wikipedia articles are two sources), numbered 1..n in order of first use. Its comment says so, because the brief's "one number per source" could be read as one per registry key; per page is what lets each entry be one full citation.
 - **`src/components/clueGame/FactsWithSources.tsx`**: takes `{ facts: Array<{ key; text: ReactNode; source }>; citations; className?; itemClassName? }`. It renders the `<ul>` of lines and, below it, a closed `<details><summary>Sources (n)</summary><ol>…`. This is the same native disclosure as the journal's "Words you've learned" (`JournalSheet.tsx:81-91`).
   - **Mark:** `<sup class="text-xxs text-neutral-7 leading-[0]">` (the zero line-height avoids layout shift) wrapping `<a href="#<id>-<n>" aria-label="Source <n>">`. A transparent `after:` box enlarges the tap area without moving layout (inline targets are exempt from WCAG 2.5.8 anyway).
   - **Click or Enter on a mark:** call `preventDefault` (no hash, no page scroll), open the `<details>`, then `entry.focus({ preventScroll: true })` and `scrollIntoView({ block: 'nearest' })`. This is plain DOM work, with no React state.
-  - **Entry:** `<li id tabIndex={-1}>`, text-xxs, neutral-8, with a `focus:` highlight in cc tokens; that is "highlights its entry". It shows the citation text, a link to the page, an "archived copy of 12 Mar 2026" link when there is one, `License: …`, and "Reworded for this game." Without a citation it shows the source name and link. Links open in a new tab with `rel=noopener noreferrer` (PhotoCredit pattern). The id prefix comes from `useId()`, because the journal holds many lists. Copy uses US spelling, like "color".
+  - **Entry:** `<li id tabIndex={-1}>`, text-xxs, neutral-8, with a `focus:` highlight in cc tokens; that is "highlights its entry". Keep `focus:`, not `focus-visible:`: Chrome doesn't match `:focus-visible` on programmatic focus after a tap. It shows the citation text, a link to the page, an "archived copy of 12 Mar 2026" link when there is one, `License: …` (page licence, else the registry default), and "Reworded for this game." Without a citation (no entry, or an old cached pool) it shows the source name and link. Links open in a new tab with `rel=noopener noreferrer` (PhotoCredit pattern). The id prefix comes from `useId()`, because the journal holds many lists. Copy uses US spelling, like "color".
 - **RoundEndSheet:** the component replaces `AnimalSheets.tsx:635-642`, and its bullets become `list-disc marker:text-neutral-6`.
 - **JournalSheet:** the component replaces `:69-71`.
+- **During review, the card is the one place facts are read** (the brief's "after the round only (round-end card, Field Journal page)"). In `AnimalGame.tsx`:
+  - desktop witness notes: `{wide && round && !reviewing && …}` (`:504`). The side area is the grid's last cell, so nothing moves;
+  - status line: `facts={reviewing ? [] : facts}` and ``key={reviewing ? `end-${roundNo}` : roundNo ?? 0}`` (`:502`). The remount starts it on `now`, the round's result line, and with no facts it holds there. Changing `facts` alone could leave it blank on a fact it can no longer find. It stays mounted, so its box keeps its height and the board box (and the card's top) don't move on short phones.
+
+  Both show only blanked copies of the card's own notes (Finding 1), so the card loses nothing. Numbering them instead would add two more Sources lists, one inside the ticker's `<button>`, where links can't go.
 
 **§4 AmphibiaWeb via Wayback**
 
@@ -238,11 +247,12 @@ When it goes live: citations for existing rows ship with the deploy. The new Amp
   - `<details>` is closed at first;
   - the summary reads `Sources (n)`.
   - Then click one mark and press Enter on another: the details open, `document.activeElement` is that entry, and the entry is inside the scroller's view.
+  - While the card is open: no `#side-notes` section, and the status line shows no "Clue n of m".
 - **AmphibiaWeb, data-driven:**
-  - From `/api/clue-game/pool/`, the candidates are species with a field note whose `citations[url].license` starts with `CC BY-NC`. FAIL if there are none.
+  - From `/api/clue-game/pool/`, the candidates are species with a fact whose `source.url` is on `amphibiaweb.org` and has a `citations[url]` entry (every fact is a field note on the card). Match on the host, not the licence: ADW's CC BY-NC-SA would also match "CC BY-NC". FAIL if there are none.
   - Take the continent with the most candidates and probe `?seed=1..40&place=`. Clear `sessionStorage` `cc:explore:game` and localStorage first, then read `__cc.clue().mysteryId`, with no moves and no waiting for the board, until a candidate is the mystery.
   - Name it right, reusing the pencil-bonus flow.
-  - On the card, assert an entry containing "AmphibiaWeb", "CC BY-NC" and "Reworded for this game.". Record the seed in the report.
+  - On the card, assert the entry linking to `amphibiaweb.org` contains "AmphibiaWeb", `License: CC BY-NC` and "Reworded for this game.". Record the seed in the report.
   - This works on live now, on the dev copy in CI, and after the owner's build.
 - **Screenshots** of that card: `10-sources-closed-light.png`, `10-sources-open-light.png` and the same two in dark (set `data-theme` and the theme key, restore afterwards), plus `11-journal-sources-open.png`. The final run is copied to `/srv/critter-ai/agent-state/missions/fact-sources/final-e2e/` with `COMMAND.txt`.
 - **Budget:** the E2E takes about 10 min locally, and the CI e2e job times out at 15 (`.github/workflows/ci.yml`). Measure the probe; it must stay cheap.
@@ -253,11 +263,11 @@ Order:
 1. Sparkle fix.
 2. Wayback batch A.
 3. Batches B1 to B5.
-4. Citation data for all 261 pages: the accessed-date script; ADW lines by curl; IUCN lines in staging batches of 7; DOIs; about 33 pages by hand.
-5. `citations.ts`, the templates, both checks, the `load()` pick and the pool join.
-6. UI: component, card, journal, dead code.
+4. Citation data for all 261 pages: the accessed-date script; ADW lines by curl (confirm the CC BY-NC-SA 3.0 on its Conditions of Use page; a change goes under Decisions); IUCN lines in staging batches of 7; DOIs; about 33 pages by hand; a page `license` wherever a literature, government, ngo or news page states one. Outside AmphibiaWeb and Wikipedia a missing `cite` is only a warning, so this aims at zero warnings without gating the build.
+5. `citations.ts`, the templates, `checkCitations` and the `validatePool` rule, the `load()` pick, the pool join and the client loader's `citations ?? {}`.
+6. UI: component, card, journal, hiding the ticker's facts and the desktop notes during review, dead code.
 7. E2E.
-8. Docs: `CONTENT_SOURCES.md` (how to record a citation; the Wayback route as a stopgap), the content line in `AGENTS.md`, and the pool shape in `docs/CLUE_MATCH.md` if it is documented there.
+8. Docs: `CONTENT_SOURCES.md` (how to record a citation, with each source's guidance and licence URL; what `accessed` means for pages from before this mission; the release order in §2; a line that Wikipedia's CC BY-SA share-alike applies to facts reworded from it; the Wayback route as a stopgap), the content line in `AGENTS.md`, and the pool shape in `docs/CLUE_MATCH.md` if it is documented there.
 9. Verification.
 
 Risks:
@@ -267,11 +277,11 @@ Risks:
   3. run `DATABASE_URL=postgres:///<scratch> npm run content -- build`, then `-- check` (dotenv doesn't override a `DATABASE_URL` that is already set, `connect.ts:8`);
   4. `dropdb`.
 
-  This also proves the new content checks clean in a real DB, and it never touches live. Run `content -- check` on live too (read-only).
-- **CI dev copy.** The AmphibiaWeb E2E check needs an AmphibiaWeb-cited note in `phaser_june_dev`. Before the E2E step, count those rows read-only using the dev-copy env file, without echoing its URL. If there are none, build this branch's content into the dev copy (as moves-and-signs-build does) and record it under Decisions.
+  This is the gate for "`content -- check` passes" in the Definition of done: it proves this branch's content checks clean in a real DB, and it never touches live. Run `content -- check` on live too (read-only); a live-only error is handled as in §1 "Checks".
+- **CI dev copy.** The AmphibiaWeb E2E check needs an AmphibiaWeb-cited fact in `phaser_june_dev`. Before the E2E step, count those rows read-only using the dev-copy env file, without echoing its URL. If there are none, build this branch's content into the dev copy (as moves-and-signs-build does) and record it under Decisions.
 - **IUCN lines** depend on the staging pages (parallel-search `web_fetch`). If those are unreachable, fall back to IUCN's own citation for the Red List as a whole (`IUCN. <year>. The IUCN Red List of Threatened Species. Version <v>. https://www.iucnredlist.org.`) plus the species link, and record it under Decisions.
 - **Wayback 429s:** handled as in §4.
-- **moves-and-signs-build overlap.** It also edits `AnimalSheets.tsx` (signs and guide headings in SuspectSheet), `profiles.ts` and `traits.ts`. This mission touches only RoundEndSheet's notes block, its props and one import in `AnimalSheets.tsx`, plus `checkProfile`'s signature and `pageUrl` in `profiles.ts`. New open tags are listed under Decisions. Don't add its `trees` question here; the research file hands it the trees data.
+- **moves-and-signs-build overlap.** It also edits `AnimalSheets.tsx` (signs and guide headings in SuspectSheet), `profiles.ts` and `traits.ts`. This mission touches only RoundEndSheet's notes block, its props and one import in `AnimalSheets.tsx`, plus a new `checkCitations` and `pageUrl` in `profiles.ts` (`checkProfile`'s signature no longer changes). New open tags are listed under Decisions. Don't add its `trees` question here; the research file hands it the trees data.
 
 ### Rejected alternatives
 
@@ -285,6 +295,11 @@ Risks:
 - **Hard-coded E2E seed for the AmphibiaWeb card:** content changes reshuffle deals; the probe is data-driven.
 - **`:target` or hash highlight:** changes the URL and scrolls the page; focus works without either.
 - **Availability API, direct AmphibiaWeb, `amphib_dump.xml`:** the first returned 429, and the brief rules out the other two.
+- **A full citation required for every key:** gates the owner's `content -- build`, and every future profile, on ~190 hand-collected lines; the brief asks it only of AmphibiaWeb and Wikipedia.
+- **Licence only in the registry:** can't represent mixed publishers under one key (the CC BY Frontiers paper under `literature`).
+- **Versioning the pool endpoint for old caches:** one absent field, normalized at the one client loader, degrades to plain numbered entries for about 11 min; a new URL adds a route or an ignored query for no lasting gain.
+- **Numbering the status line and desktop notes during review:** two more Sources lists for blanked copies of the card's notes, and the ticker is a `<button>`, so it can't hold links.
+- **Hiding the status line during review (unmount):** frees its row, so on short phones the board box and the card's top can move; the remount on `now` keeps the box.
 
 ## Architecture review (Fable)
 
@@ -326,6 +341,24 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+One round, 2026-11-08, edits in place above.
+
+MUST-FIX:
+- **Fable 1 (check strictness):** `FULL_CITATION_KEYS` = amphibiaweb, wikipedia; every page needs a dated `citations.json` entry (error); elsewhere a missing `cite` is a warning with the `{name}. Accessed {accessed}.` fallback. New `checkCitations → { errors, warnings }` beside `checkProfile` (§1 Checks).
+- **Fable 2 (ADW licence):** CC BY-NC-SA 3.0, checked 2026-11-08 from the VPS. Fable's `/about/copyright/` is a 404; the terms are at `https://animaldiversity.org/about/use_conditions/`, which links `by-nc-sa/3.0`. In the §1 table; step 4 re-confirms it, and any change goes under Decisions. Consequence: the E2E probe now matches the AmphibiaWeb host, not "CC BY-NC" (§6).
+- **Astra 1 (cached pool):** the one client loader (`useAnimalSession.ts:101`) normalizes absent `citations` to `{}`; downstream types stay required, and missing entries render as numbered name + link (§2). No endpoint versioning (Rejected).
+- **Astra 2 (page licences):** optional `license` per `citations.json` page overrides the registry default; mixed-publisher keys have no default (§1).
+- **Astra 3 (post-round coverage):** hide, don't number. During review, the desktop witness notes are not rendered and the status line remounts with no facts, on the round's result line. Both are blanked copies of the card's notes, so the card and journal are the only post-round fact surfaces, as the brief picks (Finding 1, §3, E2E §6).
+
+MISSED (Fable):
+- Stale pool: same fix as Astra 1.
+- Live `check` lagging the owner's build: recorded under Decisions and the Summary as "needs the prod content build", not a blocker. The scratch-DB build and check gate this branch (§1 Checks, §7).
+- `savedGame.ts` path: corrected to `src/components/animalBoard/savedGame.ts:18` (§2).
+
+SHOULD-CONSIDER taken: Astra SC1 + Fable SC3 (`accessed` for old pages is the git-entry date, a proxy, and the docs say so); Astra SC2 (release order rule in §2 and the docs); Astra SC3 (`validatePool` errors on a fact or hand-written clue with no source URL); Fable SC2 (Wikipedia share-alike line in the docs); Fable SC4 (`focus:`, not `focus-visible:`); Fable SC5 (per-page numbering comment).
+
+Declined: Fable SC1 (a dev-bridge seed → mystery hook). `deal` draws from the session's stateful `rng` ref (`useAnimalSession.ts:83-89`), so the hook would mean duplicating or refactoring dealing. The probe loads no board and makes no moves, stops at the first hit (40 seeds at most), and §6 already measures it against the CI budget. If the measurement says otherwise, revisit it then.
+
 ## Steps
 
 ## Verification
@@ -343,5 +376,6 @@ SHOULD-CONSIDER:
 - 2026-11-08 01:00 UTC: Fable review. APPROVE_WITH_CHANGES, 2 MUST-FIX (non-AmphibiaWeb/Wikipedia cite = warning not error; settle ADW licence CC BY-NC-SA 3.0) + stale-pool tolerance note. Plan-only, no checks needed.
 
 - 2026-11-08 00:33 UTC: Astra review. APPROVE_WITH_CHANGES, 3 MUST-FIX (stale cached pool without `citations`; page-level licence overrides; StatusTicker/NotesList post-round coverage). Plan-only, no checks needed.
+- 2026-11-08 01:55 UTC: Revision. `architect` resolved 5 MUST-FIX + Fable MISSED: cite errors only AmphibiaWeb/Wikipedia (others warn); ADW CC BY-NC-SA 3.0 (terms at /about/use_conditions/); absent `citations` → `{}` in pool loader; page-level licence override; hide StatusTicker facts/NotesList during review. Plan-only, no checks needed.
 
 ## Summary
