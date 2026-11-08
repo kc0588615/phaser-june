@@ -59,7 +59,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -187,7 +187,107 @@ SHOULD-CONSIDER: none
 
 ## Steps
 
+`M=/srv/critter-ai/agent-state/missions/frog-fact-fixes`. V1–V5 are under Verification. Repo root; one heavy job at a time.
+
+- [ ] S1. **Content edits, research record, plan 057; one commit.** Exactly Target design 1–5; nothing else:
+  - `db/content/animals/06-red-eyed-tree-frog.json` `clues[9]` (lines 138-142) → TD1. `db/content/animals/11-goliath-frog.json` `clues[5]` (lines 102-109) → TD2, deleting the `tags` key. Same positions, 2-space JSON, `\n` at EOF.
+  - `docs/research/2026-11-07-moves-and-signs/sign-map.csv:204` → TD3, verbatim.
+  - `docs/research/2026-11-07-amphibiaweb-wayback.md`: on the bullet at `:200`, replace the last sentence ("IUCN (tier 1) kept; noted under Decisions.") with TD4's "**Resolved 2026-11-08 (plan 057):** …" sentence. On the bullet at `:458`, replace "Same tier, ADW clue kept; worth the owner's look, since `voiceless` also tags 08, which truly has no call." with TD4's resolution sentence plus the ADW attribution. The ADW quote stays inline in the prose. Don't touch any `> "` line.
+  - New `plans/057-frog-fact-fixes.md` per TD5, in 056's shape. Its Verification line holds S1's static results; S2 adds the E2E line.
+  - In this plan, under **Decisions**: (a) `S1 · Goliath line kept verbatim on amphibiaweb (Architecture finding 2): AW backs the claim (it calls, how, open mouth); "no vocal sac" is ADW's, true and uncontested, recorded in the research note; one source per clue.` (b) `S1 · No ANIMAL_RULES.version bump (finding 5): deals read only prefixed traits (unchanged); the tag only reaches witness notes, which roundStillFits re-deals.`
+  - Checks: V1 (all items), V2. No DB, no E2E. Commit the 2 JSONs, CSV, research note, plan 057 and this plan, then push.
+- [ ] S2. **Dev-copy build, check and E2E; handoff H11.**
+  - Run V3 and V4. V4 reads the newest run in `e2e-artifacts/` (gitignored, self-pruning). Don't copy it into `$M`; the disk rule leaves room only for `baseline-e2e` and `final-e2e`. Hard pass: V3 shows the expected check and spot-check lines, and V4 exits 0. If `rounds` differ: no release. Record it under Decisions, find the cause, and add a fix step or a handoff item.
+  - Append H11 to `/srv/critter-ai/handoff/critter-connect.md` under `## Open`, in the exact `~/AGENTS.md` item format:
+    - Title `### H11 · Production content build for the frog fixes`, `Status: waiting on you`, `From: frog-fact-fixes · <UTC date>`, `Blocks: the two fixed clues reaching players (the mission doesn't wait on it)`.
+    - **Why:** one sentence: prod keeps the old 06 and 11 clue rows until a content build.
+    - **Steps:** TD6 1–5, with one correction to step 3. `content -- build` prints no row counts, only `0 citation warnings (see preview).` and `Built. …`. So step 3 is build, then `npm run content -- check`, which must print `Pool: <P> playable of 76 species, 2478 clues (2086 deductive), 491 facts.` and `0 errors, 0 warnings.`. `<P>` is the number V3 printed here.
+    - **Your reply:** `- Dump file name:` and `- Built (done/failed + check line):`.
+    - Leave the other items alone.
+  - Under **Decisions**: `S2 · H11 step 3 differs from TD6.3: content -- build prints no table counts; counts come from content -- check.`
+  - Add the V4 line to plan 057's Verification. If `next dev` rewrote the `AGENTS.md` block, commit it (repo rule). Run V1.1, then commit and push.
+
+Not a step: once S2 is checked, the runner does the Astra code review, then the full Verification (V1–V5, artifact `$M/final-e2e/`), then the Release (`~/.claude/CLAUDE.md` "In a mission session" 6-8). A Verification checkbox here would run before the code review, and twice.
+
 ## Verification
+
+E2E first. The scenarios are the existing suite at seed 7, Africa: globe → continent → 4 rounds → resume → journal → sources. There's no new scenario: the deals must not change, and matching `rounds` proves it. Round 1 has Goliath Frog as a suspect, so its field guide loads the changed clue row. Final run (after the Astra code review): V1–V5, artifact `$M/final-e2e/`. Run each block in one Bash call, because shell state doesn't persist.
+```
+M=/srv/critter-ai/agent-state/missions/frog-fact-fixes
+CH=/srv/critter-ai/agent-state/missions/moves-and-signs-build/chrome-nosandbox.sh
+Q=/srv/critter-ai/agent-state/missions/fact-sources
+```
+
+**V1. Static (no DB)**, each must hold:
+1. `npm run typecheck && npm run lint && npm test` exits 0; tests 66/66.
+2. `rg -n voiceless db/content/animals` prints exactly one line, `db/content/animals/08-coastal-tailed-frog.json:109:…`.
+3. `python3 -I $Q/tools/check_quotes.py docs/research/2026-11-07-amphibiaweb-wayback.md $Q/wayback/` prints `274 quotes, 0 misses` and exits 0.
+4. The clues and the file format are exact:
+   ```
+   node -e 'const fs=require("fs"),d="db/content/animals/";for(const [f,i,t] of [["06-red-eyed-tree-frog.json",9,"Its international trade has been controlled since 2010 (CITES Appendix II)."],["11-goliath-frog.json",5,"It has no vocal sac, but it still calls: whistles, chirps, even a deep roar, made with its mouth open."]]){const s=fs.readFileSync(d+f,"utf8"),p=JSON.parse(s),c=p.clues[i],ok=s===JSON.stringify(p,null,2)+"\n"&&c.text===t&&c.source==="amphibiaweb"&&!("tags" in c);console.log(f,ok?"ok":"WRONG "+JSON.stringify(c));if(!ok)process.exitCode=1}'
+   ```
+   Must print `ok` for both files.
+5. Scope: `B=$(git merge-base origin/main HEAD); git diff --name-only $B; git status --short`. Must list only the 2 animal JSONs, `sign-map.csv`, `2026-11-07-amphibiaweb-wayback.md`, `plans/057-frog-fact-fixes.md` and this plan (plus `AGENTS.md` if `next dev` rewrote its block). Also `git diff --quiet $B -- src scripts tests db/content/citations.json db/content/sources.json && echo "code untouched"` must print `code untouched`.
+
+**V2. Content preview** (files only):
+```
+npm run -s content -- preview > /tmp/frog-preview-after.txt 2>&1; echo "exit $?"
+echo "PROBLEM: $(grep -c PROBLEM /tmp/frog-preview-after.txt) cite warn: $(grep -c 'cite warn' /tmp/frog-preview-after.txt)"
+diff $M/preview-before.txt /tmp/frog-preview-after.txt
+```
+Must show `exit 0` and `PROBLEM: 0 cite warn: 0` (this covers sign problems via `checkProfile`). The diff must be exactly two hunks:
+- `220c220` → `  conservation/4 [] Its international trade has been controlled since 2010 (CITES Appendix II).`
+- `418c418` → `  behavior/5 [] It has no vocal sac, but it still calls: whistles, chirps, even a deep roar, made with its mouth open.`
+
+**V3. DB build, check and E2E, dev copy `phaser_june_dev` only.** Never `.env.local`. Never print `DATABASE_URL` or `cat` the secrets file.
+```
+( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+  [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+  npm run content -- build && npm run content -- check || exit 2
+  psql "$DATABASE_URL" -tAc "select id, source_key, coalesce(array_to_string(compare_tags, ','), ''), is_filtering, label from species_deduction_clues where id in (635, 1127) order by id"
+  psql "$DATABASE_URL" -tAc "select string_agg(distinct species_id::text, ',') from species_deduction_clues where 'voiceless' = any(compare_tags)"
+  E2E_SEED=7 E2E_PLACE=continent:africa CHROME_PATH=$CH npm run e2e:fresh )
+```
+- **Exit 1:** wrong DB. Stop, and add a handoff item to refresh the dev-copy file.
+- **Exit 2:** the build or check failed. Fix it before anything else.
+- **Must show:**
+  - Build: `0 citation warnings (see preview).`
+  - Check: `… 2478 clues (2086 deductive), 491 facts.` and `0 errors, 0 warnings.` Record the playable count for H11.
+  - Spot check (this confirms the new Goliath line):
+    `635|amphibiaweb||f|Its international trade has been controlled since 2010 (CITES Appendix II).`
+    `1127|amphibiaweb||f|It has no vocal sac, but it still calls: whistles, chirps, even a deep roar, made with its mouth open.`
+  - `voiceless` holders: `8`.
+- **Why not a screenshot:** the field guide reads exactly these rows (`/api/clue-game/pool`), but no screenshot is expected to show the line. In round 1 Habits is a dealt question, so Habits guide lines stay hidden during play, and `02d` shows Hairy Frog.
+- **Known VPS flake:** 1–3 timing checks can fail. Rerun e2e:fresh once, inside the same guard; failing twice is real.
+
+**V4. Artifact must show** (hard pass, exit 0). `<run>` is `"$(ls -d e2e-artifacts/*/ | tail -1)report.json"` in S2, and `$M/final-e2e/report.json` in the final run, after `rm -rf $M/final-e2e && cp -r "$(ls -d e2e-artifacts/*/ | tail -1)" $M/final-e2e`:
+```
+node -e 'const [a,b]=process.argv.slice(1).map(f=>require(require("path").resolve(f))),bad=b.checks.filter(c=>!c.ok),same=a.seed===b.seed&&a.place.key===b.place.key&&JSON.stringify(a.rounds)===JSON.stringify(b.rounds);console.log(b.checks.length,"checks (baseline",a.checks.length+"),",bad.length,"failed,",b.consoleErrors.length,"console errors,",b.failedRequests.length,"failed requests; rounds same as baseline:",same);process.exit(bad.length||b.consoleErrors.length||!same?1:0)' $M/baseline-e2e/report.json <run>
+```
+- **Must show:** 0 failed, 0 console errors, `rounds same as baseline: true` (seed 7, Africa; baseline 1565 checks, round 1 suspects include Goliath Frog).
+- **Artifact:** `$M/final-e2e/` (`report.json` + screenshots). Reproduce: V3 then V4.
+- **Disk:** `$M` keeps only `baseline-e2e` (V4's reference) and `final-e2e`. Any later re-run replaces `final-e2e`.
+
+**V5. Summary** (final run): `git diff --stat origin/main...HEAD`, `$M/final-e2e/` with its V4 line and V3's check and spot-check lines, both architecture verdicts, the code-review verdict and its SHOULD-CONSIDERs. Also say that the fixed clues reach players only after the owner's H11 build. Put the same V4 line in plan 057.
+
+**Failure modes:** none. Nothing is tested in isolation: there's no code. The quote check is an existing tool run as-is.
+
+**Release** (runner's unit, `deploy`):
+1. Refresh and re-verify:
+   - `git fetch origin --prune`, then rebase on `origin/main`. Rerun V1–V4; the re-run replaces `final-e2e`.
+   - If `git diff --quiet 7edc1a5a origin/main -- src scripts db/content` fails, main changed code or content. Then the V2 diff and V4's `rounds` match don't apply: record that under Decisions, and everything else must still hold.
+2. Merge, deploy and smoke:
+   - Open the PR, `gh pr merge <n> --merge`, `deploy critter-connect`.
+   - Smoke:
+     ```
+     MC=$(gh pr view <n> --json mergeCommit -q .mergeCommit.oid)
+     echo "explore: $(curl -sL -o /dev/null -w '%{http_code}' https://play.critterconnect.org/explore/)"
+     [ "$(curl -s https://play.critterconnect.org/version.txt)" = "$MC" ] && echo "version.txt = merge commit"
+     ```
+     Must show `explore: 200` and `version.txt = merge commit`.
+3. Record:
+   - Add `(Done <date>: PR #<n> merged as <MC> and deployed.)` to H11 step 1, as H10 did.
+   - In the Summary, note that prod content waits on H11.
 
 ## Code review (Astra)
 
@@ -202,5 +302,6 @@ SHOULD-CONSIDER: none
 - 2026-11-08 23:45 UTC · Fable review: APPROVE, no MUST-FIX; 3 SHOULD-CONSIDER (H11 order note, spot-check SQL, shorter 11 bullet) for the planner. Doc-only, no checks needed.
 - 2026-11-08 23:35 UTC · Astra review: APPROVE_WITH_CHANGES; 1 MUST-FIX (H11 needs a fresh prod dump before `content -- build`) for Revision. Doc-only, no checks needed.
 - 2026-11-08 23:55 UTC · Revision: architect added fresh prod dump (`pg-backup.sh`, "no `backup ok`, no build") as H11 step 2; adopted Fable SC 1-3. Resolves Astra MUST-FIX 1. Doc-only, no checks needed.
+- 2026-11-08 23:41 UTC · Steps: planner wrote S1 (content edits + plan 057) and S2 (dev-copy build/check/e2e + H11), V1–V5 + release smoke; corrected H11 step 3 (counts come from `content -- check`). Doc-only; quote check still 274/0.
 
 ## Summary
