@@ -661,6 +661,15 @@ Both MUST-FIX checked and real: steps 18 and 19. SHOULD-CONSIDER goes to the Sum
 
 ## Release
 
+2026-11-08, `deploy`:
+- Re-verified on `516f667c` (no rebase needed, branch held `origin/main`): typecheck, lint, test 66/66, preview 0 PROBLEM / 0 cite warn, scratch-check 0 errors, live check 0 errors, build bundles citations, e2e 1558/1558 (AW probe seed 4), quotes 274/0 misses. `final-e2e/` replaced with this run.
+- PR #65. CI e2e failed once on the globe timing check `arrow keys move the globe while it spins, then the spin returns` (restMs 134; branch doesn't touch the globe; passes locally and on main); rerun of the failed job passed (check + e2e).
+- Merge commit: `447e9317302efd012810b08690adc4752a0de8c9`.
+- Deploy last line: `deploy critter-connect: live at https://critterconnect.org`. Log: `/srv/critter-ai/agent-state/missions/fact-sources/deploy.log`.
+- Smoke: `version.txt` = `447e9317…`; `/`, `/explore/`, `/api/places/`, `/api/clue-game/pool/` all 200; pool citations 250, AmphibiaWeb CC BY-NC 4.
+
+Result: done
+
 ## Decisions
 
 - 2026-11-08 (steps): Wayback fetch (step 2) before citation code: the 4 existing AmphibiaWeb pages need snapshot `cite` before `checkCitations` passes. Added `citations.test.ts` (content checks a playtest can't see; failure modes F1-F18 written first), a 1280x800 E2E check (main loop at 390 px never renders `#side-notes`), and `npm run build` in steps 5/20 (proves citations bundle without `db/`).
@@ -724,6 +733,7 @@ Both MUST-FIX checked and real: steps 18 and 19. SHOULD-CONSIDER goes to the Sum
 - 2026-11-08 03:53 UTC: Step 19, purple frog name fact drops the wrong 'Sanskrit' claim (no reachable source for the split; fallback per step). check_quotes 274/0 misses; preview 0 PROBLEM, 0 cite warn; scratch-check 0 errors; typecheck, lint, test pass.
 
 - 2026-11-08 04:10 UTC: Step 20, Final Verification on `5c81c828`. typecheck, lint pass; test 66/66; preview 0 PROBLEM, 0 cite warn; scratch-check build 2472 clues / 491 facts, 0 errors 0 warnings; live `content -- check` 0 errors (2430 clues / 437 facts: live lags until owner's content build); `npm run build` ok, AmphibiaWeb in `.next/server`; e2e:fresh 1558/1558 (31 `sources:` checks, AW probe seed 4, species 06), all 5 `10-*`/`11-*` screenshots; `check_quotes.py` 274 / 0 misses. Artifact `$STATE/final-e2e/` (e2e-s16 deleted).
+- 2026-11-08 04:40 UTC: Release. Re-verified all pass; PR #65 (CI e2e globe-timing flake, rerun passed), merged `447e9317`, `deploy critter-connect` ok, smoke ok (200s, 250 citations, 4 AW).
 
 ## Summary
 
@@ -759,6 +769,8 @@ Totals: +38 written clues (+4 from the filled traits), +54 facts (2430 → 2472 
 
 **Owner checks (in Decisions):** 06 CITES date (IUCN 2008 vs AW 2010); Goliath frog `voiceless` clue vs AW calls; 11 IUCN cite lines (4 fallback, 7 maybe missing errata note).
 
-**Verification:** all pass on `5c81c828`; e2e 1558/1558. Artifact `/srv/critter-ai/agent-state/missions/fact-sources/final-e2e/` (`report.json`, screenshots, `e2e.log`, `COMMAND.txt`).
+**Verification:** all pass on `5c81c828`; e2e 1558/1558; re-run for release on `516f667c`, same result. Artifact `/srv/critter-ai/agent-state/missions/fact-sources/final-e2e/` (`report.json`, screenshots, `e2e.log`, `COMMAND.txt`).
 
 **Live lag:** live DB has 2430 clues / 437 facts; new AmphibiaWeb rows go live only after **the owner runs `npm run content -- build` from WSL** (after the deploy). Citations for existing rows ship with the deploy. For ~11 min after deploy an old cached pool without `citations` may answer (tolerated: shows names + links).
+
+**Released:** PR #65 merged (`447e9317`), deployed; live smoke ok (see Release). Owner still to run the prod content build.
