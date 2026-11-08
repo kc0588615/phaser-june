@@ -48,12 +48,7 @@
     "wetlands:permanent_lakes",
     "wetlands:seasonal_lakes",
     "wetlands:permanent_marshes",
-    "wetlands:seasonal_marshes",
-    "artificial",
-    "artificial:arable",
-    "artificial:pasture",
-    "artificial:plantations",
-    "artificial:degraded_forest"
+    "wetlands:seasonal_marshes"
   ],
   "elevation": [
     0,
@@ -82,6 +77,11 @@
     },
     "social": {
       "value": "alone",
+      "source": "adw"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It rests on the ground in deep shade, and only rarely in trees.",
       "source": "adw"
     },
     "birth": {

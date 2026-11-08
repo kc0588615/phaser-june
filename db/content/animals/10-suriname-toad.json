@@ -41,6 +41,11 @@
       "note": "It eats worms, insects, crustaceans and small fish.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It stays down low its whole life and never climbs.",
+      "source": "adw"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"

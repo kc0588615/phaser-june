@@ -54,6 +54,11 @@
       "note": "Males and females each defend their own patch of ground.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It lives on the ground among fallen leaves.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "eggs",
       "source": "iucn"

@@ -23,9 +23,7 @@
     "forest",
     "forest:tropical_moist_lowland",
     "wetlands",
-    "wetlands:permanent_rivers",
-    "artificial",
-    "artificial:degraded_forest"
+    "wetlands:permanent_rivers"
   ],
   "traits": {
     "covering": {
@@ -49,6 +47,11 @@
     },
     "social": {
       "value": "alone",
+      "source": "adw"
+    },
+    "trees": {
+      "value": "no",
+      "note": "Older frogs sometimes rest on rocks, but not up in branches.",
       "source": "adw"
     },
     "birth": {

@@ -34,6 +34,12 @@
       "value": "plants",
       "source": "britannica"
     },
+    "trees": {
+      "value": "no",
+      "note": "This tortoise lived on the ground and never climbed.",
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_abingdonii.html"
+    },
     "birth": {
       "value": "eggs",
       "source": "britannica"

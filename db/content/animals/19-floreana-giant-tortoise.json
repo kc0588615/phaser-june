@@ -35,6 +35,12 @@
       "value": "plants",
       "source": "britannica"
     },
+    "trees": {
+      "value": "no",
+      "note": "This tortoise walked on the ground all its life.",
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_niger.html"
+    },
     "birth": {
       "value": "eggs",
       "source": "britannica"

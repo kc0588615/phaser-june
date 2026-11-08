@@ -41,11 +41,7 @@
     "grassland:tropical_high_altitude",
     "wetlands",
     "wetlands:bogs_marshes",
-    "marine",
-    "artificial",
-    "artificial:plantations",
-    "artificial:gardens",
-    "artificial:degraded_forest"
+    "marine"
   ],
   "elevation": [
     0,
@@ -76,6 +72,11 @@
       "value": "alone",
       "note": "The only lasting bond is between a mother and her cubs.",
       "source": "adw"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It rests and moves on the ground; no source puts it up in trees.",
+      "source": "smithsonian"
     },
     "birth": {
       "value": "live",

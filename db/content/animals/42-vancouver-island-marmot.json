@@ -54,6 +54,11 @@
       "note": "It lives in small family colonies.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It spends much of its time underground in burrows.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

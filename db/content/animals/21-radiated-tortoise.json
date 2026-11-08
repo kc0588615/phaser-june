@@ -46,6 +46,11 @@
       "value": "day",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It keeps to the ground, using the same spots again and again.",
+      "source": "adw"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"

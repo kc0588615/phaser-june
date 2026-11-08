@@ -44,6 +44,11 @@
       "value": "insects",
       "source": "adw"
     },
+    "trees": {
+      "value": "yes",
+      "note": "It spends its time up in the trees and can glide from one to the next.",
+      "source": "adw"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"

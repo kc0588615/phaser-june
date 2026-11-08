@@ -46,6 +46,11 @@
       "value": "alone",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It hides under flat rocks and never climbs.",
+      "source": "adw"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"

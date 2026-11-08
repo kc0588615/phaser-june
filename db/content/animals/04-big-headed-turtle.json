@@ -40,6 +40,12 @@
       "note": "By day it hides under rocks or underwater.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It hides under gravel or in cracks between stones.",
+      "source": "literature",
+      "url": "https://web.archive.org/web/20110522230829/http://www.unc.edu/~dtkirkpa/stuff/bigheads.html"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"

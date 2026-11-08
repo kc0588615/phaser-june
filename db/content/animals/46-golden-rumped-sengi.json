@@ -50,6 +50,11 @@
       "note": "Pairs stay together for life.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It sleeps on the ground in nests of leaves.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "live",
       "source": "iucn"

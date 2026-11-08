@@ -52,6 +52,11 @@
       "value": "alone",
       "source": "adw"
     },
+    "trees": {
+      "value": "yes",
+      "note": "It almost never comes down: females hardly ever walk on the ground.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

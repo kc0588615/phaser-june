@@ -40,6 +40,11 @@
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
     },
+    "trees": {
+      "value": "yes",
+      "note": "It lives mostly up in trees.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

@@ -51,6 +51,11 @@
       "note": "It comes out to feed in the early morning.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It squeezes into narrow cracks to hide.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "eggs",
       "source": "iucn"

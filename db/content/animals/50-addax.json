@@ -51,6 +51,11 @@
       "note": "Herds of 5 to 20 are led by a top male.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It walks and runs on the ground.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

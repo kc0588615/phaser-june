@@ -23,11 +23,7 @@
     "forest",
     "forest:tropical_moist_lowland",
     "wetlands",
-    "wetlands:permanent_rivers",
-    "artificial",
-    "artificial:arable",
-    "artificial:plantations",
-    "artificial:degraded_forest"
+    "wetlands:permanent_rivers"
   ],
   "elevation": [
     26,
@@ -42,6 +38,11 @@
       "value": "insects",
       "note": "It eats slugs, millipedes, spiders, beetles and grasshoppers.",
       "source": "wikipedia"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It stays down low; no source finds it living up in trees.",
+      "source": "iucn"
     },
     "birth": {
       "value": "eggs",

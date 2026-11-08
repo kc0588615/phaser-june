@@ -54,6 +54,11 @@
       "note": "It lives in small colonies in certain patches of forest.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It hides among fallen leaves on the ground.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"

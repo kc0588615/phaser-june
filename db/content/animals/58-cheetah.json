@@ -33,9 +33,7 @@
     "desert",
     "desert:hot",
     "desert:temperate",
-    "desert:cold",
-    "artificial",
-    "artificial:pasture"
+    "desert:cold"
   ],
   "elevation": [
     0,
@@ -66,6 +64,11 @@
       "value": "alone",
       "note": "Females live alone with their cubs, but some males team up in small groups.",
       "source": "iucn"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It lives on the ground, though it sometimes climbs a tree.",
+      "source": "adw"
     },
     "birth": {
       "value": "live",

@@ -30,10 +30,7 @@
     "grassland",
     "grassland:tropical_dry",
     "desert",
-    "desert:hot",
-    "artificial",
-    "artificial:plantations",
-    "artificial:degraded_forest"
+    "desert:hot"
   ],
   "elevation": [
     0,
@@ -61,6 +58,11 @@
     },
     "social": {
       "value": "alone",
+      "source": "iucn"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It lives mainly on the ground, though it can climb with its tail and claws.",
       "source": "iucn"
     },
     "birth": {

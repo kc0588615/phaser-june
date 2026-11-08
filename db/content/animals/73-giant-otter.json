@@ -33,9 +33,7 @@
     "wetlands:permanent_lakes",
     "wetlands:seasonal_lakes",
     "wetlands:permanent_marshes",
-    "wetlands:seasonal_marshes",
-    "artificial",
-    "artificial:ponds"
+    "wetlands:seasonal_marshes"
   ],
   "elevation": [
     0,
@@ -66,6 +64,11 @@
       "value": "groups",
       "note": "A family has 5 to 8 otters: a mother, a father and their young.",
       "source": "adw"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It stays down low and never lives up in trees.",
+      "source": "iucn"
     },
     "birth": {
       "value": "live",

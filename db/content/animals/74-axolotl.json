@@ -20,9 +20,7 @@
   ],
   "habitats": [
     "wetlands",
-    "wetlands:permanent_lakes",
-    "artificial",
-    "artificial:ponds"
+    "wetlands:permanent_lakes"
   ],
   "elevation": [
     2240,
@@ -51,6 +49,11 @@
     "social": {
       "value": "alone",
       "source": "adw"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It spends its whole life down low and never climbs.",
+      "source": "iucn"
     },
     "birth": {
       "value": "eggs",

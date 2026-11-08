@@ -53,6 +53,11 @@
       "value": "alone",
       "source": "adw"
     },
+    "trees": {
+      "value": "yes",
+      "note": "It spends most of its time up in trees.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

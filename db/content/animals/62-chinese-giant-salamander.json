@@ -53,6 +53,11 @@
       "value": "alone",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It stays down low all its life and never climbs.",
+      "source": "adw"
+    },
     "birth": {
       "value": "eggs",
       "source": "iucn"

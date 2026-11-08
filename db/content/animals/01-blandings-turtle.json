@@ -44,6 +44,11 @@
       "note": "Half its food is crayfish. It also eats insects, fish, frogs, snails and water plants.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It stays low, and at most climbs onto logs to rest.",
+      "source": "adw"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"

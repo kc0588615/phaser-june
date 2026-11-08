@@ -23,9 +23,7 @@
     "wetlands",
     "wetlands:permanent_rivers",
     "wetlands:permanent_lakes",
-    "wetlands:bogs_marshes",
-    "artificial",
-    "artificial:ponds"
+    "wetlands:bogs_marshes"
   ],
   "traits": {
     "covering": {
@@ -45,6 +43,11 @@
     },
     "social": {
       "value": "alone",
+      "source": "adw"
+    },
+    "trees": {
+      "value": "no",
+      "note": "When it is scared, it buries itself in sand instead of climbing.",
       "source": "adw"
     },
     "birth": {

@@ -51,6 +51,11 @@
       "value": "alone",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It lives mainly on the ground, though it climbs well.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

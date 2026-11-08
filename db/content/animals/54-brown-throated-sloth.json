@@ -23,10 +23,7 @@
     "forest:tropical_dry",
     "forest:tropical_moist_lowland",
     "forest:tropical_swamp",
-    "forest:tropical_moist_montane",
-    "artificial",
-    "artificial:plantations",
-    "artificial:urban"
+    "forest:tropical_moist_montane"
   ],
   "elevation": [
     0,
@@ -55,6 +52,11 @@
     },
     "social": {
       "value": "alone",
+      "source": "adw"
+    },
+    "trees": {
+      "value": "yes",
+      "note": "It spends most of its life high in the treetops.",
       "source": "adw"
     },
     "birth": {

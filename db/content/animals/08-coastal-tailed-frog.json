@@ -44,6 +44,11 @@
       "value": "night",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It stays down low, hiding under stones.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "eggs",
       "source": "adw"

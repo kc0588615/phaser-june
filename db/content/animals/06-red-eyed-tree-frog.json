@@ -26,9 +26,7 @@
     "forest:tropical_moist_montane",
     "wetlands",
     "wetlands:permanent_marshes",
-    "wetlands:seasonal_marshes",
-    "artificial",
-    "artificial:degraded_forest"
+    "wetlands:seasonal_marshes"
   ],
   "elevation": [
     0,
@@ -53,6 +51,12 @@
     "activity": {
       "value": "night",
       "source": "adw"
+    },
+    "trees": {
+      "value": "yes",
+      "note": "Adults live high in the treetops, sometimes hiding inside plants that grow on the branches.",
+      "source": "ngo",
+      "url": "https://www.rainforest-alliance.org/species/red-eyed-tree-frog/"
     },
     "birth": {
       "value": "eggs",

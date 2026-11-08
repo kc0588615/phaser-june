@@ -47,6 +47,11 @@
       "value": "alone",
       "source": "adw"
     },
+    "trees": {
+      "value": "yes",
+      "note": "It lives mainly in trees, though it can walk on the ground.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

@@ -39,6 +39,11 @@
       "note": "Adults eat almost anything: fish, crayfish, snails and plants.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It buries itself in mud and stays put.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "eggs",
       "source": "iucn"

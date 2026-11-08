@@ -28,9 +28,7 @@
     "shrubland:tropical_moist",
     "grassland",
     "grassland:tropical_dry",
-    "grassland:tropical_seasonally_wet",
-    "artificial",
-    "artificial:plantations"
+    "grassland:tropical_seasonally_wet"
   ],
   "elevation": [
     0,
@@ -60,6 +58,11 @@
     "social": {
       "value": "groups",
       "note": "Related females and their young live in herds. Adult males live alone or in small groups.",
+      "source": "adw"
+    },
+    "trees": {
+      "value": "no",
+      "note": "It lives on the ground and keeps on the move.",
       "source": "adw"
     },
     "birth": {

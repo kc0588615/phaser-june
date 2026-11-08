@@ -49,6 +49,11 @@
       "value": "alone",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It digs burrows and lives under the ground.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

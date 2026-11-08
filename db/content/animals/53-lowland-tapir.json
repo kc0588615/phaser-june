@@ -66,6 +66,11 @@
       "note": "Mothers travel with their young.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It walks on the ground and never climbs.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

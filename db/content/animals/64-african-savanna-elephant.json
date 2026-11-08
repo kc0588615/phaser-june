@@ -72,6 +72,11 @@
       "note": "Herds of mothers and young follow the oldest female; adult males often live alone.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It walks on the ground and never climbs.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

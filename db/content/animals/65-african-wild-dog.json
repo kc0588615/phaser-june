@@ -63,6 +63,11 @@
       "note": "Packs usually have 7 to 15 dogs.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It runs over long distances on the ground.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

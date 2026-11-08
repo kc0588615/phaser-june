@@ -438,7 +438,7 @@ Deviation from the architecture's 8-step order (sessions too big): its step 3 is
   - `src/clueGame/profiles.ts`: `YesNo`, `traits.trees?: Sourced<YesNo>`, `TREES_TEXT`, `trait('behavior','trees',…)` after social, `TRAIT_VALUES.trees`.
   - `scripts/e2e.mjs`: E5 (no column tag ends `:no`, every round); E6 at `:1786` (append old-content `tree_dweller` note to the save's `notesLeft`, reload, expect fresh deal: `end` null, `movesUsed` 0, saved seed).
   - Checks: static checks; Dev E2E → `M/e2e-s1/` (delete `M/baseline-e2e`): E5, E6 and the existing "a reload resumes the round…" checks pass.
-- [ ] S2. **Content part A: `trees` ×71, Farms & towns ×20, test pair (T5 A, finding 1).**
+- [x] S2. **Content part A: `trees` ×71, Farms & towns ×20, test pair (T5 A, finding 1).**
   - Copy `STATE/tools/run.sh` to `M/tools/run.sh` with `REPO=/srv/critter-ai/worktrees/moves-and-signs-build`.
   - Write `docs/research/2026-11-07-moves-and-signs/trees-notes.csv` (`animal_id,verdict,note`; 71 rows from `STATE/research/moves.csv` `lives_in_trees`; grade 6–12, trees vs ground words only, no unglossed science term).
   - Write `M/content/apply.ts` part A (T5): `traits.trees` after `social`, `url` only for the 8 keys with no page; verdicts checked against `moves.csv`; drop `artificial`/`artificial:*` from `habitats`; `content.ts` format; ends printing `checkProfile` problems. Run it via `M/tools/run.sh`, then once more (no diff = idempotent).
@@ -577,6 +577,10 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 
 ## Decisions
 
+- S2 · `trees` notes (`trees-notes.csv`) use only ground/branch/burrow words: no habitat class, water, diet, size, day/night, social or birth words, since a trait note shows whenever its own question isn't dealt (finding 10). Fully aquatic animals (10, 17, 18, 62, 73, 74) get a plain "stays down low, never climbs" note for that reason.
+- S2 · `trees` goes after the last of covering/size/diet/activity/social in `traits` (not every profile has `social`), matching `profileClues` order.
+- S2 · Finding 1: after part A the only inseparable pair is North America's two sloths (30, 54; Farms & towns had split them). The test guard moved to that pair, scoped to `north-america` (they're separable elsewhere). Saola + Sumatran Orangutan are split by `trees`.
+
 ## Log
 
 - 2026-11-08 04:50 UTC · Baseline: typecheck, lint, 66 unit tests, content preview, e2e:fresh on dev copy (1558/1558) all pass.
@@ -586,5 +590,6 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - 2026-11-08 05:36 UTC · Revision: architect fixed Astra MUST-FIX (T10 `roundStillFits` invalidates saves whose witness notes no longer match; E2E E6), accepted 5 SC, rejected tree-icon SC4 for now; steps now 8; plan-only.
 - 2026-11-08 05:52 UTC · Steps: planner wrote 12 steps (arch steps 3, 4 split; content build + probe moved before audit/docs), Verification V1-V5, Failure modes F/A/R; plan-only.
 - 2026-11-08 05:58 UTC · S1: `trees` trait + `neverAsked` (traits.ts), Habits question texts, `fullTable`/`questionsFor` skip `:no`, rules `055-0`, `roundStillFits` (rows, then witness notes) used by the resume, 🌲 face, profile `trees` trait; E2E E5 + E6. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; dev E2E 1563/1563 (`M/e2e-s1/`).
+- 2026-11-08 06:25 UTC · S2: `trees` on 71 (10 yes, 61 no; 8 with `url`), Farms & towns off 20, `trees-notes.csv` committed, apply.ts idempotent; pair guard → sloths (NA). typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; no `artificial` left; V1.6 ok. No E2E (DB unchanged).
 
 ## Summary

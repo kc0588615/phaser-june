@@ -52,6 +52,11 @@
       "note": "Mothers stay with their young.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It rests lying down in shade on the ground.",
+      "source": "adw"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

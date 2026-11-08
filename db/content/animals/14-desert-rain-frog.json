@@ -48,6 +48,11 @@
       "note": "It is most active on foggy nights.",
       "source": "iucn"
     },
+    "trees": {
+      "value": "no",
+      "note": "It digs burrows and stays below ground.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "eggs",
       "source": "iucn"

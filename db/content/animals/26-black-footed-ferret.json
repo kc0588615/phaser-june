@@ -50,6 +50,12 @@
       "note": "It lives alone except in the breeding season.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It spends most of its time underground in burrows, coming up for only a few minutes a day.",
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/black-footed-ferret"
+    },
     "birth": {
       "value": "live",
       "source": "adw"

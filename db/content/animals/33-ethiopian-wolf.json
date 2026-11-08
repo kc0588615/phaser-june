@@ -56,6 +56,11 @@
       "note": "Packs have 3 to 13 wolves.",
       "source": "adw"
     },
+    "trees": {
+      "value": "no",
+      "note": "It moves about on the ground.",
+      "source": "iucn"
+    },
     "birth": {
       "value": "live",
       "source": "adw"
