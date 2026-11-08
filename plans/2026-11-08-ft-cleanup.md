@@ -54,7 +54,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none): none needed
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -150,7 +150,79 @@ None needed: Fable and Astra both APPROVE with 0 MUST-FIX. Fable's SHOULD-CONSID
 
 ## Steps
 
+`M=/srv/critter-ai/agent-state/missions/ft-cleanup`. V1–V4 and `GATE` are under Verification.
+
+- [ ] S1. **Delete the 13 `artificial` lines, edit 2 doc clauses, write plan 056; one commit.**
+  - First, before any edit (code = `origin/main` `36dc1a5d`): `npm run -s content -- preview > $M/preview-before.txt 2>&1`; `grep -c PROBLEM` on it = 0. Kept in `M` so V2 works in later sessions.
+  - Edits, exactly. Partial-line edits change only the named text; neighbouring entries stay on their lines, no reflow:
+    - `src/clueGame/traits.ts:31`: `'marine', 'artificial'] as const;` → `'marine'] as const;`
+    - `src/clueGame/questionMatch.ts`: delete lines 158 and 178; line 214 → `  'habitat:marine': 'Coasts & sea',`
+    - `src/clueGame/clueFaces.ts:15`: drop ` 'habitat:artificial': '🏡',`; line ends `'habitat:marine': '🏖️',`
+    - `src/clueGame/profiles.ts`: delete line 98 and lines 144-150.
+    - `docs/CLUE_MATCH.md:54`: drop `; Farms & towns is no longer asked` (sentence ends `(only its yes is asked).`).
+    - `docs/CONTENT_SOURCES.md:25`: `the game no longer asks it (plan 055), so profiles don't record it.` → `the game doesn't know it (plans 055, 056): the content check rejects it as an unknown habitat.`
+    - New `plans/056-ft-cleanup.md`, ~15 lines, style of 052/053: what went (sites above); why now (H10 prod build 2026-11-08, live gate 0 of 2478); `ANIMAL_RULES.version` stays `055-0` and why (Architecture); side effect (`artificial:*` hand-written tag no longer reserved; the `CONTENT_SOURCES.md` rule and unknown-habitat check cover it); notes left unedited (Architecture "Notes, not edits"); a Verification line (S2 and the final run fill it).
+    - This plan, **Decisions**: `S1 · docs/CONTENT_SOURCES.md:25 edited, outside the brief's named docs (Fable SC2): same intent, one clause; its old reason ("not asked") understated the new behaviour (now rejected as an unknown habitat).`
+  - Checks: V1, V2. No E2E (S2). Commit code + docs + plan 056 + this plan; push.
+- [ ] S2. **Dev-copy E2E; `rounds` = baseline.**
+  - V3 with `<out>` = `e2e-s2`, then V4 on it. Hard pass: V4 exit 0. `rounds` differ: no release; record under Decisions, find the cause, add a fix step or a handoff item.
+  - Record the V4 line in plan 056's Verification line and **Log**. If `next dev` rewrote its `AGENTS.md` block, commit it (repo rule). Commit, push.
+
+Not a step: after S2 the runner does the Astra code review, then the full Verification (artifact `$M/final-e2e/`, Summary, `status: done`), then the Release (`~/.claude/CLAUDE.md` "In a mission session" 6-8). A Verification checkbox here would run it before the code review, and twice.
+
 ## Verification
+
+Repo root; `M=/srv/critter-ai/agent-state/missions/ft-cleanup`; one heavy job at a time; each block in one Bash call, with `GATE` defined (shell state doesn't persist). Final run (after the Astra code review): V1–V5, `<out>` = `final-e2e`. E2E: the existing suite (globe → Africa → 4 rounds at seed 7 → resume → journal → sources); no new scenario, since behaviour must not change and the `rounds` match proves it.
+```
+GATE="select count(*) from species_deduction_clues c, unnest(c.compare_tags) t where t = 'habitat:artificial' or t like 'artificial:%'"
+```
+
+**V1. Static**, each must hold:
+1. `npm run typecheck`, `npm run lint`, `npm test` exit 0; tests 66/66.
+2. `rg -n artificial src db/content` prints nothing.
+3. `B=$(git merge-base origin/main HEAD); git diff --numstat $B -- src; git diff --quiet $B -- db && echo "db untouched"` → exactly `1 1 …/traits.ts`, `1 3 …/questionMatch.ts`, `1 1 …/clueFaces.ts`, `0 8 …/profiles.ts`, then `db untouched`. `git diff --name-only $B` + `git status --short`: only those 4, the 2 docs, `plans/056-ft-cleanup.md`, this plan.
+
+**V2. Content preview** (files only, no DB):
+```
+npm run -s content -- preview > /tmp/ft-preview-after.txt 2>&1; echo "exit $?"
+diff $M/preview-before.txt /tmp/ft-preview-after.txt && echo "preview unchanged"
+echo "PROBLEM lines: $(grep -c PROBLEM /tmp/ft-preview-after.txt)"
+```
+Must show `exit 0`, `preview unchanged` (all 76 profiles' rows identical), `PROBLEM lines: 0` (preview exits 0 even with PROBLEMs, F2).
+
+**V3. E2E, dev copy `phaser_june_dev` only** (never `.env.local`; never print `DATABASE_URL`; never `cat` the secrets file):
+```
+( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+  [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+  [ "$(psql "$DATABASE_URL" -tAc "$GATE")" = 0 ] || exit 2
+  E2E_SEED=7 E2E_PLACE=continent:africa CHROME_PATH=/srv/critter-ai/agent-state/missions/moves-and-signs-build/chrome-nosandbox.sh npm run e2e:fresh ) \
+  && rm -rf $M/<out> && cp -r "$(ls -d e2e-artifacts/*/ | tail -1)" $M/<out>
+```
+Exit 1: wrong DB, stop. Exit 2: dev copy holds `artificial` rows (0 of 2478 on 2026-11-08), baseline void: stop, log, add a step. No content build (dev copy holds 055's content). Known VPS flake: 1–3 timing checks (row-slide press, re-order click, sparkle) can fail; rerun once; failing twice is real. A failed run's evidence stays in `e2e-artifacts/`.
+
+**V4. Artifact must show** (hard pass, exit 0):
+```
+node -e 'const [a,b]=process.argv.slice(1).map(f=>require(f)),bad=b.checks.filter(c=>!c.ok),same=a.seed===b.seed&&a.place.key===b.place.key&&JSON.stringify(a.rounds)===JSON.stringify(b.rounds);console.log(b.checks.length,"checks (baseline",a.checks.length+"),",bad.length,"failed,",b.consoleErrors.length,"console errors,",b.failedRequests.length,"failed requests; rounds same as baseline:",same);process.exit(bad.length||b.consoleErrors.length||!same?1:0)' $M/baseline-e2e/report.json $M/<out>/report.json
+```
+0 failed, 0 console errors, `rounds same as baseline: true` (seed 7, Africa; baseline 1565 checks). Same seed and code = same `rounds` (055's `final-e2e` and `release-e2e` match), so a difference is a real change: fail. Artifact `$M/<out>/` (`report.json` + screenshots); reproduce with V3. Disk: once `final-e2e` passes, `rm -rf $M/e2e-s2`; keep `baseline-e2e` (V4 reference), `final-e2e`, and the release's `release-e2e`.
+
+**V5. Summary** (final run): `git diff --stat origin/main...HEAD`, `$M/final-e2e/` + its V4 line, both architecture verdicts, code-review verdict and SHOULD-CONSIDERs. Same V4 line in plan 056.
+
+**Release** (runner's unit, `deploy`):
+1. `git fetch origin --prune`, rebase on `origin/main`, rerun V1–V4 with `<out>` = `release-e2e`. If `git diff --quiet 36dc1a5d origin/main -- src db scripts` fails (main changed code, content or the e2e), V2's diff and V4's `rounds` match don't apply: record under Decisions; the rest must hold.
+2. Live gate, **hard stop**, right before `gh pr merge` (merge and `deploy critter-connect` follow back to back). Read-only; URL never printed:
+```
+U=$(node --env-file=.env.local -e 'const u=new URL(process.env.DATABASE_URL);u.searchParams.delete("pgbouncer");process.stdout.write(u.href)')
+echo "live gate: $(psql "$U" -tAc "$GATE")"
+```
+Must print `live gate: 0`. Else no merge, no deploy: `Result: failed: live gate <n>` under Release, handoff item (prod content holds `artificial` again, e.g. a build from a stale checkout), `MISSION_BLOCKED`.
+3. `gh pr merge <n> --merge`, `deploy critter-connect`, smoke:
+```
+MC=$(gh pr view <n> --json mergeCommit -q .mergeCommit.oid)
+echo "explore: $(curl -sL -o /dev/null -w '%{http_code}' https://play.critterconnect.org/explore/)"
+[ "$(curl -s https://play.critterconnect.org/version.txt)" = "$MC" ] && echo "version.txt = merge commit"
+```
+Must show `explore: 200` and `version.txt = merge commit`.
 
 ## Code review (Astra)
 
@@ -165,5 +237,6 @@ None needed: Fable and Astra both APPROVE with 0 MUST-FIX. Fable's SHOULD-CONSID
 - 2026-11-08 22:00 UTC: Fable review. `architecture-reviewer`: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (for Steps: hard-pass rounds match + live gate, partial-line edits, record CONTENT_SOURCES widening). Plan-only edit.
 - 2026-11-08 22:10 UTC: Astra review. APPROVE, 0 MUST-FIX, 0 SHOULD-CONSIDER. Plan-only edit.
 - 2026-11-08 22:15 UTC: Revision. None needed (0 MUST-FIX); Fable SHOULD-CONSIDERs handed to Steps. Plan-only edit.
+- 2026-11-08 22:25 UTC: Steps. `planner`: S1 (13 code lines, 2 doc clauses, plan 056, V1+V2), S2 (dev-copy e2e, rounds = baseline hard pass); V1-V5 + Release (live gate hard stop). Planner dry-ran gate cmds (dev copy + live: 0). Plan-only edit.
 
 ## Summary
