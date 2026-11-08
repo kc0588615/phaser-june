@@ -38,13 +38,41 @@ Mission `fact-sources`. AmphibiaWeb's species accounts for the game's 15 amphibi
 
 #### Trees
 
+**Yes.**
+> "Habitat ranges from trees, bushes, palms, etc. in primary rain forests and logged rain forests."
+
 #### Filled traits
+
+None. Its no-records (lifespan, activity, young, social) aren't in the account.
+
+#### Existing AmphibiaWeb values (checked)
+
+- `covering: skin`, found.
+  > "Skin is smooth or finely granulated above"
+- `size: tiny`, note "Its body is 9 to 10 cm long", found. The note's old tail "big for a tree frog" isn't in the snapshot, so it was dropped (Decisions).
+  > "This flying frog is about 90-100 mm in total length"
+- Clue "Its huge hands and feet are webbed right to the fingertips.", found ("huge" is the game's word for the large discs and webbing; kept).
+  > "Hands and feet are fully webbed."
+  > "Finger tips are expanded into large, oval discs"
 
 #### New clues
 
+- morphology, no tag: "The webbing between its fingers and toes is jet black at the base and yellow near the edges."
+  > "The interdigital membranes are jet black at the base. These membranes are yellow and veined with black towards the border."
+
 #### New facts
 
+- key_fact: "Young frogs start out bright red. They turn green and brown with white spots, then bright green as adults."
+  > "dramatic ontogenetic shift in coloration from bright red in recently metamorphosed juveniles, to green and brown with extensive white spotting in older juveniles, to vivid green with black and yellow webbing and yellow flanks in adults"
+- key_fact: "It needs color pigments from its food to turn bright green. Without them it stays blue-green."
+  > "dietary carotenoid supplementation was necessary for this species to achieve its natural vivid green adult coloration. Individuals without a source of dietary carotenoids, or reduced carotenoid intake, were blue-green in color."
+- behavior: "It can change color fast when it is stressed or when the light changes."
+  > "R. nigropalmatus was capable of extensive rapid color changes associated with either the stress of handling or the light regime experienced by the individual frog"
+
 #### Disagreements
+
+- Elevation: AmphibiaWeb gives feet; IUCN (tier 1) gives 0 to 600 m. Kept IUCN.
+  > "Can be found at elevations ranging from 700 to 1800 feet"
 
 ### 06 Red-eyed Tree Frog (*Agalychnis callidryas*)
 
@@ -70,13 +98,48 @@ Mission `fact-sources`. AmphibiaWeb's species accounts for the game's 15 amphibi
 
 #### Trees
 
+**No record.** The account ties it to streams and the forest floor and says nothing about climbing.
+> "Trichobatrachus robustus is primarily associated with streams"
+
 #### Filled traits
+
+None. Its no-records (size, lifespan, activity, young, social) aren't settled:
+- size: the account gives lengths, not weight, and a 9 to 13 cm stout frog sits near the 100 g line between tiny and small, so it stays out (Decisions).
+  > "male snout–vent lengths averaging 130 mm compared to 90 mm in females"
+- young: no clutch size.
+  > "Eggs are deposited as clutches attached to stones below water and are guarded by males"
+
+#### Re-sourced from Wikipedia (same claim, higher tier)
+
+- `covering: skin`
+  > "The dorsal integument is smooth to granulated and covered with small, round tubercules"
+- `birth: eggs`, and clue "Eggs are laid on rocks in streams, and the male stays to guard them." (`egg_guarding`)
+  > "Eggs are deposited as clutches attached to stones below water and are guarded by males"
+- Clue "In the breeding season, males grow thin, hair-like frills of skin on their sides and thighs." (`hair_like_frills`)
+  > "In breeding males, the upper surfaces of the thighs and lower flanks have long hair-like papillae made of vascularized skin"
+- Clue "Males grow to about 13 cm long, bigger than females."
+  > "male snout–vent lengths averaging 130 mm compared to 90 mm in females"
+- Clue "If it is grabbed, it can push sharp bone claws out through the skin of its toes." (`bone_claws`)
+  > "The last phalanx of toes II–V is recurved and can protrude through the ventral skin of the toe to defend the frog by scratching potential predators"
 
 #### New clues
 
+- morphology, no tag: "Its sides and legs are black, and its belly is white."
+  > "The side of the body and limbs are black. The ventral coloration is white"
+- behavior, no tag: "In the breeding season, males stay mostly in the water, while females live in the leaf litter on the forest floor."
+  > "males are primarily aquatic and females are found in forest leaf litter"
+
 #### New facts
 
+- key_fact: "It may be the only frog whose males and females have different lungs."
+  > "Trichobatrachus robustus may be unique among frogs in having sexually dimorphic lungs."
+- behavior: "No one has ever reported hearing its mating call."
+  > "To date, there are no reported observations of advertisement calls in T. robustus"
+
 #### Disagreements
+
+None. Diet: the account only notes a captive meal, so the Wikipedia invertebrate list stays.
+> "Durrell (1960) reported that T. robustus would eat neonate mice in captivity."
 
 ### 08 Coastal Tailed Frog (*Ascaphus truei*)
 
@@ -166,13 +229,44 @@ Mission `fact-sources`. AmphibiaWeb's species accounts for the game's 15 amphibi
 
 #### Trees
 
+**No.** A burrower of nearly bare coastal dunes that can't even hop.
+> "This frog is fossorial, meaning it is adapted to burrowing and underground living."
+> "an arid coastal desert in the Succulent Karoo ecoregion with large sand dunes and sparse desert vegetation"
+
 #### Filled traits
+
+- `size: tiny`, note "It is only about 5 cm long." (a 5 cm frog is far under 100 g; the same call as the 2 to 5 cm coastal tailed frog)
+  > "Breviceps macrops is a short and stout frog, with a body length of about 48 mm"
+  > "Eyes are strikingly large and prominent in this small frog"
+- `diet: insects`, note "It looks for animal dung at night and eats the beetles and moths there."
+  > "It searches for dung, where it feeds on beetles and moths"
+
+Still no record: young (the account says the clutch size isn't known), lifespan, social.
+> "Clutch size is not known for B. macrops"
+
+Agrees with the existing `activity: night` (IUCN):
+> "This frog is nocturnal, emerging after dark from under the sand on both misty and clear nights."
 
 #### New clues
 
+- morphology, `webbed_feet` (reused: Wallace's flying frog, giant otter): "Its feet are shaped like paddles, with thick, fleshy webbing that may help it grip loose sand."
+  > "specialized feet, which are paddle-like and smooth and have thick fleshy webbing"
+  > "conjecture that the foot webbing enables traction on loose sand"
+- morphology, no tag: "Its legs are so short that it cannot hop. It walks instead."
+  > "The extremely short limbs make it impossible for this frog to hop, although it can walk"
+
 #### New facts
 
+- key_fact: "Part of the skin on its belly is see-through."
+  > "The venter has a transparent vascular window in the central and posterior regions of the abdomen."
+- key_fact: "Its Afrikaans name, Melkpadda, means 'milk frog', for its pale back."
+  > "The Afrikaans name Melkpadda ("milk frog") refers to the pale color of the dorsum"
+- behavior: "You can find a buried one by the small cone of sand it leaves on top of the dune."
+  > "A buried frog can be located by a small conical mound of sand on the dune surface"
+
 #### Disagreements
+
+None.
 
 ### 16 Purple Frog (*Nasikabatrachus sahyadrensis*)
 
