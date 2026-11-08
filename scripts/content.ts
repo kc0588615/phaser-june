@@ -131,7 +131,8 @@ run(async () => {
     await sql.begin(async tx => {
       await tx.unsafe('DELETE FROM species_facts');
       await tx.unsafe('DELETE FROM species_deduction_clues');
-      await load(tx, 'content_sources', sources);
+      // Only the table's columns: sources.json also holds citation fields (citeAs, license).
+      await load(tx, 'content_sources', sources.map(({ id, key, tier, name, url, notes }) => ({ id, key, tier, name, url, notes })));
       await load(tx, 'species', rows.species);
       await load(tx, 'species_deduction_clues', rows.clues);
       await load(tx, 'species_facts', rows.facts);

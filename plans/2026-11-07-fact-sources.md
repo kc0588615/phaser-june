@@ -385,7 +385,7 @@ Every step:
   - **Extract:** `$STATE/tools/wayback_text.py` turns each `.html` into `<profile>.txt`. `$STATE/wayback/index.json` holds, per profile: `{ id, idFrom, original, timestamp, archive, citeLine, license }`, with the licence and its version taken from the page footer.
   - **Research file:** new `docs/research/2026-11-07-amphibiaweb-wayback.md` with the route and the licence. Per amphibian: its ID and how it was found, the snapshot URL and date (or "no snapshot"), and the citation line verbatim. Add empty headings per animal for Trees, Filled traits, New clues, New facts and Disagreements.
   - Check: `index.json` has 15 entries; every snapshot's `.txt` contains its `citeLine` (`grep -F`); typecheck and lint pass. Log the request count, any 429s and any no-snapshot species.
-- [ ] 3. **Citation renderer, templates, safe `load()` (tests first).**
+- [x] 3. **Citation renderer, templates, safe `load()` (tests first).**
   - First write `tests/clueGame/citations.test.ts` with F1 to F10 (Failure modes). `npm test` must fail, on the missing module. Then write the code:
   - `src/clueGame/citations.ts`: `CitedPage`, `Citation`, `FULL_CITATION_KEYS`, `renderCitation` and `formatDay` (§1). Client-safe: no import from `profiles.ts`.
   - `db/content/sources.json`:
@@ -647,6 +647,7 @@ Pool join and `validatePool` (step 5):
 
 - 2026-11-08 (step 2): AmphibiaWeb licence = **CC BY-NC 4.0**. Species pages have no licence footer (plan assumed one); they link `/data/datause.html`, so read its one Wayback snapshot (`20251006003414`, 2 extra requests), which states CC-BY-NC and links `creativecommons.org/licenses/by-nc/4.0`. Not bulk; the policy page itself points to Wayback for archived species pages.
 - 2026-11-08 (step 2): `citeLine` = the page's "Species Account Citation:" line minus its trailing "Accessed <snapshot date>." (crawler's render date; F10 would reject it). `index.json` `read` = 2026-11-08, the `accessed` for step 4.
+- 2026-11-08 (step 3): scratch DB URL = `PGHOST=/var/run/postgresql DATABASE_URL=postgres:///fact_sources_scratch` (peer auth). postgres.js ignores `?host=` and takes the socket dir from `PGHOST` only when the URL has no host. Every source has a `citeAs`; a source without one would fall back to `{name}. Accessed {accessed}.`. F10 rejects any `cite` containing the word "Accessed", not only a trailing one (simpler, and no real line uses it otherwise).
 
 ## Log
 
@@ -659,5 +660,6 @@ Pool join and `validatePool` (step 5):
 - 2026-11-08 00:52 UTC: Steps. `planner` wrote 18 steps, Verification, Failure modes F1-F18, risks. Plan-only, no checks needed.
 - 2026-11-08 01:04 UTC: Step 1. Sparkle fix: reveal clear-timer only clears the set it was armed for (`AnimalGame.tsx:216`). typecheck, lint, test pass; e2e:fresh 1527/1527 (round 3 move 10 sparkle check now ok). Artifact `$STATE/e2e-s1/`; baseline kept as `baseline-report.json`.
 - 2026-11-08 01:10 UTC: Step 2. IDs: 4 profile + 11 Wikidata P5036 (all 15 agree). 15/15 snapshots via CDX (newest 2024-12 to 2026-03), 30 requests + 2 for data-use page, 0 429s, no no-snapshot species. `index.json` 15 entries, every `citeLine` in its `.txt` (grep -F 15/15). Research skeleton `docs/research/2026-11-07-amphibiaweb-wayback.md`. typecheck, lint pass.
+- 2026-11-08 01:35 UTC: Step 3. `src/clueGame/citations.ts` (`renderCitation`, `formatDay`, `FULL_CITATION_KEYS`), tests F1-F10 first (failed on the missing module); `citeAs` on all 16 sources, `license` on amphibiaweb (CC BY-NC 4.0), adw, wikipedia; `load()` picks the six `content_sources` columns (without it the scratch build fails: `column "citeas" … does not exist`). `$STATE/tools/scratch-check.sh`: build 76 species / 2430 clues / 437 facts, check 0 errors 0 warnings, DB dropped. typecheck, lint pass; test 58/58.
 
 ## Summary

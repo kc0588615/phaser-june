@@ -61,7 +61,8 @@ export interface AnimalProfile {
   photo?: { url: string; credit: string; license: string; page: string } | null;
 }
 
-export interface ContentSource { id: number; key: string; tier: 1 | 2 | 3 | 4; name: string; url: string; notes: string }
+/** A row of db/content/sources.json. `citeAs` and `license` feed citations (`@/clueGame/citations`); they aren't DB columns. */
+export interface ContentSource { id: number; key: string; tier: 1 | 2 | 3 | 4; name: string; url: string; notes: string; citeAs?: string; license?: string }
 
 const CLASS_TEXT: Record<string, string> = {
   amphibia: "It's an amphibian (class Amphibia).",
