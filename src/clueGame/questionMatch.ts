@@ -155,7 +155,6 @@ const QUESTION_TEXT: Record<string, string> = {
   'habitat:shrubland': 'Does it live in shrubland (land covered in bushes)?', 'habitat:grassland': 'Does it live in grassland?',
   'habitat:wetlands': 'Does it live in wetlands (rivers, lakes, marshes)?', 'habitat:rocky': 'Does it live in rocky places?',
   'habitat:caves': 'Does it live in caves?', 'habitat:desert': 'Does it live in desert?', 'habitat:marine': 'Does it live along coasts or in the sea?',
-  'habitat:artificial': 'Does it also live on farms, plantations or in towns?',
 };
 
 /** Two-line versions for the gem legend (rules 043). */
@@ -175,7 +174,6 @@ const SHORT_TEXT: Record<string, string> = {
   'habitat:forest': 'Lives in forests?', 'habitat:savanna': 'Lives in savanna?', 'habitat:shrubland': 'Lives in shrubland?',
   'habitat:grassland': 'Lives in grassland?', 'habitat:wetlands': 'Lives in wetlands?', 'habitat:rocky': 'Lives in rocky places?',
   'habitat:caves': 'Lives in caves?', 'habitat:desert': 'Lives in desert?', 'habitat:marine': 'Lives by coasts or sea?',
-  'habitat:artificial': 'Lives on farms or in towns?',
 };
 
 export const prefixOf = (tag: string): string => tag.slice(0, tag.indexOf(':'));
@@ -211,7 +209,7 @@ const COLUMN_LABEL: Record<string, string> = {
   'system:terrestrial': 'On land', 'system:freshwater': 'Fresh water', 'system:marine': 'Sea',
   'habitat:forest': 'Forest', 'habitat:savanna': 'Savanna', 'habitat:shrubland': 'Shrub\u00adland', 'habitat:grassland': 'Grass\u00adland',
   'habitat:wetlands': 'Wetlands', 'habitat:rocky': 'Rocky places', 'habitat:caves': 'Caves', 'habitat:desert': 'Desert',
-  'habitat:marine': 'Coasts & sea', 'habitat:artificial': 'Farms & towns',
+  'habitat:marine': 'Coasts & sea',
   'region:east-africa': 'East Africa', 'region:central-africa': 'Central Africa', 'region:north-africa': 'North Africa',
   'region:southern-africa': 'Southern Africa', 'region:west-africa': 'West Africa', 'region:central-asia': 'Central Asia',
   'region:east-asia': 'East Asia', 'region:southeast-asia': 'South\u00adeast Asia', 'region:south-asia': 'South Asia', 'region:west-asia': 'Middle East',

@@ -28,7 +28,7 @@ export const NEVER_ASKED_VALUE = 'no';
 export const neverAsked = (tag: string): boolean => tag.endsWith(`:${NEVER_ASKED_VALUE}`);
 
 /** IUCN habitat classes (level 1); each class name is also the prefix of its level-2 kinds, e.g. forest:tropical_moist_lowland. */
-export const HABITAT_CLASSES = ['forest', 'savanna', 'shrubland', 'grassland', 'wetlands', 'rocky', 'caves', 'desert', 'marine', 'artificial'] as const;
+export const HABITAT_CLASSES = ['forest', 'savanna', 'shrubland', 'grassland', 'wetlands', 'rocky', 'caves', 'desert', 'marine'] as const;
 
 /** Every value a species has, from one source for all species. */
 export const COMPLETE_PREFIXES = new Set<string>(['realm', 'country', 'system', 'habitat', ...HABITAT_CLASSES]);

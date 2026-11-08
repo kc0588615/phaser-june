@@ -95,7 +95,6 @@ const HABITAT_TEXT: Record<string, string> = {
   caves: 'It lives in caves.',
   desert: 'It lives in desert.',
   marine: 'It lives along coasts or in the sea.',
-  artificial: 'It also lives on land people have changed, like farms, plantations or towns.',
 };
 
 const HABITAT_KIND_TEXT: Record<string, string> = {
@@ -141,13 +140,6 @@ const HABITAT_KIND_TEXT: Record<string, string> = {
   'marine:coastal': 'It lives on sandy or rocky coasts.',
   'marine:estuaries': 'It lives in estuaries, where rivers meet the sea.',
   'marine:mangroves': 'It lives among mangrove roots at the coast.',
-  'artificial:arable': 'It also lives in farm fields.',
-  'artificial:pasture': 'It also lives in pastures where livestock graze.',
-  'artificial:plantations': 'It also lives in plantations, like oil palm or rubber.',
-  'artificial:gardens': 'It also lives in village gardens.',
-  'artificial:urban': 'It also lives in towns or cities.',
-  'artificial:degraded_forest': 'It also lives in tropical forest that has been heavily cut.',
-  'artificial:ponds': 'It also lives in ponds, canals or reservoirs people have made.',
 };
 
 const COVERING_TEXT: Record<Covering, string> = {
