@@ -51,7 +51,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -128,6 +128,16 @@ A deal reads the book (from the pool) and the rules. These constants only add te
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE
+MUST-FIX: none
+MISSED: none
+SHOULD-CONSIDER:
+1. Verified against the code: all 13 sites exist as cited; `HABITAT_CLASSES` has the single consumer `traits.ts:34`; every text/face table is a `Record<string, string>` with a fallback (`questionText` → tag, `clueFace` → ❓, `profileClues:260-261` → template); `roundStillFits` fails a stale `habitat:artificial` order because `book.traits.get(id)?.get('habitat')?.has(tag)` is `undefined`, never equal to a boolean; `preview` only logs `PROBLEM` (`scripts/content.ts:81-84`) while `build` throws (`:131`). F2 is a real gap; keep the `grep -c PROBLEM` check.
+2. `docs/CONTENT_SOURCES.md:25` is outside the brief's named docs; the one-clause edit is justified, but record it under Decisions so the scope widening is explicit.
+3. In `COLUMN_LABEL` (`questionMatch.ts:214`) and `FACES` (`clueFaces.ts:15`) the removal is a partial-line edit; after it, confirm the trailing comma/line still parses (typecheck will catch it, but say so in Steps so the implementer doesn't reflow the surrounding entries).
+4. The `rounds` comparison with `baseline-e2e/report.json` is the strongest behavioural check here; make "identical" a hard pass condition in Verification, not just "investigate".
+5. After the `isHandWrittenClue` change, a live row tagged `artificial:<kind>` would turn into a field note (text "It also lives in towns or cities."). The pre-deploy live gate covers it; keep that gate as a hard stop, not advisory.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -146,5 +156,6 @@ A deal reads the book (from the pool) and the rules. These constants only add te
 
 - 2026-11-08 21:40 UTC: Baseline. Live gate 0; typecheck/lint/test/preview 0; dev-copy e2e 1565/1565.
 - 2026-11-08 21:50 UTC: Architecture. `architect`: 13 code lines + 2 doc clauses go; no union-keyed types or positional deps; no version bump; Verification adds preview diff + rounds comparison. Plan-only edit.
+- 2026-11-08 22:00 UTC: Fable review. `architecture-reviewer`: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (for Steps: hard-pass rounds match + live gate, partial-line edits, record CONTENT_SOURCES widening). Plan-only edit.
 
 ## Summary
