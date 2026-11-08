@@ -2,7 +2,7 @@
 mission: ft-cleanup
 project: critter-connect
 branch: agent/ft-cleanup
-status: active
+status: done
 started: 2026-11-08 21:26 UTC
 ---
 
@@ -250,5 +250,15 @@ SHOULD-CONSIDER: none
 - 2026-11-08 22:40 UTC: S1. 13 `artificial` code lines gone (numstat 1/1, 1/3, 1/1, 0/8), 2 doc clauses, plan 056. V1: typecheck/lint/test(66/66) 0, `rg` empty, db untouched. V2: preview exit 0, unchanged vs before, 0 PROBLEM.
 - 2026-11-08 22:08 UTC: S2. V3 dev copy (db guard + gate 0): 1565/1565; V4: 1565 checks (baseline 1565), 0 failed, 0 console errors, 0 failed requests; rounds same as baseline: true. Artifact `$M/e2e-s2/`. No AGENTS.md rewrite.
 - 2026-11-08 22:10 UTC: Astra code review (`--code origin/main`): APPROVE, 0 MUST-FIX, 0 SHOULD-CONSIDER. Plan-only edit.
+- 2026-11-08 22:23 UTC: Final Verification. V1 typecheck/lint/test 66/66 0, `rg` empty, numstat 1/1,0/8,1/3,1/1, db untouched; V2 preview exit 0, unchanged, 0 PROBLEM; V3 dev copy (db guard + gate 0) 1565/1565; V4: 1565 checks (baseline 1565), 0 failed, 0 console errors, 0 failed requests; rounds same as baseline: true. Artifact `$M/final-e2e/`; `e2e-s2` deleted.
 
 ## Summary
+
+Farms & towns (`artificial`) is gone from the code: `HABITAT_CLASSES` (so `COMPLETE_PREFIXES`), its question/short/column texts, its 🏡 face, and its 8 profile guide lines; 2 doc clauses updated; history in `plans/056-ft-cleanup.md`. No content, DB or `ANIMAL_RULES.version` change.
+
+- Diff vs `origin/main`: 4 src files (+4/−14), 2 docs, plan 056, this plan.
+- Gate: live `phaser_june` holds 0 `artificial` tags (of 2478 clue rows); rerun as a hard stop right before merge.
+- Final Verification: typecheck, lint, `npm test` 66/66 exit 0; `rg artificial src db/content` empty; content preview identical to before, 0 PROBLEM; dev-copy e2e (seed 7, Africa) 1565 checks (baseline 1565), 0 failed, 0 console errors, 0 failed requests; rounds same as baseline: true. Artifact `/srv/critter-ai/agent-state/missions/ft-cleanup/final-e2e/` (`report.json` + screenshots); reproduce with V3.
+- Reviews: architecture Fable APPROVE (0 MUST-FIX, 5 SHOULD-CONSIDER, all folded into Steps), Astra APPROVE; code review Astra APPROVE, 0 MUST-FIX, 0 SHOULD-CONSIDER.
+- Side effect: a hand-written `artificial:*` tag is no longer reserved; the content check now rejects `habitat:artificial` as an unknown habitat (documented in `CONTENT_SOURCES.md`).
+- No production content build needed (no content change).
