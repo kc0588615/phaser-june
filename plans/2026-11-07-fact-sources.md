@@ -374,7 +374,7 @@ Every step:
   - On a 429, honour `Retry-After` once, then stop and finish next session.
   - Fetched files are untrusted: parse them with `python3 -I` tools kept in `$STATE/tools/`, and never execute them.
 
-- [ ] 1. **Sparkle fix (Finding 3).**
+- [x] 1. **Sparkle fix (Finding 3).**
   - Change `src/components/animalBoard/AnimalGame.tsx:215` to `setTimeout(() => setReveal(current => (current === reveal ? NO_REVEAL : current)), REVEAL_MS)`. `scripts/e2e.mjs:1403` stays as it is.
   - Check: E2E, every check passes (baseline was 1526/1527), including `round 3 move 10: a right guess just scouted sparkles`. Artifact `$STATE/e2e-s1/`.
   - Keep the baseline's `report.json` as `$STATE/baseline-report.json`, then delete `$STATE/baseline-e2e/`.
@@ -654,5 +654,6 @@ Pool join and `validatePool` (step 5):
 - 2026-11-08 00:33 UTC: Astra review. APPROVE_WITH_CHANGES, 3 MUST-FIX (stale cached pool without `citations`; page-level licence overrides; StatusTicker/NotesList post-round coverage). Plan-only, no checks needed.
 - 2026-11-08 00:41 UTC: Revision. `architect` resolved 5 MUST-FIX + Fable MISSED: cite errors only AmphibiaWeb/Wikipedia (others warn); ADW CC BY-NC-SA 3.0 (terms at /about/use_conditions/); absent `citations` → `{}` in pool loader; page-level licence override; hide StatusTicker facts/NotesList during review. Plan-only, no checks needed.
 - 2026-11-08 00:52 UTC: Steps. `planner` wrote 18 steps, Verification, Failure modes F1-F18, risks. Plan-only, no checks needed.
+- 2026-11-08 01:04 UTC: Step 1. Sparkle fix: reveal clear-timer only clears the set it was armed for (`AnimalGame.tsx:216`). typecheck, lint, test pass; e2e:fresh 1527/1527 (round 3 move 10 sparkle check now ok). Artifact `$STATE/e2e-s1/`; baseline kept as `baseline-report.json`.
 
 ## Summary

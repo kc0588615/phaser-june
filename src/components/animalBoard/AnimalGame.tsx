@@ -212,7 +212,8 @@ export function AnimalGame() {
   const [reveal, setReveal] = useState(NO_REVEAL);
   useEffect(() => {
     if (reveal.size === 0) return;
-    const timer = window.setTimeout(() => setReveal(NO_REVEAL), REVEAL_MS);
+    // Clear only the set this timer was armed for: a stale timer can fire after a newer move's add has queued.
+    const timer = window.setTimeout(() => setReveal(current => (current === reveal ? NO_REVEAL : current)), REVEAL_MS);
     return () => window.clearTimeout(timer);
   }, [reveal]);
   // The field guide's and round end's drawers reach up to the board's top edge (the grid above stays visible).
