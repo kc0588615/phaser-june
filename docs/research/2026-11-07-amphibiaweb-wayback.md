@@ -181,13 +181,49 @@ None. Diet: the account only notes a captive meal, so the Wikipedia invertebrate
 
 #### Trees
 
+**No.** It lives its whole life in water.
+> "Pipa pipa is entirely aquatic, living on the muddy bottom of tropical rivers."
+
 #### Filled traits
+
+None. Its no-records (size, activity, social) aren't in the account: it gives no adult size, only the young's.
+
+#### Re-sourced from the USGS fact sheet (same claim, higher tier)
+
+- Clue "Its eggs sink into pockets in the mother's back and hatch there as tiny toads, with no tadpole stage." (`mother_carries_young`, `no_tadpoles`)
+  > "the male fertilizes the eggs and then attaches them to the female's back. The skin of the female then encloses the fertilized eggs. Larval development occurs within the egg and fully metamorphosed individuals"
+- Fact "Its babies climb out of little pockets in their mother's back after 3 to 4 months."
+  > "emerge from incubation after 3 to 4 months"
+
+Agrees with ADW (same tier, kept as ADW): flat body and triangle head, star fingertips, no tongue, lives in water.
+> "large triangular head, small eyes with rounded pupils"
+> "Its body is flat, brown or olive-colored, and covered by many tubercles."
+> "Using star-shaped tactile organs on its fingertips to detect food, the tongueless Pipa pipa lunges at its prey"
 
 #### New clues
 
+- morphology, no tag: "Its nostrils sit at the ends of two thin tubes on its snout."
+  > "nostrils found at the end of two narrow tubes on the snout"
+- morphology, `webbed_feet` (reused: Wallace's flying frog, desert rain frog, giant otter): "Its front legs are short and weak, with long thin fingers. Its back legs are long and strong, with webbed feet."
+  > "The front limbs are short and weak with long slender fingers, and the hind limbs are long, strong with webbed feet."
+- habitat, no tag: "It lives in slow rivers and canals with muddy bottoms."
+  > "Found in sluggish rivers and canals with muddy bottoms"
+
 #### New facts
 
+- key_fact: "Its babies are only about 2 cm long when they leave their mother's back."
+  > "fully metamorphosed individuals approximately 2 cm in length emerge from incubation after 3 to 4 months"
+- behavior: "It finds food by touch, with the stars on its fingertips, then lunges at it."
+  > "Using star-shaped tactile organs on its fingertips to detect food, the tongueless Pipa pipa lunges at its prey"
+- life_description: "The male presses the eggs onto the female's back, and her skin grows over them."
+  > "the male fertilizes the eggs and then attaches them to the female's back. The skin of the female then encloses the fertilized eggs."
+
 #### Disagreements
+
+- Diet: ADW (same tier) lists worms, insects, crustaceans and small fish (`diet: meat`); AmphibiaWeb says mostly invertebrates, which would be `insects`. Kept ADW.
+  > "consisting mostly of invertebrates"
+- Countries: AmphibiaWeb also lists French Guiana and Trinidad and Tobago; the profile's countries come from the IUCN range polygon (tier 1). Kept IUCN.
+  > "Bolivia, Brazil, Colombia, Ecuador, French Guiana, Guyana, Peru, Suriname, Trinidad and Tobago, Venezuela"
 
 ### 11 Goliath Frog (*Conraua goliath*)
 
@@ -213,13 +249,42 @@ None. Diet: the account only notes a captive meal, so the Wikipedia invertebrate
 
 #### Trees
 
+**No record.** Gardens, ponds and ditches; nothing on climbing.
+> "it inhabits most gardens and breeds in ponds and ditches"
+
 #### Filled traits
+
+None. Its no-records (activity, social) aren't in the account.
+> "can be observed all-year round after rains"
+
+Agrees with ADW (same tier, kept as ADW): size, breeding after rain, sticky skin.
+> "M 60-65 mm, F 85-105 mm"
+> "Specimens breed regularly after rainfalls"
+> "These frogs have very sticky skin secretions"
 
 #### New clues
 
+- behavior, no tag: "Its call is a string of short, low notes, repeated after short breaks."
+  > "A series of short low-pitched notes which is repeated after some intervals."
+- reproduction, no tag: "Its small black eggs hatch only 36 hours after they are laid."
+  > "1000-1500 small black eggs are laid and hatch 36 hours later"
+
 #### New facts
 
+- key_fact: "Its Malagasy name, Sangongon, comes from the sound of its call."
+  > "The Malagasy name for this frog “Sangongon” is based on these sounds"
+- key_fact: "Its sticky skin ooze can make a person's skin swell up."
+  > "These frogs have very sticky skin secretions which can produce local swellings in humans"
+- behavior: "In the town of Maroantsetra it lives in most gardens, and locals can find one fast to show tourists."
+  > "especially in the town of Maroantsetra where it inhabits most gardens"
+  > "locals are familiar with this frog and can quickly find them when required as tourist attraction"
+
 #### Disagreements
+
+- Male color: ADW's clue says males look more brown; AmphibiaWeb says males are yellow-orange. Same tier, kept ADW.
+  > "Colour uniformly yellow-orange in males, orange-red in females"
+- Clutch: ADW says several thousand eggs; AmphibiaWeb 1,000 to 1,500. Same tier, kept ADW (both `young: many`).
+  > "1000-1500 small black eggs are laid"
 
 ### 14 Desert Rain Frog (*Breviceps macrops*)
 
@@ -276,13 +341,75 @@ None.
 
 #### Trees
 
+**No.** A burrower that lives underground nearly all year.
+> "N. sahyadrensis is fossorial and comes to the surface only for a few weeks a year to breed"
+> "Most recently it has been found 3 feet underground"
+
 #### Filled traits
+
+- `young: many`, note "One pair laid about 3,600 eggs in one night."
+  > "One mating pair deposited about 3600 eggs in one night"
+
+Still no record:
+- size: lengths only (5.3 to 9 cm, a bloated frog near the 100 g line between tiny and small), so it stays out, as for 07 (Decisions).
+  > "Snout-vent length ranges from 52.8 mm to 89.9 mm"
+- activity: adults stay underground; only the breeding chorus is timed, and a captive one stayed in the soil "even at night".
+  > "Choruses typically occur on rainy evenings (lasting until dawn) from late April to mid-May"
+  > "During five months of captivity, the frog did not emerge from the soil, even at night"
+- lifespan, social: not in the account.
+
+#### Re-sourced from Wikipedia (same claim, higher tier)
+
+- `diet: insects`, note "Mostly termites, which it catches underground."
+  > "this species is likely to be a completely underground feeder specializing in termites"
+
+#### Existing AmphibiaWeb values (checked)
+
+- `covering: skin`, found.
+  > "This species has smooth, black skin dorsally which fades into gray ventrally"
+- Clue "Its body is round and puffy, with a small head and a pointy, pig-like snout.", found ("pig-like" from its other common name).
+  > "a relatively large burrowing frog with a distinct, bloated appearance"
+  > "The head is small and relatively short in comparison with the rest of the body."
+  > "The pointed snout is touch-sensitive."
+  > "Purple Frog, Pignose Frog"
 
 #### New clues
 
+- morphology, no tag: "Its snout ends in a small white knob."
+  > "The snout ends in a white, knob-like protrusion."
+- morphology, no tag: "Each back foot has a big, white, shovel-like bump that it uses for digging."
+  > "Each hindfoot possesses a large, white, shovel-like inner metatarsal tubercle, used for digging."
+- reproduction, no tag: "The male is much smaller than the female. She carries him on her back to the spot where she lays her eggs."
+  > "Males are about one third the size of females"
+  > "During amplexus, the male grasps the female's spine"
+  > "The female then carries the male to suitable oviposition sites"
+
 #### New facts
 
+- key_fact: "Its family line may go back 130 to 180 million years, to the age of dinosaurs."
+  > "estimated to have originated in the Jurassic, 130-180 million years ago"
+- key_fact: "Its scientific name comes from Sanskrit: nasika means 'nose' and batrachus means 'frog'."
+  > "In Sanskrit, nasika means "nose" and batrachus means "frog,""
+- behavior: "Its tadpoles leave the water at night, wriggling onto wet rock to feed."
+  > "tadpoles are known to feed out of the water at night, using their strengthened abdominal muscles to move onto surfaces with extremely shallow water flow"
+- threat: "People catch and eat thousands of its tadpoles each year."
+  > "thousands of tadpoles were harvested per year, as well as adults"
+- Rewritten (replaces the Wikipedia line "…its tadpoles were first found in 1917."): "Scientists only described it in 2003, though its tadpoles had been described in 1918, with no adults to go with them."
+  > "Nasikabatrachus sahyadrensis Biju & Bossuyt, 2003"
+  > "N. sahyadrensis tadpoles were first described in Annandale (1918), without specimens of adults."
+
 #### Disagreements
+
+- Color: Wikipedia's clue says "dark purplish gray" (tag `purple_gray`); AmphibiaWeb says black above, gray below. Kept, not replaced: it is the color its English name (AmphibiaWeb's too) comes from, a description rather than a conflicting fact (Decisions).
+  > "smooth, black skin dorsally which fades into gray ventrally"
+- Time above ground: IUCN (tier 1) says a few hours a year; AmphibiaWeb says a few weeks. Kept IUCN.
+  > "comes to the surface only for a few weeks a year to breed"
+- Digging: the literature clue (PMC4814056, tier 2) says it digs head first; AmphibiaWeb saw a captive one burrow with its back legs. Same tier, kept the paper.
+  > "In captivity, the frog used its hindlimbs for burrowing"
+- Red List: AmphibiaWeb's page shows Endangered, an older assessment; IUCN 2022 says Near Threatened. Kept IUCN.
+  > "Endangered (EN)"
+- Elevation: AmphibiaWeb 60 to 1,100 m; IUCN 30 to 1,400 m. Kept IUCN.
+  > "It inhabits an elevational range of 60-1100 meters above sea level"
 
 ### 62 Chinese Giant Salamander (*Andrias davidianus*)
 

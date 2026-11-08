@@ -98,6 +98,11 @@
       "source": "adw"
     },
     {
+      "category": "behavior",
+      "text": "Its call is a string of short, low notes, repeated after short breaks.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "habitat",
       "text": "It lives near the coast, even in drainage ditches and gardens in town.",
       "tags": [
@@ -112,6 +117,11 @@
         "rain_breeder"
       ],
       "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its small black eggs hatch only 36 hours after they are laid.",
+      "source": "amphibiaweb"
     },
     {
       "category": "conservation",
@@ -131,9 +141,24 @@
       "source": "adw"
     },
     {
+      "category": "key_fact",
+      "text": "Its Malagasy name, Sangongon, comes from the sound of its call.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its sticky skin ooze can make a person's skin swell up.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "Its skin glue is among the stickiest made by any amphibian.",
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "In the town of Maroantsetra it lives in most gardens, and locals can find one fast to show tourists.",
+      "source": "amphibiaweb"
     },
     {
       "category": "threat",
@@ -143,7 +168,8 @@
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/6937/84159360",
-    "adw": "https://animaldiversity.org/accounts/Dyscophus_antongilii/"
+    "adw": "https://animaldiversity.org/accounts/Dyscophus_antongilii/",
+    "amphibiaweb": "https://amphibiaweb.org/species/5530"
   },
   "range": {
     "realms": [
