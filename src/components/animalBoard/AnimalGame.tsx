@@ -529,8 +529,8 @@ export function AnimalGame() {
           />
         )}
         {round?.status === 'out-of-moves' && <OutOfMovesSheet key="out-of-moves" round={round} nameOf={nameOf} onName={name} />}
-        {session && mystery && reviewing && (
-          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} box={boardBox} nameOf={nameOf} onNext={() => { nextRound(); board.current?.focus({ preventScroll: true }); }} />
+        {session && pool && mystery && reviewing && (
+          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} citations={pool.citations} box={boardBox} nameOf={nameOf} onNext={() => { nextRound(); board.current?.focus({ preventScroll: true }); }} />
         )}
         {helpOpen && <AnimalHowToPlay key="help" rules={rules} seed={seed} onClose={closeHelp} />}
         {journalOpen && <JournalSheet key="journal" pool={pool} journal={journal} records={records} onClose={() => setJournalOpen(false)} />}

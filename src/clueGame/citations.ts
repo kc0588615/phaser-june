@@ -85,3 +85,29 @@ export function renderCitation(source: CitationSource, url: string, page: CitedP
   const text = (missing.length ? FALLBACK : template).replace(/\{(\w+)\}/g, (_, name: string) => values[name] ?? '');
   return { citation: { text, url, license: page.license ?? source.license ?? null, archive }, missing };
 }
+
+/** What `numberSources` numbers: a line's source (structurally `Source` in questionMatch). */
+export interface NumberedSource { name: string; url: string | null }
+
+/**
+ * One number per cited page, 1..n in order of first use: a source is its `url`, or its
+ * `name` when it has none. So two Wikipedia articles are two sources (each entry is one
+ * full citation), and a page backing three lines shows one number three times.
+ * `marks[i]` is line i's number (null: the line has no source); `list[n - 1]` is source n.
+ */
+export function numberSources<S extends NumberedSource>(sources: ReadonlyArray<S | null>): { marks: Array<number | null>; list: S[] } {
+  const numbers = new Map<string, number>();
+  const list: S[] = [];
+  const marks = sources.map(source => {
+    if (!source) return null;
+    const id = source.url ?? `name:${source.name}`;
+    let number = numbers.get(id);
+    if (number === undefined) {
+      list.push(source);
+      number = list.length;
+      numbers.set(id, number);
+    }
+    return number;
+  });
+  return { marks, list };
+}
