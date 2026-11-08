@@ -54,7 +54,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -62,6 +62,12 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+From `agent/frog-fact-fixes` @ `e4c59782` (= `origin/main` `7edc1a5a` + mission start). `node_modules` present; no migrations in this repo.
+- `npm run typecheck` 0, `npm run lint` 0, `npm test` 66/66 pass, `npm run content -- preview` 0 (no PROBLEM lines; output `/srv/critter-ai/agent-state/missions/frog-fact-fixes/preview-before.txt`).
+- `npm run e2e:fresh` on dev copy (`current_database()` guard = `phaser_june_dev`, no-sandbox Chrome wrapper from moves-and-signs-build), seed 7, `continent:africa`: **1565/1565 checks**. Artifact `/srv/critter-ai/agent-state/missions/frog-fact-fixes/baseline-e2e/`.
+- `rg -n voiceless db/content/animals`: 08:109 and 11:106. Target lines: `06-red-eyed-tree-frog.json:140` ("since 2008"), `11-goliath-frog.json:104` ("can't croak").
+- Quote check tool: `/srv/critter-ai/agent-state/missions/fact-sources/tools/check_quotes.py`.
 
 ## Architecture
 
@@ -82,5 +88,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-08 23:20 UTC · Baseline: typecheck/lint/66 tests/preview 0; dev-copy e2e:fresh seed 7 Africa 1565/1565 (`baseline-e2e/`).
 
 ## Summary
