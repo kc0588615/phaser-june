@@ -27,6 +27,8 @@ export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v5';
 
 /** A section label inside a sheet (cc Menu label: XS, medium). */
 const LABEL = 'm-0 text-xs font-medium uppercase text-neutral-7';
+/** The small category word under an answer or a witness note (plan 055). */
+const MARK_CAPTION = 'text-xxs font-medium uppercase text-neutral-7';
 /** A small square holding an animal's number this round, or a question's emoji. */
 const TILE = 'grid shrink-0 place-items-center rounded-xs bg-neutral-3';
 /** A one-line notice in a sheet: ruled out, released, a lost heart. */
@@ -218,7 +220,7 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
             <li key={order.tag} data-answer-tag={order.tag} className={`flex min-h-12 items-center gap-s py-xxs ${ROW_LINE}`}>
               <span className={`${TILE} h-8 w-8 text-m`} aria-hidden="true">{clueFace(order.tag)}</span>
               <span className="flex min-w-0 flex-1 flex-col">
-                <CategoryMark category={categoryOf(order.tag)} small className="text-xxs font-medium uppercase text-neutral-7" />
+                <CategoryMark category={categoryOf(order.tag)} small className={MARK_CAPTION} />
                 <span className="text-s text-neutral-8">{order.question}</span>
               </span>
               {isSeen(i) ? (
@@ -306,7 +308,7 @@ export function NotesList({ round }: { round: AnimalRound }) {
       {round.notes.map((note, index) => (
         <li key={index} className="flex flex-col gap-xs rounded-s bg-notes/15 p-s">
           <p className="m-0 text-m"><WithBlanks text={note.text} /></p>
-          <p className="m-0 flex flex-wrap gap-x-s gap-y-xxs text-xxs font-medium uppercase text-neutral-7">
+          <p className={`m-0 flex flex-wrap gap-x-s gap-y-xxs ${MARK_CAPTION}`}>
             {noteCategories(note.tags).map(category => <CategoryMark key={category} category={category} small />)}
           </p>
           <p className="m-0 flex items-center gap-xs text-xs text-neutral-7">

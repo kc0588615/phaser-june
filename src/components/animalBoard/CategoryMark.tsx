@@ -1,10 +1,11 @@
 // One mark per question category (plan 055): the same icon on the guide's headings, "Its answers" rows, the grid's
 // question tiles and witness notes, so a player links a question to the signs and lines that bear on it. No new
-// colour: the icon takes the text colour, and the word is always printed or read out.
-import { Baby, Eye, MapPin, PawPrint, Trees, type LucideIcon } from 'lucide-react';
+// colour: the icon takes the text colour, and the word is always printed or read out. Habitat is a mountain, not trees, so
+// the trees question's 🌲 face (Habits) doesn't point at the Habitat heading (plan 055 audit).
+import { Baby, Eye, MapPin, Mountain, PawPrint, type LucideIcon } from 'lucide-react';
 import { CATEGORY_LABELS, type ChargeCategory } from '@/clueGame/questionMatch';
 
-export const CATEGORY_ICON: Record<ChargeCategory, LucideIcon> = { body: Eye, habits: PawPrint, habitat: Trees, range: MapPin, life: Baby };
+export const CATEGORY_ICON: Record<ChargeCategory, LucideIcon> = { body: Eye, habits: PawPrint, habitat: Mountain, range: MapPin, life: Baby };
 
 export function CategoryMark({ category, word = true, small = false, className = '' }: {
   category: ChargeCategory;
