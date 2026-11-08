@@ -94,7 +94,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -102,6 +102,14 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+From `2a725a40` (origin/main `35baf89b` + plan), 2026-11-07, DB = live `phaser_june` (`.env.local`).
+
+- `npm ci`: ok. `npm run typecheck`: pass. `npm run lint`: pass. `npm test`: 48/48 pass.
+- `npm run content -- check`: 0 errors, 0 warnings (76 playable species, 2430 clues, 437 facts).
+- `npm run e2e:fresh`: **1526/1527**, one check fails, same on two runs (deterministic, seed 7): `round 3 move 10: a right guess just scouted sparkles` (`{"sparkling":[],"calledNow":["57:region:southern-africa"]}`; round 3 Golden-rumped Sengi; check at `scripts/e2e.mjs:1403`). Pre-existing on main, not this mission's code; the final Verification needs `e2e:fresh` green, so the plan must fix or settle it (cause unknown yet: test timing vs the sparkle UI vs current live content).
+- Needs `CHROME_PATH=/srv/critter-ai/agent-state/missions/fact-sources/bin/chrome` (wrapper adding `--no-sandbox`; `/usr/bin/google-chrome` absent), as in clue-audit.
+- Artifact: `/srv/critter-ai/agent-state/missions/fact-sources/baseline-e2e/` (report.json, screenshots, `e2e.log`, `COMMAND.txt`).
 
 ## Architecture
 
@@ -122,5 +130,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-08 00:05 UTC: Baseline. typecheck, lint, test (48/48), content check pass; e2e:fresh 1526/1527 (pre-existing sparkle check fails at round 3 move 10, deterministic).
 
 ## Summary
