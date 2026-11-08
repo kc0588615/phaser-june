@@ -753,6 +753,8 @@ async function main() {
         mystery: document.querySelector('table[aria-label="Evidence"] tr[data-mystery] th')?.textContent ?? '',
       }));
       check(`round ${n}: the evidence grid has a row per suspect and a column per clue`, screen.rows.join() === start.suspects.join() && screen.columns.join() === start.orders.map(order => order.tag).join(), JSON.stringify(screen));
+      // A yes/no trait's `no` is recorded, never asked (plan 055: trees:no).
+      check(`round ${n}: no column asks a "no" value`, screen.columns.every(tag => !tag.endsWith(':no')), screen.columns.join());
       check(`round ${n}: the grid doesn't name the mystery while it's hidden`, screen.mystery.includes('On camera') && !screen.mystery.includes(mysteryName), screen.mystery);
       if (n === 1) {
         // Tap an animal's tile: it's picked in the grid (its actions in the status line); tap again to drop it.
@@ -1781,6 +1783,19 @@ async function main() {
     await waitFor(boardReady, 'the resumed end card', 60_000);
     const fromSave = await replayRows();
     check('a reload draws the round-end order from the save', reversed.length > 0 && sameList(fromSave, reversed), JSON.stringify({ reversed, shown: fromSave }));
+    // Plan 055: a save whose witness notes the content would no longer deal (here a note on the retired tag tree_dweller,
+    // as an old-content save holds) isn't resumed: a fresh round 1 is dealt from the saved seed.
+    const staleSeed = await evaluate(() => {
+      const saved = JSON.parse(sessionStorage.getItem('cc:explore:game'));
+      saved.session.round.notesLeft.push({ text: 'It sleeps high in the trees.', tags: ['tree_dweller'], fits: 2, source: { name: 'Old content', url: null } });
+      sessionStorage.setItem('cc:explore:game', JSON.stringify(saved));
+      return saved.seed;
+    });
+    await page('Page.reload');
+    await waitFor(() => document.readyState === 'complete', 'the reload');
+    await waitFor(boardReady, 'the board after a stale save', 60_000);
+    const afterStale = await evaluate(() => { const clue = window.__cc.clue(); return { end: clue.end, movesUsed: clue.movesUsed, roundNo: clue.roundNo, seed: clue.seed }; });
+    check('a save whose witness notes no longer fit the content deals a fresh round, not a resume', afterStale.end === null && afterStale.movesUsed === 0 && afterStale.roundNo === 1 && afterStale.seed === staleSeed, JSON.stringify({ ...afterStale, staleSeed }));
     const solves = raw => Object.values(JSON.parse(raw ?? '{}')).find(entry => entry.commonName === mysteryName)?.timesSolved ?? 0;
     check('the resumed round, named right, is written to the journal once', ended.end?.outcome === 'found' && solves(ended.journal) === solves(journalBefore) + 1, JSON.stringify({ mysteryName, before: solves(journalBefore), after: solves(ended.journal), outcome: ended.end?.outcome }));
     check('a reload on the round-end card resumes it without writing the journal again', Boolean(ended.end) && JSON.stringify(afterEnd.end) === JSON.stringify(ended.end) && afterEnd.journal === ended.journal, JSON.stringify({ ended: ended.end?.outcome ?? null, after: afterEnd.end?.outcome ?? null, sameJournal: afterEnd.journal === ended.journal }));

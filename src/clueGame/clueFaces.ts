@@ -6,7 +6,7 @@ const FACES: Record<string, string> = {
   'covering:fur': '🧶', 'covering:spines': '📍', 'covering:scales': '💠', 'covering:armor': '🛡️', 'covering:shell': '🐚', 'covering:skin': '✋',
   'diet:plants': '🥬', 'diet:meat': '🍖', 'diet:insects': '🐜', 'diet:mixed': '🍽️',
   'activity:day': '☀️', 'activity:night': '🌙', 'activity:twilight': '🌅', 'activity:any': '🌓',
-  'social:alone': '👤', 'social:pairs': '👥', 'social:groups': '👪',
+  'social:alone': '👤', 'social:pairs': '👥', 'social:groups': '👪', 'trees:yes': '🌲',
   'birth:eggs': '🥚', 'birth:live': '🍼',
   'young:one': 'x1', 'young:few': 'x3', 'young:many': 'x10',
   'lifespan:short': '⏱️', 'lifespan:medium': '⏳', 'lifespan:long': '🕰️',

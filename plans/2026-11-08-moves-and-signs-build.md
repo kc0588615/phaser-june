@@ -429,7 +429,7 @@ One pass, on 447e9317 (the code is unchanged on this branch).
 `M` = `/srv/critter-ai/agent-state/missions/moves-and-signs-build`. `STATE` = design's folder (read-only). **Static checks** = Verification V1 items 1–4. **Dev E2E** = Verification V2 (dev copy, no content build). Content files reach the game only through a content build, so E2E before S9 plays new code on old dev rows (window a).
 Deviation from the architecture's 8-step order (sessions too big): its step 3 is split into S3–S5 (no throwaway code: `signsOf` keeps `string[]` until S4); its step 4 into S6 (decide) and S7 (apply); E5 moves to S1 with the rule it checks; the dev content build and probe (S9) come before the audit (S10) and docs (S11), because the audit needs a trees-seed sheet. The accepted cosmetic risk window (brief) opens at S9; Verification rebuilds. Record this under Decisions in S9.
 
-- [ ] S1. **Trees question rule, rules version, saved-round fit (T1, T10, E5, E6).**
+- [x] S1. **Trees question rule, rules version, saved-round fit (T1, T10, E5, E6).**
   - `src/clueGame/traits.ts`: `trees` in `EXCLUSIVE_PREFIXES`; `NEVER_ASKED_VALUE`, `neverAsked` with its doc line.
   - `src/clueGame/questionMatch.ts`: `PREFIX_CATEGORY.trees = 'habits'` after `social`; `QUESTION_TEXT`/`SHORT_TEXT`/`COLUMN_LABEL` for `trees:yes`; `questionsFor` skips `neverAsked`.
   - `src/clueGame/animalBoard.ts`: `fullTable` filters `!neverAsked`; `ANIMAL_RULES.version` `'055-0'` (re-read `origin/main` first); new `roundStillFits(book, round)` beside `witnessNotes` (rows first, then `[...notes, ...notesLeft]` vs fresh `witnessNotes` on text/tags/fits).
@@ -585,5 +585,6 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - 2026-11-08 05:28 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (saved-round witness notes vs fresh content across delayed content build), 2 SHOULD-CONSIDER; plan-only.
 - 2026-11-08 05:36 UTC · Revision: architect fixed Astra MUST-FIX (T10 `roundStillFits` invalidates saves whose witness notes no longer match; E2E E6), accepted 5 SC, rejected tree-icon SC4 for now; steps now 8; plan-only.
 - 2026-11-08 05:52 UTC · Steps: planner wrote 12 steps (arch steps 3, 4 split; content build + probe moved before audit/docs), Verification V1-V5, Failure modes F/A/R; plan-only.
+- 2026-11-08 06:05 UTC · S1: `trees` trait + `neverAsked` (traits.ts), Habits question texts, `fullTable`/`questionsFor` skip `:no`, rules `055-0`, `roundStillFits` (rows, then witness notes) used by the resume, 🌲 face, profile `trees` trait; E2E E5 + E6. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; dev E2E 1563/1563 (`M/e2e-s1/`).
 
 ## Summary
