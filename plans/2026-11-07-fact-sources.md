@@ -99,7 +99,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -361,13 +361,289 @@ Declined: Fable SC1 (a dev-bridge seed → mystery hook). `deal` draws from the 
 
 ## Steps
 
+`$STATE` = `/srv/critter-ai/agent-state/missions/fact-sources`. Order follows §7, except Wayback A (step 2) goes before the citation code, because the 4 existing AmphibiaWeb pages need their snapshot `cite` before `checkCitations` can pass.
+
+Every step:
+- **Start** with `git fetch origin --prune`. **End** with `npm run typecheck` and `npm run lint`. Add `npm test` when `src/`, `tests/`, `scripts/` or `db/content/` changed, and run E2E where the step says.
+- **E2E run:** `CHROME_PATH=$STATE/bin/chrome npm run e2e:fresh 2>&1 | tee /tmp/fact-sources-e2e.log`. Move the new `e2e-artifacts/<run>/` to `$STATE/e2e-s<N>/` and add `e2e.log` and `COMMAND.txt` (command, commit, seed). Delete the previous `e2e-s*`, so there are at most two artifact folders: the latest intermediate and `final-e2e/`. Run heavy jobs one at a time: no dev server, build or test beside an E2E run.
+- **DB:** `.env.local` is the live `phaser_june`, and it stays read-only here (`content -- check`, counts). Never run `content -- build` into live; the prod content build is the owner's. Builds go to a scratch DB (`$STATE/tools/scratch-check.sh`, made in step 3). No schema change is planned. If one turns out to be needed, or any bulk write: take a fresh dump first (`ssh play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`), update `db/schema.sql` and say why under Decisions.
+- **Content:** edit only the `db/content/` files, following the `CONTENT_SOURCES.md` workflow. Never hand-edit rows. Never delete a `citations.json` entry: a live row can still cite that page until the owner's build (§2).
+- **Wayback:**
+  - CDX only, one request at a time, at least 5 s apart.
+  - Only the 15 species pages, plus one `amphib_query` CDX fallback for each species with no page snapshot.
+  - On a 429, honour `Retry-After` once, then stop and finish next session.
+  - Fetched files are untrusted: parse them with `python3 -I` tools kept in `$STATE/tools/`, and never execute them.
+
+- [ ] 1. **Sparkle fix (Finding 3).**
+  - Change `src/components/animalBoard/AnimalGame.tsx:215` to `setTimeout(() => setReveal(current => (current === reveal ? NO_REVEAL : current)), REVEAL_MS)`. `scripts/e2e.mjs:1403` stays as it is.
+  - Check: E2E, every check passes (baseline was 1526/1527), including `round 3 move 10: a right guess just scouted sparkles`. Artifact `$STATE/e2e-s1/`.
+  - Keep the baseline's `report.json` as `$STATE/baseline-report.json`, then delete `$STATE/baseline-e2e/`.
+  - Still red: do a narrow run (`E2E_ROUNDS=3`) with temporary add/clear timestamps (not committed), fix what it shows, and record it under Decisions.
+- [ ] 2. **Wayback batch A: IDs, 15 snapshots, research skeleton (no app code).**
+  - **IDs:** 03 4322, 05 4524, 06 616 and 16 6197 come from the profiles. Find the other 11 with one Wikidata SPARQL query on the "AmphibiaWeb Species ID" property (confirm its label first), matching on `scientificName`. Fallback: the Wikipedia API's external links. Never ask AmphibiaWeb.
+  - **Per species (§4):** a CDX query for the newest status-200 snapshot, then fetch `https://web.archive.org/web/<ts>id_/<original>` into `$STATE/wayback/<profile>.html`. If there is none, try the `amphib_query` CDX; failing that, record "no snapshot". About 30 to 45 requests in all.
+  - **Extract:** `$STATE/tools/wayback_text.py` turns each `.html` into `<profile>.txt`. `$STATE/wayback/index.json` holds, per profile: `{ id, idFrom, original, timestamp, archive, citeLine, license }`, with the licence and its version taken from the page footer.
+  - **Research file:** new `docs/research/2026-11-07-amphibiaweb-wayback.md` with the route and the licence. Per amphibian: its ID and how it was found, the snapshot URL and date (or "no snapshot"), and the citation line verbatim. Add empty headings per animal for Trees, Filled traits, New clues, New facts and Disagreements.
+  - Check: `index.json` has 15 entries; every snapshot's `.txt` contains its `citeLine` (`grep -F`); typecheck and lint pass. Log the request count, any 429s and any no-snapshot species.
+- [ ] 3. **Citation renderer, templates, safe `load()` (tests first).**
+  - First write `tests/clueGame/citations.test.ts` with F1 to F10 (Failure modes). `npm test` must fail, on the missing module. Then write the code:
+  - `src/clueGame/citations.ts`: `CitedPage`, `Citation`, `FULL_CITATION_KEYS`, `renderCitation` and `formatDay` (§1). Client-safe: no import from `profiles.ts`.
+  - `db/content/sources.json`:
+    - `citeAs` on all 16 entries (§1 table);
+    - `license` on amphibiaweb (CC BY-NC, version from step 2's footer), adw (`CC BY-NC-SA 3.0`) and wikipedia (`CC BY-SA 4.0`);
+    - `ContentSource` (`profiles.ts:64`) gains optional `citeAs` and `license`.
+  - `scripts/content.ts:134`: `load()` gets an explicit pick of the six `content_sources` columns (Finding 4).
+  - `$STATE/tools/scratch-check.sh`:
+    - `createdb fact_sources_scratch`;
+    - apply the DDL for `content_sources`, `species`, `species_deduction_clues` and `species_facts` (plus their sequences) from `db/schema.sql`;
+    - `DATABASE_URL=<local socket URL> npm run content -- build`, then `-- check`;
+    - `dropdb` in a trap.
+
+    Find the socket URL that postgres.js accepts (`postgres:///…` or `?host=/var/run/postgresql`) and hard-code it in the script.
+  - Check: `npm test` passes (F1 to F10 and the 48 existing tests); typecheck and lint pass; `scratch-check.sh` builds and reports `0 errors`.
+- [ ] 4. **`citations.json`, `pageUrl`, `checkCitations` (tests first).**
+  - First add F11 to F15 to `citations.test.ts`; they must fail. Then write the code:
+  - **`pageUrl(profile, key, url?)`** in `profiles.ts`, used at `:310`, `:370` and `:381` (Finding 6). The rows must not change: dump `contentRowsFromProfiles(profiles)` as JSON before and after (tool in `$STATE/tools/`), and `cmp` must find them equal.
+  - **`$STATE/tools/accessed-dates.mjs`** takes every distinct clue and fact page (`pageUrl`; traits and iucn_range left out). It sets `accessed` to the first date from `git log --reverse --format=%as -S<url> -- db/content/animals/`, and writes `db/content/citations.json` with sorted keys and 2-space indent. The 4 existing AmphibiaWeb pages get `cite` (the `citeLine`), `archive`, and `accessed` (the date the snapshot was read), all from `index.json`.
+  - **`src/lib/contentCitations.ts`:** typed imports of `sources.json` and `citations.json`. `scripts/content.ts` and `tests/clueGame/contentPool.ts` use it instead of reading the files themselves.
+  - **`checkCitations(profile, registry, pages) → { errors, warnings }`**, beside `checkProfile`. In `content.ts`:
+    - `preview` prints errors as `PROBLEM …` and warnings as `cite warn …`;
+    - `build` throws on errors and prints `<n> citation warnings`.
+
+    `content.test.ts` asserts `checkCitations` gives no errors.
+  - Check:
+    - `npm test`, typecheck and lint pass;
+    - `npm run content -- preview | grep -c PROBLEM` prints 0;
+    - log the count from `grep -c 'cite warn'` (non-full keys with no `cite` yet);
+    - `scratch-check.sh` passes;
+    - the entry count equals the distinct page count (about 250).
+- [ ] 5. **Pool join, `validatePool` rule, old-pool tolerance (tests first).**
+  - First add F16 to F18 to `citations.test.ts`; they must fail. Then write the code:
+  - **Pool join:**
+    - `ContentRows` clues and facts gain `source_key?`;
+    - `buildCluePool` (`src/lib/cluePool.ts:17`, `:20`) selects `c.source_key` and `f.source_key`, and calls `poolFromRows(rows, { registry, pages })` with the data from `contentCitations`;
+    - `poolFromRows` adds `citations: Record<url, Citation>` (§2), and `CluePool.citations` is required;
+    - the `tests/clueGame/testPool.ts` fixture gets `citations: {}`, and `contentPool.ts` passes the registry and pages.
+  - **`validatePool`:** every fact and every hand-written clue (`isHandWrittenClue`) needs a `source.url` with an entry in `pool.citations`; a missing one is an error.
+  - **Old cached pools:** `useAnimalSession.ts:101` reads the response as `Omit<CluePool, 'citations'> & Partial<Pick<CluePool, 'citations'>>` and builds `{ ...fetched, citations: fetched.citations ?? {} }`, with a comment saying why (§2).
+  - Check:
+    - `npm test`, typecheck and lint pass;
+    - `npm run content -- check` on live (read-only) shows 0 errors. A live-only error, for a row this branch's profiles no longer have, goes under Decisions as "needs the prod content build";
+    - `scratch-check.sh` reports 0 errors;
+    - `npm run build` passes, and `grep -rl 'amphibiaweb.org/species' .next/server` finds the bundled citations (the run image has no `db/`). Then `rm -rf .next`;
+    - E2E is green. Artifact `$STATE/e2e-s5/`.
+- [ ] 6. **AmphibiaWeb B1: 05 Wallace's flying frog, 07 hairy frog, 14 desert rain frog** (4, 5 and 5 no-records). For each animal, working from `$STATE/wayback/<profile>.txt`:
+  - **Fill** the no-record traits first, then the clues and facts the profile lacks. Follow the `CONTENT_SOURCES.md` workflow and tag vocabulary, with copy for grades 6 to 12. Every value needs a quote found word for word in the `.txt`.
+  - **Tier rule (§4):** IUCN wins (keep it, note both). Against ADW, keep the existing value and note both. Against Wikipedia, AmphibiaWeb replaces it, and the old page's `citations.json` entry stays.
+  - **Tags:** reuse existing ones. List any new open tag under Decisions, because moves-and-signs-build maps every open tag to a sign.
+  - **Source and citation:** set `sources.amphibiaweb` to `https://amphibiaweb.org/species/<id>`, and add its `citations.json` entry with `cite`, `archive` and `accessed` (the date the snapshot was read).
+  - **Existing AmphibiaWeb values** (05): check each against the snapshot. A value not found there is flagged in the research file and settled under Decisions.
+  - **Research file:** Trees (yes, no or no record, with the quote), filled traits, new clues and new facts, each with its quote as `> "…"`, and any disagreements.
+  - **First batch only:**
+    - write `$STATE/tools/check_quotes.py`: every `> "…"` under an animal must appear in that animal's `.txt`, comparing with whitespace normalized;
+    - run the balance bot before editing (`node scripts/run-typescript.mjs scripts/balance-044.ts`) and log its summary.
+  - Check:
+    - `npm run content -- preview <name>` for each animal, with no `PROBLEM` lines;
+    - `npm test`, typecheck and lint pass;
+    - `scratch-check.sh` reports 0 errors;
+    - `check_quotes.py` finds 0 misses.
+
+    No E2E: the live DB doesn't get these rows, and the app code is unchanged. Log, per animal: the traits filled and the clues and facts added.
+- [ ] 7. **B2: 16 purple frog, 10 Suriname toad, 13 tomato frog.** As step 6. For 16, check its 2 existing AmphibiaWeb values against the snapshot.
+- [ ] 8. **B3: 08 coastal tailed frog, 06 red-eyed tree frog, 09 dyeing poison dart frog.** As step 6. For 06, check its 3 existing AmphibiaWeb values.
+- [ ] 9. **B4: 11 Goliath frog, 76 golden poison frog, 03 Darwin's frog.** As step 6. For 03, check its 4 existing AmphibiaWeb values.
+- [ ] 10. **B5: 62 Chinese giant salamander, 74 axolotl, 75 hellbender** (no gaps: only facts, clues and trees). As step 6, then:
+  - the research file covers all 15 animals: Trees for each, and the "no snapshot" ones stated as such;
+  - run `check_quotes.py` over the whole file;
+  - run the balance bot again and compare it with step 6's run in the Log. A worse deal or look-alike set goes under Decisions.
+- [ ] 11. **ADW cite lines (65 pages).**
+  - Re-confirm that `https://animaldiversity.org/about/use_conditions/` still gives CC BY-NC-SA 3.0. A change goes into `sources.json` and under Decisions.
+  - `curl` each ADW account page in `citations.json` into `$STATE/adw/`, one at a time, about 2 s apart.
+  - A tool extracts the "To cite this page:" block into `cite`, without its trailing "Accessed …".
+  - Check: preview prints no adw `cite warn` lines; `npm test`, typecheck and lint pass.
+- [ ] 12. **IUCN cite lines (74 pages).**
+  - Read the staging details page (CONTENT_SOURCES.md, "Research access") through parallel-search `web_fetch`, 7 URLs per call.
+  - Take the assessment's "Citation" into `cite`, stripping "Accessed on …" (F10 catches a miss).
+  - If the pages can't be reached, use the §7 fallback (`IUCN. <year>. The IUCN Red List of Threatened Species. Version <v>. https://www.iucnredlist.org.`) and record it under Decisions.
+  - Check: preview prints no iucn `cite warn` lines; `npm test`, typecheck and lint pass.
+- [ ] 13. **Remaining cite lines and page licences.**
+  - **Literature (15):** `curl -LH 'Accept: text/x-bibliography; style=apa' https://doi.org/<doi>`.
+  - **By hand (about 33):** news, ngo, government, sdzwa and tftsg pages, in the forms in §1.
+  - **Page `license`** wherever a page states one, e.g. the Frontiers paper `10.3389/fphys.2020.00637` (CC BY, version from the page).
+  - smithsonian and britannica keep the `{name}` template.
+  - Check:
+    - `npm run content -- preview | grep -c 'cite warn'` prints 0; any line left goes under Decisions with the reason;
+    - `npm test`, typecheck and lint pass;
+    - `scratch-check.sh` reports 0 errors.
+- [ ] 14. **UI: `FactsWithSources` on the round-end card.**
+  - **`numberSources`** in `citations.ts`: a source's identity is its URL, or its name when it has no URL. Its comment says numbering is per page (SC5).
+  - **New `src/components/clueGame/FactsWithSources.tsx` (§3):**
+    - **Mark:** a `sup` with `text-xxs text-neutral-7 leading-[0]`, wrapping `a href="#<id>-<n>" aria-label="Source <n>"`, with an `after:` box for the tap area.
+    - **Click or Enter on a mark:** `preventDefault`, open the `<details>`, then `focus({ preventScroll: true })` and `scrollIntoView({ block: 'nearest' })`.
+    - **List:** a closed `<details><summary>Sources (n)</summary><ol>`.
+    - **Entry:** `li id tabIndex={-1}`, text-xxs, neutral-8, with a `focus:` highlight. It shows the citation text, a link to the page, an "archived copy of <date>" link, `License: …` and "Reworded for this game.". Without a citation it falls back to the source's name and link.
+    - Links open in a new tab with `rel="noopener noreferrer"`. Ids are prefixed from `useId()`. Use the cc tokens, per `GUI.md`.
+  - **Card:** the component replaces `AnimalSheets.tsx:635-642`. `RoundEndSheet` gets a `citations` prop, and its bullets become `list-disc marker:text-neutral-6`. `AnimalGame.tsx` passes `pool.citations`.
+  - Check:
+    - typecheck, lint (including the theme's contrast check) and `npm test` pass;
+    - E2E is green, layout checks included ("the round-end card covers the board only"). Artifact `$STATE/e2e-s14/`;
+    - look at `04-round-*-end.png`.
+- [ ] 15. **UI: journal, hiding during review, dead code.**
+  - **Journal:** `keyFacts` (`src/clueGame/pool.ts:101`) returns `Array<{ text; source }>`, de-duplicated by text with the first source kept. `JournalSheet.tsx:69-71` uses `FactsWithSources`, applied after `slice(0, LEARNED_FACTS)` and given `pool.citations`.
+  - **During review**, in `AnimalGame.tsx`:
+    - desktop witness notes: `{wide && round && !reviewing && …}` (`:504`);
+    - `StatusTicker`: `facts={reviewing ? [] : facts}` and ``key={reviewing ? `end-${roundNo}` : roundNo ?? 0}`` (`:502`).
+  - **Dead code** in `LogEntryText.tsx`:
+    - delete `plural`, `rankName`, `isLive`, `SourceLine` and `LogEntryText` (`rg` for importers first);
+    - move `WithBlanks` to `src/components/clueGame/WithBlanks.tsx` and update its 2 imports (`AnimalGame.tsx:21`, `AnimalSheets.tsx:15`);
+    - delete the old file.
+  - Check: typecheck, lint and `npm test` pass; E2E is green (artifact `$STATE/e2e-s15/`); look at `05-journal.png`.
+- [ ] 16. **E2E: Sources checks and screenshots (`scripts/e2e.mjs`, §6).**
+  - **CI data first.** Count the AmphibiaWeb-cited facts in `phaser_june_dev`, read-only and without echoing the URL: `( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; psql "$DATABASE_URL" -Atc "SELECT count(*) FROM species_facts WHERE source_key='amphibiaweb'" )`. If it is 0, build this branch's content into the dev copy (never into live) and record it under Decisions.
+  - **One helper** reads a facts list in a single DOM read. It runs on each of the 4 round-end cards and on the journal, and checks:
+    - one mark per line;
+    - the set of marks equals the set of entries;
+    - numbers run 1..n in order of first use;
+    - the `<details>` is closed at first, with the summary `Sources (n)`.
+
+    Then it clicks one mark and presses Enter on another: the details open, `document.activeElement` is that entry, and the entry is inside the scroller's view. For the journal, run it where section 3 opens the journal and where the sharp-eye scenario opens it. FAIL if no journal fact list is seen.
+  - **Hiding during review.** While each card is open, sample the status line for one dwell (about 4 s): it never shows "Clue n of m", and there is no `#side-notes`. Once, on round 1's card, switch to 1280x800 non-mobile and assert there is no `#side-notes`, then go back to 390x844. The phone check alone proves nothing, because `wide` is false at 390 px.
+  - **AmphibiaWeb probe (§6):**
+    - candidates: species in `/api/clue-game/pool/` with a fact whose `source.url` host is `amphibiaweb.org` and which has a `citations[url]` entry; FAIL if there are none;
+    - take the continent with the most candidates, and probe `?seed=1..40&place=`: clear `cc:explore:game` and localStorage first, then read `__cc.clue().mysteryId`;
+    - name the mystery right, using the pencil-bonus flow;
+    - assert the entry linking to `amphibiaweb.org` contains "AmphibiaWeb", `License: CC BY-NC` and "Reworded for this game.";
+    - record `report.sources = { amphibiaweb: { seed, place, speciesId, probeMs } }`.
+  - **Screenshots** of that card: `10-sources-closed-light.png`, `10-sources-open-light.png`, `10-sources-closed-dark.png` and `10-sources-open-dark.png` (set `data-theme` and the localStorage key `critter-connect:theme`, and restore them afterwards), plus `11-journal-sources-open.png`.
+  - Every new check's name contains `sources:` (for the Verification grep). Update the file's header comment.
+  - Check:
+    - typecheck and lint pass, and E2E is green;
+    - the report has the new checks, all ok;
+    - the 5 screenshots exist and show closed and open in both themes (look at them);
+    - log `probeMs` and the total run time. The CI e2e job times out at 15 min, so keep the local run at or under about 11 min;
+    - artifact `$STATE/e2e-s16/`.
+- [ ] 17. **Docs.**
+  - **`docs/CONTENT_SOURCES.md`**, a new "Citations" section:
+    - the `citations.json` fields and how to record each: `cite` verbatim, without its "Accessed …"; what `accessed` means (for pages from before this mission it is the date the page entered the content, a proxy, not a verified read); the `archive` viewer URL; the page licence override;
+    - the §1 table, with each source's guidance URL and licence URL;
+    - what is an error (amphibiaweb, wikipedia, a missing entry) and what is a warning;
+    - the release order (§2);
+    - a line that Wikipedia's CC BY-SA share-alike applies to facts reworded from it;
+    - the Wayback route (CDX, the load rules, no `amphib_dump.xml` or web services), as a stopgap until AmphibiaWeb grants access.
+
+    Also replace the "AmphibiaWeb blocks bots…" line under "Research access", and mention `checkCitations` and `cite warn` in the workflow steps.
+  - **`AGENTS.md`:** add `citations.json` to the "Content:" line.
+  - **`docs/CLUE_MATCH.md`:** add the pool's `citations`, if the file documents the pool shape (`rg`).
+  - **Research file:** a final pass, with all 15 animals and the trees table; `check_quotes.py` finds 0 misses.
+  - Check: lint passes; `check_quotes.py` passes; `rg citations.json` hits all three docs.
+- [ ] 18. **Final Verification.** Do this once `## Code review (Astra)` is recorded and its MUST-FIX steps are done.
+  - Run `## Verification` and save the artifact to `$STATE/final-e2e/`.
+  - Write the Summary:
+    - per animal, the no-records filled and the clues and facts added;
+    - new open tags;
+    - both review verdicts;
+    - "the owner runs `npm run content -- build` from WSL";
+    - any live-check lag.
+  - Set `status: done`.
+
 ## Verification
+
+E2E first. Run on the final commit, from `/srv/critter-ai/worktrees/fact-sources`, one command at a time:
+
+```
+git fetch origin --prune && git status --short           # clean
+npm run typecheck                                         # exit 0
+npm run lint                                              # exit 0 (eslint + theme contrast)
+npm test                                                  # all pass (48 existing + citations.test.ts)
+npm run content -- preview > /tmp/fact-sources-preview.txt
+grep -c PROBLEM /tmp/fact-sources-preview.txt             # 0
+grep -c 'cite warn' /tmp/fact-sources-preview.txt         # 0, or each one under Decisions
+/srv/critter-ai/agent-state/missions/fact-sources/tools/scratch-check.sh   # build ok, "0 errors": the gate for "content -- check passes"; never touches live
+npm run content -- check                                  # live, read-only: 0 errors (a live-only lag goes under Decisions and in the Summary)
+npm run build && grep -rlq 'amphibiaweb.org/species' .next/server && rm -rf .next
+CHROME_PATH=/srv/critter-ai/agent-state/missions/fact-sources/bin/chrome npm run e2e:fresh 2>&1 | tee /tmp/fact-sources-e2e.log   # "N/N checks passed", exit 0
+python3 -I /srv/critter-ai/agent-state/missions/fact-sources/tools/check_quotes.py docs/research/2026-11-07-amphibiaweb-wayback.md /srv/critter-ai/agent-state/missions/fact-sources/wayback   # 0 misses
+```
+
+The E2E run must show every check ok in `report.json`:
+- **Each round-end card** in the seed-7 main loop (4 rounds):
+  - one mark per fact line;
+  - the marks and entries are equal sets;
+  - numbers run 1..n in order of first use;
+  - Sources is closed at first, with the summary `Sources (n)`;
+  - a click and an Enter each open Sources and focus that entry, in view;
+  - during review, no "Clue n of m" and no `#side-notes`, at 390x844 and at 1280x800.
+- **The journal:** the same Sources checks.
+- **An AmphibiaWeb-sourced animal's card:** "AmphibiaWeb", `License: CC BY-NC` and "Reworded for this game.", with its seed in `report.sources.amphibiaweb`.
+- **Every check that was already there**, including `round 3 move 10: a right guess just scouted sparkles`, plus no console errors and no failed requests.
+
+Report check:
+```
+node -e 'const r=require(process.argv[1]);const bad=r.checks.filter(c=>!c.ok);const src=r.checks.filter(c=>c.name.includes("sources:"));console.log({failed:bad.length,sources:src.length,aw:r.sources?.amphibiaweb})' /srv/critter-ai/agent-state/missions/fact-sources/final-e2e/report.json
+```
+It must print `failed: 0`, a `sources` count covering the 4 cards, the journal and AmphibiaWeb, and `aw.seed` set.
+
+**Artifact:** move `e2e-artifacts/<run>/` to `/srv/critter-ai/agent-state/missions/fact-sources/final-e2e/`. Add `e2e.log` (from `/tmp/fact-sources-e2e.log`) and `COMMAND.txt`, which says: `CHROME_PATH=/srv/critter-ai/agent-state/missions/fact-sources/bin/chrome npm run e2e:fresh   # from /srv/critter-ai/worktrees/fact-sources at <commit>, seed 7`. Then delete the last `e2e-s*`.
+- **Screenshots it must hold:** `10-sources-closed-light.png`, `10-sources-open-light.png`, `10-sources-closed-dark.png`, `10-sources-open-dark.png` and `11-journal-sources-open.png`, plus the existing set.
+- **Repeatable:** the same command on the same seed replays the same rounds, and the AmphibiaWeb probe's seed is in the report.
+
+**Definition of done, content:**
+- `$STATE/wayback/index.json` has 15 entries;
+- the research file has each animal, with its snapshot (or "no snapshot"), Trees, and every fill quoted;
+- `check_quotes.py` finds 0 misses, and the scratch build and check give 0 errors;
+- the Summary lists the fills per animal.
+
+**Release smoke** (the Release unit, after `gh pr merge` and `deploy critter-connect`):
+```
+curl -s https://play.critterconnect.org/version.txt       # the merge commit
+for p in / /explore/ /api/places/ /api/clue-game/pool/; do curl -s -o /dev/null -w "%{http_code} $p\n" "https://play.critterconnect.org$p"; done   # all 200
+curl -s https://play.critterconnect.org/api/clue-game/pool/ | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const c=JSON.parse(s).citations??{};const aw=Object.entries(c).filter(([u,v])=>new URL(u).hostname.endsWith("amphibiaweb.org")&&(v.license??"").startsWith("CC BY-NC"));console.log(Object.keys(c).length,aw.length)})'   # >= 250, >= 1
+```
+For about 11 min after the deploy, an old cached pool without `citations` can answer (§2); retry after that. The Summary says the owner's prod content build (`npm run content -- build`, WSL) is what puts the new AmphibiaWeb rows live.
+
+## Failure modes
+
+Only the citation renderer and the content checks are tested in isolation: they are content checks a playtest can't see (AGENTS.md, "Testing"). The tests go in `tests/clueGame/citations.test.ts` and are written before the code, in steps 3 to 5. Everything else is covered by E2E.
+
+`renderCitation` and `formatDay` (step 3):
+- F1. A page with no entry gives `citation: null`, `missing: ['accessed']`.
+- F2. An unknown placeholder in `citeAs` (e.g. `{author}`) throws.
+- F3. A bad `accessed` (`2026-13-01`, `2026-02-30`, `8 Nov 2026`) throws.
+- F4. A bad `archive` throws: not of the form `https://web.archive.org/web/<14 digits>/…`, or an impossible timestamp. A good one gives `archive.date` from its timestamp (`20250617172314` → `17 Jun 2025`).
+- F5. A full key (amphibiaweb) with no `cite` gives `citation: null`, `missing: ['cite']`.
+- F6. Wikipedia's `{title}` is the last path segment, percent-decoded, with `_` turned into spaces (`Darwin%27s_frog` → `Darwin's frog`); the query and fragment are ignored. With no segment, `title` is missing and `citation` is `null`.
+- F7. A non-full key (iucn) with no `cite` falls back to `{name}. Accessed {accessed}.`, with `missing: ['cite']`.
+- F8. A page's licence beats the registry's; with neither, the licence is `null`.
+- F9. `formatDay`: `2026-01-01` → `1 Jan 2026`, `2026-12-31` → `31 Dec 2026`. It uses no `Date` or locale, so there's no timezone shift.
+- F10. A `cite` that still ends in "Accessed …" throws, because the date would print twice (IUCN's and ADW's lines carry one).
+
+`checkCitations` (step 4):
+- F11. A clue or fact page with no `citations.json` entry is an error naming `clues[i]` or `facts[i]` and the URL.
+- F12. An override `url` is checked on that URL, not on the profile's `sources[key]` page (`pageUrl`).
+- F13. Traits and `iucn_range` are not checked.
+- F14. A non-full key with no `cite` is a warning, not an error.
+- F15. An entry that no profile cites gives nothing: live rows may still cite it (§2).
+
+Pool join and `validatePool` (step 5):
+- F16. A fact or hand-written clue with no `source`, or no `source.url`, is an error; a template clue without one is not.
+- F17. A cited URL missing from `pool.citations` is an error.
+- F18. In `poolFromRows`, an incomplete full-key page gets no `citations` entry, and a non-full key missing `cite` gets the fallback entry.
+
+## Risks / open questions (steps)
+
+- **The main loop runs at 390 px**, where `#side-notes` never renders. Step 16 adds a 1280x800 check so the hiding is really tested.
+- **postgres.js may not reach the local socket from `postgres:///…`.** Step 3 finds the form that works and fixes it in `scratch-check.sh`.
+- **IUCN's and ADW's own lines end in "Accessed …".** Steps 11 and 12 strip it, and F10 fails loudly on a miss.
+- **A batch that replaces a Wikipedia value changes that row's URL.** The old entry stays (never deleted), so the live row keeps its citation until the owner's build.
+- **CI budget:** the probe, 5 screenshots and the journal checks add time, measured in step 16. If the run goes over about 11 min locally, revisit Fable SC1 (a dev-bridge seed-to-mystery hook) and record it under Decisions.
 
 ## Code review (Astra)
 
 ## Release
 
 ## Decisions
+
+- 2026-11-08 (steps): Wayback fetch (step 2) before citation code: the 4 existing AmphibiaWeb pages need snapshot `cite` before `checkCitations` passes. Added `citations.test.ts` (content checks a playtest can't see; failure modes F1-F18 written first), a 1280x800 E2E check (main loop at 390 px never renders `#side-notes`), and `npm run build` in steps 5/18 (proves citations bundle without `db/`).
 
 ## Log
 
@@ -377,5 +653,6 @@ Declined: Fable SC1 (a dev-bridge seed → mystery hook). `deal` draws from the 
 
 - 2026-11-08 00:33 UTC: Astra review. APPROVE_WITH_CHANGES, 3 MUST-FIX (stale cached pool without `citations`; page-level licence overrides; StatusTicker/NotesList post-round coverage). Plan-only, no checks needed.
 - 2026-11-08 00:41 UTC: Revision. `architect` resolved 5 MUST-FIX + Fable MISSED: cite errors only AmphibiaWeb/Wikipedia (others warn); ADW CC BY-NC-SA 3.0 (terms at /about/use_conditions/); absent `citations` → `{}` in pool loader; page-level licence override; hide StatusTicker facts/NotesList during review. Plan-only, no checks needed.
+- 2026-11-08 00:52 UTC: Steps. `planner` wrote 18 steps, Verification, Failure modes F1-F18, risks. Plan-only, no checks needed.
 
 ## Summary
