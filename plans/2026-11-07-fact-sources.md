@@ -96,7 +96,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -288,6 +288,26 @@ Risks:
 
 ## Architecture review (Fable)
 
+Read at `97d1fa30`. Checked every cited line: Findings 1-6 are real (notes block `AnimalSheets.tsx:635-642` shows `note.full ?? note.text` only; `keyFacts` returns `string[]`; `load()` inserts `Object.keys(rows[0])` so a new `sources.json` key breaks the owner's build; `url ?? profile.sources[key]` written 3x; `SourceLine`/`LogEntryText` unimported). The 12 AmphibiaWeb uses = 6 traits + 3 hand-written clues + 3 facts in 4 profiles, so live already has AmphibiaWeb field notes for the E2E probe. The reveal-timer race (Finding 3) is a coherent reading of `AnimalGame.tsx:213-217` + `:333` and the fix is safe either way. No schema change, no dump needed: correct. JSON-join-at-read-time is the simplest shape that cites correctly and keeps the owner's build path intact.
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. **Check strictness overshoots the brief and can block every future build.** §1 "Checks" fails `checkProfile` (run by `build`) and `validatePool` on *any* source's line without a full citation. The brief asks for errors only on AmphibiaWeb and Wikipedia. As designed, ~190 iucn/adw/news/ngo/government/literature pages each need a hand-collected `cite` before `content -- build` runs at all, and every future profile the owner adds with a news/IUCN source fails his prod build until he writes a citation line. Make it: error for `amphibiaweb` and `wikipedia` (missing `cite`/`accessed`/`archive` where required); for every other key require only an `accessed` entry (error if absent) and treat a missing `cite` as a **warning**, rendering the `{name}. Accessed {accessed}.` fallback so the line still gets a number and a dated entry. Step 4's 261-page effort stays, but no longer gates the build.
+2. **ADW licence is left as "look up ADW's terms"** (table in §1). ADW is the largest source (797 uses) and the entry's `License:` line depends on it; a placeholder in the design is not acceptable. Settle it now: ADW's copyright page (`https://animaldiversity.org/about/copyright/`) licenses its text CC BY-NC-SA 3.0; record that URL in `docs/CONTENT_SOURCES.md` beside the others and put `CC BY-NC-SA 3.0` in `sources.json`. Verify on the page during step 4 and note any deviation under Decisions.
+
+MISSED:
+- **Stale pool in the browser after deploy.** `/api/clue-game/pool/` is served with `max-age=60, stale-while-revalidate=600` and `getJson` caches per page load. For up to ~11 min after the deploy, clients hold a pool without `citations`. `CluePool.citations` is "required" in TS but the UI must still treat it as possibly undefined (`citations ?? {}`), or the round-end card throws on the first live rounds. Same in `keyFacts` callers.
+- **Live `content -- check` may fail for reasons outside this mission.** The live rows come from the owner's last prod build; if any live `source_url` is no longer in profiles (his build lags `main`), the new `validatePool` rule reports a missing citation that only his build can fix. Plan says "the live check catches it" but not what to do: record it under Decisions and in the Summary as "needs the prod content build", don't treat it as a blocker.
+- Path slip only: `savedGame.ts` is `src/components/animalBoard/savedGame.ts`, not under `src/clueGame/`. Conclusion (session stores no pool) is right.
+
+SHOULD-CONSIDER:
+1. E2E AmphibiaWeb probe: up to 40 full page loads is 1-2 min on a 15-min CI budget already at ~10. The deal is pure and seeded (`deal(data, 1, [])`, `mulberry32(hash32(seed))`); expose the mystery-for-seed through `window.__cc` (dev bridge) so the probe is one `evaluate` loop, not 40 navigations.
+2. Wikipedia is CC BY-SA: reworded facts are derivatives, so share-alike technically applies to the game's fact text. Not an architecture problem; put a one-line note in `CONTENT_SOURCES.md` so the owner knows what he's accepting.
+3. `accessed` from `git log -S<url>` is a reasonable proxy for existing pages; say so in `CONTENT_SOURCES.md` ("the date the page entered the content") so nobody later mistakes it for a verified read date.
+4. The entry's "highlight" relies on `focus:` (not `focus-visible:`); keep it that way, since Chrome won't match `:focus-visible` on programmatic focus after a mouse tap.
+5. `numberSources` numbers per page, so two Wikipedia articles get two numbers. That matches "no guessing by position", but say it in the component comment, because the brief's wording ("one number per source") reads as per registry key.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -306,5 +326,6 @@ Risks:
 
 - 2026-11-08 00:05 UTC: Baseline. typecheck, lint, test (48/48), content check pass; e2e:fresh 1526/1527 (pre-existing sparkle check fails at round 3 move 10, deterministic).
 - 2026-11-08 00:40 UTC: Architecture. `architect` wrote findings + design: citation templates in `sources.json` + new `citations.json` joined at read time (no schema change), shared `FactsWithSources` UI, sparkle E2E failure = reveal clear-timer race in `AnimalGame.tsx` (one-line fix), Wayback via CDX (availability API 429). Plan-only, no checks needed.
+- 2026-11-08 01:00 UTC: Fable review. APPROVE_WITH_CHANGES, 2 MUST-FIX (non-AmphibiaWeb/Wikipedia cite = warning not error; settle ADW licence CC BY-NC-SA 3.0) + stale-pool tolerance note. Plan-only, no checks needed.
 
 ## Summary
