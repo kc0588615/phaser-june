@@ -17,7 +17,7 @@ No sign-in needed; every finished round, solved or lost, is saved to `clue_match
 | Game page | `src/pages/explore.tsx` → `src/components/animalBoard/AnimalGame.tsx` |
 | Page state + board wiring | `src/components/animalBoard/useAnimalSession.ts` |
 | Game in progress (resume after reload or a discarded tab) | `src/components/animalBoard/savedGame.ts`: one sessionStorage slot (session + last settled board); the globe clears it; `?seed=` skips it |
-| UI pieces | `src/components/animalBoard/` (EvidenceGrid, AnimalSheets, FaceIcon, useShownOrders); shared in `src/components/clueGame/` (Sheet, JournalSheet, GlossaryText, LogEntryText, RangeMap, SpeciesPortrait, PhaserGame, useJournal) |
+| UI pieces | `src/components/animalBoard/` (EvidenceGrid, AnimalSheets, FaceIcon, useShownOrders); shared in `src/components/clueGame/` (Sheet, JournalSheet, GlossaryText, FactsWithSources, WithBlanks, RangeMap, SpeciesPortrait, PhaserGame, useJournal) |
 | Rules (pure) | `src/clueGame/animalBoard.ts` (suspects, clue orders, marks, release), `animalSession.ts` (the trail: rounds, hearts, score, streak), `questionMatch.ts` (questions, book, columns), `gems.ts` (gem color ↔ category) |
 | Content → rules data | `src/clueGame/questionMatchContent.ts` (traits, regions, family tree names, field notes with blanks, sources), `regions.ts` (every country → UN region with kid names → continent) |
 | Board | `src/game/`: `ClueBoardScene.ts` (seeded 7×7 board), `BoardModel.ts` (swaps, matches, toys, the rare note gem), `BoardView.ts` (sprites, toy effects), `toyTextures.ts` (toy looks), `sfx.ts` (sounds), `BoardController.ts` (swipe, tap, keyboard, cascade loop) |

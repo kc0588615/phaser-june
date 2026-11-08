@@ -121,10 +121,11 @@ export function isPlaceholderText(text: string): boolean {
   return /^(none|n\/a|unknown|-)?\.?$/i.test(text.trim());
 }
 
-/** An animal's key facts (facts first, then key-fact clues), without repeats. */
-export function keyFacts(pool: Pick<CluePool, 'facts' | 'clues'>, speciesId: number): string[] {
-  return [...new Set([
-    ...pool.facts.filter(fact => fact.speciesId === speciesId && fact.category === 'key_fact').map(fact => fact.text),
-    ...pool.clues.filter(clue => clue.speciesId === speciesId && clue.category === 'key_fact').map(clue => clue.label),
-  ])];
+/** An animal's key facts (facts first, then key-fact clues), without repeats; a repeated line keeps its first source. */
+export function keyFacts(pool: Pick<CluePool, 'facts' | 'clues'>, speciesId: number): Array<{ text: string; source: NonNullable<PoolFact['source']> | null }> {
+  const lines = [
+    ...pool.facts.filter(fact => fact.speciesId === speciesId && fact.category === 'key_fact').map(fact => ({ text: fact.text, source: fact.source ?? null })),
+    ...pool.clues.filter(clue => clue.speciesId === speciesId && clue.category === 'key_fact').map(clue => ({ text: clue.label, source: clue.source ?? null })),
+  ];
+  return lines.filter((line, i) => lines.findIndex(other => other.text === line.text) === i);
 }

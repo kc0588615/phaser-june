@@ -13,7 +13,7 @@ import type { CluePool, PoolSpecies } from '@/clueGame/pool';
 import { prefixOf, type Animal } from '@/clueGame/questionMatch';
 import { FactsWithSources } from '@/components/clueGame/FactsWithSources';
 import { GlossaryText } from '@/components/clueGame/GlossaryText';
-import { WithBlanks } from '@/components/clueGame/LogEntryText';
+import { WithBlanks } from '@/components/clueGame/WithBlanks';
 import { Sheet } from '@/components/clueGame/Sheet';
 import { PhotoCredit } from '@/components/clueGame/SpeciesPortrait';
 import { useEscapeKey } from '@/components/clueGame/useEscapeKey';

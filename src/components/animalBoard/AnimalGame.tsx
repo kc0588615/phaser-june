@@ -18,7 +18,7 @@ import { EventBus, type BoardKey } from '@/game/EventBus';
 import { reducedMotion } from '@/game/motion';
 import { isSoundOn, setSoundOn, sfx, wakeOnFirstGesture } from '@/game/sfx';
 import { JournalSheet } from '@/components/clueGame/JournalSheet';
-import { WithBlanks } from '@/components/clueGame/LogEntryText';
+import { WithBlanks } from '@/components/clueGame/WithBlanks';
 import { PhaserGame } from '@/components/clueGame/PhaserGame';
 import { useJournal } from '@/components/clueGame/useJournal';
 import { ANIMAL_HOW_TO_KEY, AnimalHowToPlay, GameMenu, NotesList, NotesSheet, OutOfMovesSheet, RoundEndSheet, roundEndAnnouncement, SuspectSheet } from './AnimalSheets';
@@ -500,9 +500,10 @@ export function AnimalGame() {
           <p className="sr-only" aria-live="polite">{boardStatus}</p>
         </section>
 
-        <StatusTicker key={roundNo ?? 0} keys={boardFocus} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={facts} idle={round ? `Which of these ${round.suspects.length} was caught on camera? Match gems to find out.` : ''} />
+        <StatusTicker key={reviewing ? `end-${roundNo}` : roundNo ?? 0} keys={boardFocus} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={reviewing ? [] : facts} idle={round ? `Which of these ${round.suspects.length} was caught on camera? Match gems to find out.` : ''} />
 
-        {wide && round && (
+        {/* During review the card is where facts are read (with sources); these are only blanked copies of its notes. */}
+        {wide && round && !reviewing && (
           <section ref={sideNotes} aria-labelledby="side-notes" className="min-h-0 overflow-y-auto overscroll-contain px-m pb-m pt-xs [grid-area:side]">
             <h2 id="side-notes" className="m-0 mb-xs text-xs font-medium uppercase text-neutral-7">📓 Witness notes</h2>
             <NotesList round={round} />
