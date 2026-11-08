@@ -116,7 +116,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -135,7 +135,9 @@ Read on `origin/main` 447e9317 (rules `054-1`, fact-sources merged). Line number
 
 1. **`npm test` breaks once `trees` content lands.** `tests/clueGame/animalBoard.test.ts:50-52` asserts Saola (38) and Sumatran Orangutan (40) never share a set. fact-sources moved this guard here (7df0aa5e, after the design read 69f45fa6), and `trees` splits that exact pair (38 no, 40 yes; design: 7 of 8 Asian trees rounds are this pair). Fix, in the content step: recompute the inseparable pairs (`tellsApart(fullTable(book, [a, b], place), 2)` per place). If one is left, move the guard to it; if not, delete the pair lines, because `tellsApart(deck, 5)` at `:45` still covers failure 5.
 2. **`trees:no` would be dealt** (a bug). `fullTable` (`animalBoard.ts:89-92`) and `questionsFor` (`questionMatch.ts:438-441`) make a question of every value of a `PREFIX_CATEGORY` prefix. `trees:no` sorts first, so it would show its raw tag and ❓. Fix: `neverAsked`, T1.
-3. **Deploy window vs a strict sign table.** Prod runs the new code on old rows until the owner's content build (`tree_dweller`, `builds_nests`, `swimmer` on land animals...). A table that dropped those tags would make the UI throw or file the signs under the wrong heading. Fix: `SIGNS` keeps every open tag ever shipped. Retired tags are flagged only by `signProblems`, never by the UI. Release adds the guard in T9.
+3. **Two rollout windows.** Prod runs the new code (`055-0`) on old rows until the owner's content build, then on new rows.
+   - (a) **New code, old rows vs a strict sign table.** Old rows still have `tree_dweller`, `builds_nests`, `swimmer` on land animals and so on. A table that dropped those tags would fail the load or file the signs under the wrong heading. Fix: `SIGNS` keeps every open tag ever shipped. Retired tags are flagged only by `signProblems`, never by the UI. Release adds the guard in T9.
+   - (b) **A round saved on old rows resumes on new rows with stale witness notes** (bug, Astra). `useAnimalSession.ts:122-125` resumes when the rules version matches and every saved clue row still matches the traits, but it never checks `round.notes` / `round.notesLeft`. Both sides run `055-0`, and T5's retags change only open tags, so any round without a Farms & towns question passes. Verified: aye-aye (23), Sumatran orangutan (40) and indri (61) hold `tree_dweller` today, so in the set `[23,34,40,56,61]` mystery 23's note shows "3 of 5 field guides say this too". T5 removes `tree_dweller` from every animal, so the resumed note is one no sheet shows, and `stillPossible` is empty. Fix: T10.
 4. **Signs sit in the faces module, and paging exists only to fit them beside the photo.** `clueFaces.ts:33-37` (`signPhrase`; `signsOf` returns a `string[]` with no category) breaks SRP: that module is about gem pictures. `AnimalSheets.tsx:270-333` `GuideSigns` (ResizeObserver page split, hidden measuring copy, 5 s timer, pause button; `SIGN_PAGE_MS` `:41`, `useLayoutEffect`, `AnimatePresence` and `Pause` are used only here) can go once the signs move. Fix: T2 and T4.
 5. **The design's own new tags mislead or restate.** `retags.csv` gives `rock_climber` (4, 15) and `climbing_tail` (59). `note-tags.csv` gives `above_tree_line` (42), `stays_underground` (26) and `tree_dweller` (54, twice). Each of these is in `sign-map.csv`'s `misleads` or `restates` column. Goal 3 wins over Goal 2 for these rows, so they're decided again in the one tag-edit table (T5), not applied as written. Note tags existed to feed leak rules 1–2 (design rule 5). With those rules dropped, the rest still apply as the brief says, as evidence.
 6. **DRY: guide categories listed twice.** `AnimalSheets.tsx:34` `GUIDE` repeats `CHARGE_CATEGORIES` and `CATEGORY_LABELS` (`questionMatch.ts:11`, `:17-19`). Fix: use those two directly.
@@ -199,19 +201,25 @@ export interface SignEntry {
   implies?: readonly string[];
   /** Trait tags its plain reading rules out: the holder must not hold them. */
   denies?: readonly string[];
-  /** The trait tag its words simply are (tree_dweller -> trees:yes): never used while that trait's prefix is asked. */
+  /** The asked trait tag its words simply are (tree_dweller -> trees:yes). */
   restates?: string;
 }
-export const SIGNS: Readonly<Record<string, SignEntry>>;   // every open tag ever shipped, retired ones included (finding 3)
-export interface Sign { tag: string; text: string; category: ChargeCategory }
+export const SIGNS: Readonly<Record<string, SignEntry>>;   // every open tag ever shipped, retired ones included (finding 3a)
 export const signPhrase = (tag: string) => tag.replace(/_/g, ' ');                 // moved from clueFaces.ts
-export function signCategory(tag: string): ChargeCategory;                         // throws on a tag missing from SIGNS
+export function signCategory(tag: string): ChargeCategory;                         // throws on a tag missing from SIGNS, naming the tag
 export function signsOf(tags: readonly string[] | undefined): Sign[];             // moved; open tags (no ':'), in tag order, none filtered
 export function noteCategories(tags: readonly string[] | undefined): ChargeCategory[]; // distinct, CHARGE_CATEGORIES order
 export function signProblems(clues: ReadonlyArray<{ tags?: readonly string[] }>, record: ReadonlySet<string>): string[];
 ```
+- **`Sign`** (`{ tag; text; category }`) lives in `questionMatch.ts` beside `FieldNote`, because `Animal` carries it (below). `signs.ts` imports it, so there's no import cycle.
+- **Fails at load, not in render** (reviews' SC1):
+  - `buildAnimal` (`questionMatchContent.ts:137-141`, behind both front doors) sets `signs: signsOf(tags)` on each `Animal` (new field `signs: Sign[]`, next to `guide`).
+  - An unknown tag throws there. In the app, the load's existing `try/catch` (`useAnimalSession.ts:137-139`) logs the error naming the tag and shows the load error. The bot and `npm test` fail at load.
+  - `Animal` isn't saved (the hook strips `book` before it saves), so saved data keeps its shape.
+  - Render looks up only `noteCategories(note.tags)`. A note's tags are a subset of its animal's `tags`, which were checked at load, and T10 makes a resumed round's notes equal the fresh ones. So no render path can meet an unknown tag.
 - **Building the table, once:**
-  - Start from `sign-map.csv`. Drop `can_swim`, which leaves 205 entries: the 198 in content plus the design's 7 new tags. `category` comes from the CSV's `category` column, and `restates` from its `restates` column (`tree_dweller` → `trees:yes`; also `climber`, `burrower`, `swimmer` → `climbs/digs/swims:yes`, which stay dormant until those traits exist).
+  - Start from `sign-map.csv`. Drop `can_swim`, which leaves 205 entries: the 198 in content plus the design's 7 new tags. `category` comes from the CSV's `category` column.
+  - `restates` is set only on `tree_dweller` (`trees:yes`). The CSV's `climber`, `burrower` and `swimmer` rows point at traits that don't exist (climbs/digs/swims), so they're left out (YAGNI). Add them when such a trait ships.
   - Encode `implies` and `denies` by hand from the `answers` column, only where it gives a definite value of a prefix this game asks. Examples: `reddish_fur` implies `covering:fur`; `swimmer` implies `system:freshwater`; `fully_aquatic` denies `system:terrestrial`; `builds_nests` implies `birth:eggs`; `climber` implies `trees:yes`; `nectar_drinker` denies `diet:meat`. One line per entry, with no answers text and no counts.
 - **No per-tag phrase:** the tag is the phrase, and plan 044's phrase list was never needed.
 - **`signProblems` checks three things, mechanically:**
@@ -227,7 +235,10 @@ export function signProblems(clues: ReadonlyArray<{ tags?: readonly string[] }>,
     - Habitat: `coastal_dunes` 14, 32; `crevice_hider` 75; `seasonal_streams` 20.
     - Life cycle: `internal_fertilization` 8; `no_tadpoles` 10.
   - Restating uses: `tree_dweller` on 5, 6, 23, 30, 35, 40, 43, 45, 54, 61, 71.
-  - An extra flag means the encoding is stronger than the design's judgment: weaken it and record that. It doesn't mean more retagging. A missing flag means strengthen it.
+  - The counts are a baseline, not a target (Astra SC2). Read each extra flag against its note:
+    - If the entry is a fair plain reading of the tag, the contradiction is real. Keep the entry and retag that note in T5 like the design's own; plan 055 lists it as "found by `signProblems`".
+    - Only an entry that overstates the tag's plain reading is weakened, and that's recorded.
+    - A missing flag means the encoding is too weak: strengthen it.
 
 **T3. `checkProfile`** (`profiles.ts:312-348`): at the end, `if (problems.length === 0) problems.push(...signProblems(profile.clues, new Set(profileClues(profile).flatMap(d => d.tags))))`.
 - It reuses `profileClues` for the record. The shape is checked first, because `profileClues` needs taxonomy, systems, habitats and redList. There's no import cycle: profiles → signs → deduction/traits, questionMatch.
@@ -241,18 +252,18 @@ export function signProblems(clues: ReadonlyArray<{ tags?: readonly string[] }>,
 - **`SuspectSheet` (`AnimalSheets.tsx`):**
   - Photo row: figure and peeks only. `GuideSigns`, the paging and their imports go. Size and position stay; the brief allows a smaller photo if it reads better (record).
   - "Its answers": each `<li data-answer-tag={order.tag}>` puts `<CategoryMark category={categoryOf(order.tag)} small className="text-xxs font-medium uppercase …"/>` as a small line above the question (mockup option 1). Rows keep deal order, so they match the grid's column order.
-  - Guide: `CHARGE_CATEGORIES.flatMap(key => { lines = guide[key] minus lines with an asked prefix (unchanged); chips = signs.filter(s => s.category === key); show if lines.length || chips.length })`.
+  - Guide: `CHARGE_CATEGORIES.flatMap(key => { lines = guide[key] minus lines with an asked prefix (unchanged); chips = animal.signs.filter(s => s.category === key); show if lines.length || chips.length })`. The `useMemo(signsOf)` at `:90` goes.
   - Each row: `<div className="contents" data-guide-cat={key}><dt><CategoryMark category={key}/></dt><dd>` holding the lines `<span data-guide-line={line.tags.map(prefixOf).join(' ')}>`, then `<ul data-signs aria-label="{Label} signs">` with `<li data-sign={tag} className={CHIP}>`.
   - Chips wrap and are never hidden or paged. `asked` and the line filter stay exactly as plan 045 has them.
 - **`EvidenceGrid.tsx`:**
   - Before each label (`:249`): `<CategoryMark category={categoryOf(order.tag)} word={false} small className="mr-xxs align-[-1px]"/>`.
-  - Button `aria-label` per finding 8.
+  - Button `aria-label` per finding 8, keeping the `, highlighted` suffix: `${CATEGORY_LABELS[c]}: ${order.question}${highlighted ? ', highlighted' : ''}`.
   - The review grid gets the marks automatically.
 - **`NotesList`:** under each note's text, `noteCategories(note.tags).map(c => <CategoryMark small …/>)`, printed words, `text-xxs font-medium uppercase text-neutral-7`. This also covers the desktop side notes.
 
 **T5. Content for all 76 files: one-off script outside the repo.**
 - **Location:** `/srv/critter-ai/agent-state/missions/moves-and-signs-build/content/apply.ts`, run through a copy of `STATE/tools/run.sh` pointed at this worktree. It bundles repo imports with `@/`; `scripts/run-typescript.mjs` only runs files under `scripts/`.
-- **Inputs:** `moves.csv` (read-only), plus two tables the mission writes in that folder:
+- **Inputs:** `moves.csv` (read-only), plus two tables the mission writes and commits beside `sign-map.csv` in `docs/research/2026-11-07-moves-and-signs/`. That folder is the brief's "successor beside it", so every per-note decision is in git (Fable SC3):
   - `trees-notes.csv`: `animal_id, verdict, note` for the 71 values.
   - `tag-edits.csv`: `animal_id, note (exact text), from (tags now), to (tags after), kind (retag | note-tag | restating | misleading), reason`.
 - **What it does:** reads profiles with `readProfiles()` and writes them in `content.ts`'s format.
@@ -261,12 +272,12 @@ export function signProblems(clues: ReadonlyArray<{ tags?: readonly string[] }>,
   - Applies each `tag-edits` row: the note must match exactly once and its tags must equal `from` (or already equal `to`); otherwise it stops.
   - Every `to` tag must be in `SIGNS` (it imports it). The script can be rerun safely.
   - It ends by printing `checkProfile` problems (expect 0).
-- **Why a script:** about 140 edits across 76 files by hand would be error-prone and couldn't be reviewed or redone. The two tables record every decision, and plan 055's old → new table is printed from `tag-edits.csv`. It stays out of the repo because it's one-off: the content files themselves are the source of truth.
+- **Why a script:** about 140 edits across 76 files by hand would be error-prone and couldn't be reviewed or redone. The two committed tables record every decision, and plan 055's old → new table is printed from `tag-edits.csv`. The script itself stays out of the repo because it's one-off: the content files are the source of truth.
 - **`tag-edits.csv`, one row per changed note,** built from the `c` rows of `retags.csv` (5) and `note-tags.csv` (19), then corrected for Goal 3:
   - skip `stays_underground` (26), `above_tree_line` on 42, and `tree_dweller` on 54;
   - re-decide `rock_climber` (4, 15) and `climbing_tail` (59);
   - merge rows that touch the same note (for example 40, 56 and 71: `builds_nests` plus the `climber` note tag);
-  - then fix the 33 contradictions and the 11 restating uses from T2.
+  - then fix the 33 contradictions and the 11 restating uses from T2, plus any real extra the T2 acceptance found.
 - **Picking a replacement tag, in this order:**
   1. The note's own words support it. It adds no fact; it may paraphrase only so that one tag is shared by notes stating the same fact.
   2. Reuse an existing tag the note supports, which keeps witness notes. Examples: 28 `snorkel_nose` → `trunk`; 59 drops `climber` and keeps `long_tail`; 30 and 54 drop `tree_dweller` and keep `slow_mover`.
@@ -286,7 +297,7 @@ export function signProblems(clues: ReadonlyArray<{ tags?: readonly string[] }>,
 - "fixed in 055" added to the `misleads` and `restates` cells it fixed;
 - every row's `category` asserted equal to `SIGNS`.
 
-A header comment in `signs.ts` and a line in `CONTENT_SOURCES.md` say the code is authoritative.
+`tag-edits.csv` and `trees-notes.csv` sit beside it as the same kind of record. No code or check reads any of the three. A header comment in `signs.ts` and a line in `CONTENT_SOURCES.md` say the code is authoritative.
 
 **T7. Metrics** (tools in the mission's state folder, not in the repo).
 - **Witness notes per round:** `tools/witness.ts`, adapted from `STATE/tools/deals.ts`'s loop.
@@ -306,22 +317,37 @@ A header comment in `signs.ts` and a line in `CONTENT_SOURCES.md` say the code i
   - E3 "tile, answer row and guide heading carry the same category icon": for each column, the tile's mark and its `[data-answer-tag]` row's mark match in category and in the svg's `lucide-*` class; on sheets that show that category's heading, the heading's svg matches too; at least one heading matches per round.
   - E4, at the existing notes check (`:1516`): each witness note has at least one `[data-category-mark]`, none repeated.
   - E5: no column tag ends in `:no`.
+- **E6 "a round saved on old content doesn't resume on new content"** (T10). It goes at the end of the resume section, after the round-end reload checks (`e2e.mjs:1786`), where the save holds a played, ended round, so a resume and a fresh deal look different.
+  - Following the `rowOrder` reversal's pattern (`:1774-1778`), append to the save's `session.round.notesLeft` the note an old-content save holds for a retired tag: `{ text, tags: ['tree_dweller'], fits: 2, source }`. Then reload.
+  - Check that a fresh round is dealt: `end` is null, `movesUsed` is 0, and the seed is the saved one.
+  - In the final run, after the dev content build has retired `tree_dweller`, this is literally an old save against new content. In earlier runs it's a save holding a note the book no longer deals. Either way it goes through the same check.
+  - The existing "a reload resumes the round…" checks (`:1736-1738`) show an unchanged save still resumes through the new query.
 - **Screenshots:** `02d-field-guide-{light,dark}.png` (top of the sheet) and `02e-field-guide-rows-{light,dark}.png` (scrolled to the rows), using the `dataset.theme` switch the sources block uses (`:1969-1987`). Copy them to `/srv/critter-ai/agent-state/missions/moves-and-signs-build/`.
-- **During the build:** E2E on the dev copy plays new code on old rows, which is also the deploy-window proof.
+- **During the build:** E2E on the dev copy plays new code on old rows, which proves window (a). E6 in the final run proves window (b).
 - **Final run:** after the dev content build, with the probe's trees seed. Copy the probe from `STATE/tools/probe-seeds.mjs` with the import changed to this repo's `scripts/cdp.mjs` and the filter `^trees:`. Run it inside the same guarded subshell against its own dev server on a free port in 3100–3102.
 
-**T9. Release guard.** Before merging, fetch `https://play.critterconnect.org/api/clue-game/pool/` (public, cached; no DB login) and check that every open tag in its `compareTags` is in `SIGNS`. If one is missing, add it before deploying.
+**T9. Release guard.** Before merging, fetch `https://play.critterconnect.org/api/clue-game/pool/` (public, cached; no DB login) and check that every open tag in its `compareTags` is in `SIGNS`. If one is missing, add it before deploying. With T2's load-time check, a missing tag would show every player the load error, so this guard is required.
+
+**T10. A resumed round must fit the content it resumes on** (finding 3b). This follows the existing resume pattern: a save that doesn't fit is dropped, never repaired.
+- **`animalBoard.ts`:** a new query next to `witnessNotes`, `roundStillFits(book: Book, round: AnimalRound): boolean`, with the doc line "Content can change between visits (the owner's content build lands after the deploy): a saved round resumes only if the book would deal it the same clue rows and witness notes now". It checks two things, in this order:
+  1. Every clue row still matches the suspects' traits. This is the check now inline at `useAnimalSession.ts:123-125`, moved unchanged. A suspect the book no longer has fails it.
+  2. The round's witness notes, collected then still to come (`[...round.notes, ...round.notesLeft]`, the order `newAnimalRound` dealt them in), equal `witnessNotes(book, round.suspects, round.mysteryId)` in order, compared on `text`, `tags` and `fits`.
+  - Rows go first, so `witnessNotes`, which throws on an id the book lacks, never sees one.
+  - `text`, `tags` and `fits` are what the player reads and reasons with ("3 of 5 field guides say this too"). `full` and `source` aren't compared, so a citation edit alone doesn't drop a round.
+- **`useAnimalSession.ts:122-125`:** `resume = saved && saved.requested === requested && saved.session.round.rules.version === ANIMAL_RULES.version && roundStillFits(book, saved.session.round) ? saved : null`.
+  - A save that fails gets a fresh round 1 from the saved seed, exactly as a stale row does today. That includes an ended round's save. The session's score and streak restart, as they do today; the window is about one content build long.
+- **Files outside the brief's list:** `useAnimalSession.ts` (this) and `questionMatchContent.ts` (T2's load check). Record both under Decisions in plan 055.
+- **Verified by** E2E check E6 (T8).
 
 **Step order** (each step leaves the checks passing):
-1. T1 code and the version bump. No content yet, so nothing new is dealt.
-2. T5 part A (`trees` ×71, Farms & towns ×20) and finding 1's test change.
-3. `signs.ts` with the table, the moved functions and `signProblems`, not yet wired. `GuideSigns` temporarily maps `s.text`. Run the T2 acceptance (33 + 11).
-4. T4 interface, `categoryOf`, the T8 E2E changes and screenshots.
-5. T5 part B (`tag-edits.csv`, new `SIGNS` entries, the `sign-map.csv` update), then wire T3 (0 problems). Split restating and misleading into two steps if large.
-6. T7 metrics.
-7. Docs and plan 055.
-8. `graphical-audit`.
-9. Final verification: guarded block, probe and E2E; T9; the handoff item.
+1. T1 code, the version bump, T10 and E6. There's no content yet, so nothing new is dealt; E6 already passes on old rows.
+2. T5 part A (`trees` ×71 from `trees-notes.csv`, committed in `docs/research/2026-11-07-moves-and-signs/`; Farms & towns ×20) and finding 1's test change.
+3. `signs.ts` (the table, the moved functions, `signProblems`, not yet wired into `checkProfile`), `Sign` and `Animal.signs` built at load, `categoryOf`, the T4 interface, the T8 E2E changes E1-E5 and the screenshots, all in one step (Fable SC5: no throwaway mapping). Run the T2 acceptance (33 + 11) before step 4.
+4. T5 part B (`tag-edits.csv` committed beside it, new `SIGNS` entries, the `sign-map.csv` update), then wire T3 (0 problems). Split restating and misleading into two steps if large.
+5. T7 metrics.
+6. Docs and plan 055.
+7. `graphical-audit`, including the tree-picture check below (risks).
+8. Final verification: guarded block, then dev content build, probe and E2E (E6 now runs an old save against new content); T9; the handoff item.
 
 ### Rejected alternatives
 - Generate `signs.ts` from the CSV at build time, or read the CSV at runtime: a second source and a generator, and the client can't read a CSV.
@@ -335,10 +361,14 @@ A header comment in `signs.ts` and a line in `CONTENT_SOURCES.md` say the code i
 - A `category` field on `Clue`/`ClueOrder`: it can be derived, and it would change the saved data shape.
 - A `YES_NO_PREFIXES` or movement-prefix constant: `EXCLUSIVE_PREFIXES` plus one never-asked value is enough (YAGNI).
 - Keeping chips beside the photo as well: the brief moves them, and a copy in both places would duplicate them.
+- A content fingerprint on saves (a pool hash or a new API version field): it drops every save on any content change, photos and citations included. It needs a stable hash or a server change. It also duplicates what T10 checks precisely with the existing `witnessNotes`.
+- Repairing a stale save by swapping in fresh witness notes: notes the player has already read would change under them, and it adds a second restore path. Dropping matches the existing stale-row rule.
+- Skipping an unknown sign tag with a `warn` (the builder's existing channel, a no-op in the app): a quiet fallback, against fail-fast.
+- Validating signs in the hook after `animalsFromPool`: the bot and tests would skip it, and it needs a void call made only for its throw. Building `Animal.signs` in the shared builder covers all three callers.
 
 ### Risks and open questions for reviewers
-- **Unknown tag → throw** (`signCategory`). Fail loud, made safe by keeping every shipped tag in `SIGNS`, by the build gate (T3) and by T9. The alternative is to skip the tag and log an error. Is throwing in render acceptable?
-- **Look-alike tree pictures:** 🌲 (Habits question) next to Habitat's lucide `Trees` icon and 🌳 Forest. Check the shots and the audit, and polish the face if they confuse.
+- **Unknown tag → throw, at load** (settled in revision, T2). The page shows the load error, and the console names the tag. There's no error boundary in `src/`, but render can no longer meet an unknown tag. It's kept unreachable by `SIGNS` keeping every shipped tag, by the build gate (T3) and by T9.
+- **Look-alike tree pictures** (Fable SC4): the 🌲 face (Habits, `PawPrint` mark) next to Habitat's lucide `Trees` heading and the 🌳 Forest face. They stay as the owner named them (decision in Revision notes). Step 7 checks them on a trees-seed sheet and grid at 390 px. If the audit finds the 🌲 gem points the eye at the Habitat heading, the fix is one entry: Habitat's icon becomes lucide `Mountain` (present in 0.525), recorded under Decisions.
 - **"Only words the note contains" vs shared vocabulary:** T5 allows a minimal paraphrase only to share one tag. The owner's own example "sleeps in branches" isn't literal either. Recorded as a Decision.
 - **Witness notes lost** where nothing shared fits (for example 44, "It is a good swimmer.", becomes untagged). T7 reports this; no rule change to make up for it.
 - **Implies/denies encoding is judgment.** It's anchored by T2's exact-match acceptance, and pairs beyond the design's list are out of scope.
@@ -379,6 +409,21 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+One pass, on 447e9317 (the code is unchanged on this branch).
+
+- **Astra MUST-FIX 1, saved rounds across the content build: fixed.** The claim holds in code: `useAnimalSession.ts:122-125` checks only the rules version and clue rows, never the witness notes; 23, 40 and 61 hold `tree_dweller` today. Changes:
+  - finding 3 now covers both windows, and the new part (b) is this bug;
+  - T10 adds `roundStillFits` in `animalBoard.ts`: the existing row check, moved, plus saved notes = fresh `witnessNotes` on text, tags and fits. The hook calls it, and a stale save gets a fresh round, as today;
+  - E2E check E6 (T8) injects an old-content `tree_dweller` note and expects a fresh deal; the final run, after the dev content build, is the real old-save-against-new-content case;
+  - it's built in step 1;
+  - two rejected alternatives were added (a content fingerprint, repairing the save).
+- **Fable SC1 / Astra SC1, where an unknown tag fails: accepted.** It fails at load: `buildAnimal` sets `Animal.signs` with `signsOf`, which throws naming the tag. The existing load catch shows it in the app, and the bot and tests fail at load. Render no longer looks up an unknown tag (T2; the risk is settled).
+- **Fable SC2, YAGNI on dormant `restates`: accepted.** Only `tree_dweller → trees:yes` is encoded. The climbs, digs and swims traits don't exist, and check (c) ignored those entries anyway.
+- **Fable SC3, commit the two tables: accepted.** `tag-edits.csv` and `trees-notes.csv` go in `docs/research/2026-11-07-moves-and-signs/` (the brief's "successor beside it"). It's cheap and puts every per-note decision in git. `apply.ts` stays in STATE.
+- **Fable SC4, tree picture clash: rejected for now.** The owner named Habitat `Trees`, every Habitat face is already a plant or landscape (🌳🌿🌱), and the tile's own `PawPrint` mark is the link E3 checks. Step 7 judges it on a trees-seed shot, and the fallback is spelled out under Risks (Habitat → `Mountain`).
+- **Fable SC5, merge steps 3-4 and keep `, highlighted`: accepted, both.** The old steps 3 and 4 are now step 3, with no throwaway `s.text` mapping. T4's `aria-label` keeps the suffix.
+- **Astra SC2, the counts are a baseline: accepted.** The T2 acceptance now keeps a real extra contradiction and retags it in T5 (listed in plan 055). Only an entry that overstates its tag is weakened, and that's recorded. Weakening a valid entry to hit the count would hide a real contradiction from `signProblems`, against Goal 3's "a sign never contradicts its holder".
+
 ## Steps
 
 ## Verification
@@ -395,5 +440,6 @@ SHOULD-CONSIDER:
 - 2026-11-08 05:18 UTC · Architecture: architect wrote findings + target design (signs.ts table, CategoryMark, content script in STATE, 9-step order); plan-only, typecheck ok.
 - 2026-11-08 05:25 UTC · Fable review: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (throw-site, YAGNI restates, commit csvs, tree icon clash, merge steps 3-4); plan-only.
 - 2026-11-08 05:28 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (saved-round witness notes vs fresh content across delayed content build), 2 SHOULD-CONSIDER; plan-only.
+- 2026-11-08 05:36 UTC · Revision: architect fixed Astra MUST-FIX (T10 `roundStillFits` invalidates saves whose witness notes no longer match; E2E E6), accepted 5 SC, rejected tree-icon SC4 for now; steps now 8; plan-only.
 
 ## Summary
