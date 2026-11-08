@@ -38,6 +38,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const KEEP_RUNS = 10;
 /** Which category asks each trait prefix, as the game says (PREFIX_CATEGORY): what the player should see on screen. */
 const CATEGORY = { size: 'body', covering: 'body', diet: 'habits', activity: 'habits', social: 'habits', trees: 'habits', system: 'habitat', habitat: 'habitat', region: 'range', birth: 'life', young: 'life', lifespan: 'life' };
+const CATEGORY_WORD = { body: 'Body', habits: 'Habits', habitat: 'Habitat', range: 'Range', life: 'Life cycle' };
 /** The grid's sort, from `rows` facts (window.__gridFacts): out below; no contradiction above any; more matches higher; then the card's number. */
 const sortFacts = (facts, view = fact => fact) => [...facts]
   .sort((a, b) => a.out - b.out || view(a).contradicted - view(b).contradicted || view(b).matches - view(a).matches || a.number - b.number)
@@ -994,8 +995,12 @@ async function main() {
         check('field guide: the longest name shows whole', !flip.longName.clipped, JSON.stringify(flip));
         // Plan 055: each of the 5 guides, during play. Signs sit under their category's row, none beside the photo, none
         // hidden; the guide's own lines for a dealt question stay hidden (plan 045) while that category's signs show.
+        let sheetTiles = [];
         const sheets = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          // A category mark as the e2e sees it: its category and its icon's lucide-* class.
+          window.__mark = el => { const mark = el.querySelector('[data-category-mark]'); return { cat: mark?.dataset.categoryMark ?? null, icon: [...(mark?.querySelector('svg')?.classList ?? [])].filter(c => c.startsWith('lucide-')).sort().join(' ') }; };
+          window.__tiles = [...document.querySelectorAll('table[aria-label="Evidence"] thead th[data-tag]')].map(th => ({ tag: th.dataset.tag, label: th.querySelector('button')?.getAttribute('aria-label') ?? '', ...window.__mark(th) }));
           await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
           const { suspects } = window.__cc.clue();
           const read = [];
@@ -1010,6 +1015,8 @@ async function main() {
               signs: [...dialog.querySelectorAll('[data-sign]')].map(li => ({ tag: li.dataset.sign, row: li.closest('[data-guide-cat]')?.dataset.guideCat ?? null, inList: Boolean(li.closest('ul[data-signs]')) })),
               rows: [...dialog.querySelectorAll('[data-guide-cat]')].map(row => ({ cat: row.dataset.guideCat, mark: row.querySelector('dt [data-category-mark]')?.dataset.categoryMark ?? null, lines: row.querySelectorAll('[data-guide-line]').length, signs: row.querySelectorAll('[data-sign]').length })),
               linePrefixes: [...dialog.querySelectorAll('[data-guide-line]')].flatMap(line => line.dataset.guideLine.split(' ').filter(Boolean)),
+              answers: [...dialog.querySelectorAll('[data-answer-tag]')].map(li => ({ tag: li.dataset.answerTag, ...window.__mark(li) })),
+              headings: [...dialog.querySelectorAll('[data-guide-cat] dt')].map(dt => window.__mark(dt)),
             });
           }
           [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
@@ -1017,8 +1024,8 @@ async function main() {
           const pressed = document.querySelector('table[aria-label="Evidence"] button[data-pill][aria-pressed="true"]');
           if (pressed) pressed.click(); // drop the pick the guide made
           await wait(150);
-          return read;
-        });
+          return { read, tiles: window.__tiles };
+        }).then(({ read, tiles }) => { sheetTiles = tiles; return read; });
         { const dealt = start.orders.map(order => order.tag.split(':')[0]);
           const rowOf = new Map();
           const bad = sheets.flatMap(sheet => {
@@ -1039,7 +1046,23 @@ async function main() {
           check('field guide: every sign shows under its category\'s row, none beside the photo, none hidden', sheets.length === 5 && bad.length === 0, JSON.stringify(bad.length ? bad : sheets.map(sheet => [sheet.id, sheet.signs.length])));
           const leaked = sheets.flatMap(sheet => sheet.linePrefixes.filter(prefix => dealt.includes(prefix)).map(prefix => `${sheet.id}:${prefix}`));
           const bearing = sheets.flatMap(sheet => dealt.filter(prefix => sheet.signs.some(sign => sign.row === CATEGORY[prefix])).map(prefix => `${sheet.id}:${prefix}`));
-          check('field guide: a dealt question\'s guide lines stay hidden while its category\'s signs show', leaked.length === 0 && bearing.length > 0, JSON.stringify({ dealt, leaked, bearing })); }
+          check('field guide: a dealt question\'s guide lines stay hidden while its category\'s signs show', leaked.length === 0 && bearing.length > 0, JSON.stringify({ dealt, leaked, bearing }));
+          // E3: each question tile, its "Its answers" row and its category's guide heading carry the same mark.
+          const iconOf = new Map(sheets.flatMap(sheet => sheet.headings).filter(h => h.cat).map(h => [h.cat, h.icon]));
+          const mismatched = sheetTiles.flatMap(tile => {
+            const problems = [];
+            if (tile.cat !== CATEGORY[tile.tag.split(':')[0]] || !tile.icon) problems.push(`tile ${tile.cat} ${tile.icon}`);
+            if (!tile.label.startsWith(`${CATEGORY_WORD[tile.cat]}: `)) problems.push(`label "${tile.label}"`);
+            for (const sheet of sheets) {
+              const row = sheet.answers.find(answer => answer.tag === tile.tag);
+              if (!row || row.cat !== tile.cat || row.icon !== tile.icon) problems.push(`${sheet.id} answer ${JSON.stringify(row)}`);
+            }
+            if (iconOf.has(tile.cat) && iconOf.get(tile.cat) !== tile.icon) problems.push(`heading ${iconOf.get(tile.cat)}`);
+            return problems.length ? [{ tag: tile.tag, problems }] : [];
+          });
+          const headingMatches = sheetTiles.filter(tile => iconOf.get(tile.cat) === tile.icon).length;
+          const headingsOneIcon = sheets.every(sheet => sheet.headings.every(h => !iconOf.has(h.cat) || iconOf.get(h.cat) === h.icon));
+          check('each question tile, its answer row and its guide heading carry the same category icon', sheetTiles.length === start.orders.length && mismatched.length === 0 && headingMatches > 0 && headingsOneIcon, JSON.stringify({ mismatched, headingMatches, tiles: sheetTiles.map(tile => [tile.tag, tile.cat, tile.icon]) })); }
         // A long press on a board tile opens the field guide too.
         const tileHeld = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -1563,11 +1586,13 @@ async function main() {
             book?.click();
             await new Promise(resolve => setTimeout(resolve, 250));
             const text = document.querySelector('[role=dialog]')?.innerText ?? '';
+            const marks = [...document.querySelectorAll('[role=dialog] ol > li')].map(li => [...li.querySelectorAll('[data-category-mark]')].map(mark => mark.dataset.categoryMark));
             [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
-            return { text, ...corner };
+            return { text, marks, ...corner };
           });
           check(`round ${n}: a witness note says how many of the 5 field guides agree`, /of 5\s+field guides say this too/.test(notes.text), notes.text.slice(0, 120));
-          check(`round ${n}: the Mystery cell opens the witness notes, counts them and pulses`, notes.inRow && notes.count === String(state.notes) && notes.label.includes(`${state.notes} witness note`) && notes.flash, JSON.stringify({ ...notes, text: undefined }));
+          check(`round ${n}: each witness note carries one mark per category of its signs, none repeated`, notes.marks.length === state.notes && notes.marks.every(cats => cats.length > 0 && new Set(cats).size === cats.length), JSON.stringify(notes.marks));
+          check(`round ${n}: the Mystery cell opens the witness notes, counts them and pulses`, notes.inRow && notes.count === String(state.notes) && notes.label.includes(`${state.notes} witness note`) && notes.flash, JSON.stringify({ ...notes, text: undefined, marks: undefined }));
           await screenshot('02c-notes.png');
         }
       }

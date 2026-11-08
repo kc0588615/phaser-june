@@ -10,7 +10,8 @@ import { PENCIL_POINTS, sharpEye, type AnimalRound } from '@/clueGame/animalBoar
 import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace } from '@/clueGame/clueFaces';
 import type { CluePool, PoolSpecies } from '@/clueGame/pool';
-import { CATEGORY_LABELS, CHARGE_CATEGORIES, prefixOf, type Animal } from '@/clueGame/questionMatch';
+import { CATEGORY_LABELS, CHARGE_CATEGORIES, categoryOf, prefixOf, type Animal } from '@/clueGame/questionMatch';
+import { noteCategories } from '@/clueGame/signs';
 import { FactsWithSources } from '@/components/clueGame/FactsWithSources';
 import { GlossaryText } from '@/components/clueGame/GlossaryText';
 import { WithBlanks } from '@/components/clueGame/WithBlanks';
@@ -214,9 +215,12 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
           const guess = pencil[`${animal.id}:${order.tag}`];
           const yes = order.row[index];
           return (
-            <li key={order.tag} className={`flex min-h-12 items-center gap-s py-xxs ${ROW_LINE}`}>
+            <li key={order.tag} data-answer-tag={order.tag} className={`flex min-h-12 items-center gap-s py-xxs ${ROW_LINE}`}>
               <span className={`${TILE} h-8 w-8 text-m`} aria-hidden="true">{clueFace(order.tag)}</span>
-              <span className="min-w-0 flex-1 text-s text-neutral-8">{order.question}</span>
+              <span className="flex min-w-0 flex-1 flex-col">
+                <CategoryMark category={categoryOf(order.tag)} small className="text-xxs font-medium uppercase text-neutral-7" />
+                <span className="text-s text-neutral-8">{order.question}</span>
+              </span>
               {isSeen(i) ? (
                 <b className={`flex w-20 shrink-0 -rotate-2 justify-center rounded-xs py-xxs text-s font-heavy uppercase ${yes ? 'bg-color-1-transparent text-color-1 shadow-[inset_0_0_0_2px_var(--color-1)]' : 'bg-neutral-3 text-neutral-7 shadow-[inset_0_0_0_2px_var(--neutral-5)]'}`}>
                   {yes ? 'yes' : 'no'}
@@ -302,6 +306,9 @@ export function NotesList({ round }: { round: AnimalRound }) {
       {round.notes.map((note, index) => (
         <li key={index} className="flex flex-col gap-xs rounded-s bg-notes/15 p-s">
           <p className="m-0 text-m"><WithBlanks text={note.text} /></p>
+          <p className="m-0 flex flex-wrap gap-x-s gap-y-xxs text-xxs font-medium uppercase text-neutral-7">
+            {noteCategories(note.tags).map(category => <CategoryMark key={category} category={category} small />)}
+          </p>
           <p className="m-0 flex items-center gap-xs text-xs text-neutral-7">
             <span className="flex gap-xxs" aria-hidden="true">
               {Array.from({ length: count }, (_, i) => <span key={i} className={`h-2.5 w-2.5 rounded-full ${i < note.fits ? 'bg-notes' : 'bg-notes/25'}`} />)}

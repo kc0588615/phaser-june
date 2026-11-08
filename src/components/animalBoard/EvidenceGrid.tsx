@@ -29,11 +29,12 @@ import type { AnimalRound } from '@/clueGame/animalBoard';
 import { liveHighlights } from '@/clueGame/animalSession';
 import { clueFace } from '@/clueGame/clueFaces';
 import type { PoolSpecies } from '@/clueGame/pool';
-import { columnLabel } from '@/clueGame/questionMatch';
+import { CATEGORY_LABELS, categoryOf, columnLabel } from '@/clueGame/questionMatch';
 import { suspectOrder } from '@/clueGame/suspectOrder';
 import { GEM_TEXT_COLOR, type GemType } from '@/game/constants';
 import { LARGE, SMALL } from '@/lib/motion';
 import { AnimalCard, TrapCard } from './AnimalCard';
+import { CategoryMark } from './CategoryMark';
 import { FaceIcon } from './FaceIcon';
 import { useRowOrder } from './useRowOrder';
 
@@ -242,11 +243,11 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
                     onHighlight(null, order.tag);
                   }
                 }}
-                aria-label={`${order.question}${highlighted.has(`*:${order.tag}`) ? ', highlighted' : ''}`}
+                aria-label={`${CATEGORY_LABELS[categoryOf(order.tag)]}: ${order.question}${highlighted.has(`*:${order.tag}`) ? ', highlighted' : ''}`}
                 className={`flex w-full flex-col items-center gap-xxs rounded-xs pb-xxs transition-colors short:gap-zero short:pb-zero ${highlighted.has(`*:${order.tag}`) ? 'ev-highlight' : 'enabled:hover:bg-neutral-3-transparent enabled:active:bg-neutral-3'}`}
               >
                 <FaceIcon gem={order.gem} face={clueFace(order.tag)} className={`h-6 w-6 text-[13px] ${highlighted.has(`*:${order.tag}`) ? 'ev-glow' : ''}`} />
-                <span className="line-clamp-2 min-h-[calc(2*var(--line-xs))] text-xs text-neutral-7 short:min-h-[calc(2*var(--line-xxs))] short:text-xxs" lang="en">{columnLabel(order.tag)}</span>
+                <span className="line-clamp-2 min-h-[calc(2*var(--line-xs))] text-xs text-neutral-7 short:min-h-[calc(2*var(--line-xxs))] short:text-xxs" lang="en"><CategoryMark category={categoryOf(order.tag)} word={false} small className="mr-xxs align-[-1px]" />{columnLabel(order.tag)}</span>
               </button>
             </th>
           ))}

@@ -456,7 +456,7 @@ Deviation from the architecture's 8-step order (sessions too big): its step 3 is
   - `AnimalSheets.tsx`: delete `GuideSigns`, its paging, `SIGN_PAGE_MS`, the `useMemo(signsOf)`, now-unused imports; `GUIDE` → `CHARGE_CATEGORIES` + `CATEGORY_LABELS`; guide rows per T4 (`data-guide-cat`, `CategoryMark` heading, `data-guide-line`, `ul[data-signs]`, `li[data-sign]`; row shows if lines or chips; `asked` filter unchanged).
   - `scripts/e2e.mjs`: remove the two `GuideSigns` checks (`:986-988`), their measuring (`:918-922`) and the photo-width hack (`:950-968`); pool fetch (`:637`) gives open tags; add E1, E2; shots `02d-field-guide-{light,dark}.png`, `02e-field-guide-rows-{light,dark}.png` (theme switch as `:1969-1987`).
   - Checks: static checks; Dev E2E → `M/e2e-s4/` (E1, E2 and the drawer-height check pass); copy the 4 shots to `M/shots/`. Judge the photo size from them; record if changed.
-- [ ] S5. **One mark per category on answers rows, tiles and witness notes (T4, E3, E4).**
+- [x] S5. **One mark per category on answers rows, tiles and witness notes (T4, E3, E4).**
   - `questionMatch.ts`: `categoryOf(tag)` (throws when no category; existing inline uses untouched).
   - `AnimalSheets.tsx`: "Its answers" `<li data-answer-tag>` with a small mark above the question; `NotesList` marks per `noteCategories` (desktop side notes too).
   - `EvidenceGrid.tsx`: mark before each label (`word={false}`); button `aria-label` `${CATEGORY_LABELS[c]}: ${order.question}` + `, highlighted` suffix. Check no e2e selector reads the old column label (none at 447e9317; `:897` reads row pills).
@@ -584,6 +584,7 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - S3 · Acceptance: exactly the T2 baseline (33 contradictions, 11 `tree_dweller` uses) plus one extra, kept as real: 62 `forest_streams` (note: "mountain streams … often with forest … in the banks"; record has no `habitat:forest`, the tag reads as forest yes). S6 retags it; plan 055 lists it as "found by `signProblems`". Output `M/content/sign-check-s3.txt`.
 - S4 · Photo stays `w-36` in its place with nothing beside it (brief: keep place; smaller only if it reads better). Shots `M/shots/02d-*`/`02e-*` read fine; no change. The old single `02d-field-guide.png` shot stays beside the new light/dark pair (website shot source, plan 051).
 - S4 · e2e's prefix→category table (was local to the pencil scenarios) is now one top-level `CATEGORY` with `trees`, used by E2 and the pencil scenarios: the test's own expectation, not an import of `PREFIX_CATEGORY`.
+- S5 · Grid tile mark sits inline before the label (icon only, word in the button's `aria-label` as `Category: question`); at 320 px and 390 px "Fresh water" still fits two lines. Witness-note marks print the word under the note text. e2e reads the category words as its own `CATEGORY_WORD`, as with `CATEGORY`.
 
 ## Log
 
@@ -597,5 +598,6 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - 2026-11-08 06:03 UTC · S2: `trees` on 71 (10 yes, 61 no; 8 with `url`), Farms & towns off 20, `trees-notes.csv` committed, apply.ts idempotent; pair guard → sloths (NA). typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; no `artificial` left; V1.6 ok. No E2E (DB unchanged).
 - 2026-11-08 06:08 UTC · S3: `signs.ts` (205-entry `SIGNS`, `signCategory`, `noteCategories`, `signProblems`; `signPhrase`/`signsOf` moved from clueFaces), `tagOutcome` exported; `M/tools/sign-check.ts` F1-F10 pass, acceptance 33+1 contradictions (62 `forest_streams` kept), 11 restating. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs. No E2E (no behaviour change).
 - 2026-11-08 06:25 UTC · S4: `Sign` + `Animal.signs` built at load (`signsOf` → `Sign[]`), `CategoryMark.tsx`, guide rows hold lines then signs (row shows if either; 045 hiding unchanged), `GuideSigns` + paging gone; e2e: GuideSigns checks/measuring/photo hack removed, E1, E2, light/dark shots. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs, sign-check F-assertions pass; dev E2E 1563/1563 (`M/e2e-s4/`), shots in `M/shots/`.
+- 2026-11-08 06:40 UTC · S5: `categoryOf`; category mark on "Its answers" rows (`data-answer-tag`), grid tiles (+ `aria-label` "Category: question"), witness notes (`noteCategories`); e2e E3 (tile ↔ answer row ↔ heading, same `lucide-*`) and E4. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; dev E2E 1565/1565 (`M/e2e-s5/`), shots refreshed.
 
 ## Summary

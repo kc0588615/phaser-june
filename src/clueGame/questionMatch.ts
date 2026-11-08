@@ -180,6 +180,13 @@ const SHORT_TEXT: Record<string, string> = {
 
 export const prefixOf = (tag: string): string => tag.slice(0, tag.indexOf(':'));
 
+/** The question category of an asked tag, so its tile, answer row and guide heading share one mark. Throws on a tag no question asks. */
+export function categoryOf(tag: string): ChargeCategory {
+  const category = PREFIX_CATEGORY[prefixOf(tag)];
+  if (!category) throw new Error(`no question category for "${tag}"`);
+  return category;
+}
+
 export function questionText(tag: string): string {
   if (tag.startsWith('region:')) return `Does it live in ${REGIONS[tag.slice(7)]?.name ?? tag.slice(7)}?`;
   return QUESTION_TEXT[tag] ?? tag;
