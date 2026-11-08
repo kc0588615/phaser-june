@@ -97,6 +97,16 @@
       "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics"
     },
     {
+      "category": "morphology",
+      "text": "Its skin is rough and wrinkled, with folds and little bumps.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its flat tail has a fin along the top that runs forward onto its back.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "It sees poorly. Bumps along its body feel the tiny ripples that prey makes in the water.",
       "tags": [
@@ -129,6 +139,11 @@
         "egg_guarding"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "The female lays about 500 eggs in a string inside a male's underwater den, then leaves right away.",
+      "source": "amphibiaweb"
     },
     {
       "category": "habitat",
@@ -164,6 +179,16 @@
       "url": "https://en.wikipedia.org/wiki/Chinese_giant_salamander"
     },
     {
+      "category": "key_fact",
+      "text": "Old records tell of ones 1.8 m long, but most found today are much smaller.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its skin slime might one day be a glue for closing wounds. In tests on rats it healed them fastest, with little scarring.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "Before breeding, a male pushes sand and gravel out of his den until it is smooth and clean.",
       "source": "adw"
@@ -185,6 +210,11 @@
       "source": "adw"
     },
     {
+      "category": "life_description",
+      "text": "Young ones start eating 30 days after hatching, and begin losing their gills at 20 to 25 cm long.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "threat",
       "text": "Its numbers are thought to have fallen by more than 80% in 45 years, mostly from being caught for food.",
       "source": "iucn"
@@ -198,11 +228,17 @@
       "category": "threat",
       "text": "A 2013 to 2016 search of 55 stream sites across China found only six wild ones.",
       "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Wild ones caught today are smaller than they used to be, most likely because so many are collected.",
+      "source": "amphibiaweb"
     }
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/179010104/48438418",
     "adw": "https://animaldiversity.org/accounts/Andrias_davidianus/",
+    "amphibiaweb": "https://amphibiaweb.org/species/3858",
     "sdzwa": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders"
   },
   "range": {

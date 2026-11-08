@@ -616,13 +616,51 @@ Still no record:
 
 #### Trees
 
+**No.** It lives its whole life in water.
+> "The salamanders spend their whole lives in water."
+
 #### Filled traits
+
+None: it has no no-records.
+
+Agrees with ADW and IUCN (kept as they are): about 1 m long; eggs, guarded by the father until they hatch 50 to 60 days later; eyes with no eyelids; flat head; fully aquatic.
+> "Total length about 100 cm"
+> "Eggs are fertilized externally and are guarded by the male, until they hatch after 50-60 days at a length of 30 mm."
+> "Eyes small, rounded, dorso-lateral in position, and without eyelid."
+> "Head strongly depressed"
+> "Permanently aquatic."
 
 #### New clues
 
+- morphology, no tag: "Its skin is rough and wrinkled, with folds and little bumps."
+  > "Skin rough and porous, with wrinkles, folds and tubercles."
+- morphology, no tag: "Its flat tail has a fin along the top that runs forward onto its back."
+  > "Tail 59% of the body length, compressed. Dorsal tail fin extending to the trunk."
+- reproduction, no tag: "The female lays about 500 eggs in a string inside a male's underwater den, then leaves right away."
+  > "The female lays approximately 500 eggs in a string in an underwater cavity, occupied by a male."
+  > "Females enter the cavity and leave it directly after spawning."
+
 #### New facts
 
+- key_fact: "Old records tell of ones 1.8 m long, but most found today are much smaller."
+  > "Chang (1936) quotes a maximum of 180 cm, but most animals found nowadays are considerably smaller"
+- key_fact: "Its skin slime might one day be a glue for closing wounds. In tests on rats it healed them fastest, with little scarring."
+  > "explored the use of skin secretions from Andrias davidianus (SSAD), which can be humanely collected twice a month, as a medical adhesive"
+  > "in vivo (in rats) experiments"
+  > "SSADs had the best wound healing times with regenerative properties and minimal scarring"
+- life_description: "Young ones start eating 30 days after hatching, and begin losing their gills at 20 to 25 cm long."
+  > "After 30 days post-hatching, the larvae start eating; reduction of gills begins when the larvae are 200-250 mm total length"
+- threat: "Wild ones caught today are smaller than they used to be, most likely because so many are collected."
+  > "the individuals captured are smaller than they used to be, most probably as a result of over-collecting"
+
 #### Disagreements
+
+- Range: the account (written 2000, edited 2022) still covers the whole of China's giant salamanders, before the 2019 split the literature fact describes, so it includes the Pearl River. The IUCN fact (Yangtze and Yellow River basins only) is the newer view and tier 1; kept.
+  > "Middle and lower tributaries of the Yangtze river, Huang He (Yellow river) and Zhu Jiang (Pearl river)"
+- Elevation: AmphibiaWeb below 1,500 m, mostly 300 to 800 m; IUCN 100 to 1,700 m. Kept IUCN.
+  > "at moderate altitudes (below 1500 m, especially between 300 and 800 m)"
+- Hatchling size: the ADW fact says about 3.5 cm; AmphibiaWeb 30 mm. Same tier, ADW kept.
+- Eggs: the IUCN young note says 300 to 1,500; AmphibiaWeb about 500. Inside IUCN's range; kept.
 
 ### 74 Axolotl (*Ambystoma mexicanum*)
 
@@ -632,13 +670,61 @@ Still no record:
 
 #### Trees
 
+**No.** It stays in the water all its life.
+> "it retains an aquatic larval morphology for its entire life and lives in water permanently in the wild"
+
 #### Filled traits
+
+None: it has no no-records.
+
+Agrees with ADW and IUCN (kept): feathery gills kept as an adult; never changes into a land form; lives only in Xochimilco and Chalco; over 10 years in labs; hundreds of eggs.
+> "its most notable physical feature is its feathery gills, which protrude from the back of its wide head and remain there throughout adulthood"
+> "Wild A. mexicanum can only be found in Lake Xochimilco and Lake Chalco"
+> "In the lab, individuals can live over 10 years"
+> "In the lab, females can have 2 - 5 clutches a year with hundreds of eggs in each clutch"
+
+Three Wikipedia facts that AmphibiaWeb also states move to it (tier rule), reworded to what it says:
+- "Its name comes from Nahuatl, the language of the Aztecs." → "Its name comes from the Aztec language. It may mean 'water dog', 'water twin' or 'water sprite'."
+  > "The common name, “axolotl,” originates from the Aztec language, and its meaning can be attributed to several interpretations including: water dog, water twin, water sprite, or water slave."
+- "Since 2021 an axolotl has been on the back of Mexico's 50-peso banknote." → "An axolotl is on Mexico's 50-peso banknote." (see Disagreements)
+  > "is featured on the Mexican 50 peso bill"
+- "Surveys of Lake Xochimilco found about 6,000 per square kilometre in 1998, but only 100 in 2008." → "Counts found about 6,000 per square kilometre in 1998, only 100 in 2008, and later just 35."
+  > "a 1998 census found 6,000 axolotls per square kilometer"
+  > "By 2008, the census registered 100/km2, and currently the estimate is only 35/km2."
 
 #### New clues
 
+- morphology, no tag: "Wild ones are dark or black with white flecks, but labs have bred many other colors."
+  > "In the wild, its coloration in life is dark or black (Humphrey 1975) with white flecks and black spots"
+  > "several color mutations have been created in laboratory settings"
+- reproduction, no tag: "Its eggs are fertilized inside the female, and she lays them one at a time."
+  > "Eggs are internally fertilized"
+  > "and laid singly"
+- diet, `ambush_hunter` (25, 51, 62): "It waits for prey to come close instead of chasing it, and its tiny teeth can grip food but not chew it."
+  > "The species is not an active hunter, having more of a sit-and-wait predator style, and only has rudimentary teeth that are only able to grasp prey but not tear or chew it."
+
 #### New facts
 
+- key_fact: "Lab axolotls all trace back to 34 brought from Mexico City to Paris in 1864."
+  > "Lab-reared A. mexicanum can be traced back to 34 stock animals brought from Mexico City to Paris, France in 1864"
+- behavior: "Its courtship is called a 'waltz': the pair nudge each other and circle, then the female follows the male."
+  > "Their courtship has been described as a “waltz” with a male and female pair first nudging each other with their snouts to the other’s flanks and cloaca leading to a circling behavior."
+  > "The female follows"
+- life_description: "Very rarely, when stressed, one changes into a land form, but then it can no longer breed."
+  > "In rare instances, typically less than 1% in the lab setting, A. mexicanum will metamorphose"
+  > "under stressful conditions, but they are unable to reproduce after metamorphosis"
+- threat: "Its lakes have shrunk to under 3% of their old size, and are now marshes rather than deep lakes."
+  > "the lakes’ area has been reduced to 2.83% of its historic area and has been converted into only wetland ecosystems rather than deep lakes with wetlands"
+
 #### Disagreements
+
+- Banknote date: Wikipedia said since 2021; AmphibiaWeb says "as of Feb 2020" (citing a 2020 news story, likely the note's announcement). The fact now gives no date, so it is true either way.
+  > "as of Feb 2020, is featured on the Mexican 50 peso bill"
+- Size: the ADW size note says about 23 cm; AmphibiaWeb up to about 40 cm. Same tier, ADW kept; `tiny` either way.
+  > "can reach lengths up to about 40 centimeters"
+- Color: the ADW covering note says mottled brownish green; AmphibiaWeb dark or black with white flecks. Same tier, ADW kept; the new clue gives AmphibiaWeb's.
+- Eggs hatch: the ADW fact says 10 to 14 days; AmphibiaWeb about 20 days in the lab at 20 °C. Same tier, ADW kept.
+  > "In the lab at 20°C, embryos take approximately 20 days to develop."
 
 ### 75 Hellbender (*Cryptobranchus alleganiensis*)
 
@@ -648,13 +734,57 @@ Still no record:
 
 #### Trees
 
+**No.** It lives its whole life in streams.
+> "This completely aquatic species"
+
 #### Filled traits
+
+None: it has no no-records.
+
+Agrees with ADW and IUCN (kept): largest salamander in North America; flat body, no eyelids; loose, wrinkly side folds; active at night, hiding under rocks by day; mostly crayfish; the father guards the eggs; lives 20 to 30 years.
+> "The largest salamander in North America."
+> "dorso-ventrally flattened"
+> "the eyes are tiny and lidless"
+> "The skin is loose and wrinkled."
+> "Hellbenders forage at night, sometimes on overcast days, and they retreat to crevices under rocks during the day"
+> "Males tend the eggs after oviposition and fertilization"
+> "may reach ages of 20-30 years in the wild"
 
 #### New clues
 
+- morphology, `paddle_tail` (73): "Its big tail is shaped like a paddle, flat from side to side."
+  > "The large, paddle-like tail is laterally compressed."
+- morphology, no tag: "As an adult it has no gills on the outside, just one gill slit on each side of its head."
+  > "Adults have a single gill slit on either side of the head and lack external gills."
+- behavior, no tag: "Its skin is very slimy, and the slime puts off many predators."
+  > "These salamanders are excessively slimy"
+  > "The slime produced by these animals is noxious to many predators"
+
 #### New facts
 
+- key_fact: "Many anglers think it is poisonous and cut their line rather than unhook one."
+  > "Many fisherman consider hellbenders to be poisonous and will cut their line rather than unhook them"
+- behavior: "Other hellbenders often eat its eggs and young, so the father guards the nest against them."
+  > "Eggs and larvae are frequently eaten by conspecifics."
+  > "they guard against egg predation by conspecifics"
+- life_description: "Several females may lay in the same nest: over 1,900 eggs have been found in one."
+  > "Females may share oviposition sites, and over 1900 eggs have been found in a single nest."
+- threat: "Traces of its DNA in the water show it is gone from over a third of the West Virginia sites where it once lived. Runoff from roads is a likely cause."
+  > "Using environmental DNA (eDNA), they found that over a third of sites in West Virginia that historically harbored hellbenders no longer do."
+  > "a higher density of roads surrounding historical populations may have led to population declines and extirpations"
+
 #### Disagreements
+
+- Water temperature: the IUCN clue says it avoids water warmer than 20 °C; AmphibiaWeb says usually about 20 °C, sometimes 25 to 30 °C. Kept IUCN (tier 1).
+  > "Water temperature is usually cold (20º C, sometimes as high as 25-30º C)"
+- Red List: AmphibiaWeb's page shows Near Threatened; IUCN 2022 says Vulnerable. Kept IUCN.
+  > "Near Threatened (NT)"
+- Size: ADW 30 to 69 cm long; AmphibiaWeb 30 to 74 cm. Same tier, ADW kept; `small` either way.
+  > "(30-74 cm total length)"
+- Color: the ADW covering note says brown or black, sometimes with dark orange spots; AmphibiaWeb greenish, yellowish brown or slate gray with black spots. Same tier, ADW kept.
+  > "Adult coloration is greenish, yellowish brown or slate gray with black spots or blotches"
+- Eggs hatch: ADW 45 to 80 days; AmphibiaWeb 45 to 75. Same tier, ADW kept.
+  > "after a developmental period of 45 - 75 days"
 
 ### 76 Golden Poison Frog (*Phyllobates terribilis*)
 

@@ -452,7 +452,7 @@ Every step:
 - [x] 7. **B2: 16 purple frog, 10 Suriname toad, 13 tomato frog.** As step 6. For 16, check its 2 existing AmphibiaWeb values against the snapshot.
 - [x] 8. **B3: 08 coastal tailed frog, 06 red-eyed tree frog, 09 dyeing poison dart frog.** As step 6. For 06, check its 3 existing AmphibiaWeb values.
 - [x] 9. **B4: 11 Goliath frog, 76 golden poison frog, 03 Darwin's frog.** As step 6. For 03, check its 4 existing AmphibiaWeb values.
-- [ ] 10. **B5: 62 Chinese giant salamander, 74 axolotl, 75 hellbender** (no gaps: only facts, clues and trees). As step 6, then:
+- [x] 10. **B5: 62 Chinese giant salamander, 74 axolotl, 75 hellbender** (no gaps: only facts, clues and trees). As step 6, then:
   - the research file covers all 15 animals: Trees for each, and the "no snapshot" ones stated as such;
   - run `check_quotes.py` over the whole file;
   - run the balance bot again and compare it with step 6's run in the Log. A worse deal or look-alike set goes under Decisions.
@@ -658,6 +658,9 @@ Pool join and `validatePool` (step 5):
 - 2026-11-08 (step 8): 06 CITES date: the IUCN clue says trade controlled since 2008; AmphibiaWeb says Appendix II from 21 Mar 2010. IUCN tier 1 kept (tier rule), noted in the research file; worth the owner's check against the IUCN page when its cite line is collected (step 12). 09: IUCN says the father carries tadpoles, AmphibiaWeb both parents; IUCN kept. 06 new morphology clue reuses `vertical_pupils` (08). No new open tags in B3. 08's COSEWIC key fact keeps its source (AmphibiaWeb states only half the line).
 - 2026-11-08 (step 9): 11 Goliath frog's ADW `voiceless` clue ("can't croak") kept (same tier) though AmphibiaWeb says the old no-call claims were wrong (whistles, chirps, a deep roar); flagged for the owner in the research file, since `voiceless` also tags 08, which truly can't call. 76: Wikipedia size note (5 to 6 cm) → AmphibiaWeb 4.5 cm (`tiny` unchanged); Wikipedia poison fact ("most poisonous animal on Earth … 10 to 20 people") → AmphibiaWeb's "most poisonous of all frogs … about 10 people"; geography clue re-sourced to AW. 03: existing AW fact lost "damp" (not in the snapshot), as 05's size note. 03 pouch time: ADW 6 weeks vs AW 50 to 70 days, ADW kept. No new open tags in B4: 11's nest clue reuses `egg_guarding` (07, 62, 75), 76's young clue `striped_young` (tapirs).
 
+- 2026-11-08 (step 10): 74 axolotl: 3 Wikipedia facts AmphibiaWeb also states moved to it (name, banknote, Xochimilco counts), reworded to what it says; the banknote line drops its date (Wikipedia 2021 vs AW "as of Feb 2020", likely the announcement), so it's true either way. 62: AmphibiaWeb's account predates the 2019 split (includes the Pearl River); IUCN range fact kept. 75: IUCN "avoids water warmer than 20 °C" kept vs AW "sometimes 25 to 30 °C". No new open tags in B5: 74's diet clue reuses `ambush_hunter` (25, 51, 62), 75's tail clue `paddle_tail` (73).
+- 2026-11-08 (step 10): Balance vs step 6's run: careful found 98%→99% (africa), 97% (asia, same); 3★ 74%→75% / 55%→56%; expert same; moves-left percentiles same. Africa distinct suspect sets 23→22 (from B1 to B4; B5 itself changed nothing: `balance-before-b5` = `balance-after-b5`). Not a worse deal; no look-alike set got worse. The bot runs only africa and asia, so 74/75 (North America) aren't measured; e2e plays them.
+
 ## Log
 
 - 2026-11-08 00:05 UTC: Baseline. typecheck, lint, test (48/48), content check pass; e2e:fresh 1526/1527 (pre-existing sparkle check fails at round 3 move 10, deterministic).
@@ -679,5 +682,7 @@ Pool join and `validatePool` (step 5):
 - 2026-11-08 03:20 UTC: Step 8 (B3). 08: filled none (young, social absent); +2 clues, +4 facts. 06: filled none (social unsettled); 3 existing AW values found; +3 clues (one `vertical_pupils`), +4 facts. 09: filled young few; +4 clues, +4 facts. Trees: 08 no, 06 yes, 09 no (ground; climbs to 5 m). Poison-frog inseparable test moved to Saola/orangutan (Decisions). `check_quotes.py` 145 quotes 0 misses; preview 0 PROBLEM, 821 cite warn; scratch build 2456 clues / 467 facts, check 0 errors; typecheck, lint pass; test 66/66.
 
 - 2026-11-08 03:50 UTC: Step 9 (B4). 11: filled none (no no-records); +3 clues (one `egg_guarding`), +4 facts. 76: filled none (no no-records); size note + poison fact Wikipedia→AW, geography clue re-sourced; +2 clues (one `striped_young`), +4 facts. 03: filled none (no no-records); 4 existing AW values checked, 3 found, "damp" dropped from the 4th; +2 clues, +4 facts. Trees: 11 no, 76 no, 03 no. `check_quotes.py` 210 quotes 0 misses; preview 0 PROBLEM, 821 cite warn; scratch build 2463 clues / 479 facts, check 0 errors; typecheck, lint pass; test 66/66.
+
+- 2026-11-08 04:25 UTC: Step 10 (B5). 62: filled none (no no-records); +3 clues, +4 facts. 74: filled none; name, banknote, census facts Wikipedia→AW; +3 clues (one `ambush_hunter`), +4 facts. 75: filled none; +3 clues (one `paddle_tail`), +4 facts. Trees: 62 no, 74 no, 75 no; research file now covers all 15 (all had snapshots). `check_quotes.py` whole file 274 quotes 0 misses; preview 0 PROBLEM, 821 cite warn; scratch build 2472 clues / 491 facts, check 0 errors; typecheck, lint pass; test 66/66; balance unchanged by B5, vs step 6 flat or better (Decisions; `$STATE/balance-after-b5.txt`).
 
 ## Summary

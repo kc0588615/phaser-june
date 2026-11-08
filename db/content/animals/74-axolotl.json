@@ -82,12 +82,22 @@
       "source": "wikipedia"
     },
     {
+      "category": "morphology",
+      "text": "Wild ones are dark or black with white flecks, but labs have bred many other colors.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "reproduction",
       "text": "It grows up and breeds without ever changing into a land form, like a tadpole that never becomes a frog.",
       "tags": [
         "stays_larval"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its eggs are fertilized inside the female, and she lays them one at a time.",
+      "source": "amphibiaweb"
     },
     {
       "category": "behavior",
@@ -114,6 +124,14 @@
       "source": "adw"
     },
     {
+      "category": "diet",
+      "text": "It waits for prey to come close instead of chasing it, and its tiny teeth can grip food but not chew it.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
       "category": "habitat",
       "text": "It lives only in the canals and lakes of Xochimilco and Chalco, inside Mexico City.",
       "source": "iucn"
@@ -127,13 +145,13 @@
   "facts": [
     {
       "category": "key_fact",
-      "text": "Its name comes from Nahuatl, the language of the Aztecs.",
-      "source": "wikipedia"
+      "text": "Its name comes from the Aztec language. It may mean 'water dog', 'water twin' or 'water sprite'.",
+      "source": "amphibiaweb"
     },
     {
       "category": "key_fact",
-      "text": "Since 2021 an axolotl has been on the back of Mexico's 50-peso banknote.",
-      "source": "wikipedia"
+      "text": "An axolotl is on Mexico's 50-peso banknote.",
+      "source": "amphibiaweb"
     },
     {
       "category": "key_fact",
@@ -146,19 +164,40 @@
       "source": "wikipedia"
     },
     {
+      "category": "key_fact",
+      "text": "Lab axolotls all trace back to 34 brought from Mexico City to Paris in 1864.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "life_description",
       "text": "Its eggs hatch after 10 to 14 days, and the young look after themselves right away.",
       "source": "adw"
     },
     {
+      "category": "life_description",
+      "text": "Very rarely, when stressed, one changes into a land form, but then it can no longer breed.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "threat",
-      "text": "Surveys of Lake Xochimilco found about 6,000 per square kilometre in 1998, but only 100 in 2008.",
-      "source": "wikipedia"
+      "text": "Counts found about 6,000 per square kilometre in 1998, only 100 in 2008, and later just 35.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "threat",
+      "text": "Its lakes have shrunk to under 3% of their old size, and are now marshes rather than deep lakes.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "Its courtship is called a 'waltz': the pair nudge each other and circle, then the female follows the male.",
+      "source": "amphibiaweb"
     }
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/1095/53947343",
     "adw": "https://animaldiversity.org/accounts/Ambystoma_mexicanum/",
+    "amphibiaweb": "https://amphibiaweb.org/species/3842",
     "wikipedia": "https://en.wikipedia.org/wiki/Axolotl"
   },
   "range": {
