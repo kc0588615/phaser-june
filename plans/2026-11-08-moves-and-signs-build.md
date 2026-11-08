@@ -115,7 +115,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -366,6 +366,17 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. **Saved-round compatibility across the delayed content build.** `useAnimalSession.ts:122–125` checks rules version and question answers, but restores old witness notes against fresh content. Both sides run `055-0`. Confirmed: suspects `[23,34,40,56,61]`, mystery `23`, retain a `tree_dweller` witness note after retagging removes its holders; resume succeeds but no suspect fits. Add content compatibility checking that invalidates affected saves, and verify reload across this rollout window.
+
+SHOULD-CONSIDER:
+
+1. Validate sign vocabulary when loading the pool, where the existing load-error handling can catch failures, instead of first discovering unknown tags during rendering.
+2. Treat T2’s expected contradiction counts as a baseline, not grounds to weaken valid constraints merely to match the count. Document any additional genuine contradiction.
+
 ## Revision notes
 
 ## Steps
@@ -383,5 +394,6 @@ SHOULD-CONSIDER:
 - 2026-11-08 04:50 UTC · Baseline: typecheck, lint, 66 unit tests, content preview, e2e:fresh on dev copy (1558/1558) all pass.
 - 2026-11-08 05:18 UTC · Architecture: architect wrote findings + target design (signs.ts table, CategoryMark, content script in STATE, 9-step order); plan-only, typecheck ok.
 - 2026-11-08 05:25 UTC · Fable review: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (throw-site, YAGNI restates, commit csvs, tree icon clash, merge steps 3-4); plan-only.
+- 2026-11-08 05:28 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (saved-round witness notes vs fresh content across delayed content build), 2 SHOULD-CONSIDER; plan-only.
 
 ## Summary
