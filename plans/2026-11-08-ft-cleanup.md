@@ -52,7 +52,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -140,6 +140,10 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+MUST-FIX: none
+SHOULD-CONSIDER: none
+
 ## Revision notes
 
 ## Steps
@@ -157,5 +161,6 @@ SHOULD-CONSIDER:
 - 2026-11-08 21:40 UTC: Baseline. Live gate 0; typecheck/lint/test/preview 0; dev-copy e2e 1565/1565.
 - 2026-11-08 21:50 UTC: Architecture. `architect`: 13 code lines + 2 doc clauses go; no union-keyed types or positional deps; no version bump; Verification adds preview diff + rounds comparison. Plan-only edit.
 - 2026-11-08 22:00 UTC: Fable review. `architecture-reviewer`: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (for Steps: hard-pass rounds match + live gate, partial-line edits, record CONTENT_SOURCES widening). Plan-only edit.
+- 2026-11-08 22:10 UTC: Astra review. APPROVE, 0 MUST-FIX, 0 SHOULD-CONSIDER. Plan-only edit.
 
 ## Summary
