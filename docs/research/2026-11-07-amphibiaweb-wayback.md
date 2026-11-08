@@ -22,13 +22,57 @@ Mission `fact-sources`. AmphibiaWeb's species accounts for the game's 15 amphibi
 
 #### Trees
 
+**No.** It lives on the ground, in leaf litter and by slow streams.
+> "In each terrestrial clutch, deposited in the leaf-litter"
+> "along cool (5-21 degrees C) and wet stream banks of slowly moving streams"
+
 #### Filled traits
+
+None: it has no no-records.
+
+#### Existing AmphibiaWeb values (checked)
+
+- `activity: day`, note "It often sits in patches of sunlight.", found.
+  > "This species is mainly diurnal, and often basks in sunlight"
+- `young: many`, note "A female lays about 40 eggs, though fewer in the far south.", found.
+  > "there are about 40 large (4 mm), unpigmented eggs"
+  > "Clutch size in the far south of the range may be smaller (3-7 eggs"
+- Fact "In the cold months it shelters under logs and moss.", found.
+  > "During the colder months, Rhinoderma darwinii shelters under cover of logs or moss"
+- Fact "Females lay their eggs in damp leaf litter on the forest floor.": **"damp" not found**. The account says only that the clutch is laid on land in leaf litter. Rewritten to "Females lay their eggs in the leaf litter on the forest floor."
+  > "In each terrestrial clutch, deposited in the leaf-litter"
+
+Agrees with ADW (same tier, kept as ADW): pointed fleshy snout, brown or green back, black-and-white belly, eats insects, the father raises the young in his vocal sac.
+> "It has a pronounced, fleshy proboscis"
+> "with the dorsum being either uniform brown (tan, brown, or reddish brown), uniform green (pale or dark)"
+> "The underside is black and white, with large blotches"
+> "Rhinoderma darwinii consumes insects and other small invertebrates"
+> "larval development and metamorphosis take place within the vocal sac of the male parent"
 
 #### New clues
 
+- behavior, no tag: "When threatened, it rolls onto its back and plays dead."
+  > "This frog has the unusual defensive strategy of playing dead when threatened; it rolls over on its back and remains motionless."
+- diet, no tag: "It sits still and waits for insects to come close."
+  > "using a sit-and-wait predation strategy"
+
 #### New facts
 
+- key_fact: "The father feeds the tadpoles in his pouch with a thick liquid he makes."
+  > "The male not only shelters the tadpoles but nourishes them via viscous secretions within the vocal sac"
+- key_fact: "When they are done changing, the froglets come out through their father's mouth."
+  > "At the end of metamorphosis the froglets move from the male's vocal sac into the mouth, and emerge from the mouth"
+- behavior: "A scared frog near a stream may jump in and float on its back."
+  > "If it is near a stream when frightened, it may jump into the stream and float in the water on its back"
+- life_description: "As many as 19 young have been found in one father's pouch."
+  > "As many as 19 embryos have been found within a male's vocal sac"
+
 #### Disagreements
+
+- Time in the pouch: the ADW key fact says about 6 weeks; AmphibiaWeb says 50 to 70 days after hatching (plus about 3 days before). Same tier, ADW kept.
+  > "This post-hatching period of development lasts for about 50-70 days"
+- Size: ADW (trait note) 2.5 to 3.5 cm; AmphibiaWeb males 22 to 28 mm, females 25 to 31 mm. Same tier, ADW kept; `tiny` either way.
+  > "males 22-28 mm, females 25-31 mm"
 
 ### 05 Wallace's Flying Frog (*Rhacophorus nigropalmatus*)
 
@@ -346,13 +390,53 @@ Agrees with ADW (same tier, kept as ADW): flat body and triangle head, star fing
 
 #### Trees
 
+**No.** It lives in and beside fast rivers, resting on rocks.
+> "Adult goliath frogs are found in rapids and cascades of rivers"
+> "adults may bask on rocks emerging from streams and rivers"
+
 #### Filled traits
+
+None: it has no no-records.
+
+Agrees with ADW (same tier, kept as ADW): biggest frog, up to 32 cm and about 3.3 kg; active at night; eats insects, snails, shrimp and frogs; hundreds of eggs, stuck to plants underwater; about 3 months as a tadpole; rests on rocks by waterfalls.
+> "Conraua goliath is the largest frog in the world, with some individuals weighing as much as 3.3 kilograms and reaching ~32 cm snout–vent length"
+> "While adults of C. goliath are generally nocturnal"
+> "Most nests contain 150 – 350 eggs, though in some cases might have as many as 2,800 eggs"
+> "Egg masses are deposited underwater and attached to vegetation or stones in pools near rapids"
+> "Larval development takes approximately 3 months to go through metamorphosis"
+> "Large adults are often observed on rocks close to or within waterfalls and rapids"
 
 #### New clues
 
+- morphology, no tag: "Its belly and the undersides of its legs are yellowish orange."
+  > "The abdomen and ventral part of the limbs are yellowish orange"
+- behavior, no tag: "To escape, it can skitter across the water in up to seven short leaps."
+  > "individuals have been observed to skitter across the surface of the water with as many as seven consecutive short leaps"
+- reproduction, `egg_guarding` (07, 62, 75): "Adults clear out pools by the river, or dig hollows in the gravel bank, to lay their eggs in, and guard the nests at night."
+  > "frogs actively dig depressions into the gravel banks of rivers"
+  > "these pools and depressions are actively cleaned of leaf litter and detritus by the frogs"
+  > "Camera traps showed that adults guarded nests at night"
+
 #### New facts
 
+- key_fact: "Building its nests means moving large, heavy objects, which may be why it grew so big."
+  > "because large, heavy objects must be moved for nest construction, this type of nest construction may have favored large size in this species"
+- key_fact: "For such a big frog, its mating call is high-pitched, and it can last up to a minute and a half."
+  > "The advertisement call of Conraua goliath is a high frequency sound of long duration (4.1 kHz, and up to 1.5 minutes"
+- behavior: "On land it tires after five or six leaps, which makes it easy for people to catch."
+  > "On land, however, individuals typically appear exhausted after five or six leaps (Sabater-Pi 1967) making them easy to capture by humans"
+- threat: "Hunters prefer the biggest frogs, usually females. Far from towns, goliath frogs are more common and grow bigger."
+  > "Hunters prefer to hunt the largest individuals (typically females)"
+  > "C. goliath is more abundant and attains larger body sizes farther from human settlements"
+
 #### Disagreements
+
+- Calls: the ADW clue says it "can't croak" (no vocal sac) and males whistle with open mouths (`voiceless`). AmphibiaWeb agrees on the whistles and the open mouth, but says older claims that adults don't call were wrong: it has several calls, even a deep roar. Same tier, ADW clue kept; worth the owner's look, since `voiceless` also tags 08, which truly has no call.
+  > "Despite previous assertions that adults do not call"
+  > "including brief whistles, chirping, and even a “sighing deep roar”"
+  > "the advertisement call of C. goliath is produced with the mouth open"
+- Tadpole food: the ADW fact says its tadpoles eat only one water plant. AmphibiaWeb reports the same source (Sabater-Pi 1985) but says the plant's identity is unknown. Not a conflict on the claim; ADW kept.
+  > "Thus, the identity of this aquatic plant remains unknown"
 
 ### 13 Madagascar Tomato Frog (*Dyscophus antongilii*)
 
@@ -580,10 +664,55 @@ Still no record:
 
 #### Trees
 
+**No.** It stays on the ground, at most a few centimetres up on roots.
+> "It is also terrestrial, preferring to sit on the ground or perched only a few centimeters above the ground on tree roots or ground litter."
+
 #### Filled traits
+
+None: it has no no-records.
+
+- `size` stays `tiny`; its note, from Wikipedia ("about 5 to 6 cm long"), becomes AmphibiaWeb's "It grows to about 4.5 cm long." (tier rule: AmphibiaWeb replaces Wikipedia).
+  > "adult females having a maximum snout-vent length of 47 mm, and adult males reaching 45 mm in snout-vent length"
+
+Re-sourced Wikipedia → AmphibiaWeb, text unchanged (same claim): the geography clue "It lives only on the Pacific coast of Colombia."
+> "in Pacific coastal Colombia"
+> "Country distribution from AmphibiaWeb's database: Colombia"
+
+Agrees with ADW (same tier, kept as ADW): active by day, alone, bold and out in the open, under 20 eggs, the male carries tadpoles, the long trill call, one known enemy (a small snake that may eat only the young).
+> "This species, like all other members of the family Dendrobatidae, is diurnal."
+> "While these frogs normally are solitary in the wild"
+> "They are noticeably bolder than other poison dart frogs and are found out in the open."
+> "Eggs are laid terrestrially in small clutches of less than 20."
+> "Their calls are long sustained trills"
+> "these snakes may only consume the juvenile P. terribilis and not the adults"
 
 #### New clues
 
+- morphology, `striped_young` (53, 70): "Its young are black with two gold stripes, which fade as they grow up."
+  > "Juvenile frogs are black in color, with gold dorsolateral stripes."
+  > "As the frogs reach maturity, the dorsolateral stripes disappear"
+- morphology, no tag: "Its eyes and the tips of its toes are black."
+  > "The eyes, nares and digit tips are black."
+
 #### New facts
 
+- key_fact: "Hunters rub their blowgun darts on the skin of a live frog to load them with poison."
+  > "used by native Colombians such as the Chocó and Cofán to poison their blow-gun darts"
+  > "the darts are rubbed over the skin of the live frog to collect the poison"
+- key_fact: "Its poison might one day help make a medicine for pain."
+  > "batrachotoxin might be useful to develop as a topical pain-relief medication"
+- behavior: "A father can carry up to nine tadpoles on his back at once."
+  > "Male frogs have been observed carrying up to nine larvae simultaneously"
+- life_description: "Its tadpoles have no poison. It gets its poison only after it turns into a frog."
+  > "Tadpoles did not contain batrachotoxin"
+  > "implying that the batrachotoxin alkaloids are synthesized or sequestered after metamorphosis"
+
 #### Disagreements
+
+- Poison: the Wikipedia key fact ("thought to be the most poisonous animal on Earth … deadly to 10 to 20 people") becomes AmphibiaWeb's "It is the most poisonous of all frogs. One frog may hold enough poison to kill about 10 people." (tier rule).
+  > "Phyllobates terribilis is the most highly toxic of all frogs"
+  > "with a single frog thus potentially holding enough poison to kill about 10 humans"
+- Poison from food: the Wikipedia fact ("Its poison comes from its food. Frogs raised in zoos on crickets lose their poison.") stays: AmphibiaWeb agrees that frogs born in captivity have none, and calls the wild source likely, not proven. It adds that wild-caught frogs kept for three years still had about 40% of their poison, so "lose" holds only for frogs raised there.
+  > "poison frogs born and reared in captivity do not contain toxins in their skin, although they can accumulate alkaloid toxins if these are part of the diet"
+  > "frogs maintained in captivity for three years still maintaining toxicity at about 40% the level of recently captured animals"
+- Dart users: the Wikipedia fact names the Emberá; AmphibiaWeb names "the Chocó and Cofán". The Emberá are a Chocó people, so no conflict; the Wikipedia fact stays.
