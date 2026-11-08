@@ -49,7 +49,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -57,6 +57,12 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+From `agent/ft-cleanup` @ `cd1d6007` (= `origin/main` `36dc1a5d` + mission start). `node_modules` present; no migrations in this repo.
+- **Gate (live `phaser_june`, read-only):** `Farms & towns` tags in `species_deduction_clues.compare_tags` = **0** (of 2478 clue rows). Prod content build reached prod; proceed. psql needs the URL's `pgbouncer` param stripped (as `scripts/connect.ts` does).
+- `npm run typecheck` 0, `npm run lint` 0, `npm test` 66/66 pass, `npm run content -- preview` 0.
+- `npm run e2e:fresh` on dev copy (`current_database()` guard = `phaser_june_dev`, no-sandbox Chrome wrapper): **1565/1565 checks**, seed 7. Artifact `/srv/critter-ai/agent-state/missions/ft-cleanup/baseline-e2e/`.
+- `rg -n artificial src db/content`: 13 lines, exactly the brief's sites (`traits.ts:31`, `questionMatch.ts:158,178,214`, `clueFaces.ts:15`, `profiles.ts:98,144-150`); none in `db/content`.
 
 ## Architecture
 
@@ -77,5 +83,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-08 21:40 UTC: Baseline. Live gate 0; typecheck/lint/test/preview 0; dev-copy e2e 1565/1565.
 
 ## Summary
