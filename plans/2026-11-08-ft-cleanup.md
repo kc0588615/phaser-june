@@ -234,6 +234,16 @@ SHOULD-CONSIDER: none
 
 ## Release
 
+- Rebase: none needed (`origin/main` still `36dc1a5d`; `src db scripts` unchanged). Rerun V1-V4: typecheck/lint/test 66/66 0, `rg` empty, numstat as S1, db untouched; preview unchanged, 0 PROBLEM; dev copy (db guard + gate 0) 1565/1565, rounds same as baseline: true. Artifact `$M/release-e2e/`.
+- PR #67. CI `e2e` failed twice on `arrow keys move the globe while it spins` (`restMs` 148/144, window 2500-7000), passed on 3rd attempt. Preexisting CI flake, not this diff: same signature on PR `fact-sources` run 42446433394 attempt 1 (`restMs` 134, passed attempt 2); no globe code touched; VPS runs 4/4 pass (`restMs` ~4100).
+- Live gate right before merge: 0.
+- Merge commit `7edc1a5a697dcb57bc4f2ebaed138498582943f3`.
+- Deploy last line: `deploy critter-connect: live at https://critterconnect.org`.
+- Smoke: `/explore/` 200; `version.txt` = merge commit.
+- Log: `/srv/critter-ai/agent-state/missions/ft-cleanup/release-deploy.log`.
+
+Result: done
+
 ## Decisions
 
 - S1 · docs/CONTENT_SOURCES.md:25 edited, outside the brief's named docs (Fable SC2): same intent, one clause; its old reason ("not asked") understated the new behaviour (now rejected as an unknown habitat).
@@ -252,6 +262,8 @@ SHOULD-CONSIDER: none
 - 2026-11-08 22:10 UTC: Astra code review (`--code origin/main`): APPROVE, 0 MUST-FIX, 0 SHOULD-CONSIDER. Plan-only edit.
 - 2026-11-08 22:23 UTC: Final Verification. V1 typecheck/lint/test 66/66 0, `rg` empty, numstat 1/1,0/8,1/3,1/1, db untouched; V2 preview exit 0, unchanged, 0 PROBLEM; V3 dev copy (db guard + gate 0) 1565/1565; V4: 1565 checks (baseline 1565), 0 failed, 0 console errors, 0 failed requests; rounds same as baseline: true. Artifact `$M/final-e2e/`; `e2e-s2` deleted.
 
+- 2026-11-08 23:06 UTC: Release. V1-V4 rerun pass (release-e2e 1565/1565, rounds = baseline); PR #67 CI green on 3rd attempt (known globe-key flake); live gate 0; merged `7edc1a5a`, deployed; `/explore/` 200, version.txt = merge commit.
+
 ## Summary
 
 Farms & towns (`artificial`) is gone from the code: `HABITAT_CLASSES` (so `COMPLETE_PREFIXES`), its question/short/column texts, its 🏡 face, and its 8 profile guide lines; 2 doc clauses updated; history in `plans/056-ft-cleanup.md`. No content, DB or `ANIMAL_RULES.version` change.
@@ -262,3 +274,4 @@ Farms & towns (`artificial`) is gone from the code: `HABITAT_CLASSES` (so `COMPL
 - Reviews: architecture Fable APPROVE (0 MUST-FIX, 5 SHOULD-CONSIDER, all folded into Steps), Astra APPROVE; code review Astra APPROVE, 0 MUST-FIX, 0 SHOULD-CONSIDER.
 - Side effect: a hand-written `artificial:*` tag is no longer reserved; the content check now rejects `habitat:artificial` as an unknown habitat (documented in `CONTENT_SOURCES.md`).
 - No production content build needed (no content change).
+- Released: PR #67 merged (`7edc1a5a`), deployed; `/explore/` 200, `version.txt` = merge commit. CI globe arrow-key check (`restMs` ~140 vs window 2500-7000) is a preexisting flake (also hit `fact-sources`); worth hardening the e2e's spin classification.
