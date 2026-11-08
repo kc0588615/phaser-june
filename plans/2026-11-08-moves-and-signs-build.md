@@ -450,7 +450,7 @@ Deviation from the architecture's 8-step order (sessions too big): its step 3 is
   - `src/clueGame/deduction.ts`: export `tagOutcome`, parameter `ReadonlySet<string>`.
   - Acceptance: `M/tools/run.sh M/tools/sign-check.ts > M/content/sign-check-s3.txt` shows exactly the 33 contradictions and 11 restating uses of T2. Read each extra/missing flag per T2's rules; record kept extras ("found by `signProblems`") and any weakened entry under Decisions.
   - Checks: static checks; sign-check F-assertions pass. No E2E (no behaviour change).
-- [ ] S4. **Signs inside the field guide (T2 load check, T4 guide, E1, E2, shots).**
+- [x] S4. **Signs inside the field guide (T2 load check, T4 guide, E1, E2, shots).**
   - `questionMatch.ts`: `Sign {tag,text,category}` beside `FieldNote`; `Animal.signs: Sign[]`. `signs.ts`: `signsOf` → `Sign[]` (open tags, tag order, none filtered). `src/clueGame/questionMatchContent.ts` `buildAnimal`: `signs: signsOf(tags)`.
   - New `src/components/animalBoard/CategoryMark.tsx` (T4: `CATEGORY_ICON`, `data-category-mark`, word printed or `sr-only`, no new colour).
   - `AnimalSheets.tsx`: delete `GuideSigns`, its paging, `SIGN_PAGE_MS`, the `useMemo(signsOf)`, now-unused imports; `GUIDE` → `CHARGE_CATEGORIES` + `CATEGORY_LABELS`; guide rows per T4 (`data-guide-cat`, `CategoryMark` heading, `data-guide-line`, `ul[data-signs]`, `li[data-sign]`; row shows if lines or chips; `asked` filter unchanged).
@@ -582,6 +582,8 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - S2 · Finding 1: after part A the only inseparable pair is North America's two sloths (30, 54; Farms & towns had split them). The test guard moved to that pair, scoped to `north-america` (they're separable elsewhere). Saola + Sumatran Orangutan are split by `trees`.
 - S3 · `SIGNS` encoding: a disjunction is written as `denies` ("giant" denies tiny/small/medium; plant eaters deny `diet:meat`/`diet:insects`; hunters deny `diet:plants`), so no OR-implies is needed. Water words that don't fix fresh vs sea (`feathery_gills`, `flippers`, `paddle_tail`, `underwater_breathing`) imply only `habitat:wetlands`; `brackish_water` and `eggs_over_water` imply no system. `sand_swimmer` implies `system:freshwater` (its plain reading, as the design's `misleads` says). No entry weakened.
 - S3 · Acceptance: exactly the T2 baseline (33 contradictions, 11 `tree_dweller` uses) plus one extra, kept as real: 62 `forest_streams` (note: "mountain streams … often with forest … in the banks"; record has no `habitat:forest`, the tag reads as forest yes). S6 retags it; plan 055 lists it as "found by `signProblems`". Output `M/content/sign-check-s3.txt`.
+- S4 · Photo stays `w-36` in its place with nothing beside it (brief: keep place; smaller only if it reads better). Shots `M/shots/02d-*`/`02e-*` read fine; no change. The old single `02d-field-guide.png` shot stays beside the new light/dark pair (website shot source, plan 051).
+- S4 · e2e's prefix→category table (was local to the pencil scenarios) is now one top-level `CATEGORY` with `trees`, used by E2 and the pencil scenarios: the test's own expectation, not an import of `PREFIX_CATEGORY`.
 
 ## Log
 
@@ -594,5 +596,6 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - 2026-11-08 05:58 UTC · S1: `trees` trait + `neverAsked` (traits.ts), Habits question texts, `fullTable`/`questionsFor` skip `:no`, rules `055-0`, `roundStillFits` (rows, then witness notes) used by the resume, 🌲 face, profile `trees` trait; E2E E5 + E6. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; dev E2E 1563/1563 (`M/e2e-s1/`).
 - 2026-11-08 06:03 UTC · S2: `trees` on 71 (10 yes, 61 no; 8 with `url`), Farms & towns off 20, `trees-notes.csv` committed, apply.ts idempotent; pair guard → sloths (NA). typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; no `artificial` left; V1.6 ok. No E2E (DB unchanged).
 - 2026-11-08 06:08 UTC · S3: `signs.ts` (205-entry `SIGNS`, `signCategory`, `noteCategories`, `signProblems`; `signPhrase`/`signsOf` moved from clueFaces), `tagOutcome` exported; `M/tools/sign-check.ts` F1-F10 pass, acceptance 33+1 contradictions (62 `forest_streams` kept), 11 restating. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs. No E2E (no behaviour change).
+- 2026-11-08 06:25 UTC · S4: `Sign` + `Animal.signs` built at load (`signsOf` → `Sign[]`), `CategoryMark.tsx`, guide rows hold lines then signs (row shows if either; 045 hiding unchanged), `GuideSigns` + paging gone; e2e: GuideSigns checks/measuring/photo hack removed, E1, E2, light/dark shots. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs, sign-check F-assertions pass; dev E2E 1563/1563 (`M/e2e-s4/`), shots in `M/shots/`.
 
 ## Summary

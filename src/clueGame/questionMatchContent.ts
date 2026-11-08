@@ -6,6 +6,7 @@
 // balance bot (db/content/animals/*.json). Pure.
 import { isHandWrittenClue, profileClues, type AnimalProfile, type ContentSource } from '@/clueGame/profiles';
 import type { CluePool } from '@/clueGame/pool';
+import { signsOf } from '@/clueGame/signs';
 import { FAMILY_NAMES, ORDER_NAMES } from '@/clueGame/speciesInfo';
 import { REGIONS, countryName, regionOfCountry, type ContinentKey } from '@/clueGame/regions';
 import { PREFIX_CATEGORY, prefixOf, type Animal, type ChargeCategory, type FieldNote, type Source } from '@/clueGame/questionMatch';
@@ -134,10 +135,12 @@ function buildAnimal(input: AnimalInput, warn: (text: string) => void): Animal {
     else revealNotes.push({ text: item.text, source: item.source, ...tags });
   }
 
+  const allTags = [...new Set(input.clues.flatMap(clue => clue.tags))];
   return {
     id: input.id, name: input.commonName, scientificName: input.scientificName, photo: input.photo,
     redList: input.redList.category, redListUrl: input.redList.url, continents, traits, traitSources, familyTree, notes, revealNotes, guide,
-    tags: [...new Set(input.clues.flatMap(clue => clue.tags))],
+    // An unknown sign throws here, at load (plan 055), never in a render.
+    signs: signsOf(allTags), tags: allTags,
   };
 }
 

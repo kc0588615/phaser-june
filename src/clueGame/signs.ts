@@ -2,7 +2,7 @@
 // (plan 055). This table is the vocabulary and is authoritative; docs/research/2026-11-07-moves-and-signs/sign-map.csv
 // is the research record it was built from. It keeps every open tag ever shipped, retired ones included, so new
 // code still loads rows an older content build wrote. Pure: queries only.
-import { CHARGE_CATEGORIES, PREFIX_CATEGORY, prefixOf, questionText, type ChargeCategory } from '@/clueGame/questionMatch';
+import { CHARGE_CATEGORIES, PREFIX_CATEGORY, prefixOf, questionText, type ChargeCategory, type Sign } from '@/clueGame/questionMatch';
 import { tagOutcome } from '@/clueGame/deduction';
 
 export interface SignEntry {
@@ -237,8 +237,8 @@ const openTags = (tags: readonly string[] | undefined): string[] => (tags ?? [])
 /** An open tag as a short phrase for a suspect's signs (digging_claws -> "digging claws"). */
 export const signPhrase = (tag: string): string => tag.replace(/_/g, ' ');
 
-/** A suspect's signs: the open tags its field guide records (not the question traits, which the clue chips show). */
-export const signsOf = (tags: readonly string[] | undefined): string[] => openTags(tags).map(signPhrase);
+/** A suspect's signs: the open tags its field guide records (not the question traits), in tag order. Throws on a tag missing from SIGNS. */
+export const signsOf = (tags: readonly string[] | undefined): Sign[] => openTags(tags).map(tag => ({ tag, text: signPhrase(tag), category: signCategory(tag) }));
 
 /** The question category a sign sits under. Throws on a tag missing from SIGNS. */
 export function signCategory(tag: string): ChargeCategory {
