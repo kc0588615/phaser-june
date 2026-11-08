@@ -114,7 +114,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -348,6 +348,22 @@ A header comment in `signs.ts` and a line in `CONTENT_SOURCES.md` say the code i
 
 ## Architecture review (Fable)
 
+Checked against `origin/main` 447e9317: every cited line and count holds (test `:50-52` pair guard; `fullTable :89-92` and `questionsFor :438-441` deal every value of a `PREFIX_CATEGORY` prefix; `GuideSigns :270-333` is the only user of `useLayoutEffect`, `AnimatePresence`, `Pause` and `SIGN_PAGE_MS` in that file; `EvidenceGrid.tsx:245` `aria-label` overrides inner text; `tagOutcome` private at `deduction.ts:17`; 198 open tags, 526 uses, 20 `artificial` holders, all 198 in `sign-map.csv`; its `restates` column is exactly `burrower/climber/swimmer/tree_dweller`; lucide 0.525 has all five icons; `STATE/tools/run.sh` bundles `@/` imports with esbuild as T5 assumes). No import cycle: profiles → signs → deduction/traits + questionMatch; questionMatch → traits is new but traits imports nothing from it. Hiding by prefix (`:87`, `:99-102`) covers `trees:no` lines when `trees:yes` is dealt, as finding 11 says. The design follows the brief's picks, reuses `tagOutcome`, `CHARGE_CATEGORIES`/`CATEGORY_LABELS`, `profileClues` and the `checkProfile` build gate, and adds no second source for the sign table.
+
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+MISSED:
+1. There is no React error boundary in `src/` (no `ErrorBoundary`/`componentDidCatch`). The plan's own open question ("is throwing in render acceptable?") therefore means: an unknown tag in `signCategory` blanks the whole `/explore` page for that player, not just the sheet. The three guards (SIGNS keeps every shipped tag, `checkProfile` gates every content build, T9 before merge) make it unreachable in practice, so this is a recorded trade-off, not a defect; see SHOULD-CONSIDER 1.
+
+SHOULD-CONSIDER:
+1. Keep `signCategory` throwing (owner: fail fast) but decide and record where the failure is meant to surface: the build gate (T3) and T9 are the "early" places; if the architect wants the render path to survive a mismatch instead, that must be an explicit Decision, not a quiet fallback.
+2. T2 `restates` for `climber → climbs:yes`, `burrower → digs:yes`, `swimmer → swims:yes` encodes prefixes that don't exist (Swims dropped by the owner; Hops/Glides out of scope). YAGNI: keep only `tree_dweller → trees:yes`; add the others when a trait exists.
+3. Commit `tag-edits.csv` and `trees-notes.csv` beside `sign-map.csv` in `docs/research/2026-11-07-moves-and-signs/` (the brief allows "a successor beside it"); the one-off `apply.ts` can stay in STATE. Otherwise the per-note decisions live only outside git and in plan 055's printed table.
+4. Picture clash: the `trees:yes` face 🌲 sits on a Habits tile whose mark is `PawPrint`, while the Habitat heading's mark is lucide `Trees`. That teaches the opposite of the tile ↔ heading link the design wants; decide from the 390 px shots whether to change the face (non-tree) or Habitat's icon (e.g. `Mountain`/`Tent`).
+5. Step 3's "GuideSigns temporarily maps `s.text`" is code written to be deleted in step 4; merge steps 3 and 4, or leave `signsOf` returning `string[]` until T4 lands. Also, finding 8's new `aria-label` must keep the existing `, highlighted` suffix.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -366,5 +382,6 @@ A header comment in `signs.ts` and a line in `CONTENT_SOURCES.md` say the code i
 
 - 2026-11-08 04:50 UTC · Baseline: typecheck, lint, 66 unit tests, content preview, e2e:fresh on dev copy (1558/1558) all pass.
 - 2026-11-08 05:18 UTC · Architecture: architect wrote findings + target design (signs.ts table, CategoryMark, content script in STATE, 9-step order); plan-only, typecheck ok.
+- 2026-11-08 05:25 UTC · Fable review: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (throw-site, YAGNI restates, commit csvs, tree icon clash, merge steps 3-4); plan-only.
 
 ## Summary
