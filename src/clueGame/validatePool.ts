@@ -4,6 +4,7 @@
 import { GEM_CATEGORIES } from '@/clueGame/categories';
 import { fitClue, isDeductive } from '@/clueGame/deduction';
 import { isPlaceholderText, playableSpeciesIds, type CluePool } from '@/clueGame/pool';
+import { isHandWrittenClue } from '@/clueGame/profiles';
 import { EXCLUSIVE_PREFIXES, REALM_TAGS, allTraits, buildSpeciesRecords, clueTags, prefixOf } from '@/clueGame/traits';
 
 export interface PoolReport {
@@ -41,6 +42,17 @@ export function validatePool(pool: CluePool): PoolReport {
     const body = text.replace(/^[A-Z][a-z ]+: /, '');
     const longer = body.length >= 20 && pool.facts.find(fact => fact.speciesId === speciesId && fact.text.length > body.length && fact.text.startsWith(body));
     if (longer) warnings.push(`${where}: looks cut off; species_facts (${longer.category}) has the full text`);
+  }
+
+  // Every line a player reads after a round (facts, hand-written clues) needs its page's citation.
+  const cited = [
+    ...pool.clues.filter(clue => isHandWrittenClue({ category: clue.category, text: clue.label, tags: clue.compareTags }))
+      .map(clue => ({ where: `clue ${clue.id} (${name(clue.speciesId)}, ${clue.category})`, url: clue.source?.url })),
+    ...pool.facts.map(fact => ({ where: `fact (${name(fact.speciesId)}, ${fact.category} ${fact.sortOrder})`, url: fact.source?.url })),
+  ];
+  for (const { where, url } of cited) {
+    if (!url) errors.push(`${where}: no source page`);
+    else if (!pool.citations[url]) errors.push(`${where}: no citation for ${url}`);
   }
 
   const orderKeys = new Set<string>();

@@ -119,6 +119,16 @@
       "category": "conservation",
       "text": "Zoos in Chile and Germany breed it as a backup population.",
       "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "When threatened, it rolls onto its back and plays dead.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "diet",
+      "text": "It sits still and waits for insects to come close.",
+      "source": "amphibiaweb"
     }
   ],
   "facts": [
@@ -138,13 +148,33 @@
       "source": "iucn"
     },
     {
+      "category": "key_fact",
+      "text": "The father feeds the tadpoles in his pouch with a thick liquid he makes.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "When they are done changing, the froglets come out through their father's mouth.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "In the cold months it shelters under logs and moss.",
       "source": "amphibiaweb"
     },
     {
+      "category": "behavior",
+      "text": "A scared frog near a stream may jump in and float on its back.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "life_description",
-      "text": "Females lay their eggs in damp leaf litter on the forest floor.",
+      "text": "Females lay their eggs in the leaf litter on the forest floor.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "life_description",
+      "text": "As many as 19 young have been found in one father's pouch.",
       "source": "amphibiaweb"
     },
     {

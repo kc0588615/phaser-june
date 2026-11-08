@@ -22,7 +22,8 @@ import {
   pickSuspectSet, reportOf, rewardToy, scoreRound, sharpEye, shownMismatches, starsFor, stillPossible, tileCells, trailAfter, trailFinished, travelOf, walkOff, walkers,
   type AnimalRound, type AnimalRules, type PhaseReport,
 } from '../src/clueGame/animalBoard';
-import type { AnimalProfile, ContentSource } from '../src/clueGame/profiles';
+import type { AnimalProfile } from '../src/clueGame/profiles';
+import { contentSources } from '../src/lib/contentCitations';
 import { PREFIX_CATEGORY, makeBook, poolFor, type Book } from '../src/clueGame/questionMatch';
 import { animalsFromProfiles } from '../src/clueGame/questionMatchContent';
 import type { ContinentKey } from '../src/clueGame/regions';
@@ -249,8 +250,7 @@ async function main() {
   const dir = path.join(process.cwd(), 'db/content');
   const profiles = readdirSync(path.join(dir, 'animals')).filter(file => file.endsWith('.json')).sort()
     .map(file => JSON.parse(readFileSync(path.join(dir, 'animals', file), 'utf8')) as AnimalProfile);
-  const registry = JSON.parse(readFileSync(path.join(dir, 'sources.json'), 'utf8')) as ContentSource[];
-  const animals = animalsFromProfiles(profiles, registry, () => undefined);
+  const animals = animalsFromProfiles(profiles, contentSources, () => undefined);
   const book = makeBook(animals);
   const name = (id: number) => book.byId.get(id)!.name;
 

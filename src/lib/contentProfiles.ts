@@ -4,7 +4,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { AnimalProfile } from '@/clueGame/profiles';
 
-export const CONTENT_DIR = path.join(process.cwd(), 'db/content');
+const CONTENT_DIR = path.join(process.cwd(), 'db/content');
 export const ANIMALS_DIR = path.join(CONTENT_DIR, 'animals');
 
 export async function readProfiles(): Promise<Array<{ file: string; profile: AnimalProfile }>> {

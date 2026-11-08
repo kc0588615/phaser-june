@@ -36,8 +36,8 @@
     },
     "size": {
       "value": "tiny",
-      "note": "It is about 5 to 6 cm long.",
-      "source": "wikipedia"
+      "note": "It grows to about 4.5 cm long.",
+      "source": "amphibiaweb"
     },
     "diet": {
       "value": "insects",
@@ -80,6 +80,19 @@
       "source": "adw"
     },
     {
+      "category": "morphology",
+      "text": "Its young are black with two gold stripes, which fade as they grow up.",
+      "tags": [
+        "striped_young"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes and the tips of its toes are black.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "It stays on the ground and hardly ever climbs.",
       "tags": [
@@ -111,7 +124,7 @@
     {
       "category": "geography",
       "text": "It lives only on the Pacific coast of Colombia.",
-      "source": "wikipedia"
+      "source": "amphibiaweb"
     },
     {
       "category": "conservation",
@@ -122,8 +135,8 @@
   "facts": [
     {
       "category": "key_fact",
-      "text": "It is thought to be the most poisonous animal on Earth. One wild frog has enough poison to be deadly to 10 to 20 people.",
-      "source": "wikipedia"
+      "text": "It is the most poisonous of all frogs. One frog may hold enough poison to kill about 10 people.",
+      "source": "amphibiaweb"
     },
     {
       "category": "key_fact",
@@ -136,9 +149,24 @@
       "source": "wikipedia"
     },
     {
+      "category": "key_fact",
+      "text": "Hunters rub their blowgun darts on the skin of a live frog to load them with poison.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its poison might one day help make a medicine for pain.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "Males sing to females with a long, musical trill.",
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "A father can carry up to nine tadpoles on his back at once.",
+      "source": "amphibiaweb"
     },
     {
       "category": "diet_prey",
@@ -149,11 +177,17 @@
       "category": "threat",
       "text": "Only one enemy is known: a small snake that can eat young frogs without being harmed.",
       "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Its tadpoles have no poison. It gets its poison only after it turns into a frog.",
+      "source": "amphibiaweb"
     }
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/55264/85887889",
     "adw": "https://animaldiversity.org/accounts/Phyllobates_terribilis/",
+    "amphibiaweb": "https://amphibiaweb.org/species/1707",
     "wikipedia": "https://en.wikipedia.org/wiki/Golden_poison_frog"
   },
   "range": {

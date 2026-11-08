@@ -33,6 +33,16 @@
       "value": "skin",
       "source": "iucn"
     },
+    "size": {
+      "value": "tiny",
+      "note": "It is only about 5 cm long.",
+      "source": "amphibiaweb"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It looks for animal dung at night and eats the beetles and moths there.",
+      "source": "amphibiaweb"
+    },
     "activity": {
       "value": "night",
       "note": "It is most active on foggy nights.",
@@ -44,6 +54,19 @@
     }
   },
   "clues": [
+    {
+      "category": "morphology",
+      "text": "Its feet are shaped like paddles, with thick, fleshy webbing that may help it grip loose sand.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are so short that it cannot hop. It walks instead.",
+      "source": "amphibiaweb"
+    },
     {
       "category": "behavior",
       "text": "When it is scared, it puffs up and lets out a loud squeak.",
@@ -108,13 +131,29 @@
       "source": "iucn"
     },
     {
+      "category": "key_fact",
+      "text": "Part of the skin on its belly is see-through.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its Afrikaans name, Melkpadda, means 'milk frog', for its pale back.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "threat",
       "text": "Building projects could affect a third of its range in South Africa and two thirds in Namibia within 20 years.",
       "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "You can find a buried one by the small cone of sand it leaves on top of the dune.",
+      "source": "amphibiaweb"
     }
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/3070/248906550",
+    "amphibiaweb": "https://amphibiaweb.org/species/2375",
     "news": "https://www.bbc.com/news/articles/cq819y09g2lo"
   },
   "range": {

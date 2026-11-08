@@ -37,7 +37,7 @@
     },
     "size": {
       "value": "tiny",
-      "note": "Its body is 9 to 10 cm long, big for a tree frog.",
+      "note": "Its body is 9 to 10 cm long.",
       "source": "amphibiaweb"
     },
     "diet": {
@@ -65,6 +65,11 @@
         "bright_green"
       ],
       "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "The webbing between its fingers and toes is jet black at the base and yellow near the edges.",
+      "source": "amphibiaweb"
     },
     {
       "category": "behavior",
@@ -113,9 +118,24 @@
       "source": "adw"
     },
     {
+      "category": "key_fact",
+      "text": "Young frogs start out bright red. They turn green and brown with white spots, then bright green as adults.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "It needs color pigments from its food to turn bright green. Without them it stays blue-green.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "It makes a long, low approach before landing, then grips the tree with sticky toe pads.",
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It can change color fast when it is stressed or when the light changes.",
+      "source": "amphibiaweb"
     },
     {
       "category": "life_description",

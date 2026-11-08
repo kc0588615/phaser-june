@@ -80,6 +80,19 @@
       "source": "adw"
     },
     {
+      "category": "morphology",
+      "text": "Its big tail is shaped like a paddle, flat from side to side.",
+      "tags": [
+        "paddle_tail"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult it has no gills on the outside, just one gill slit on each side of its head.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "It sees poorly. It senses movement in the water and smells its prey.",
       "tags": [
@@ -104,6 +117,11 @@
         "fully_aquatic"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Its skin is very slimy, and the slime puts off many predators.",
+      "source": "amphibiaweb"
     },
     {
       "category": "reproduction",
@@ -144,6 +162,11 @@
       "source": "wikipedia"
     },
     {
+      "category": "key_fact",
+      "text": "Many anglers think it is poisonous and cut their line rather than unhook one.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "It takes in about 90% of its oxygen through its skin, so it needs water rich in oxygen.",
       "source": "iucn"
@@ -154,19 +177,35 @@
       "source": "wikipedia"
     },
     {
+      "category": "behavior",
+      "text": "Other hellbenders often eat its eggs and young, so the father guards the nest against them.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "life_description",
       "text": "Eggs hatch after 45 to 80 days, and young hellbenders take 5 to 8 years to grow up.",
       "source": "adw"
     },
     {
+      "category": "life_description",
+      "text": "Several females may lay in the same nest: over 1,900 eggs have been found in one.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "threat",
       "text": "Dams stop the fast flow of the streams it lives in.",
       "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Traces of its DNA in the water show it is gone from over a third of the West Virginia sites where it once lived. Runoff from roads is a likely cause.",
+      "source": "amphibiaweb"
     }
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/59077/82473431",
     "adw": "https://animaldiversity.org/accounts/Cryptobranchus_alleganiensis/",
+    "amphibiaweb": "https://amphibiaweb.org/species/3861",
     "wikipedia": "https://en.wikipedia.org/wiki/Hellbender"
   },
   "range": {

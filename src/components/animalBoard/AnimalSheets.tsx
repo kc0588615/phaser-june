@@ -9,10 +9,11 @@ import { animate, AnimatePresence, motion, useIsPresent, useMotionValue, useRedu
 import { PENCIL_POINTS, sharpEye, type AnimalRound } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace, signsOf } from '@/clueGame/clueFaces';
-import type { PoolSpecies } from '@/clueGame/pool';
+import type { CluePool, PoolSpecies } from '@/clueGame/pool';
 import { prefixOf, type Animal } from '@/clueGame/questionMatch';
+import { FactsWithSources } from '@/components/clueGame/FactsWithSources';
 import { GlossaryText } from '@/components/clueGame/GlossaryText';
-import { WithBlanks } from '@/components/clueGame/LogEntryText';
+import { WithBlanks } from '@/components/clueGame/WithBlanks';
 import { Sheet } from '@/components/clueGame/Sheet';
 import { PhotoCredit } from '@/components/clueGame/SpeciesPortrait';
 import { useEscapeKey } from '@/components/clueGame/useEscapeKey';
@@ -503,8 +504,10 @@ export function roundEndAnnouncement(session: AnimalSession, animal: Animal): st
 /** A grid-key swatch: a cell of the replay grid, small, with the answered cells' edge. */
 const SWATCH = 'h-5 w-7 shrink-0 rounded-xs shadow-[inset_0_0_0_1px_var(--control-edge)]';
 
-export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }: {
+export function RoundEndSheet({ session, animal, species, citations, box, nameOf, onNext }: {
   session: AnimalSession; animal: Animal; species: PoolSpecies | undefined;
+  /** The pool's citations by page URL, for the field notes' Sources. */
+  citations: CluePool['citations'];
   /** The board's box (px, viewport): the card covers the board only, so the grid (above, or beside on desktop) shows the replay (plan 052). */
   box: { top: number; left: number; width: number };
   nameOf: (id: number) => string; onNext: () => void;
@@ -632,14 +635,11 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
               <h3 id="end-notes" className={`${LABEL} mb-xs flex items-center gap-xs tracking-[0.04em]`}>
                 Field notes <span className="rounded-full bg-color-1-transparent px-xs font-data normal-case text-neutral-10">{notes.length}</span>
               </h3>
-              <ul className="m-0 flex list-none flex-col gap-s p-0">
-                {notes.map((note, index) => (
-                  <li key={index} className="flex gap-s text-m text-neutral-8">
-                    <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-6" aria-hidden="true" />
-                    <span>{note.full ?? note.text}</span>
-                  </li>
-                ))}
-              </ul>
+              <FactsWithSources
+                facts={notes.map((note, index) => ({ key: index, text: note.full ?? note.text, source: note.source }))}
+                citations={citations}
+                className="flex list-disc flex-col gap-s pl-m text-m text-neutral-8 marker:text-neutral-6"
+              />
             </section>
           )}
         </div>

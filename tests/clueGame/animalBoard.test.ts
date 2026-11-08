@@ -47,9 +47,9 @@ test('every set has a deck with a full table that tells all five apart, and no i
       for (const clue of deck) for (const suspect of set) assert.ok(book.traits.get(suspect)!.get(clue.tag.split(':')[0]), `${suspect} has a record for ${clue.tag}`);
     }
   }
-  // No question tells these two frogs apart, so they never share a set.
-  const frogs = ['Dyeing Poison Dart Frog', 'Golden Poison Frog'].map(id);
-  for (const place of PLACES) for (const set of sets(place)) assert.ok(!frogs.every(frog => set.includes(frog)));
+  // No question tells these two apart, so they never share a set. (The poison frogs were the other such pair until 9 got `young: few`.)
+  const pair = ['Saola', 'Sumatran Orangutan'].map(id);
+  for (const place of PLACES) for (const set of sets(place)) assert.ok(!pair.every(animal => set.includes(animal)));
 });
 
 test('the deck, notes aside, is the same whichever suspect is the mystery', () => {

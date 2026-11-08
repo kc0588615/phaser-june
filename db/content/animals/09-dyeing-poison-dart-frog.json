@@ -58,6 +58,11 @@
       "value": "eggs",
       "source": "iucn"
     },
+    "young": {
+      "value": "few",
+      "note": "A clutch has only 2 to 6 eggs.",
+      "source": "amphibiaweb"
+    },
     "lifespan": {
       "value": "medium",
       "note": "It lives 4 to 6 years in the wild and up to 12 in zoos.",
@@ -72,6 +77,16 @@
         "warning_colors"
       ],
       "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its arms and legs are a deep blue-black.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Males have bigger finger pads than females.",
+      "source": "amphibiaweb"
     },
     {
       "category": "behavior",
@@ -98,6 +113,11 @@
       "source": "iucn"
     },
     {
+      "category": "reproduction",
+      "text": "In courtship the female strokes the male's snout and back, then he leads her to a spot to lay eggs.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "conservation",
       "text": "Main threats: illegal collecting for the pet trade, farming and logging.",
       "source": "iucn"
@@ -106,6 +126,11 @@
       "category": "conservation",
       "text": "It breeds easily in zoos, and zoos all over the world keep it.",
       "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It needs cool, rocky streams in wet forest, and hides under rocks and moss nearby.",
+      "source": "amphibiaweb"
     }
   ],
   "facts": [
@@ -125,9 +150,29 @@
       "source": "iucn"
     },
     {
+      "category": "key_fact",
+      "text": "Up close its colors warn predators, but from far away the pattern blends into the leaf litter.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "A blue form was once named as a separate species, until DNA showed it is the same species.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "Its tadpoles eat eggs that their mother lays just to feed them.",
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Its tadpoles often eat each other.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "Tracked by radio, fathers carried their tadpoles farther, and to more pools, than expected.",
+      "source": "amphibiaweb"
     },
     {
       "category": "life_description",
@@ -137,7 +182,8 @@
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/55204/61395760",
-    "adw": "https://animaldiversity.org/accounts/Dendrobates_tinctorius/"
+    "adw": "https://animaldiversity.org/accounts/Dendrobates_tinctorius/",
+    "amphibiaweb": "https://amphibiaweb.org/species/1646"
   },
   "range": {
     "realms": [

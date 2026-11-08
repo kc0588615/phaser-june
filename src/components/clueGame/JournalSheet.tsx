@@ -5,6 +5,7 @@ import type { Journal, Records } from '@/clueGame/journal';
 import { keyFacts, playableSpeciesIds, type CluePool } from '@/clueGame/pool';
 import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
 import { LARGE, backdropMotion, drawerSideMotion, useOverlayPresence } from '@/lib/motion';
+import { FactsWithSources } from './FactsWithSources';
 import { GlossaryText } from './GlossaryText';
 import { RangeMap } from './RangeMap';
 import { PhotoCredit, SpeciesPortrait } from './SpeciesPortrait';
@@ -66,9 +67,13 @@ export function JournalSheet({ pool, journal, records, onClose }: { pool: CluePo
                   )}
                 </p>
                 <div className="mt-xs"><RangeMap speciesId={species.id} name={species.commonName} caption={false} /></div>
-                <ul className="m-0 mt-xs list-disc pl-m text-xs text-neutral-8">
-                  {(pool ? keyFacts(pool, species.id).slice(0, LEARNED_FACTS) : []).map(fact => <li key={fact}><GlossaryText text={fact} /></li>)}
-                </ul>
+                {pool && (
+                  <FactsWithSources
+                    facts={keyFacts(pool, species.id).slice(0, LEARNED_FACTS).map(fact => ({ key: fact.text, text: <GlossaryText text={fact.text} />, source: fact.source }))}
+                    citations={pool.citations}
+                    className="mt-xs list-disc pl-m text-xs text-neutral-8 marker:text-neutral-6"
+                  />
+                )}
                 {species.photo && <p className="m-0 mt-xxs text-xxs"><PhotoCredit photo={species.photo} /></p>}
               </li>
             );

@@ -82,6 +82,19 @@
       "source": "adw"
     },
     {
+      "category": "morphology",
+      "text": "Its nostrils sit at the ends of two thin tubes on its snout.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its front legs are short and weak, with long thin fingers. Its back legs are long and strong, with webbed feet.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "It almost never leaves the water, resting on the bottom of murky ponds.",
       "tags": [
@@ -104,19 +117,24 @@
         "mother_carries_young",
         "no_tadpoles"
       ],
-      "source": "government"
+      "source": "amphibiaweb"
     },
     {
       "category": "conservation",
       "text": "No major threats: it is widespread, with plenty of rainforest left.",
       "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in slow rivers and canals with muddy bottoms.",
+      "source": "amphibiaweb"
     }
   ],
   "facts": [
     {
       "category": "key_fact",
       "text": "Its babies climb out of little pockets in their mother's back after 3 to 4 months.",
-      "source": "government"
+      "source": "amphibiaweb"
     },
     {
       "category": "key_fact",
@@ -124,19 +142,35 @@
       "source": "adw"
     },
     {
+      "category": "key_fact",
+      "text": "Its babies are only about 2 cm long when they leave their mother's back.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "It swims up to the surface for air about every half hour.",
       "source": "adw"
     },
     {
+      "category": "behavior",
+      "text": "It finds food by touch, with the stars on its fingertips, then lunges at it.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "life_description",
       "text": "While mating, the pair flip and loop through the water as the eggs roll onto the female's back.",
       "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "The male presses the eggs onto the female's back, and her skin grows over them.",
+      "source": "amphibiaweb"
     }
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/58163/85900348",
     "adw": "https://animaldiversity.org/accounts/Pipa_pipa/",
+    "amphibiaweb": "https://amphibiaweb.org/species/5234",
     "government": "https://nas.er.usgs.gov/queries/FactSheet.aspx?speciesID=2728"
   },
   "range": {

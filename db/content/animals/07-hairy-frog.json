@@ -36,7 +36,7 @@
   "traits": {
     "covering": {
       "value": "skin",
-      "source": "wikipedia"
+      "source": "amphibiaweb"
     },
     "diet": {
       "value": "insects",
@@ -45,7 +45,7 @@
     },
     "birth": {
       "value": "eggs",
-      "source": "wikipedia"
+      "source": "amphibiaweb"
     }
   },
   "clues": [
@@ -55,12 +55,17 @@
       "tags": [
         "hair_like_frills"
       ],
-      "source": "wikipedia"
+      "source": "amphibiaweb"
     },
     {
       "category": "morphology",
       "text": "Males grow to about 13 cm long, bigger than females.",
-      "source": "wikipedia"
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its sides and legs are black, and its belly is white.",
+      "source": "amphibiaweb"
     },
     {
       "category": "behavior",
@@ -68,7 +73,12 @@
       "tags": [
         "bone_claws"
       ],
-      "source": "wikipedia"
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "In the breeding season, males stay mostly in the water, while females live in the leaf litter on the forest floor.",
+      "source": "amphibiaweb"
     },
     {
       "category": "habitat",
@@ -84,7 +94,7 @@
       "tags": [
         "egg_guarding"
       ],
-      "source": "wikipedia"
+      "source": "amphibiaweb"
     },
     {
       "category": "conservation",
@@ -104,6 +114,11 @@
       "source": "wikipedia"
     },
     {
+      "category": "key_fact",
+      "text": "It may be the only frog whose males and females have different lungs.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "life_description",
       "text": "Its tadpoles are hunters, with several rows of tiny horny teeth.",
       "source": "wikipedia"
@@ -117,10 +132,16 @@
       "category": "threat",
       "text": "Traders in Cameroon collect some for the pet trade in the USA and Japan.",
       "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "No one has ever reported hearing its mating call.",
+      "source": "amphibiaweb"
     }
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/54443/18361006",
+    "amphibiaweb": "https://amphibiaweb.org/species/1506",
     "wikipedia": "https://en.wikipedia.org/wiki/Hairy_frog"
   },
   "range": {

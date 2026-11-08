@@ -18,7 +18,7 @@ import { EventBus, type BoardKey } from '@/game/EventBus';
 import { reducedMotion } from '@/game/motion';
 import { isSoundOn, setSoundOn, sfx, wakeOnFirstGesture } from '@/game/sfx';
 import { JournalSheet } from '@/components/clueGame/JournalSheet';
-import { WithBlanks } from '@/components/clueGame/LogEntryText';
+import { WithBlanks } from '@/components/clueGame/WithBlanks';
 import { PhaserGame } from '@/components/clueGame/PhaserGame';
 import { useJournal } from '@/components/clueGame/useJournal';
 import { ANIMAL_HOW_TO_KEY, AnimalHowToPlay, GameMenu, NotesList, NotesSheet, OutOfMovesSheet, RoundEndSheet, roundEndAnnouncement, SuspectSheet } from './AnimalSheets';
@@ -212,7 +212,8 @@ export function AnimalGame() {
   const [reveal, setReveal] = useState(NO_REVEAL);
   useEffect(() => {
     if (reveal.size === 0) return;
-    const timer = window.setTimeout(() => setReveal(NO_REVEAL), REVEAL_MS);
+    // Clear only the set this timer was armed for: a stale timer can fire after a newer move's add has queued.
+    const timer = window.setTimeout(() => setReveal(current => (current === reveal ? NO_REVEAL : current)), REVEAL_MS);
     return () => window.clearTimeout(timer);
   }, [reveal]);
   // The field guide's and round end's drawers reach up to the board's top edge (the grid above stays visible).
@@ -499,9 +500,10 @@ export function AnimalGame() {
           <p className="sr-only" aria-live="polite">{boardStatus}</p>
         </section>
 
-        <StatusTicker key={roundNo ?? 0} keys={boardFocus} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={facts} idle={round ? `Which of these ${round.suspects.length} was caught on camera? Match gems to find out.` : ''} />
+        <StatusTicker key={reviewing ? `end-${roundNo}` : roundNo ?? 0} keys={boardFocus} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={reviewing ? [] : facts} idle={round ? `Which of these ${round.suspects.length} was caught on camera? Match gems to find out.` : ''} />
 
-        {wide && round && (
+        {/* During review the card is where facts are read (with sources); these are only blanked copies of its notes. */}
+        {wide && round && !reviewing && (
           <section ref={sideNotes} aria-labelledby="side-notes" className="min-h-0 overflow-y-auto overscroll-contain px-m pb-m pt-xs [grid-area:side]">
             <h2 id="side-notes" className="m-0 mb-xs text-xs font-medium uppercase text-neutral-7">📓 Witness notes</h2>
             <NotesList round={round} />
@@ -528,8 +530,8 @@ export function AnimalGame() {
           />
         )}
         {round?.status === 'out-of-moves' && <OutOfMovesSheet key="out-of-moves" round={round} nameOf={nameOf} onName={name} />}
-        {session && mystery && reviewing && (
-          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} box={boardBox} nameOf={nameOf} onNext={() => { nextRound(); board.current?.focus({ preventScroll: true }); }} />
+        {session && pool && mystery && reviewing && (
+          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} citations={pool.citations} box={boardBox} nameOf={nameOf} onNext={() => { nextRound(); board.current?.focus({ preventScroll: true }); }} />
         )}
         {helpOpen && <AnimalHowToPlay key="help" rules={rules} seed={seed} onClose={closeHelp} />}
         {journalOpen && <JournalSheet key="journal" pool={pool} journal={journal} records={records} onClose={() => setJournalOpen(false)} />}

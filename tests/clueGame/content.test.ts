@@ -2,12 +2,13 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { validatePool } from '@/clueGame/validatePool';
-import { checkProfile } from '@/clueGame/profiles';
-import { contentPool as pool, profiles, sources } from './contentPool';
+import { checkCitations, checkProfile } from '@/clueGame/profiles';
+import { citedPages, contentPool as pool, profiles, sources } from './contentPool';
 
 describe('Content', () => {
   test('every profile is complete and the pool validates with no errors or warnings', () => {
     assert.deepEqual(profiles.flatMap(profile => checkProfile(profile, sources).map(problem => `${profile.commonName}: ${problem}`)), []);
+    assert.deepEqual(profiles.flatMap(profile => checkCitations(profile, sources, citedPages).errors.map(problem => `${profile.commonName}: ${problem}`)), []);
     const report = validatePool(pool);
     assert.deepEqual(report.errors, []);
     assert.deepEqual(report.warnings, []);

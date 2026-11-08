@@ -79,6 +79,11 @@
       "source": "adw"
     },
     {
+      "category": "morphology",
+      "text": "Its belly and the undersides of its legs are yellowish orange.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "habitat",
       "text": "It needs big, clean, fast-flowing rivers deep in the rainforest.",
       "tags": [
@@ -103,6 +108,11 @@
       "source": "adw"
     },
     {
+      "category": "behavior",
+      "text": "To escape, it can skitter across the water in up to seven short leaps.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "conservation",
       "text": "Main threat: hunting for food. Its numbers fell by more than 70% in 15 years.",
       "source": "iucn"
@@ -111,6 +121,14 @@
       "category": "conservation",
       "text": "Some were shipped to the USA for zoos, pets and even frog-jumping races.",
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "Adults clear out pools by the river, or dig hollows in the gravel bank, to lay their eggs in, and guard the nests at night.",
+      "tags": [
+        "egg_guarding"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [
@@ -125,9 +143,24 @@
       "source": "adw"
     },
     {
+      "category": "key_fact",
+      "text": "Building its nests means moving large, heavy objects, which may be why it grew so big.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "For such a big frog, its mating call is high-pitched, and it can last up to a minute and a half.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "behavior",
       "text": "Young goliath frogs spend most of their time underwater.",
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "On land it tires after five or six leaps, which makes it easy for people to catch.",
+      "source": "amphibiaweb"
     },
     {
       "category": "life_description",
@@ -138,11 +171,17 @@
       "category": "threat",
       "text": "New roads to plantations make its rivers easier for hunters to reach.",
       "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Hunters prefer the biggest frogs, usually females. Far from towns, goliath frogs are more common and grow bigger.",
+      "source": "amphibiaweb"
     }
   ],
   "sources": {
     "iucn": "https://www.iucnredlist.org/species/5263/96062132",
-    "adw": "https://animaldiversity.org/accounts/Conraua_goliath/"
+    "adw": "https://animaldiversity.org/accounts/Conraua_goliath/",
+    "amphibiaweb": "https://amphibiaweb.org/species/4691"
   },
   "range": {
     "realms": [

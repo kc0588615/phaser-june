@@ -5,6 +5,7 @@
 // become template clues every animal gets, so decoys can share them and the
 // answer shows itself slowly. Pure; scripts/content.ts loads the rows.
 import type { SpeciesClueCategory } from '@/clueGame/categories';
+import { renderCitation, type CitationSource, type CitedPage } from '@/clueGame/citations';
 import type { ContentRows } from '@/clueGame/pool';
 import { FAMILY_NAMES, ORDER_NAMES } from '@/clueGame/speciesInfo';
 import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, prefixOf } from '@/clueGame/traits';
@@ -61,7 +62,8 @@ export interface AnimalProfile {
   photo?: { url: string; credit: string; license: string; page: string } | null;
 }
 
-export interface ContentSource { id: number; key: string; tier: 1 | 2 | 3 | 4; name: string; url: string; notes: string }
+/** A row of db/content/sources.json. `citeAs` and `license` feed citations (`@/clueGame/citations`); they aren't DB columns. */
+export interface ContentSource { id: number; key: string; tier: 1 | 2 | 3 | 4; name: string; url: string; notes: string; citeAs?: string; license?: string }
 
 const CLASS_TEXT: Record<string, string> = {
   amphibia: "It's an amphibian (class Amphibia).",
@@ -301,13 +303,18 @@ const TRAIT_VALUES: Record<keyof AnimalProfile['traits'], readonly string[]> = {
 const CLUE_CATEGORIES = ['habitat', 'morphology', 'diet', 'behavior', 'reproduction', 'taxonomy', 'key_fact', 'geography', 'conservation'];
 const FACT_CATEGORIES = ['key_fact', 'behavior', 'diet_prey', 'diet_flora', 'life_description', 'threat'];
 
+/** The page a profile's item cites: its own `url`, else the profile's page for that source. Rows key citations on it. */
+export function pageUrl(profile: Pick<AnimalProfile, 'sources'>, key: string, url?: string): string | null {
+  return url ?? profile.sources?.[key] ?? null;
+}
+
 /** What's missing or wrong in a profile; empty when it can be built. */
 export function checkProfile(profile: AnimalProfile, sources: readonly Pick<ContentSource, 'key'>[]): string[] {
   const problems: string[] = [];
   const known = new Set(sources.map(source => source.key));
   const cite = (where: string, key: string | undefined, url?: string) => {
     if (!key || !known.has(key)) problems.push(`${where}: unknown source "${key}"`);
-    else if (key !== 'iucn_range' && !url && !profile.sources?.[key]) problems.push(`${where}: no ${key} page in "sources"`);
+    else if (key !== 'iucn_range' && !pageUrl(profile, key, url)) problems.push(`${where}: no ${key} page in "sources"`);
   };
   if (!profile.commonName || !profile.scientificName || !Number.isInteger(profile.id) || !Number.isInteger(profile.iucnId)) problems.push('id, names and iucnId are required');
   for (const rank of ['class', 'order', 'family', 'genus'] as const) if (!profile.taxonomy?.[rank]) problems.push(`taxonomy.${rank} is missing`);
@@ -341,6 +348,33 @@ export function checkProfile(profile: AnimalProfile, sources: readonly Pick<Cont
   return problems;
 }
 
+/**
+ * Citation problems in a profile's clue and fact pages (db/content/citations.json). Errors: a page with no
+ * entry, a full-citation source (`FULL_CITATION_KEYS`) missing a field, or bad data. Warnings: any other source
+ * missing a field, which shows the `{name}. Accessed {accessed}.` fallback. Traits show only in the field guide
+ * during play, so they aren't checked; neither is iucn_range. Unknown sources and missing pages are checkProfile's.
+ */
+export function checkCitations(profile: AnimalProfile, registry: readonly CitationSource[], pages: Readonly<Record<string, CitedPage>>): { errors: string[]; warnings: string[] } {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const byKey = new Map(registry.map(source => [source.key, source]));
+  const items = [...(profile.clues ?? []).map((clue, i) => [`clues[${i}]`, clue] as const), ...(profile.facts ?? []).map((fact, i) => [`facts[${i}]`, fact] as const)];
+  for (const [where, { source: key, url: override }] of items) {
+    const source = byKey.get(key);
+    const url = pageUrl(profile, key, override);
+    if (!source || !url || key === 'iucn_range') continue;
+    try {
+      const { citation, missing } = renderCitation(source, url, pages[url]);
+      if (!pages[url]) errors.push(`${where}: no citations.json entry for ${url}`);
+      else if (!citation) errors.push(`${where}: no full ${key} citation for ${url} (missing ${missing.join(', ')})`);
+      else if (missing.length) warnings.push(`${where}: ${key} page ${url} has no ${missing.join(', ')} line yet; shows the fallback`);
+    } catch (error) {
+      errors.push(`${where}: ${(error as Error).message}`);
+    }
+  }
+  return { errors, warnings };
+}
+
 /** Database rows for every profile, with stable ids (species id x 100 + position). */
 export function contentRowsFromProfiles(profiles: readonly AnimalProfile[]) {
   const species = profiles.map(profile => ({
@@ -367,7 +401,7 @@ export function contentRowsFromProfiles(profiles: readonly AnimalProfile[]) {
       return {
         id: profile.id * 100 + index + 1, species_id: profile.id, category: draft.category, label: draft.text,
         compare_tags: draft.tags, reveal_order: revealOrder, is_filtering: draft.tags.length > 0,
-        source_key: draft.source, source_url: draft.url ?? profile.sources[draft.source] ?? null,
+        source_key: draft.source, source_url: pageUrl(profile, draft.source, draft.url),
       };
     });
   });
@@ -378,7 +412,7 @@ export function contentRowsFromProfiles(profiles: readonly AnimalProfile[]) {
       order.set(fact.category, sortOrder);
       return {
         id: profile.id * 100 + index + 1, species_id: profile.id, category: fact.category, fact_text: fact.text,
-        sort_order: sortOrder, source_key: fact.source, source_url: fact.url ?? profile.sources[fact.source] ?? null,
+        sort_order: sortOrder, source_key: fact.source, source_url: pageUrl(profile, fact.source, fact.url),
       };
     });
   });

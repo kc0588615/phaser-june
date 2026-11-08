@@ -35,11 +35,16 @@
     "diet": {
       "value": "insects",
       "note": "Mostly termites, which it catches underground.",
-      "source": "wikipedia"
+      "source": "amphibiaweb"
     },
     "birth": {
       "value": "eggs",
       "source": "literature"
+    },
+    "young": {
+      "value": "many",
+      "note": "One pair laid about 3,600 eggs in one night.",
+      "source": "amphibiaweb"
     }
   },
   "clues": [
@@ -59,6 +64,16 @@
         "purple_gray"
       ],
       "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout ends in a small white knob.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Each back foot has a big, white, shovel-like bump that it uses for digging.",
+      "source": "amphibiaweb"
     },
     {
       "category": "behavior",
@@ -86,6 +101,11 @@
       "source": "literature"
     },
     {
+      "category": "reproduction",
+      "text": "The male is much smaller than the female. She carries him on her back to the spot where she lays her eggs.",
+      "source": "amphibiaweb"
+    },
+    {
       "category": "conservation",
       "text": "Main threats: granite quarries, new roads, landslides, and farms clearing its forest.",
       "source": "iucn"
@@ -100,8 +120,18 @@
     },
     {
       "category": "key_fact",
-      "text": "Scientists only described it in 2003, even though its tadpoles were first found in 1917.",
-      "source": "wikipedia"
+      "text": "Scientists only described it in 2003, though its tadpoles had been described in 1918, with no adults to go with them.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its family line may go back 130 to 180 million years, to the age of dinosaurs.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its genus name, Nasikabatrachus, means 'nose frog'.",
+      "source": "amphibiaweb"
     },
     {
       "category": "life_description",
@@ -112,6 +142,16 @@
       "category": "behavior",
       "text": "Its call is said to sound like a clucking chicken.",
       "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "Its tadpoles leave the water at night, wriggling onto wet rock to feed.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "threat",
+      "text": "People catch and eat thousands of its tadpoles each year.",
+      "source": "amphibiaweb"
     }
   ],
   "sources": {

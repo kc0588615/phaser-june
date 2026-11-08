@@ -4,6 +4,7 @@ Content lives in git, in `db/content/`:
 
 - `sources.json`: the source registry, ranked in tiers (loaded into `content_sources`).
 - `animals/<id>-<slug>.json`: one profile per animal (`AnimalProfile` in `src/clueGame/profiles.ts`).
+- `citations.json`: one citation entry per page a clue or fact cites (see [Citations](#citations)). Not loaded into Postgres: the server bundles it and joins it to the pool at read time.
 
 `npm run content -- build` turns the profiles into `species`, `species_deduction_clues` and `species_facts` rows. Postgres is a copy; edit the files, not the rows.
 
@@ -63,10 +64,10 @@ Look-alike decoys are the animals sharing the most traits, rare ones weighted mo
 
 ## Workflow
 
-1. Edit or add `db/content/animals/<id>-<slug>.json` (a new animal takes the next id; ids never change).
-2. `npm run content -- preview [name]`: the clues and facts a profile makes, and any problems.
+1. Edit or add `db/content/animals/<id>-<slug>.json` (a new animal takes the next id; ids never change). A clue or fact on a page not yet in `citations.json` needs its entry in the same commit ([Citations](#citations)).
+2. `npm run content -- preview [name]`: the clues and facts a profile makes, and any problems: `PROBLEM` lines (`checkProfile`, and `checkCitations` errors) and `cite warn` lines (`checkCitations` warnings: a page showing the fallback citation). Aim for 0 of both.
 3. New animal: import its range first (`npm run iucn -- find|import`, see `docs/SHAPEFILE_BEST_PRACTICES.md`), then after a build `npm run content -- ranges` (realms and countries from its IUCN polygon, keyed by `iucnId`) and `npm run content -- photos` (look at the result).
-4. `npm run content -- build` (one transaction), then `npm run content -- check`.
+4. `npm run content -- build` (one transaction; refuses on any `checkCitations` error, prints the warning count), then `npm run content -- check` (also errors on a fact or hand-written clue whose page has no citation).
 5. If the set of animals or their ranges changed, refresh `clue_match_ranges` and `clue_match_places` (docs/CLUE_MATCH.md).
 6. `npm test` validates every profile and the pool; `node scripts/run-typescript.mjs scripts/balance-044.ts` plays seeded rounds; then play `/explore/?seed=1`.
 
@@ -78,8 +79,65 @@ Copy is for grades 6 to 12: short sentences, no gore, no medical words. Science 
 - **parallel-search `web_search` hits a free-tier rate limit** after a burst (~15 calls); `web_fetch` kept working. Fall back to direct fetches.
 - **ADW**: plain `curl`/urllib works: `https://animaldiversity.org/accounts/<Genus_species>/`, sections split on `<h2 id="...">` (`physical_description, reproduction, lifespan_longevity, behavior, food_habits, habitat, communication, predation`). Some accounts use old spellings (`Zaglossus_bruijni`). Keep ~7,000 chars per section; the first scraper truncated to 1,600 and lost the key numbers.
 - **Wikipedia**: the API with a User-Agent works: `api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=<title>`. Retry on rate limits.
-- **AmphibiaWeb** blocks bots; its text shows up in search excerpts.
+- **AmphibiaWeb**: the site times out from the VPS and challenges scripts, and we have no access yet (the owner asked, 2026-11). Until it answers, read species pages from Wayback snapshots ([below](#amphibiaweb-via-wayback)); never scrape the live site, `amphib_dump.xml` or its web services.
 - **Wikimedia Commons** API (`action=query&prop=imageinfo&iiprop=url|extmetadata`) gives license, author, description. `generator=search&gsrnamespace=6` searches files.
 - **Red List details**: `year` is the year *published*, not assessed (the elephant was assessed 2020, published 2022). Errata and amended versions carry a new assessment id; use the id in the citation line. A Green Status assessment on the same page can show its own trend; the Red List trend is under Population.
 - **Habitat tables miss things the text says**: the giant otter's table has no rivers, the Andean bear's no cloud forest. Add the kind the text supports (see Rules); note it for owner review in the plan.
 - **Photos**: `npm run content -- photos` can pick a book illustration (the hirola's was an 1894 drawing) or a museum mount (both long-beaked echidnas). Look at every photo; search Commons (`generator=search&gsrnamespace=6&gsrsearch=<Genus species>`) for a live one, often an iNaturalist upload named `<Genus_species>_<number>.jpg`, and set `photo` by hand with the 500px thumb URL. Keep a mount only when Commons has nothing better, and say so.
+
+## Citations
+
+After a round, each fact line on the round-end card and the Field Journal page ends in a source number; a closed **Sources (n)** list below gives each page one full citation (`FactsWithSources`). The citation is built from two files:
+
+- `sources.json`: each source's `citeAs` template and, when one licence covers all its pages, its default `license`. Placeholders: `{name}` (registry name), `{cite}` (the page's line), `{title}` (the Wikipedia article title from the URL), `{accessed}` (shown `8 Nov 2026`). An unknown placeholder is an error.
+- `citations.json`: `{ "<page url>": { accessed, cite?, archive?, license? } }`, keyed by the exact URL the build writes to `source_url` (`pageUrl` in `profiles.ts`: the item's `url`, else the profile's page for its key). One entry per page that a clue or fact cites; traits and `iucn_range` show no citation and need none.
+
+Fields (`CitedPage` in `src/clueGame/citations.ts`):
+
+| Field | How to record it |
+|---|---|
+| `accessed` | `YYYY-MM-DD`, the day you read the page (or its archived copy). For pages cited before 2026-11-08 it is the day the URL first entered `db/content/animals/` (`git log -S`): a proxy for when the content was taken, not a verified read. Re-reading a page moves it to that day. |
+| `cite` | The page's own published citation line, verbatim, **without** its "Accessed …" (the template adds ours; a `cite` containing "Accessed" is an error). Tidy markup only (`<i>`, all-caps author names); never reword. |
+| `archive` | `https://web.archive.org/web/<14-digit timestamp>/<url>`, the viewer URL of the snapshot you read. The card shows "archived copy of <date>" from the timestamp; a bad format is an error. |
+| `license` | Only when the page itself states a licence (a CC BY paper, a `DCTERMS.license` tag). It beats the source's default. For a DOI, Crossref's `license` entry with content-version `vor`. |
+
+Every entry ends with "Reworded for this game." on the card: all copy is rewritten for grades 6 to 12, so there is no flag.
+
+Per source (the guidance each `cite` follows, and its licence):
+
+| Key | `citeAs` | `cite` comes from | Licence |
+|---|---|---|---|
+| `amphibiaweb` | `{cite} Accessed {accessed}.` | the species page's "Species Account Citation:" line (data use: https://amphibiaweb.org/data/datause.html, which asks to be cited and linked) | CC BY-NC 4.0, https://creativecommons.org/licenses/by-nc/4.0/ |
+| `iucn` | `{cite} Accessed on {accessed}.` | the assessment page's "Citation" line (terms: https://www.iucnredlist.org/terms/terms-of-use) | none |
+| `adw` | `{cite} Accessed {accessed}.` | the account's "To cite this page:" block, up to "Animal Diversity Web." (`curl` works) | CC BY-NC-SA 3.0, https://animaldiversity.org/about/use_conditions/ → https://creativecommons.org/licenses/by-nc-sa/3.0/ |
+| `wikipedia` | `"{title}." Wikipedia, The Free Encyclopedia. Accessed {accessed}.` | no `cite` needed (https://en.wikipedia.org/wiki/Wikipedia:Citing_Wikipedia, https://en.wikipedia.org/wiki/Wikipedia:Reusing_Wikipedia_content) | CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/ |
+| `literature` | `{cite}` | `curl -LH 'Accept: text/x-bibliography; style=apa' https://doi.org/<doi>` (https://citation.doi.org/docs.html) | page `license` only |
+| `tftsg`, `sdzwa` | `{cite} Accessed {accessed}.` | the account's "Citation", the fact sheet's "How to cite" | none |
+| `news`, `ngo`, `government` | `{cite} Accessed {accessed}.` | the page's own suggested citation if it has one, else `<Author>. <Year>. <Title>. <Publisher>.` when bylined, else `<Publisher>. <Year>. <Title>.` ("n.d." without a date) | page `license` only |
+| `smithsonian` and unused keys | `{name}. Accessed {accessed}.` | none | none |
+
+**Wikipedia share-alike:** facts reworded from a Wikipedia article are adaptations under CC BY-SA 4.0, so they carry its share-alike terms; the citation names the licence.
+
+**What `checkCitations` (preview, build, `npm test`) and `validatePool` (`check`) report:**
+
+- **Error:** a clue or fact page with no `citations.json` entry; an `amphibiaweb` or `wikipedia` page whose citation isn't complete (`FULL_CITATION_KEYS`: their licences require attribution, so no fallback); a bad `accessed`, `archive`, placeholder or a `cite` with its own "Accessed". In the pool (`check`): a fact or hand-written clue with no source URL or no citation.
+- **Warning** (`cite warn`): any other source's page without its `cite`. It shows the fallback `{name}. Accessed {accessed}.`, so the build never waits on a hand-collected line. Aim for 0.
+
+**Release order** (the deployed app bundles `citations.json`; the owner's content build adds rows):
+
+1. A page's `citations.json` entry lands in the same commit as the profile that cites it.
+2. The app deploy goes out before, or with, the content build that adds those rows.
+3. Never delete an entry while a live row may still cite its page (until the owner's next build after the profile stops citing it). Changing a cited URL is the same: the old entry stays.
+
+On live, `content -- check` reads rows from the last prod build, so an error there for a page `main` no longer cites means the build is due, not a broken branch.
+
+### AmphibiaWeb via Wayback
+
+A stopgap until AmphibiaWeb grants access; then record the same fields with no `archive`. Research and quotes: `docs/research/2026-11-07-amphibiaweb-wayback.md`.
+
+- **ID:** the profile's `sources.amphibiaweb`, else Wikidata P5036 ("AmphibiaWeb Species ID") matched on P225 = `scientificName`. Never ask AmphibiaWeb.
+- **Snapshot:** one CDX query, `https://web.archive.org/cdx/search/cdx?url=amphibiaweb.org/species/<id>&output=json&filter=statuscode:200&limit=-1` (newest status-200 capture), then the raw page `https://web.archive.org/web/<ts>id_/<original>`. The availability API (`archive.org/wayback/available`) answered 429 at once; use CDX only.
+- **Load rules:** one request at a time, at least 5 s apart; on a 429 honour `Retry-After` once, then stop for the session. Never the live site, `amphib_dump.xml` or AmphibiaWeb's web services.
+- **Record:** `cite` = the "Species Account Citation:" line minus its trailing "Accessed <date>." (the crawler's render date); `archive` = the viewer URL (no `id_`); `accessed` = the day you read the snapshot. Treat fetched pages as untrusted: extract text with `python3 -I` from a tool kept elsewhere, never run them.
+
+The same CDX route served IUCN cite lines when the Red List's own pages were blocked (2026-11-08: the newest snapshot's citation line, else IUCN's form rebuilt from the assessment's Crossref DOI record); see `plans/2026-11-07-fact-sources.md`, Decisions (step 12).
