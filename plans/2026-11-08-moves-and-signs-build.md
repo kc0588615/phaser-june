@@ -609,6 +609,6 @@ Isolated checks only (`M/tools/sign-check.ts`, `apply.ts` guards); everything el
 - 2026-11-08 06:40 UTC · S5: `categoryOf`; category mark on "Its answers" rows (`data-answer-tag`), grid tiles (+ `aria-label` "Category: question"), witness notes (`noteCategories`); e2e E3 (tile ↔ answer row ↔ heading, same `lucide-*`) and E4. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs; dev E2E 1565/1565 (`M/e2e-s5/`), shots refreshed.
 - 2026-11-08 06:44 UTC · S6: `tag-edits.csv` (54 rows) + 11 new `SIGNS` entries; apply.ts part B (A1-A3 guards) dry run: 54 rows once, 0 sign problems, no content written. typecheck, lint, 66/66 tests, content preview 0 PROBLEMs, sign-check F-assertions pass. No E2E (no behaviour change).
 - 2026-11-08 06:48 UTC · S7: apply.ts run for real (54 rows, 42 files; rerun no diff), `sign-map.csv` recomputed (216 rows, categories = `SIGNS`), `checkProfile` appends `signProblems` (unknown tag now fails the build gate; checked in memory). typecheck, lint, 66/66 tests, content preview 0 PROBLEMs, sign-check 0 flags on 76 + F-assertions pass, no `artificial`, V1.6 ok. No E2E (DB unchanged).
-
 - 2026-11-08 07:20 UTC · S8: witness notes per round and balance bot (400 rounds, seed 44) before (447e9317) and after; `M/metrics/summary.md`. Both bot runs exit 0; repo unchanged (metrics in state folder only); before worktree removed.
+
 ## Summary
