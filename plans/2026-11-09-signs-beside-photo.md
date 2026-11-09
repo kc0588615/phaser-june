@@ -61,7 +61,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -242,6 +242,27 @@ return each page as runs of one g -> { category, signs }
 
 ## Architecture review (Fable)
 
+Read `agent/signs-beside-photo` @ `7751918a`; checked `AnimalSheets.tsx` (current and `447e9317`), `CategoryMark.tsx`, `signs.ts`, `questionMatch.ts:12-39`, `scripts/e2e.mjs` (current `:999-1065`, old `:908-988`), `globals.css` (`--line-xs` 16 px, `--space-xxs` 4 px), `motion.ts` (`SMALL` 0.16 s).
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. **P2's fallback goes the wrong way** (plan `:199-203`). A *split* needs a group with `span > height`; a *move* needs a group with `span ≤ height` that starts mid-page. At 40 px (2 lines of 16 px + 4 px gap) a split needs a 3-line group; raising the box to 60 px (3 lines) makes a split need a 4-line group, so the fallback makes the required split *less* likely while the check still demands `≥ 1 split`. With 5 suspects of 4–7 signs spread over up to 5 categories, a 3-line group at the ~168 px column isn't assured. Fix: keep 40 px and, as the fallback (or outright), also narrow the box (`box.style.width = '96px'` or similar: the measuring `ul` is `inset-x-0`, so it re-wraps and the `ResizeObserver` re-splits). Narrower lines make multi-line groups (splits) likelier without changing what a move needs. Don't go below 40 px: with one-line pages every group starts a page, `from > 0` never holds, and no move can happen. Record the chosen width under Decisions.
+
+MISSED:
+- **The `!page` branch in `signPages`** (plan `:141-143`): `from = index in page of g's first chip` is evaluated before `page` exists on the first item. Trivial, but the implementation must guard it (`from = page ? page.indexOf(firstOf[g]) : -1`), else the first item throws. Also precompute `firstOf[g]` (index of g's first item) rather than searching the page.
+- **Icon box taller than a chip line breaks the height test** (plan `:113`, `:115` "the audit may tune the gaps"). The split measures chip bottoms (`b.bottom - top`), not the group `li`'s bottom. With `items-start`, an icon box taller than 16 px hangs below a one-line group's chips and can poke past the page bottom unmeasured. State the constraint in the code comment: the icon box stays ≤ `--line-xs` (16 px), or the gap tuning stays on the gaps only.
+- **P3's last step** (plan `:208`): after flipping to the next animal the box is remounted at natural size, so that animal may have one page and no pause button. The check must read "page 1 and no `aria-pressed=true`", not "button unpressed", or it fails on a one-page neighbour.
+
+Verified correct (no change): the algorithm is a single forward pass (no loop); the splice branch sets `top` to the moved group's first chip, and every later chip of that group satisfies `b.bottom − top ≤ span[g] ≤ height`, so a moved group can't overflow; `from > 0` keeps the old page non-empty and the new page holds at least g's first chip, so no empty page; `from === 0` with `span ≤ height` is unreachable (contradiction with the overflow test), so the else branch there is only ever the `span > height` split; the chip's `offsetParent` is the `absolute` measuring `ul` (no positioned element between: `li.flex`, `ul.flex`, `CategoryMark`'s `inline-flex` are all static), so `offsetTop` is relative to the right ancestor; same-line chips share a bottom (flex default stretch), so an overflowing chip is at a line start and a continuation run re-wraps identically from x = 0. Finding 1 is real (`AnimalSheets.tsx:102` vs `447e9317:101`). Finding 4 is real (`447e9317:308`). E2E hooks, `__allPages` (450 ms > 2 × 160 ms crossfade under `mode="wait"`) and S1/S2/P1 are feasible and deterministic given the seed. DRY (`SignGroups` for both lists), CQS (`signPages` query, `split` command), KISS (old pager + one rule) and E2E-first all hold; nothing over-engineered for the brief.
+
+SHOULD-CONSIDER:
+1. Compute `span[g]` and `firstOf[g]` once up front from `boxes`, not inside the loop.
+2. In `__signs`, read `shown` via `[data-sign-page]:last-of-type` or wait until exactly one exists, so a read during a crossfade can't pick the exiting page.
+3. The `sr-only` list is the only place the category word reaches a screen reader beside the photo; `aria-label="Signs"` on it (or `aria-labelledby` the `h3`) ties it to the heading.
+4. `data-guide-signs` already carries `pages.length`; drop the separate `pages` read in `__signs` and use it (one source).
+5. Keep 055's `content -- build/check` out of the final run as the architect suggests; nothing in content changes.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -260,5 +281,6 @@ return each page as runs of one g -> { category, signs }
 
 - 2026-11-09 00:50 UTC: Baseline. typecheck/lint/test (66/66)/preview 0; dev-copy E2E 1565/1565, artifact `M/baseline-e2e/`.
 - 2026-11-09 01:07 UTC: Architecture. Hanging layout (one icon column per group), pure `signPages` with keep-together rule, guide rows back to lines only; E2E S1/S2/P1-P3 via forced 40 px box. Plan only, no code.
+- 2026-11-09 01:15 UTC: Fable review. APPROVE_WITH_CHANGES; 1 MUST-FIX (P2 fallback: narrow box width, not taller), 3 small misses. Plan only.
 
 ## Summary
