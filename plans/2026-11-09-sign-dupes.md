@@ -63,7 +63,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -237,7 +237,112 @@ Revision 1 (architect, after both reviews, on 66911a42).
 
 ## Steps
 
+`M` = `/srv/critter-ai/agent-state/missions/sign-dupes`, `T` = `$M/tools`, repo root = `/srv/critter-ai/worktrees/sign-dupes` (run everything there unless a step says otherwise; set `M`/`T` in the same command, shells don't persist). **Static checks** = Verification V1 items 1–4. Heavy jobs (bot, e2e) one at a time. The tools, bot and preview read `db/content` only: no env file sourced (Fable SC5). Database only through V3's guarded blocks. Before = `5c37fc04` (`origin/main` at baseline).
+Order: H12 (S6) and docs/plan 059 (S7) come after the dev run (S5), so both carry its real `Pool:` line, check count and shots. The before tree is only needed in S1, so it goes at S1's end.
+
+- [ ] S1. **Tools, before tree, before metrics, chimp before (Target 2, 10, 12).**
+  - `mkdir -p $T $M/metrics`. Copy `/srv/critter-ai/agent-state/missions/moves-and-signs-build/tools/{run.sh,bot.sh,botsum.py,witness.ts}` to `$T/`. Repoint: `run.sh` `REPO=/srv/critter-ai/worktrees/sign-dupes`, tmp names `sd-`; `bot.sh` `M=$M`; `botsum.py` `MET=$M/metrics`, every run read from `MET` (drop `BOT` and the design runs); comments name this mission.
+  - Write, after Failure modes: `$T/witness-pairs.ts <label>` (book as in `witness.ts`, 76 asserted; for each animal, each tagged note of `notes` at index i, as `witnessNotes` reads them, each other animal whose `tags` hold every note tag → `<mystery id> <i> <other id>\t<full ?? text>`; lines sorted in code-unit order; writes `$M/metrics/pairs-<label>.txt`; prints `pairs-<label>: N pairs; tree <cwd> at <short head>`). `$T/dedupe-check.py` (D1–D6). `$T/spot.sql` (Target 13 step 4's `select count(*) …` as one line, `;`-terminated). `$T/report-check.cjs <report.json>`: prints `<n> checks, <k> failed; paging: <animal>; rounds: <id:outcome …>; console errors: <n>; failed requests: <n>`, exit 1 unless 0 failed, paging `Chimpanzee`, rounds `7:found 68:lost 46:found 41:found`, 0 console errors, 0 failed requests.
+  - Before tree: `git worktree add --detach /tmp/sd-before 5c37fc04 && ln -s /srv/critter-ai/worktrees/sign-dupes/node_modules /tmp/sd-before/node_modules`.
+  - Runs, one at a time: `ROOT=/tmp/sd-before $T/run.sh $T/witness.ts before > $M/metrics/witness-before.md`; `ROOT=/tmp/sd-before $T/run.sh $T/witness-pairs.ts before`; `(cd /tmp/sd-before && node scripts/run-typescript.mjs scripts/content.ts preview) > $M/metrics/preview-before.txt`; `$T/bot.sh before /tmp/sd-before`.
+  - Chimp before: copy `$M/baseline-e2e/02f-signs-page-{1,2}-light.png` to `$M/chimp-before-p{1,2}.png`; view both (page 2 = Life group, "carries young on back" and "mother carries young").
+  - Remove the tree: `git worktree remove --force /tmp/sd-before && git worktree prune` (recreate with the command above if a before run must be redone).
+  - Checks: `witness-before.md` names `/tmp/sd-before` at 5c37fc04's short head, rules `055-0`; `pairs-before` prints the same tree; `bot-before.txt` ends `# exit 0`; `python3 -I $T/dedupe-check.py` exits 1, reporting 12 notes holding both tags and uses 518 (the check fails before the edits); `node $T/report-check.cjs $M/baseline-e2e/report.json` exits 0 with 1575 checks; `git worktree list` has no `sd-before`; `git status` clean apart from the plan; typecheck + lint exit 0. No E2E (nothing changed).
+- [ ] S2. **Content: drop the broader tag on the 12 notes (Target 1).**
+  - By hand, in `db/content/animals/` (clue = 0-based index in `clues[]`; delete the tag's line, fix the comma before it, nothing else): `31-northern-hairy-nosed-wombat.json` clue 6 `pouch`; `37-greater-bilby.json` 6 `pouch`; `48-tasmanian-devil.json` 5 `pouch`; `50-addax.json` 0 `horns`; `52-giant-anteater.json` 2 `stripes` and 8 `mother_carries_young`; `56-chimpanzee.json` 6 `mother_carries_young`; `61-indri.json` 7 `mother_carries_young`; `63-temmincks-pangolin.json` 7 `mother_carries_young`; `68-hirola.json` 1 `face_markings`; `69-dama-gazelle.json` 0 `horns`; `71-andean-bear.json` 0 `face_markings`.
+  - Checks: `python3 -I $T/dedupe-check.py` exits 0 and prints `0 notes with both; 12 notes in 11 files changed, tags only; holders ok; open tags 201, uses 506`. `node scripts/run-typescript.mjs scripts/content.ts preview > $M/metrics/preview-after.txt; diff $M/metrics/preview-before.txt $M/metrics/preview-after.txt`: exactly 12 `<` and 12 `>` lines, each a clue's `[…]` list minus its broader tag. Static checks (0 PROBLEMs, 66/66). No E2E: content reaches the game only through a content build (S5).
+- [ ] S3. **After metrics, witness-pair diff, bot (Target 2, 10).**
+  - At the repo root, one at a time: `$T/run.sh $T/witness.ts after > $M/metrics/witness-after.md`; `$T/run.sh $T/witness-pairs.ts after`; `$T/bot.sh after /srv/critter-ai/worktrees/sign-dupes`.
+  - Diff in `$M/metrics`: `LC_ALL=C comm -13 --check-order pairs-before.txt pairs-after.txt > pairs-added.txt`; `LC_ALL=C comm -23 --check-order pairs-before.txt pairs-after.txt > pairs-removed.txt`. `pairs-added.txt` must be empty, else stop: its note was mis-edited; fix it under S2's checks and redo this step. `wc -l < pairs-removed.txt` = 43 (F1); another count: reconcile with F1 in `summary.md` and Decisions.
+  - `$M/metrics/pairs-removed.md`: the removed pairs grouped by note (mystery, its note), each other animal with its own note holding the broader tag, marked true or false. Expected 4 true or close (24→63 and 59→63 tail, 54→61 belly, 68→69 ringed horns), the rest false.
+  - `python3 -I $T/botsum.py before after > $M/metrics/bot-tables.md`. `$M/metrics/summary.md`: witness table before/after (notes/round, rounds with 0 notes per place; tagged, shareable), pair counts, bot table, the reading (Target 10: small change, likely slightly fewer notes; a |Δ found| > 2 points or |Δ moves left| > 1.5 gets a sentence; no rule change either way).
+  - Checks: `bot-after.txt` ends `# exit 0`; `witness-after.md` `Tagged notes` and `Content problems` equal before's; shareable ≤ before's; `git status` clean apart from the plan; typecheck + lint exit 0. No E2E.
+- [ ] S4. **`sign-map.csv` recompute, `sign-dupes.csv` check (Target 4, 5).**
+  - Copy `/srv/critter-ai/agent-state/missions/moves-and-signs-build/content/sign-map-update.ts` to `$T/sign-map-update.ts`. Drop the `tag-edits.csv` logic (`lost`, `replaced`), `NOT_BUILT`/`can_swim`, the `FIXED` marks and new-row creation (a content tag without a row fails). Add `NARROWS` (the 6 pairs): a narrower row's `rule` gets `; 059: narrows <broader>: its holders drop <broader>`; a broader row gets `; 059: dropped on <narrower's holders> (narrower <tag>)`, one per narrower (`horns` gets 2); skip a cell already holding `059:`. Keep the `SIGNS` category assert, the rows↔`SIGNS` check both ways, CRLF (C1–C5).
+  - Run `$T/run.sh $T/sign-map-update.ts` twice: `sign-map.csv: 216 rows (was 216); written; categories match SIGNS (216)`, then `… unchanged …`.
+  - `git diff --numstat -- docs/research/2026-11-07-moves-and-signs/sign-map.csv` = `11 11`. Broader rows: `mother_carries_young` 4 uses `10 24 54 59`; `pouch` 3 `27 43 67`; `stripes` 4 `25 29 39 43`; `face_markings` 4 `33 38 42 50`; `horns` 5 `29 38 44 66 68`. Narrower rows: `rule` only.
+  - `sign-dupes.csv`, one-off python check: 216 rows, tags = `SIGNS` keys; holders = `git show 5c37fc04:docs/research/2026-11-07-moves-and-signs/sign-map.csv` holders for every tag; verdicts `keep, narrows` 6, `keep, narrowed by` 5, `owner` 14 rows, `retired in 055` 15. Reasons that S3's `pairs-removed.md` contradicts get corrected (text only); record each under Decisions.
+  - Checks: static checks. No E2E.
+- [ ] S5. **Dev copy: content build, check, e2e; chimp after (Target 11, 12).**
+  - V3 spot query: prints `12` (dev copy holds 5c37fc04's content). Then V3's block. Expect build `0 citation warnings (see preview).` and `Built. …`; check `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.` and `0 errors, 0 warnings.`; e2e passes. Then the spot query again: `0`.
+  - `cp -r "$(ls -d e2e-artifacts/*/ | tail -1)" $M/e2e-s5`; `node $T/report-check.cjs $M/e2e-s5/report.json` exits 0, 1575 checks (another count with 0 failed: explain from round 2's note fits under Decisions).
+  - Chimp after: copy `$M/e2e-s5/02f-signs-page-{1,2}-light.png` to `$M/chimp-after-p{1,2}.png`; view: page 2 = "carries young on back" alone, "mother carries young" on neither page. If paging names another animal: Target 12's fallback (one-off CDP script `$T/chimp-shot.mjs`, round 2 chimp sheet), recorded under Decisions.
+  - Disk: `rm -rf $M/baseline-e2e` once `chimp-before-p{1,2}.png` exist. Folders left: `e2e-s5/`.
+  - Log the `Pool:` line, check count and rounds (S6, S7 quote them).
+  - Checks: guard passes; the above; `git status` clean apart from the plan; typecheck + lint exit 0.
+- [ ] S6. **Handoff H12 (Target 13).**
+  - In `/srv/critter-ai/handoff/critter-connect.md`, under `## Open` above H11 (next free number; H12 today, else the next, and S7 uses it), H11's format:
+    ```
+    ### H12 · Production content build for the sign dedupe
+    Status: waiting on you
+    From: sign-dupes · <YYYY-MM-DD>
+    Blocks: the deduped signs reaching players (the mission doesn't wait on it)
+
+    **Why:** 12 clue rows drop a broader tag that their narrower one already says (the chimpanzee's "mother carries young" beside "carries young on back"; plan 059). Prod keeps the old rows until a production content build. Code and `SIGNS` are unchanged, so building before or after the deploy is safe; after is the plan.
+
+    **Steps:**
+    1. Wait until the sign-dupes PR is merged and deployed: `curl https://play.critterconnect.org/version.txt` shows the PR's merge commit.
+    2. **Fresh production dump first** (the build deletes and reloads every clue and fact and has no backup of its own). From WSL: `ssh root@play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh` (add `-i ~/.ssh/hetzner-vps` if your ssh config doesn't pick the key). Success = exit 0 and a last line `<UTC time> backup ok: /var/backups/critter-connect/daily/phaser_june-<stamp>.dump (<size>)`, about 90-120 MB. No `backup ok`, no build: stop here. Restore steps: `docs/DEPLOY.md#backups` ("Restore drill"; for a real restore add `--clean --if-exists -d phaser_june`).
+    3. In WSL on a fresh `main` (`git pull --ff-only`): `npm run content -- build` (expect `0 citation warnings (see preview).` and `Built. …`), then `npm run content -- check`, which must print `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.` and `0 errors, 0 warnings.`
+    4. Spot check: `./scripts/db "select count(*) from species_deduction_clues where compare_tags @> '{carries_young_on_back,mother_carries_young}' or compare_tags @> '{backward_pouch,pouch}' or compare_tags @> '{shoulder_stripe,stripes}' or compare_tags @> '{spectacles,face_markings}' or compare_tags @> '{spiral_horns,horns}' or compare_tags @> '{s_shaped_horns,horns}';"` (= `spot.sql`) returns `0` (`12` before the build).
+    5. Reply below and set `Status: done`.
+
+    **Your reply:**
+    - Dump file name:
+    - Built (done/failed + check line):
+    - Spot check count:
+    ```
+  - Step 3's `Pool:` line is the expected one; if S5's differed, write S5's.
+  - Checks: `grep -n '^### H12' /srv/critter-ai/handoff/critter-connect.md` = 1 hit, between `## Open` and `## Closed`; next line `Status: waiting on you`; no value in the title, no secret in the item. No repo change.
+- [ ] S7. **Docs and plan 059 (Target 6, 7, 8).**
+  - `docs/CONTENT_SOURCES.md`: Target 6's bullet, verbatim, after `:72` ("A sign names evidence from its own note…").
+  - New `plans/059-sign-dupes.md` (058 is the last), 057/058 style: What changed (F2's table; counts: open tags 201 → 201, uses 518 → 506, `SIGNS` 216 and 15 retired unchanged, 0 merges, 6 pairs deduped on 12 notes in 11 files, 95 pairs compared = 6 + 80 + 9); Why (narrower over broader, F1; rejected merge); For the owner (F4's 9 pairs and the other items, the 4 true links lost); Removed witness pairs (from `$M/metrics/pairs-removed.md`, true/false); Balance (witness and bot tables from `$M/metrics/summary.md`); No version bump (Target 8); DB (H12); Verification (S2–S5 results); Shots (`$M/chimp-{before,after}-p{1,2}.png`; chimp 9 signs → 8, still 2 pages at 390 px from 058's layout). The `Final:` line is added in the final Verification.
+  - Checks: every path in 059 exists (`ls`); static checks. No E2E (Markdown only).
+
 ## Verification
+
+Run after the Astra code review (its own unit, not a step), from the repo root, one heavy job at a time; `M`, `T` as in Steps. Expected numbers assume content at `5c37fc04`; if a rebase brings content changes, recompute them and record under Decisions. Known VPS flake: 1–3 timing checks can fail once; rerun once, a check failing twice is real. Disk: at most two E2E folders in `M`: `e2e-s5/` and `final-e2e/`.
+
+**V1. Static (no database)**, each exit 0:
+1. `npm run typecheck`
+2. `npm run lint` (eslint + theme contrast)
+3. `npm test`: 66/66 pass
+4. `npm run content -- preview > /tmp/sd-preview.txt && ! grep PROBLEM /tmp/sd-preview.txt`: prints nothing (0 content and 0 sign problems: `checkProfile` runs `signProblems`).
+5. `python3 -I $T/dedupe-check.py`: `0 notes with both; 12 notes in 11 files changed, tags only; holders ok; open tags 201, uses 506`.
+6. `git diff --name-only 5c37fc04 -- src scripts tests` prints nothing (`SIGNS` 216 entries and `ANIMAL_RULES.version` `'055-0'` unchanged; no `next build` needed, `deploy` builds the image).
+7. `$T/run.sh $T/sign-map-update.ts`: 216 rows, `unchanged`, categories match SIGNS (216).
+
+**V2. Metrics still current:** `$T/run.sh $T/witness-pairs.ts final && cmp $M/metrics/pairs-final.txt $M/metrics/pairs-after.txt` (identical; then delete `pairs-final.txt`). Bot and witness tables are in `$M/metrics/{summary.md,bot-tables.md,witness-before.md,witness-after.md}` and copied into plan 059 and the Summary.
+
+**V3. Database, dev copy only.** Never `.env.local`, never print `DATABASE_URL` or `cat` the file; if the guard fails, stop and add a handoff item to refresh the file.
+- Spot query (S5 before/after the build; here after: `0`):
+  ```
+  ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a; [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1; psql "$DATABASE_URL" -tA -f /srv/critter-ai/agent-state/missions/sign-dupes/tools/spot.sql )
+  ```
+- Build, check, E2E (Target 11, verbatim):
+  ```
+  ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a; [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1; npm run content -- build && npm run content -- check && CHROME_PATH=/srv/critter-ai/agent-state/missions/sign-dupes/chrome-nosandbox.sh npm run e2e:fresh )
+  cp -r "$(ls -d e2e-artifacts/*/ | tail -1)" /srv/critter-ai/agent-state/missions/sign-dupes/final-e2e
+  ```
+  Must show: build `0 citation warnings (see preview).`, `Built. …`; check `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.`, `0 errors, 0 warnings.`; e2e exit 0.
+
+E2E scenario: the existing suite at seed 7, Africa (globe → continent → 4 rounds → resume → journal → sources). Load-bearing here: round 2's 390 px paging check finds the chimpanzee and shoots both pages in light and dark (`field guide: a sheet whose signs page at 390 px was found and shot …`), round 2's Hirola notes read the new fits, and rounds 1, 3 and 4 play as the baseline.
+
+**V4. Artifact must show** (`/srv/critter-ai/agent-state/missions/sign-dupes/final-e2e/report.json` + screenshots):
+- `node $T/report-check.cjs $M/final-e2e/report.json` exits 0: `1575 checks, 0 failed; paging: Chimpanzee; rounds: 7:found 68:lost 46:found 41:found; console errors: 0; failed requests: 0`.
+- Copy `final-e2e/02f-signs-page-{1,2}-light.png` over `$M/chimp-after-p{1,2}.png`; view all four chimp shots: before page 2 has both carry signs, after page 2 has "carries young on back" alone.
+- Reproduce: the V3 build/check/E2E block on `agent/sign-dupes` (seed 7, Africa are the defaults; same seed = same run).
+
+**V5. Record and clean up:** plan 059 gets its `Final:` line (check count, artifact path); the Summary gives tags before/after (201 → 201; uses 518 → 506), merges 0, dedupes 6 pairs on 12 notes, kept pairs 80 + 9 for the owner (listed), the chimp before/after shot paths and that it still pages (058 layout), witness notes per round and bot tables before/after, no version bump and why, `git diff --stat 5c37fc04...HEAD`, the final artifact, and "production content build waits on the owner (H12)". `git worktree list` has no `/tmp/sd-before`; `ls -d $M/*e2e*` = `e2e-s5`, `final-e2e`.
+
+**Release (runner's unit, after Verification):** rebase on `origin/main`, rerun V1–V4, PR, `gh pr merge --merge`, `deploy critter-connect`; smoke `curl -sL -o /dev/null -w '%{http_code}' https://play.critterconnect.org/explore/` = 200 and `curl https://play.critterconnect.org/version.txt` = merge commit. No pre-merge tag gate (Target 13).
+
+## Failure modes
+
+Isolated checks only (content edits, pair diff, `sign-map.csv`); everything else is E2E. Written before the tools (S1, S4).
+- **Dedupe check (`dedupe-check.py`, D):** D1 a note still holds both tags of a pair. D2 the narrower tag dropped instead of the broader (narrower holders differ from `52 56 61 63`, `31 37 48`, `52`, `68 71`, `50`, `69`). D3 the wrong note or animal edited (broader holders differ from F2's after lists). D4 any other change: note text, another tag, tag order, key order, formatting, trailing newline (parsed `5c37fc04` file minus the broader tag on those 12 notes ≠ the file now; or a `git diff -U0 5c37fc04 -- db/content/animals` line that isn't a bare tag line; or changed files ≠ the 11). D5 invalid JSON (a left trailing comma): parse fails. D6 open tags ≠ 201 or uses ≠ 506.
+- **Pair diff (`witness-pairs.ts`, W):** W1 a pair added: stop (a dedupe only removes). W2 removed ≠ 43: reconcile with F1. W3 the wrong tree read (`ROOT` unset, both runs on the branch): each run prints its tree and head, which must be `/tmp/sd-before` at 5c37fc04 and the repo root at the branch head. W4 a note's text or index differs between trees (it shouldn't): `comm` shows it as removed plus added, caught by W1. W5 unsorted output: `comm --check-order` fails.
+- **`sign-map-update.ts` (C):** C1 rows ≠ 216 or a row/`SIGNS` mismatch either way; C2 a category ≠ `SIGNS`; C3 a second run writes again (not idempotent); C4 a row other than the 11 changes (`--numstat` ≠ `11 11`); C5 LF instead of CRLF (whole-file diff).
 
 ## Code review (Astra)
 
@@ -254,5 +359,6 @@ Revision 1 (architect, after both reviews, on 66911a42).
 - 2026-11-09 04:56 UTC · Fable review: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (claims and counts re-verified vs content).
 - 2026-11-09 04:58 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (narrower→broader merges make witness notes state false shared facts, e.g. backward_pouch, spiral_horns), 5 SHOULD-CONSIDER; to architect in Revision.
 - 2026-11-09 05:11 UTC · Revision: architect resolved Astra MUST-FIX via design change: no merges; 6 on-animal dupes drop the broader tag (narrower kept), 0 witness pairs added, 43 removed (~39 false today, 4 to owner); shell_spines/spiky_shell → owner pair; SIGNS untouched; CSV 13 rows revised. No code changed.
+- 2026-11-09 05:21 UTC · Steps: planner wrote S1–S7 (before metrics, 12 hand tag edits, pair diff 0 added/43 removed, sign-map recompute, dev-copy build+e2e + chimp shots, H12, docs + plan 059), Verification V1–V5, Failure modes. No code changed.
 
 ## Summary
