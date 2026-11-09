@@ -257,7 +257,7 @@ Order: H12 (S6) and docs/plan 059 (S7) come after the dev run (S5), so both carr
   - `$M/metrics/pairs-removed.md`: the removed pairs grouped by note (mystery, its note), each other animal with its own note holding the broader tag, marked true or false. Expected 4 true or close (24→63 and 59→63 tail, 54→61 belly, 68→69 ringed horns), the rest false.
   - `python3 -I $T/botsum.py before after > $M/metrics/bot-tables.md`. `$M/metrics/summary.md`: witness table before/after (notes/round, rounds with 0 notes per place; tagged, shareable), pair counts, bot table, the reading (Target 10: small change, likely slightly fewer notes; a |Δ found| > 2 points or |Δ moves left| > 1.5 gets a sentence; no rule change either way).
   - Checks: `bot-after.txt` ends `# exit 0`; `witness-after.md` `Tagged notes` and `Content problems` equal before's; shareable ≤ before's; `git status` clean apart from the plan; typecheck + lint exit 0. No E2E.
-- [ ] S4. **`sign-map.csv` recompute, `sign-dupes.csv` check (Target 4, 5).**
+- [x] S4. **`sign-map.csv` recompute, `sign-dupes.csv` check (Target 4, 5).**
   - Copy `/srv/critter-ai/agent-state/missions/moves-and-signs-build/content/sign-map-update.ts` to `$T/sign-map-update.ts`. Drop the `tag-edits.csv` logic (`lost`, `replaced`), `NOT_BUILT`/`can_swim`, the `FIXED` marks and new-row creation (a content tag without a row fails). Add `NARROWS` (the 6 pairs): a narrower row's `rule` gets `; 059: narrows <broader>: its holders drop <broader>`; a broader row gets `; 059: dropped on <narrower's holders> (narrower <tag>)`, one per narrower (`horns` gets 2); skip a cell already holding `059:`. Keep the `SIGNS` category assert, the rows↔`SIGNS` check both ways, CRLF (C1–C5).
   - Run `$T/run.sh $T/sign-map-update.ts` twice: `sign-map.csv: 216 rows (was 216); written; categories match SIGNS (216)`, then `… unchanged …`.
   - `git diff --numstat -- docs/research/2026-11-07-moves-and-signs/sign-map.csv` = `11 11`. Broader rows: `mother_carries_young` 4 uses `10 24 54 59`; `pouch` 3 `27 43 67`; `stripes` 4 `25 29 39 43`; `face_markings` 4 `33 38 42 50`; `horns` 5 `29 38 44 66 68`. Narrower rows: `rule` only.
@@ -352,6 +352,10 @@ Isolated checks only (content edits, pair diff, `sign-map.csv`); everything else
 
 - 2026-11-09 · Revision (architect): narrower cases keep the narrower tag on their holders and drop the broader one there (one sign per fact), instead of merging into the broader tag. A merge made notes fit animals their words aren't true of (Astra MUST-FIX 1). No tag retires, `SIGNS` is unchanged, and `shell_spines`/`spiky_shell` are kept for the owner. The brief's "drop the other from `SIGNS`" doesn't arise: both tags of every pair stay in use.
 
+- 2026-11-09 · S4: `sign-map-update.ts` skips a mark already in the cell (per mark text, not any `059:`), so `horns` gets both marks and a rerun writes nothing.
+
+- 2026-11-09 · S4: 2 `sign-dupes.csv` reasons corrected (text only) against `pairs-removed.md`: `carries_young_on_back` said every merged link was false, but 63 with 24 59 (tail) and 61 with 54 (belly) are true; `s_shaped_horns` left out 68, whose ringed lyre horns are close to 69's.
+
 - 2026-11-09 · S1: `witness-pairs.ts` counts `animalsFromProfiles` load notices (3 at baseline: e.g. Darwin Frog has no countries) instead of throwing, as `witness.ts` does; preview PROBLEMs (0) are checked by preview itself.
 
 ## Log
@@ -366,5 +370,7 @@ Isolated checks only (content edits, pair diff, `sign-map.csv`); everything else
 - 2026-11-09 05:35 UTC · S1: tools in `$M/tools` (055's run/bot/botsum/witness repointed; new witness-pairs.ts, dedupe-check.py, spot.sql, report-check.cjs). Before (5c37fc04, /tmp/sd-before, removed after): witness tagged 433, shareable 307, notes/round world 2.24 / africa 2.12 / asia 1.84 / n-am 1 / s-am 2.01; pairs 1473; preview 0 PROBLEMs; bot exit 0 (7m22s). dedupe-check exits 1 pre-edit (12 notes with both, uses 518); report-check on baseline: 1575/0, paging Chimpanzee. Chimp before shots viewed (p2 = both carry signs). typecheck + lint 0.
 - 2026-11-09 05:44 UTC · S2: 12 broader tags dropped by hand in 11 files (tag lines only). dedupe-check exit 0 (0 notes with both; 12 notes/11 files, tags only; holders ok; 201 tags, 506 uses). preview diff 12</12> lines, each minus its broader tag; 0 PROBLEMs. typecheck, lint, 66/66 tests 0.
 - 2026-11-09 06:05 UTC · S3: after metrics on da70cd97. Pairs 1473 → 1430: 0 added, 43 removed (4 true/close: 24→63, 59→63, 54→61, 68→69; 39 false; `$M/metrics/pairs-removed.md`). Witness notes/round world 2.24→2.23, africa 2.12→2.04, asia 1.84=, n-am 1→0.98, s-am 2.01→1.94 (0-note rounds 5→10); tagged 433, shareable 307 unchanged. Bot exit 0; found Δ −1…0, moves left Δ −0.5…+0.1 (noise). `summary.md`, `bot-tables.md`. typecheck + lint 0.
+- 2026-11-09 06:20 UTC · S4: `sign-map.csv` recomputed (`$T/sign-map-update.ts`): 216 rows, written then unchanged, categories match SIGNS; numstat 11 11, broader uses/holders as planned, narrower rule only, CRLF kept. `sign-dupes.csv` check: 216 rows = SIGNS keys, holders = 5c37fc04 sign-map, verdicts 6/5/14/15; 2 reasons corrected. typecheck, lint, 66/66, preview 0 PROBLEMs.
+
 
 ## Summary
