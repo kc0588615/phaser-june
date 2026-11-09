@@ -58,7 +58,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -66,6 +66,13 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+From `origin/main` 5c37fc04 (signs-beside-photo merged, PR #69), 2026-11-09. Rules `055-0`.
+- `npm ci`: ok (npm warns 4 install scripts not in allowScripts; unaffected).
+- No migrations (schema baseline only; mission changes no schema).
+- `npm run typecheck`, `npm run lint`: exit 0. `npm test`: 66/66 pass. `npm run content -- preview`: exit 0, 0 PROBLEMs.
+- Content: 76 animals, 201 distinct open tags, 518 uses.
+- `npm run e2e:fresh` vs dev copy (guarded block, guard `phaser_june_dev` ok; no content build), `CHROME_PATH=/srv/critter-ai/agent-state/missions/sign-dupes/chrome-nosandbox.sh`: 1575/1575 checks, seed 7. Artifact `/srv/critter-ai/agent-state/missions/sign-dupes/baseline-e2e/` (`report.json` + screenshots); reproduce with the guarded block (plan 055 V2) and `npm run e2e:fresh`.
 
 ## Architecture
 
@@ -86,5 +93,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-09 04:25 UTC · Baseline: typecheck, lint, 66/66 tests, preview 0 PROBLEMs; dev-copy e2e:fresh 1575/1575 (`sign-dupes/baseline-e2e/`).
 
 ## Summary
