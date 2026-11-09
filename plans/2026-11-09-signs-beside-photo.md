@@ -307,7 +307,7 @@ All changes are in **Architecture**. The widths and line counts come from a stat
 
 `M` = `/srv/critter-ai/agent-state/missions/signs-beside-photo`. V1–V4 = Verification below. Each step ends with V1, then (if it says so) V2 into `M/e2e-s<N>/`, then V3 with the step's check substrings. Check names below are exact: V3 matches on them.
 
-- [ ] S1 · **Grouped signs beside the photo; guide rows lines only; retarget 055's sheet checks.** The core change plus the checks that read it, so the suite stays green.
+- [x] S1 · **Grouped signs beside the photo; guide rows lines only; retarget 055's sheet checks.** The core change plus the checks that read it, so the suite stays green.
   - `src/components/animalBoard/AnimalSheets.tsx`, per Architecture "Target design":
     - Port `GuideSigns` and `SIGN_PAGE_MS = 5000` from `447e9317:270-333` / `:41`. Props `{ signs: readonly Sign[] }`; `groups` via `CHARGE_CATEGORIES` in `useMemo`; `type SignGroup`; `pages: SignGroup[][]` starts `[groups]`.
     - New `SignGroups({ groups })`: renders the group `li`s (Architecture code block) for both the measuring `ul` (`data-sign-measure`, `invisible absolute inset-x-0 top-0`, `aria-hidden`) and the shown `motion.ul` (`data-sign-page={page + 1}`, `absolute inset-0`). Code comment: icon box is `h-(--line-xs)`, never taller than a chip line, because the split measures chip bottoms only; tune gaps, not the icon box.
@@ -347,7 +347,7 @@ All changes are in **Architecture**. The widths and line counts come from a stat
 
 - [ ] S5 · **Docs, code comments, plan 058.**
   - `CONTEXT.md` `:81`, `:85`, `:89`; `docs/CLUE_MATCH.md:54`; `docs/CONTENT_SOURCES.md:69`: wording per Architecture "Docs and plan".
-  - Comments: `src/clueGame/signs.ts:1-2`, `src/components/animalBoard/CategoryMark.tsx:1-4` (signs beside the photo in their category's group).
+  - Comments: `src/clueGame/signs.ts:1-2`, `src/components/animalBoard/CategoryMark.tsx:1-4`, `src/clueGame/questionMatch.ts:61` (`Animal.signs` doc, found in S1) (signs beside the photo in their category's group).
   - New `plans/058-signs-beside-photo.md` in 057's shape: what changed, why, decisions (hanging layout, keep-together rule, 144 × 40 forced box, audit calls), no version bump, DB none, verification commands, artifact and shot paths (final run filled in at S6).
   - Unchanged: `plans/README.md`, plan 055, `ANIMAL_RULES.version`, content, DB.
   - Checks: V1; `rg -n "under (its|the|one) (question )?categor|guide rows|after that category" CONTEXT.md docs/CLUE_MATCH.md docs/CONTENT_SOURCES.md src/clueGame/signs.ts src/components/animalBoard` shows no stale "signs in the guide rows" text; paths named in edited docs exist. No E2E (comments and docs only).
@@ -417,5 +417,6 @@ Steps pass only the substrings of checks added so far (each step lists them). Th
 - 2026-11-09 01:13 UTC: Astra review. APPROVE, no MUST-FIX; 2 SHOULD-CONSIDER (deterministic split+move E2E; 320 px/large-text chip fallback). Plan only.
 - 2026-11-09 01:24 UTC: Revision. Forced E2E box 144×40 px (2 splits, 1 move measured), signPages guard+precompute, icon h-(--line-xs), S3 320 px check, all Fable SC adopted; enlarged-text run rejected. Plan only.
 - 2026-11-09 01:35 UTC: Steps. planner wrote S1–S6 (core port+retarget checks, forced paging/320 px, shots, audit, docs/plan 058, verification) and V1–V4. Plan only.
+- 2026-11-09 01:48 UTC: S1. `GuideSigns` ported with category groups (`SignGroups` hanging layout, pure `signPages` keep-together split, pause mark only with >1 page, sr list per category); guide rows lines only; e2e `__signs`/`__allPages`, S1/S2/E2/E3 retargeted. V1 0 (66/66, preview same); V2 dev copy 1566/1566, rounds = baseline, artifact `M/e2e-s1/`; V3 0. 02d/02e shots checked.
 
 ## Summary

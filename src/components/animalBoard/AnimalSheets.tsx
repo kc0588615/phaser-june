@@ -3,14 +3,14 @@
 // round's end over the board (and the trail's; the grid above replays the evidence, plan 052), and how to play (with a worked
 // comparison on made-up answers, never the live round's). Players see the mystery as "the one caught on camera".
 import Link from 'next/link';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowUpRight, Ban, BookOpen, Camera, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen } from 'lucide-react';
-import { animate, motion, useIsPresent, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ArrowUpRight, Ban, BookOpen, Camera, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
+import { animate, AnimatePresence, motion, useIsPresent, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
 import { PENCIL_POINTS, sharpEye, type AnimalRound } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace } from '@/clueGame/clueFaces';
 import type { CluePool, PoolSpecies } from '@/clueGame/pool';
-import { CATEGORY_LABELS, CHARGE_CATEGORIES, categoryOf, prefixOf, type Animal } from '@/clueGame/questionMatch';
+import { CATEGORY_LABELS, CHARGE_CATEGORIES, categoryOf, prefixOf, type Animal, type ChargeCategory, type Sign } from '@/clueGame/questionMatch';
 import { noteCategories } from '@/clueGame/signs';
 import { FactsWithSources } from '@/components/clueGame/FactsWithSources';
 import { GlossaryText } from '@/components/clueGame/GlossaryText';
@@ -39,7 +39,6 @@ const ROW_LINE = 'shadow-[inset_0_-1px_0_0_var(--neutral-4)]';
 const SWIPE = 40;
 /** Set once the field guide has nudged sideways, to show it swipes (plan 048). */
 const GUIDE_SWIPE_HINT_KEY = 'critter-connect:guide-swipe-hint:v1';
-const CHIP = 'rounded-xs bg-neutral-3 px-xs text-xs font-medium text-neutral-8';
 
 export function SuspectSheet({ animal, species, speciesById, round, top, pencil, onPencil, onMark, onName, onShow, onClose }: {
   animal: Animal; species: PoolSpecies | undefined; speciesById: Map<number, PoolSpecies>; round: AnimalRound;
@@ -95,11 +94,11 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
     && round.suspects.some((id, i) => id !== animal.id && !round.released.includes(id) && round.orders.some(order => !order.seen[i] && pencil[`${id}:${order.tag}`]));
   useEffect(() => setConfirming(false), [animal.id, marked]);
   const isSeen = (i: number) => round.orders[i].seen[index] || round.status !== 'playing';
-  // Plan 055: each category's row holds its guide lines, then its signs (never hidden); it shows when it has either.
+  // Each category's row holds its guide lines (plan 045 hides the asked ones); a row with none doesn't show. The signs
+  // sit beside the photo instead (plan 058).
   const guides = CHARGE_CATEGORIES.flatMap(key => {
     const lines = animal.guide[key].filter(line => !line.tags.some(tag => asked.has(prefixOf(tag))));
-    const signs = animal.signs.filter(sign => sign.category === key);
-    return lines.length > 0 || signs.length > 0 ? [{ key, lines, signs }] : [];
+    return lines.length > 0 ? [{ key, lines }] : [];
   });
   return (
     <Sheet
@@ -207,6 +206,7 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
           </span>
           {species?.photo && <figcaption className="truncate text-xxs"><PhotoCredit photo={species.photo} /></figcaption>}
         </figure>
+        {animal.signs.length > 0 && <GuideSigns key={animal.id} signs={animal.signs} />}
       </motion.div>
       <div className="mt-m flex items-baseline justify-between gap-xs">
         <h3 className={LABEL}>Its answers</h3>
@@ -251,22 +251,149 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
       </ul>
       {guides.length > 0 && (
         <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-s gap-y-xs">
-          {guides.map(({ key, lines, signs }) => (
+          {guides.map(({ key, lines }) => (
             <div key={key} className="contents" data-guide-cat={key}>
               <dt className={`${LABEL} pt-xxs`}><CategoryMark category={key} /></dt>
               <dd className="m-0 flex flex-col gap-xxs text-s text-neutral-8">
                 {lines.map(line => <span key={line.text} data-guide-line={line.tags.map(prefixOf).join(' ')}><GlossaryText text={line.text} /></span>)}
-                {signs.length > 0 && (
-                  <ul data-signs className={`m-0 flex list-none flex-wrap gap-xxs p-0 ${lines.length > 0 ? 'pt-xxs' : ''}`} aria-label={`${CATEGORY_LABELS[key]} signs`}>
-                    {signs.map(sign => <li key={sign.tag} data-sign={sign.tag} className={CHIP}>{sign.text}</li>)}
-                  </ul>
-                )}
               </dd>
             </div>
           ))}
         </dl>
       )}
     </Sheet>
+  );
+}
+
+/** How long each page of a long sign list shows before the next takes its turn. */
+const SIGN_PAGE_MS = 5000;
+const CHIP = 'rounded-xs bg-neutral-3 px-xs text-xs font-medium text-neutral-8';
+/** One category's signs, in the guide's category order. */
+type SignGroup = { category: ChargeCategory; signs: readonly Sign[] };
+/** A sign chip's box in the measuring list (px from its top). */
+type ChipBox = { top: number; bottom: number };
+
+/**
+ * Cuts the groups into pages no taller than `height`, from the chips' boxes in the measuring list (`boxes[i]` is the i-th
+ * chip in group order). Pages hold whole lines. A group that would break mid-page but fits a page whole starts the next
+ * page instead; a longer one breaks at a line end and its rest starts the next page (each run repeats its icon).
+ */
+function signPages(groups: readonly SignGroup[], boxes: readonly ChipBox[], height: number): SignGroup[][] {
+  const items = groups.flatMap((group, g) => group.signs.map(sign => ({ g, sign })));
+  const firstOf: number[] = [];
+  const lastOf: number[] = [];
+  items.forEach(({ g }, i) => { firstOf[g] ??= i; lastOf[g] = i; });
+  const span = groups.map((_, g) => boxes[lastOf[g]].bottom - boxes[firstOf[g]].top);
+  const pages: number[][] = [];
+  let top = 0;
+  items.forEach(({ g }, i) => {
+    const b = boxes[i];
+    const page = pages.at(-1);
+    if (!page || b.bottom - top > height) {
+      const from = page ? page.indexOf(firstOf[g]) : -1;
+      if (page && from > 0 && span[g] <= height) {
+        const moved = page.splice(from);
+        pages.push(moved);
+        top = boxes[moved[0]].top;
+      } else {
+        pages.push([]);
+        top = b.top;
+      }
+    }
+    pages[pages.length - 1].push(i);
+  });
+  return pages.map(page => page.reduce<SignGroup[]>((runs, i) => {
+    const { g, sign } = items[i];
+    const run = runs.at(-1);
+    if (run && run.category === groups[g].category) run.signs = [...run.signs, sign];
+    else runs.push({ category: groups[g].category, signs: [sign] });
+    return runs;
+  }, []));
+}
+
+/**
+ * Sign groups as list items: the category's icon in its own column, its chips wrapping beside it, so a line never mixes
+ * groups and a page's lines render exactly as measured. The icon box is one chip line tall (`--line-xs`) and must never be
+ * taller: the split measures chip bottoms only, so a taller icon would hang past a page's bottom. Tune gaps, not the icon box.
+ */
+function SignGroups({ groups }: { groups: readonly SignGroup[] }) {
+  return groups.map(({ category, signs }) => (
+    <li key={category} data-sign-group={category} className="flex items-start gap-xxs">
+      <CategoryMark category={category} word={false} className="h-(--line-xs) shrink-0 text-neutral-7" />
+      <ul className="m-0 flex min-w-0 flex-1 list-none flex-wrap gap-xxs p-0">
+        {signs.map(sign => <li key={sign.tag} data-sign={sign.tag} className={CHIP}>{sign.text}</li>)}
+      </ul>
+    </li>
+  ));
+}
+
+/**
+ * An animal's signs beside its photo, grouped by category (plan 058), never taller than the photo: a list that doesn't fit
+ * is cut into pages (whole lines of the full list, laid out in a hidden copy) that take turns on their own. A tap pauses;
+ * another resumes and moves on (like the status line). Screen readers get the whole list, with each category's word.
+ */
+function GuideSigns({ signs }: { signs: readonly Sign[] }) {
+  const groups = useMemo(() => CHARGE_CATEGORIES.flatMap(category => {
+    const of = signs.filter(sign => sign.category === category);
+    return of.length > 0 ? [{ category, signs: of }] : [];
+  }), [signs]);
+  const box = useRef<HTMLDivElement>(null);
+  const all = useRef<HTMLUListElement>(null);
+  const [pages, setPages] = useState<SignGroup[][]>([groups]);
+  const [page, setPage] = useState(0);
+  const [paused, setPaused] = useState(false);
+  useLayoutEffect(() => {
+    const split = () => {
+      const height = box.current?.clientHeight ?? 0;
+      const chips = [...(all.current?.querySelectorAll<HTMLElement>('[data-sign]') ?? [])];
+      if (!height || chips.length === 0) return;
+      setPages(signPages(groups, chips.map(chip => ({ top: chip.offsetTop, bottom: chip.offsetTop + chip.offsetHeight })), height));
+      setPage(0);
+    };
+    split();
+    const observer = new ResizeObserver(split);
+    if (box.current) observer.observe(box.current);
+    if (all.current) observer.observe(all.current);
+    return () => observer.disconnect();
+  }, [groups]);
+  const turn = () => setPage(at => (at + 1) % pages.length);
+  useEffect(() => {
+    if (pages.length < 2 || paused) return;
+    const timer = window.setInterval(() => setPage(at => (at + 1) % pages.length), SIGN_PAGE_MS);
+    return () => window.clearInterval(timer);
+  }, [pages, paused]);
+  const list = 'm-0 flex list-none flex-col gap-xxs p-0';
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-xxs">
+      <h3 className={`${LABEL} flex items-center gap-xxs`}>
+        Signs
+        {pages.length > 1 && <span className="font-data" aria-hidden="true">{page + 1}/{pages.length}</span>}
+        {paused && pages.length > 1 && <Pause className="h-3 w-3 fill-current" aria-hidden="true" />}
+      </h3>
+      {/* The lists sit out of flow, so the photo alone sets the row's height. */}
+      <div ref={box} className="relative flex-1 overflow-hidden" data-guide-signs={pages.length}>
+        <ul ref={all} data-sign-measure className={`${list} invisible absolute inset-x-0 top-0`} aria-hidden="true">
+          <SignGroups groups={groups} />
+        </ul>
+        <AnimatePresence initial={false} mode="wait">
+          <motion.ul key={page} data-sign-page={page + 1} className={`${list} absolute inset-0`} aria-hidden="true" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={SMALL}>
+            <SignGroups groups={pages[page] ?? groups} />
+          </motion.ul>
+        </AnimatePresence>
+        <ul className="sr-only" data-sign-list aria-label="Signs">
+          {groups.map(({ category, signs: of }) => <li key={category}>{CATEGORY_LABELS[category]}: {of.map(sign => sign.text).join(', ')}</li>)}
+        </ul>
+        {pages.length > 1 && (
+          <button
+            type="button"
+            aria-pressed={paused}
+            aria-label="Pause the signs"
+            onClick={() => { if (paused) turn(); setPaused(!paused); }}
+            className="absolute inset-0"
+          />
+        )}
+      </div>
+    </div>
   );
 }
 
