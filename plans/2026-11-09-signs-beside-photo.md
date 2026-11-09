@@ -414,6 +414,12 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- PR #69 (https://github.com/kc0588615/phaser-june/pull/69), CI check + e2e pass; merged `gh pr merge 69 --merge`, merge commit `5c37fc041a471c781741e2a2b9a69b5b07cc8515`.
+- Pre-merge: branch already on `origin/main` (no rebase needed). V1 0 (typecheck, lint, 66/66, preview same); V2 first run 1574/1575 (P3 `turn on their own`, known timing flake: page didn't auto-turn in the wait), rerun 1575/1575, rounds = baseline; V3 0 (all 13 substrings). Artifact `M/release-e2e/` (`M/e2e-s8/` deleted).
+- Deploy: `deploy critter-connect`, last line `deploy critter-connect: live at https://critterconnect.org`. Log `/srv/critter-ai/agent-state/missions/signs-beside-photo/deploy.log`.
+- Smoke: `/explore/` 200, `/` 200, `version.txt` = `5c37fc04…` (merge commit).
+Result: done
+
 ## Decisions
 
 - 2026-11-09 (Revision): E2E forced box for P1–P3 is **144 × 40 px**, fixed with no fallback. Measured in the e2e's Chrome: 2 splits (14, 41) and 1 move (13). The same breaks hold from 137 to 148 px, and ≥ 1 split and ≥ 1 move from 96 to 188 px. If content changes break it, choose a new width; never make the box taller.
@@ -444,6 +450,7 @@ SHOULD-CONSIDER:
 - 2026-11-09 03:07 UTC: S7. Photo row `onClickCapture` swallows only pointer clicks (`event.detail > 0`); e2e `signs keyboard pause after drag` (resume by tap, real mouse drag 30 px and back, no flip; Tab to pause button; Space pauses, page holds 5.6 s; Space resumes, page 2 -> 1). V1 0 (66/66, preview same); V2 dev copy 1574/1574, rounds = baseline, artifact `M/e2e-s7/` (e2e-s4 deleted); V3 0 (12 substrings). Plan 058 notes the fix.
 - 2026-11-09 03:22 UTC: S8. Guide `onKeyDown`: when focus is in the photo row, `flushSync(step)` then focus the new pause button, else the row (`tabIndex={-1}`, `outline-none!`). e2e `signs arrows keep focus` (Tab to pause, ArrowRight x2: Chimpanzee pause -> Hirola row -> Dama Gazelle row, in sheet each time). V1 0 (66/66, preview same); V2 dev copy 1575/1575, rounds = baseline, artifact `M/e2e-s8/` (e2e-s7 deleted); V3 0 (all 13 substrings). Plan 058 notes the fix.
 - 2026-11-09 03:36 UTC: Final verification (rule 7, after Astra code review and S7/S8). V1 0 (typecheck, lint, 66/66, preview same); V2 dev copy 1575/1575, rounds = baseline, artifact `M/final-e2e/` (replaced; e2e-s8 kept); V3 0 (all 13 substrings); V4 10 shots refreshed in `M/shots/`, audit present. Plan 058 final line 1575. Summary written, status done.
+- 2026-11-09 04:25 UTC: Release. V1 0; V2 1574/1575 (P3 timing flake), rerun 1575/1575, V3 0; PR #69 CI pass, merged `5c37fc04`, deployed; smoke /explore 200, version.txt = merge commit.
 
 ## Summary
 
@@ -453,3 +460,4 @@ Signs are back in the box beside the species photo, grouped by category: a "Sign
 - **Shots:** in `/srv/critter-ai/agent-state/missions/signs-beside-photo/shots/` (10 files): one-page sheet, guide rows, a paging sheet on both pages (Chimpanzee in round 2) in light and dark at 390×844, desktop at 1280, and the pause button's focus ring. The audit is in `audit.md` next to them.
 - **Reviews:** architecture: Fable APPROVE_WITH_CHANGES (1 MUST-FIX, adopted), Astra APPROVE. Code: Astra APPROVE_WITH_CHANGES, with 2 MUST-FIX items, both fixed (S7: keyboard pause after a drag; S8: arrows from the pause button keep focus) and covered by E2E.
 - **For the owner:** pre-existing, out of scope: `MENU_ROW`'s inward focus offset loses to the global `:focus-visible` rule, so the ring draws outside (still visible). Fixing it needs `!` as the pause button has, or moving the global rule into a layer. No `ANIMAL_RULES.version` bump, no DB change, no production content build needed.
+- **Release:** PR #69 merged (`5c37fc04`) and deployed; play.critterconnect.org serves it (`version.txt` = merge commit, `/explore/` 200). No production content build needed.
