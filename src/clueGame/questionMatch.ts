@@ -58,7 +58,7 @@ export interface Animal {
   revealNotes: FieldNote[];
   /** Field guide lines by category, plus 'family' (class, order, family; never the genus), each with the question tags it records. */
   guide: Record<ChargeCategory | 'family', Array<{ text: string; tags: readonly string[] }>>;
-  /** Its signs, in tag order; every one shows in the guide under its category, never hidden (plan 055). */
+  /** Its signs, in tag order; every one shows beside the guide's photo in its category's group, never hidden (plans 055, 058). */
   signs: Sign[];
   /** Every tag on its clues, trait tags and open ones like digging_claws (plan 044: what its field guide records). */
   tags?: readonly string[];

@@ -1,5 +1,5 @@
-// The signs: a note's open tags (no colon), shown in the suspect's field guide under one question category each
-// (plan 055). This table is the vocabulary and is authoritative; docs/research/2026-11-07-moves-and-signs/sign-map.csv
+// The signs: a note's open tags (no colon), shown beside the field guide's photo, each in its question category's group
+// (plans 055, 058). This table is the vocabulary and is authoritative; docs/research/2026-11-07-moves-and-signs/sign-map.csv
 // is the research record it was built from. It keeps every open tag ever shipped, retired ones included, so new
 // code still loads rows an older content build wrote. Pure: queries only.
 import { CHARGE_CATEGORIES, PREFIX_CATEGORY, prefixOf, questionText, type ChargeCategory, type Sign } from '@/clueGame/questionMatch';

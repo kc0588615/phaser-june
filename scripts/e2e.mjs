@@ -39,6 +39,51 @@ const KEEP_RUNS = 10;
 /** Which category asks each trait prefix, as the game says (PREFIX_CATEGORY): what the player should see on screen. */
 const CATEGORY = { size: 'body', covering: 'body', diet: 'habits', activity: 'habits', social: 'habits', trees: 'habits', system: 'habitat', habitat: 'habitat', region: 'range', birth: 'life', young: 'life', lifespan: 'life' };
 const CATEGORY_WORD = { body: 'Body', habits: 'Habits', habitat: 'Habitat', range: 'Range', life: 'Life cycle' };
+const CATEGORY_ORDER = Object.keys(CATEGORY_WORD);
+/** Plan 058: a list of sign groups beside the photo runs in the guide's category order, each led by one icon (its own). */
+const signGroupProblems = (where, groups) => groups.flatMap((group, i) => {
+  const problems = [];
+  if (i > 0 && CATEGORY_ORDER.indexOf(group.cat) <= CATEGORY_ORDER.indexOf(groups[i - 1].cat)) problems.push(`${where}: ${group.cat} after ${groups[i - 1].cat}`);
+  if (!CATEGORY_ORDER.includes(group.cat) || group.marks !== 1 || group.first !== group.cat || group.tags.length === 0) problems.push(`${where}: group ${group.cat} has ${group.marks} marks, first ${group.first}, ${group.tags.length} chips`);
+  return problems;
+});
+/** Plan 058: a sheet's sign pages (from __allPages) as P1 wants them: each page's groups as signGroupProblems wants and
+ * fitting the box, numbered 1..n, and joined (a run continuing the last page's group merged into it) equal to the list. */
+const pagingProblems = sheet => {
+  const problems = sheet.pages.flatMap(page => [...signGroupProblems(`page ${page.page}`, page.shown), ...(page.fits ? [] : [`page ${page.page} overflows`])]);
+  const numbers = sheet.pages.map(page => page.page).join();
+  if (numbers !== sheet.pages.map((_, i) => i + 1).join() || sheet.pages.some(page => page.pages !== sheet.pages.length)) problems.push(`pages ${numbers} of ${sheet.pages[0]?.pages}`);
+  const joined = sheet.pages.flatMap(page => page.shown).reduce((runs, group) => {
+    const last = runs.at(-1);
+    if (last?.cat === group.cat) last.tags.push(...group.tags);
+    else runs.push({ cat: group.cat, tags: [...group.tags] });
+    return runs;
+  }, []);
+  const want = sheet.all.map(({ cat, tags }) => ({ cat, tags }));
+  if (JSON.stringify(joined) !== JSON.stringify(want)) problems.push(`pages ${JSON.stringify(joined)} != list ${JSON.stringify(want)}`);
+  return problems;
+};
+/** A paged sheet's breaks, judged from the measuring list's chip offsets (P2). T is the top of page k's first chip, F page
+ * k+1's first chip. A split (same group both sides) must be forced: F didn't fit, and the group is page k's only run or
+ * taller than a page. A new group whose first chip would have fitted is a move: the group must fit a page whole and must
+ * not have fitted on page k. Otherwise page k was full. */
+const pageBreaks = sheet => {
+  const height = sheet.pages[0].height;
+  const chips = new Map(sheet.all.flatMap(group => group.tags.map((tag, i) => [tag, { top: group.boxes[i].top, bottom: group.boxes[i].top + group.boxes[i].height }])));
+  const extent = new Map(sheet.all.map(group => {
+    const boxes = group.tags.map(tag => chips.get(tag));
+    return [group.cat, { top: Math.min(...boxes.map(b => b.top)), bottom: Math.max(...boxes.map(b => b.bottom)) }];
+  }));
+  const span = cat => extent.get(cat).bottom - extent.get(cat).top;
+  return sheet.pages.slice(0, -1).map((page, k) => {
+    const before = page.shown, after = sheet.pages[k + 1].shown;
+    const T = chips.get(before[0].tags[0]).top, F = chips.get(after[0].tags[0]), last = before.at(-1), next = after[0];
+    const kind = last.cat === next.cat ? 'split' : F.bottom - T <= height ? 'move' : 'full';
+    const ok = kind === 'split' ? F.bottom - T > height && (before.length === 1 || span(next.cat) > height)
+      : kind === 'move' ? span(next.cat) <= height && extent.get(next.cat).bottom - T > height : true;
+    return { id: sheet.id, kind, ok, at: `${last.cat}: ${last.tags.join(' · ')} | ${next.cat}: ${next.tags.join(' · ')}` };
+  });
+};
 /** The grid's sort, from `rows` facts (window.__gridFacts): out below; no contradiction above any; more matches higher; then the card's number. */
 const sortFacts = (facts, view = fact => fact) => [...facts]
   .sort((a, b) => a.out - b.out || view(a).contradicted - view(b).contradicted || view(b).matches - view(a).matches || a.number - b.number)
@@ -348,6 +393,18 @@ async function main() {
       return evaluate(() => ({ wide: matchMedia('(min-width: 64rem)').matches, sideNotes: Boolean(document.getElementById('side-notes')) }));
     };
     const PHONE = [390, 844, true];
+    // Runs `shoot(mode)` in the light theme, then the dark one, and puts back the theme the device had.
+    const inThemes = async shoot => {
+      const theme = await evaluate(() => ({ data: document.documentElement.dataset.theme ?? null, stored: localStorage.getItem('critter-connect:theme') }));
+      for (const mode of ['light', 'dark']) {
+        await evaluate(mode => { document.documentElement.dataset.theme = mode; localStorage.setItem('critter-connect:theme', mode); }, mode);
+        await shoot(mode);
+      }
+      await evaluate(({ data, stored }) => {
+        if (data) document.documentElement.dataset.theme = data; else delete document.documentElement.dataset.theme;
+        if (stored) localStorage.setItem('critter-connect:theme', stored); else localStorage.removeItem('critter-connect:theme');
+      }, theme);
+    };
     // The menu's Auto rule-out switch, set to `on` (opens the menu unless it's already open, then closes it),
     // with what was stored on the device before and after.
     const autoSwitch = on => evaluate(async on => {
@@ -752,6 +809,7 @@ async function main() {
       }
       if (!sameList(sortFacts(facts), sortFacts(facts, fact => fact.cheat))) sortSaw.hiddenWouldMove = true;
     };
+    let pagingShot = null;
     for (let n = 1; n <= ROUNDS; n++) {
       const start = await evaluate(() => window.__cc.clue());
       const pins = await evaluate(() => window.__cc.state().pins);
@@ -876,26 +934,20 @@ async function main() {
         });
         await sleep(1000); // its photo loads
         await screenshot('02d-field-guide.png');
+        const onePage = await evaluate(() => { const box = document.querySelector('[role=dialog] [data-guide-signs]'); return { pages: Number(box?.dataset.guideSigns ?? 0), signs: box?.querySelectorAll('[data-sign-measure] [data-sign]').length ?? 0 }; });
+        check('field guide: the 02d shot\'s sheet shows its signs on one page', onePage.signs > 0 && onePage.pages === 1, JSON.stringify(onePage));
         // Plan 055: the sheet during play, light and dark: its top, then scrolled to the guide's category rows.
-        { const theme = await evaluate(() => ({ data: document.documentElement.dataset.theme ?? null, stored: localStorage.getItem('critter-connect:theme') }));
-          for (const mode of ['light', 'dark']) {
-            for (const [shot, rows] of [['02d-field-guide', false], ['02e-field-guide-rows', true]]) {
-              await evaluate(({ mode, rows }) => {
-                document.documentElement.dataset.theme = mode;
-                localStorage.setItem('critter-connect:theme', mode);
-                const first = document.querySelector('[role=dialog] [data-guide-cat] dt');
-                if (rows) first?.scrollIntoView({ block: 'start' });
-                else document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' });
-              }, { mode, rows });
-              await sleep(300);
-              await screenshot(`${shot}-${mode}.png`);
-            }
+        await inThemes(async mode => {
+          for (const [shot, rows] of [['02d-field-guide', false], ['02e-field-guide-rows', true]]) {
+            await evaluate(rows => {
+              if (rows) document.querySelector('[role=dialog] [data-guide-cat] dt')?.scrollIntoView({ block: 'start' });
+              else document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' });
+            }, rows);
+            await sleep(300);
+            await screenshot(`${shot}-${mode}.png`);
           }
-          await evaluate(({ data, stored }) => {
-            if (data) document.documentElement.dataset.theme = data; else delete document.documentElement.dataset.theme;
-            if (stored) localStorage.setItem('critter-connect:theme', stored); else localStorage.removeItem('critter-connect:theme');
-            document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' });
-          }, theme); }
+        });
+        await evaluate(() => document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' }));
         await evaluate(async () => {
           [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
           await new Promise(resolve => setTimeout(resolve, 250));
@@ -993,13 +1045,66 @@ async function main() {
         check('field guide: both neighbours\' photos peek at the sides', flip.peeks === 2, JSON.stringify(flip));
         check('field guide: the drawer keeps one height and its photo row one place through all 5 and the longest name', flip.heights.length === 1, JSON.stringify(flip));
         check('field guide: the longest name shows whole', !flip.longName.clipped, JSON.stringify(flip));
-        // Plan 055: each of the 5 guides, during play. Signs sit under their category's row, none beside the photo, none
-        // hidden; the guide's own lines for a dealt question stay hidden (plan 045) while that category's signs show.
+        // Plan 058: each of the 5 guides, during play. Signs sit beside the photo in category groups (one icon each), none
+        // hidden, none in the guide rows; the guide's own lines for a dealt question stay hidden (plan 045) while that
+        // category's signs show.
         let sheetTiles = [];
         const sheets = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
           // A category mark as the e2e sees it: its category and its icon's lucide-* class.
           window.__mark = el => { const mark = el.querySelector('[data-category-mark]'); return { cat: mark?.dataset.categoryMark ?? null, icon: [...(mark?.querySelector('svg')?.classList ?? [])].filter(c => c.startsWith('lucide-')).sort().join(' ') }; };
+          // The open sheet's signs beside the photo: the measuring list (with chip offsets), the page showing (read once the
+          // crossfade has left exactly one), whether it fits the box, the screen-reader list and the pause state.
+          window.__signs = async () => {
+            const box = () => document.querySelector('[role=dialog] [data-guide-signs]');
+            if (!box()) return null;
+            await window.__until(() => box().querySelectorAll('[data-sign-page]').length === 1);
+            const b = box(), rect = b.getBoundingClientRect(), shown = b.querySelector('[data-sign-page]');
+            const groupsOf = (ul, offsets) => [...ul.children].map(li => {
+              const chips = [...li.querySelectorAll('[data-sign]')];
+              return { cat: li.dataset.signGroup ?? null, first: li.firstElementChild?.dataset.categoryMark ?? null, marks: li.querySelectorAll('[data-category-mark]').length, icon: window.__mark(li).icon, tags: chips.map(chip => chip.dataset.sign), offsetHeight: li.offsetHeight, ...(offsets ? { boxes: chips.map(chip => ({ top: chip.offsetTop, height: chip.offsetHeight })) } : {}) };
+            });
+            const fits = [...shown.querySelectorAll('[data-sign]')].every(chip => {
+              const r = chip.getBoundingClientRect();
+              return r.top >= rect.top - 1 && r.bottom <= rect.bottom + 1 && r.left >= rect.left - 1 && r.right <= rect.right + 1 && r.height <= 2 * parseFloat(getComputedStyle(chip).lineHeight);
+            });
+            const button = b.querySelector('button[aria-label="Pause the signs"]');
+            return {
+              pages: Number(b.dataset.guideSigns), page: Number(shown.dataset.signPage), height: b.clientHeight,
+              all: groupsOf(b.querySelector('[data-sign-measure]'), true), shown: groupsOf(shown, false), fits,
+              sr: [...b.querySelectorAll('[data-sign-list] li')].map(li => li.textContent),
+              counter: b.previousElementSibling?.querySelector('.font-data')?.textContent ?? null,
+              pressed: button?.getAttribute('aria-pressed') ?? null, mark: Boolean(b.previousElementSibling?.querySelector('svg')),
+            };
+          };
+          // Every page of the open sheet's signs, in page order: pause, then turn one page at a time (tap resumes and turns,
+          // a second tap pauses again). A tap is pointerdown/up then click, so the photo row's drag guard lets it through.
+          const pause = () => document.querySelector('[role=dialog] [data-guide-signs] button[aria-label="Pause the signs"]');
+          const tap = el => { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' })); el.click(); };
+          const turn = async () => { tap(pause()); await wait(50); tap(pause()); await wait(450); };
+          window.__allPages = async () => {
+            const first = await window.__signs();
+            if (!first || first.pages < 2) return first ? [first] : [];
+            tap(pause()); await wait(50);
+            const read = [await window.__signs()];
+            for (let k = 1; k < first.pages; k++) { await turn(); read.push(await window.__signs()); }
+            return read.sort((a, b) => a.page - b.page);
+          };
+          // Pauses the open sheet's signs on page k (for a shot) and returns what shows.
+          window.__signPage = async k => {
+            if (pause().getAttribute('aria-pressed') !== 'true') { tap(pause()); await wait(50); }
+            for (let i = 0; i < 5 && (await window.__signs()).page !== k; i++) await turn();
+            const { page, pages, pressed, mark, counter } = await window.__signs();
+            return { page, pages, pressed, mark, counter };
+          };
+          // Closes the field guide and drops the pick it made.
+          window.__closeGuide = async () => {
+            [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
+            await wait(300);
+            const pressed = document.querySelector('table[aria-label="Evidence"] button[data-pill][aria-pressed="true"]');
+            if (pressed) pressed.click();
+            await wait(150);
+          };
           window.__tiles = [...document.querySelectorAll('table[aria-label="Evidence"] thead th[data-tag]')].map(th => ({ tag: th.dataset.tag, label: th.querySelector('button')?.getAttribute('aria-label') ?? '', ...window.__mark(th) }));
           await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
           const { suspects } = window.__cc.clue();
@@ -1008,45 +1113,47 @@ async function main() {
             document.querySelector(`[role=dialog] [data-guide-number="${i}"]`).click();
             await wait(300);
             const dialog = document.querySelector('[role=dialog]');
+            const pages = await window.__allPages();
             read.push({
               id: suspects[i - 1],
               status: window.__cc.clue().status,
-              besidePhoto: dialog.querySelectorAll('[data-guide-swipe] [data-sign]').length,
-              signs: [...dialog.querySelectorAll('[data-sign]')].map(li => ({ tag: li.dataset.sign, row: li.closest('[data-guide-cat]')?.dataset.guideCat ?? null, inList: Boolean(li.closest('ul[data-signs]')) })),
-              rows: [...dialog.querySelectorAll('[data-guide-cat]')].map(row => ({ cat: row.dataset.guideCat, mark: row.querySelector('dt [data-category-mark]')?.dataset.categoryMark ?? null, lines: row.querySelectorAll('[data-guide-line]').length, signs: row.querySelectorAll('[data-sign]').length })),
+              pages,
+              all: pages[0]?.all ?? [],
+              sr: pages[0]?.sr ?? [],
+              outside: [...dialog.querySelectorAll('[data-sign]')].filter(li => !li.closest('[data-guide-swipe] [data-guide-signs]')).length,
+              rows: [...dialog.querySelectorAll('[data-guide-cat]')].map(row => ({ cat: row.dataset.guideCat, mark: row.querySelector('dt [data-category-mark]')?.dataset.categoryMark ?? null, lines: row.querySelectorAll('[data-guide-line]').length })),
               linePrefixes: [...dialog.querySelectorAll('[data-guide-line]')].flatMap(line => line.dataset.guideLine.split(' ').filter(Boolean)),
               answers: [...dialog.querySelectorAll('[data-answer-tag]')].map(li => ({ tag: li.dataset.answerTag, ...window.__mark(li) })),
               headings: [...dialog.querySelectorAll('[data-guide-cat] dt')].map(dt => window.__mark(dt)),
             });
           }
-          [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
-          await wait(300);
-          const pressed = document.querySelector('table[aria-label="Evidence"] button[data-pill][aria-pressed="true"]');
-          if (pressed) pressed.click(); // drop the pick the guide made
-          await wait(150);
+          await window.__closeGuide();
           return { read, tiles: window.__tiles };
         }).then(({ read, tiles }) => { sheetTiles = tiles; return read; });
         { const dealt = start.orders.map(order => order.tag.split(':')[0]);
-          const rowOf = new Map();
+          const groupOf = new Map();
           const bad = sheets.flatMap(sheet => {
-            const shown = sheet.signs.map(sign => sign.tag).sort().join();
+            const shown = sheet.all.flatMap(group => group.tags).sort().join();
             const want = [...(openTags.get(sheet.id) ?? [])].sort().join();
             const problems = [];
             if (sheet.status !== 'playing') problems.push('not playing');
-            if (sheet.besidePhoto > 0) problems.push(`${sheet.besidePhoto} beside the photo`);
+            if (sheet.outside > 0) problems.push(`${sheet.outside} outside the box beside the photo`);
             if (shown !== want) problems.push(`shown ${shown} != its signs ${want}`);
-            for (const sign of sheet.signs) {
-              if (!sign.row || !sign.inList) problems.push(`${sign.tag} outside a category row`);
-              if (rowOf.has(sign.tag) && rowOf.get(sign.tag) !== sign.row) problems.push(`${sign.tag} under ${sign.row} here, ${rowOf.get(sign.tag)} elsewhere`);
-              rowOf.set(sign.tag, sign.row);
+            problems.push(...signGroupProblems('all', sheet.all), ...sheet.pages.flatMap(page => signGroupProblems(`page ${page.page}`, page.shown)));
+            for (const group of sheet.all) for (const tag of group.tags) {
+              if (groupOf.has(tag) && groupOf.get(tag) !== group.cat) problems.push(`${tag} in ${group.cat} here, ${groupOf.get(tag)} elsewhere`);
+              groupOf.set(tag, group.cat);
             }
-            for (const row of sheet.rows) if (row.mark !== row.cat || (row.lines === 0 && row.signs === 0)) problems.push(`row ${row.cat}: mark ${row.mark}, ${row.lines} lines, ${row.signs} signs`);
+            if (sheet.sr.length !== sheet.all.length || sheet.all.some((group, i) => !sheet.sr[i]?.startsWith(`${CATEGORY_WORD[group.cat]}: `))) problems.push(`screen-reader list ${JSON.stringify(sheet.sr)}`);
+            for (const row of sheet.rows) if (row.mark !== row.cat || row.lines === 0) problems.push(`row ${row.cat}: mark ${row.mark}, ${row.lines} lines`);
             return problems.length ? [{ id: sheet.id, problems }] : [];
           });
-          check('field guide: every sign shows under its category\'s row, none beside the photo, none hidden', sheets.length === 5 && bad.length === 0, JSON.stringify(bad.length ? bad : sheets.map(sheet => [sheet.id, sheet.signs.length])));
+          check('field guide: signs sit beside the photo, grouped in the guide\'s category order, one icon per group before its chips; none hidden, none in the guide rows', sheets.length === 5 && bad.length === 0, JSON.stringify(bad.length ? bad : sheets.map(sheet => [sheet.id, sheet.all.map(group => `${group.cat}:${group.tags.length}`).join(' '), `${sheet.pages.length} page(s)`])));
+          const overflowing = sheets.flatMap(sheet => sheet.pages.filter(page => !page.fits).map(page => `${sheet.id} page ${page.page}`));
+          check('field guide: the signs showing fit beside the photo, chips one line tall', overflowing.length === 0, JSON.stringify(overflowing));
           const leaked = sheets.flatMap(sheet => sheet.linePrefixes.filter(prefix => dealt.includes(prefix)).map(prefix => `${sheet.id}:${prefix}`));
-          const bearing = sheets.flatMap(sheet => dealt.filter(prefix => sheet.signs.some(sign => sign.row === CATEGORY[prefix])).map(prefix => `${sheet.id}:${prefix}`));
-          check('field guide: a dealt question\'s guide lines stay hidden while its category\'s signs show', leaked.length === 0 && bearing.length > 0, JSON.stringify({ dealt, leaked, bearing }));
+          const bearing = sheets.flatMap(sheet => dealt.filter(prefix => sheet.all.some(group => group.cat === CATEGORY[prefix])).map(prefix => `${sheet.id}:${prefix}`));
+          check('field guide: a dealt question\'s guide lines stay hidden while its category\'s signs show beside the photo', leaked.length === 0 && bearing.length > 0, JSON.stringify({ dealt, leaked, bearing }));
           // E3: each question tile, its "Its answers" row and its category's guide heading carry the same mark.
           const iconOf = new Map(sheets.flatMap(sheet => sheet.headings).filter(h => h.cat).map(h => [h.cat, h.icon]));
           const mismatched = sheetTiles.flatMap(tile => {
@@ -1062,7 +1169,82 @@ async function main() {
           });
           const headingMatches = sheetTiles.filter(tile => iconOf.get(tile.cat) === tile.icon).length;
           const headingsOneIcon = sheets.every(sheet => sheet.headings.every(h => !iconOf.has(h.cat) || iconOf.get(h.cat) === h.icon));
-          check('each question tile, its answer row and its guide heading carry the same category icon', sheetTiles.length === start.orders.length && mismatched.length === 0 && headingMatches > 0 && headingsOneIcon, JSON.stringify({ mismatched, headingMatches, tiles: sheetTiles.map(tile => [tile.tag, tile.cat, tile.icon]) })); }
+          // ...and each sign group beside the photo leads with that same icon.
+          const tileIcon = new Map(sheetTiles.map(tile => [tile.cat, tile.icon]));
+          const groups = sheets.flatMap(sheet => sheet.all.map(group => ({ id: sheet.id, ...group })));
+          const groupMismatch = groups.filter(group => !group.icon || (tileIcon.has(group.cat) && tileIcon.get(group.cat) !== group.icon) || (iconOf.has(group.cat) && iconOf.get(group.cat) !== group.icon)).map(group => `${group.id} ${group.cat} ${group.icon}`);
+          const groupMatches = groups.filter(group => tileIcon.get(group.cat) === group.icon).length;
+          check('each question tile, its answer row, its guide heading and its sign group carry the same category icon', sheetTiles.length === start.orders.length && mismatched.length === 0 && headingMatches > 0 && headingsOneIcon && groupMismatch.length === 0 && groupMatches > 0, JSON.stringify({ mismatched, groupMismatch, headingMatches, groupMatches, tiles: sheetTiles.map(tile => [tile.tag, tile.cat, tile.icon]) })); }
+        // Plan 058, paging. Every sheet's signs, read page by page from a fresh guide; `force` pins the box at w x h px
+        // (re-split by its ResizeObserver) and lets go after.
+        const guideSheets = force => evaluate(async force => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
+          const { suspects } = window.__cc.clue();
+          const read = [];
+          for (let i = 1; i <= suspects.length; i++) {
+            document.querySelector(`[role=dialog] [data-guide-number="${i}"]`).click();
+            await wait(300);
+            const box = document.querySelector('[role=dialog] [data-guide-signs]');
+            if (force && box) { Object.assign(box.style, { flex: 'none', width: `${force[0]}px`, height: `${force[1]}px` }); await wait(300); }
+            const pages = await window.__allPages();
+            if (force && box) box.removeAttribute('style');
+            read.push({ id: suspects[i - 1], all: pages[0]?.all ?? [], pages });
+          }
+          await window.__closeGuide();
+          return read;
+        }, force);
+        // The forced box: 2 chip lines tall (so a group can move), narrow enough for multi-line groups (so one can split).
+        const FORCED = [144, 40];
+        const forced = await guideSheets(FORCED);
+        { const bad = forced.flatMap(sheet => {
+            const problems = pagingProblems(sheet);
+            if (sheet.pages.some(page => page.height !== FORCED[1])) problems.push(`box ${sheet.pages.map(page => page.height).join()} px`);
+            return problems.length ? [{ id: sheet.id, problems }] : [];
+          });
+          const paged = forced.filter(sheet => sheet.pages.length > 1);
+          check('field guide: signs that don\'t fit split into pages; each part follows its icon, in category order, and fits; the pages together are the list, in order', forced.length === 5 && paged.length > 0 && bad.length === 0, JSON.stringify(bad.length ? bad : forced.map(sheet => [sheet.id, sheet.pages.map(page => page.shown.map(group => `${group.cat}: ${group.tags.join(' · ')}`).join(' / ')).join(' | ')])));
+          const breaks = paged.flatMap(pageBreaks);
+          const count = kind => breaks.filter(b => b.kind === kind).length;
+          check('field guide: a sign group that fits on a page starts the next page whole; a longer one breaks at a line and repeats its icon; no break comes early', count('split') >= 1 && count('move') >= 1 && breaks.every(b => b.ok), JSON.stringify({ splits: count('split'), moves: count('move'), bad: breaks.filter(b => !b.ok).length, breaks })); }
+        // P3: the sheet with the most signs, its box forced so it pages: the pages turn on their own; a tap pauses (the mark
+        // shows, the page holds); another resumes and moves on. The next animal's box starts on page 1, not paused.
+        const most = forced.reduce((best, sheet, i) => sheet.all.flatMap(group => group.tags).length > forced[best].all.flatMap(group => group.tags).length ? i : best, 0) + 1;
+        const turns = await evaluate(async ({ most, force }) => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const box = () => document.querySelector('[role=dialog] [data-guide-signs]');
+          const shown = () => Number([...(box()?.querySelectorAll('[data-sign-page]') ?? [])].at(-1)?.dataset.signPage ?? 0);
+          const button = () => box()?.querySelector('button[aria-label="Pause the signs"]');
+          const state = () => ({ page: shown(), pressed: button()?.getAttribute('aria-pressed') ?? null, mark: Boolean(box()?.previousElementSibling?.querySelector('svg')) });
+          const tap = el => { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' })); el.click(); };
+          const number = i => { document.querySelector(`[role=dialog] [data-guide-number="${i}"]`).click(); return wait(300); };
+          await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
+          await number(most === 1 ? 2 : 1);
+          await number(most); // a fresh mount: page 1, not paused
+          Object.assign(box().style, { flex: 'none', width: `${force[0]}px`, height: `${force[1]}px` });
+          await window.__until(() => Number(box().dataset.guideSigns) > 1);
+          const result = { pages: Number(box().dataset.guideSigns), start: state() };
+          result.turned = await window.__until(() => shown() === 2, 5600);
+          tap(button()); await wait(100);
+          result.paused = state();
+          await wait(5600);
+          result.held = state();
+          tap(button());
+          await window.__until(() => shown() !== result.held.page, 1000);
+          result.resumed = state();
+          box().removeAttribute('style');
+          await number(most % 5 + 1);
+          result.next = box() ? { page: shown(), pressedTrue: Boolean(box().querySelector('[aria-pressed="true"]')) } : null;
+          await window.__closeGuide();
+          return result;
+        }, { most, force: FORCED });
+        check('field guide: signs in pages turn on their own, a tap pauses them, another resumes and moves on', turns.pages > 1 && turns.start.page === 1 && turns.start.pressed === 'false' && turns.turned && turns.paused.pressed === 'true' && turns.paused.mark && turns.held.page === turns.paused.page && turns.resumed.pressed === 'false' && !turns.resumed.mark && turns.resumed.page !== turns.held.page && (!turns.next || (turns.next.page === 1 && !turns.next.pressedTrue)), JSON.stringify({ sheet: most, ...turns }));
+        // S3: on a 320 px phone the natural box is narrower; long lists page there instead of overflowing.
+        await sideNotesAt(320, 720, true);
+        const narrow = await guideSheets(null);
+        await sideNotesAt(...PHONE);
+        { const bad = narrow.flatMap(sheet => { const problems = pagingProblems(sheet); return problems.length ? [{ id: sheet.id, problems }] : []; });
+          check('field guide: on a 320 px phone the signs page instead of overflowing: every page fits, groups and icons as at 390, the pages together are the list', narrow.length === 5 && narrow.some(sheet => sheet.pages.length > 1) && bad.length === 0, JSON.stringify(bad.length ? bad : narrow.map(sheet => [sheet.id, sheet.pages.map(page => page.shown.map(group => `${group.cat}: ${group.tags.join(' · ')}`).join(' / ')).join(' | ')]))); }
         // A long press on a board tile opens the field guide too.
         const tileHeld = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -1317,6 +1499,101 @@ async function main() {
         const touchName = await clickWithReorderWaiting({ id: e }, 'touch');
         check('the sort: a quick tap on a name that a waiting re-order moves still picks that animal', sameList(touchName.rows, card) && touchName.picked === 'true' && !touchName.guide, JSON.stringify(touchName));
         await dropPick(e);
+      }
+      // Plan 058: no round-1 sheet pages at 390 px, so the paging shots come from the first later round that deals one,
+      // before its first move: both pages, light and dark, then the same sheet at 1280 px. It plays no move.
+      if (n > 1 && !pagingShot) {
+        const found = await evaluate(async () => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
+          const { suspects } = window.__cc.clue();
+          for (let i = 1; i <= suspects.length; i++) {
+            document.querySelector(`[role=dialog] [data-guide-number="${i}"]`).click();
+            const pages = () => Number(document.querySelector('[role=dialog] [data-guide-signs]')?.dataset.guideSigns ?? 0);
+            if (await window.__until(() => pages() > 1, 800)) return { id: suspects[i - 1], pages: pages() };
+          }
+          await window.__closeGuide();
+          return null;
+        });
+        if (found) {
+          const shots = {};
+          await sleep(1000); // its photo loads
+          await inThemes(async mode => {
+            await evaluate(() => document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' }));
+            await sleep(300);
+            for (const k of [1, 2]) {
+              shots[`${k}-${mode}`] = await evaluate(k => window.__signPage(k), k);
+              await screenshot(`02f-signs-page-${k}-${mode}.png`);
+            }
+          });
+          await sideNotesAt(1280, 800, false);
+          await evaluate(() => document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' }));
+          shots.desktop = await evaluate(async () => { await new Promise(resolve => setTimeout(resolve, 300)); return window.__signs().then(s => s && { page: s.page, pages: s.pages }); });
+          await screenshot('02g-signs-desktop.png');
+          await sideNotesAt(...PHONE);
+          // Keyboard focus on the pause button (Shift+Tab away, Tab back, real keys): its ring must sit inside the box,
+          // which clips its overflow (plan 058 audit).
+          await evaluate(() => document.querySelector('[role=dialog] [data-guide-signs] button[aria-pressed]')?.focus());
+          for (const modifiers of [8, 0]) for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, modifiers });
+          await sleep(100);
+          shots.focus = await evaluate(() => {
+            const button = document.querySelector('[role=dialog] [data-guide-signs] button[aria-pressed]');
+            const style = button && getComputedStyle(button);
+            return button && { focused: document.activeElement === button, visible: button.matches(':focus-visible'), outline: style.outlineStyle, width: parseFloat(style.outlineWidth), offset: parseFloat(style.outlineOffset) };
+          });
+          await screenshot('02h-signs-focus.png');
+          // Astra code review: a photo-row drag leaves the drag guard set, which swallowed the pause button's keyboard
+          // clicks too. Resume by tap, drag the row with a real mouse and bring it back (no flip), focus the button by
+          // Tab, then Space pauses (the page holds 5.6 s) and Space again resumes and moves on.
+          const sheetNow = () => evaluate(() => {
+            const b = document.querySelector('[role=dialog] [data-guide-signs]'), button = b?.querySelector('button[aria-pressed]');
+            return { name: document.querySelector('[role=dialog] [data-guide-name]')?.textContent ?? null, page: Number(b?.querySelector('[data-sign-page]')?.dataset.signPage ?? 0), pressed: button?.getAttribute('aria-pressed') ?? null, focused: Boolean(button && document.activeElement === button), x: document.querySelector('[role=dialog] [data-guide-swipe]')?.style.transform ?? '' };
+          });
+          await evaluate(async () => {
+            const button = document.querySelector('[role=dialog] [data-guide-signs] button[aria-pressed]');
+            if (button?.getAttribute('aria-pressed') === 'true') { button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })); button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' })); button.click(); }
+            document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'center' });
+            await new Promise(resolve => setTimeout(resolve, 300));
+          });
+          const from = await evaluate(() => { const r = document.querySelector('[role=dialog] [data-guide-swipe] figure').getBoundingClientRect(); return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 3) }; });
+          const drag = { before: await sheetNow() };
+          const mouseAt = (type, dx) => page('Input.dispatchMouseEvent', { type, x: from.x + dx, y: from.y, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1 });
+          await mouseAt('mousePressed', 0);
+          for (const dx of [5, 10, 15, 20, 25, 30]) { await mouseAt('mouseMoved', dx); await sleep(16); }
+          drag.during = await sheetNow();
+          for (const dx of [25, 20, 15, 10, 5, 0]) { await mouseAt('mouseMoved', dx); await sleep(16); }
+          await mouseAt('mouseReleased', 0);
+          await sleep(500);
+          drag.after = await sheetNow();
+          await evaluate(() => document.querySelector('[role=dialog] [data-guide-signs] button[aria-pressed]')?.focus());
+          for (const modifiers of [8, 0]) for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, modifiers });
+          const space = async () => { for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: ' ', code: 'Space', windowsVirtualKeyCode: 32, ...(type === 'keyDown' ? { text: ' ' } : {}) }); await sleep(100); };
+          await space();
+          drag.paused = await sheetNow();
+          await sleep(5600);
+          drag.held = await sheetNow();
+          await space();
+          await sleep(500);
+          drag.resumed = await sheetNow();
+          shots.keyboardAfterDrag = drag;
+          // Astra code review: ←/→ from the pause button remounted the signs and dropped focus to the page, so the next
+          // arrow did nothing. Tab to the pause button, then ArrowRight twice (real keys): each flips, focus stays in the sheet.
+          const focusNow = () => evaluate(() => {
+            const dialog = document.querySelector('[role=dialog]'), active = document.activeElement;
+            return { name: dialog?.querySelector('[data-guide-name]')?.textContent ?? null, inSheet: Boolean(dialog && active && active !== document.body && dialog.contains(active)), on: active?.hasAttribute('aria-pressed') ? 'pause' : active?.hasAttribute('data-guide-swipe') ? 'row' : active?.tagName ?? null };
+          });
+          await evaluate(() => document.querySelector('[role=dialog] [data-guide-signs] button[aria-pressed]')?.focus());
+          for (const modifiers of [8, 0]) for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, modifiers });
+          const arrows = [await focusNow()];
+          for (let i = 0; i < 2; i++) {
+            for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
+            await sleep(400);
+            arrows.push(await focusNow());
+          }
+          shots.arrowsKeepFocus = arrows;
+          await evaluate(() => window.__closeGuide());
+          pagingShot = { round: n, animal: names.get(found.id), pages: found.pages, shots };
+        }
       }
       // Pencil a guess in every hidden answer (yes, no, yes, ...), so scouting shows right and wrong guesses.
       const pencilled = await evaluate(async () => {
@@ -1705,6 +1982,14 @@ async function main() {
         await sleep(800);
       }
     }
+    { const shown = pagingShot && ['light', 'dark'].every(mode => [1, 2].every(k => { const shot = pagingShot.shots[`${k}-${mode}`]; return shot.page === k && shot.pages > 1 && shot.pressed === 'true' && shot.mark && shot.counter === `${k}/${shot.pages}`; }));
+      check('field guide: a sheet whose signs page at 390 px was found and shot (both pages, light and dark, and at 1280 px)', Boolean(shown && pagingShot.shots.desktop), JSON.stringify(pagingShot));
+      const focus = pagingShot?.shots.focus;
+      check('field guide: the signs\' pause button shows its keyboard focus ring inside the box', Boolean(focus?.focused && focus.visible && focus.outline !== 'none' && focus.width > 0 && focus.offset + focus.width <= 0), JSON.stringify(focus ?? null));
+      const kd = pagingShot?.shots.keyboardAfterDrag;
+      check('field guide: signs keyboard pause after drag: after a photo-row drag (no flip), Space on the pause button pauses the pages and Space again resumes them', Boolean(kd && kd.before.pressed === 'false' && kd.during.x && kd.during.x !== 'none' && !/translateX\(0px\)/.test(kd.during.x) && kd.after.name === kd.before.name && kd.paused.focused && kd.paused.pressed === 'true' && kd.held.pressed === 'true' && kd.held.page === kd.paused.page && kd.resumed.pressed === 'false' && kd.resumed.page !== kd.held.page && kd.resumed.name === kd.before.name), JSON.stringify(kd ?? null));
+      const ak = pagingShot?.shots.arrowsKeepFocus;
+      check('field guide: signs arrows keep focus: from the pause button, ArrowRight twice shows the next animal each time and focus stays in the sheet', Boolean(ak && ak.length === 3 && ak[0].on === 'pause' && ak.every(at => at.inSheet) && new Set(ak.map(at => at.name)).size === 3), JSON.stringify(ak ?? null)); }
     check('the release preview was checked at least once', previewChecked);
     check('the scouting preview was checked at least once', scoutChecked);
     check('the idle hint was checked at least once', hintChecked);
@@ -2057,25 +2342,18 @@ async function main() {
         }, CARD);
         check('sources: the AmphibiaWeb entry cites AmphibiaWeb, CC BY-NC, reworded', Boolean(entry) && entry.includes('AmphibiaWeb') && entry.includes('License: CC BY-NC') && entry.includes('Reworded for this game.'), entry ?? 'no entry links to amphibiaweb.org');
         // Closed and open, light and dark; the theme as it was afterwards.
-        const theme = await evaluate(() => ({ data: document.documentElement.dataset.theme ?? null, stored: localStorage.getItem('critter-connect:theme') }));
-        for (const mode of ['light', 'dark']) {
+        await inThemes(async mode => {
           for (const open of [false, true]) {
-            await evaluate(({ selector, mode, open }) => {
-              document.documentElement.dataset.theme = mode;
-              localStorage.setItem('critter-connect:theme', mode);
+            await evaluate(({ selector, open }) => {
               const details = document.querySelector(`${selector} details[data-sources]`);
               details.open = open;
               const entry = [...details.querySelectorAll('[data-source-entry]')].find(item => [...item.querySelectorAll('a')].some(a => new URL(a.href).hostname.endsWith('amphibiaweb.org')));
               (open ? entry : details).scrollIntoView({ block: 'nearest' });
-            }, { selector: CARD, mode, open });
+            }, { selector: CARD, open });
             await sleep(300);
             await screenshot(`10-sources-${open ? 'open' : 'closed'}-${mode}.png`);
           }
-        }
-        await evaluate(({ data, stored }) => {
-          if (data) document.documentElement.dataset.theme = data; else delete document.documentElement.dataset.theme;
-          if (stored) localStorage.setItem('critter-connect:theme', stored); else localStorage.removeItem('critter-connect:theme');
-        }, theme);
+        });
       }
     }
 

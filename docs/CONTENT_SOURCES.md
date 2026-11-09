@@ -66,7 +66,7 @@ Trait values (templates in `profiles.ts`):
 
 ### Signs
 
-A clue's open tags are its **signs**: each shows as a phrase (`digging_claws` → "digging claws") in the field guide under one question category, and is never hidden during play. `SIGNS` in `src/clueGame/signs.ts` is the vocabulary and is authoritative: it gives each tag its category and what its plain reading says about the traits. A new tag needs its entry there; `checkProfile` (so `content -- preview` and `build`) flags an open tag missing from it, a sign that contradicts its holder's traits, and one that restates an asked answer. `docs/research/2026-11-07-moves-and-signs/sign-map.csv` is the research record it came from. Retired tags stay in `SIGNS` so new code still loads rows an older content build wrote.
+A clue's open tags are its **signs**: each shows as a phrase (`digging_claws` → "digging claws") beside the field guide's photo, in its question category's group, and is never hidden during play. `SIGNS` in `src/clueGame/signs.ts` is the vocabulary and is authoritative: it gives each tag its category and what its plain reading says about the traits. A new tag needs its entry there; `checkProfile` (so `content -- preview` and `build`) flags an open tag missing from it, a sign that contradicts its holder's traits, and one that restates an asked answer. `docs/research/2026-11-07-moves-and-signs/sign-map.csv` is the research record it came from. Retired tags stay in `SIGNS` so new code still loads rows an older content build wrote.
 
 The sign rule:
 - A sign names evidence from its own note, in the note's own words ("sleeps high in trees", "seldom on ground"), never a question's answer (`tree_dweller` is "Lives in trees: yes" and is retired).
