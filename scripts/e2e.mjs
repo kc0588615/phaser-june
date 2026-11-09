@@ -47,6 +47,43 @@ const signGroupProblems = (where, groups) => groups.flatMap((group, i) => {
   if (!CATEGORY_ORDER.includes(group.cat) || group.marks !== 1 || group.first !== group.cat || group.tags.length === 0) problems.push(`${where}: group ${group.cat} has ${group.marks} marks, first ${group.first}, ${group.tags.length} chips`);
   return problems;
 });
+/** Plan 058: a sheet's sign pages (from __allPages) as P1 wants them: each page's groups as signGroupProblems wants and
+ * fitting the box, numbered 1..n, and joined (a run continuing the last page's group merged into it) equal to the list. */
+const pagingProblems = sheet => {
+  const problems = sheet.pages.flatMap(page => [...signGroupProblems(`page ${page.page}`, page.shown), ...(page.fits ? [] : [`page ${page.page} overflows`])]);
+  const numbers = sheet.pages.map(page => page.page).join();
+  if (numbers !== sheet.pages.map((_, i) => i + 1).join() || sheet.pages.some(page => page.pages !== sheet.pages.length)) problems.push(`pages ${numbers} of ${sheet.pages[0]?.pages}`);
+  const joined = sheet.pages.flatMap(page => page.shown).reduce((runs, group) => {
+    const last = runs.at(-1);
+    if (last?.cat === group.cat) last.tags.push(...group.tags);
+    else runs.push({ cat: group.cat, tags: [...group.tags] });
+    return runs;
+  }, []);
+  const want = sheet.all.map(({ cat, tags }) => ({ cat, tags }));
+  if (JSON.stringify(joined) !== JSON.stringify(want)) problems.push(`pages ${JSON.stringify(joined)} != list ${JSON.stringify(want)}`);
+  return problems;
+};
+/** A paged sheet's breaks, judged from the measuring list's chip offsets (P2). T is the top of page k's first chip, F page
+ * k+1's first chip. A split (same group both sides) must be forced: F didn't fit, and the group is page k's only run or
+ * taller than a page. A new group whose first chip would have fitted is a move: the group must fit a page whole and must
+ * not have fitted on page k. Otherwise page k was full. */
+const pageBreaks = sheet => {
+  const height = sheet.pages[0].height;
+  const chips = new Map(sheet.all.flatMap(group => group.tags.map((tag, i) => [tag, { top: group.boxes[i].top, bottom: group.boxes[i].top + group.boxes[i].height }])));
+  const extent = new Map(sheet.all.map(group => {
+    const boxes = group.tags.map(tag => chips.get(tag));
+    return [group.cat, { top: Math.min(...boxes.map(b => b.top)), bottom: Math.max(...boxes.map(b => b.bottom)) }];
+  }));
+  const span = cat => extent.get(cat).bottom - extent.get(cat).top;
+  return sheet.pages.slice(0, -1).map((page, k) => {
+    const before = page.shown, after = sheet.pages[k + 1].shown;
+    const T = chips.get(before[0].tags[0]).top, F = chips.get(after[0].tags[0]), last = before.at(-1), next = after[0];
+    const kind = last.cat === next.cat ? 'split' : F.bottom - T <= height ? 'move' : 'full';
+    const ok = kind === 'split' ? F.bottom - T > height && (before.length === 1 || span(next.cat) > height)
+      : kind === 'move' ? span(next.cat) <= height && extent.get(next.cat).bottom - T > height : true;
+    return { id: sheet.id, kind, ok, at: `${last.cat}: ${last.tags.join(' · ')} | ${next.cat}: ${next.tags.join(' · ')}` };
+  });
+};
 /** The grid's sort, from `rows` facts (window.__gridFacts): out below; no contradiction above any; more matches higher; then the card's number. */
 const sortFacts = (facts, view = fact => fact) => [...facts]
   .sort((a, b) => a.out - b.out || view(a).contradicted - view(b).contradicted || view(b).matches - view(a).matches || a.number - b.number)
@@ -1045,6 +1082,14 @@ async function main() {
             for (let k = 1; k < first.pages; k++) { tap(pause()); await wait(50); tap(pause()); await wait(450); read.push(await window.__signs()); }
             return read.sort((a, b) => a.page - b.page);
           };
+          // Closes the field guide and drops the pick it made.
+          window.__closeGuide = async () => {
+            [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
+            await wait(300);
+            const pressed = document.querySelector('table[aria-label="Evidence"] button[data-pill][aria-pressed="true"]');
+            if (pressed) pressed.click();
+            await wait(150);
+          };
           window.__tiles = [...document.querySelectorAll('table[aria-label="Evidence"] thead th[data-tag]')].map(th => ({ tag: th.dataset.tag, label: th.querySelector('button')?.getAttribute('aria-label') ?? '', ...window.__mark(th) }));
           await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
           const { suspects } = window.__cc.clue();
@@ -1067,11 +1112,7 @@ async function main() {
               headings: [...dialog.querySelectorAll('[data-guide-cat] dt')].map(dt => window.__mark(dt)),
             });
           }
-          [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
-          await wait(300);
-          const pressed = document.querySelector('table[aria-label="Evidence"] button[data-pill][aria-pressed="true"]');
-          if (pressed) pressed.click(); // drop the pick the guide made
-          await wait(150);
+          await window.__closeGuide();
           return { read, tiles: window.__tiles };
         }).then(({ read, tiles }) => { sheetTiles = tiles; return read; });
         { const dealt = start.orders.map(order => order.tag.split(':')[0]);
@@ -1119,6 +1160,76 @@ async function main() {
           const groupMismatch = groups.filter(group => !group.icon || (tileIcon.has(group.cat) && tileIcon.get(group.cat) !== group.icon) || (iconOf.has(group.cat) && iconOf.get(group.cat) !== group.icon)).map(group => `${group.id} ${group.cat} ${group.icon}`);
           const groupMatches = groups.filter(group => tileIcon.get(group.cat) === group.icon).length;
           check('each question tile, its answer row, its guide heading and its sign group carry the same category icon', sheetTiles.length === start.orders.length && mismatched.length === 0 && headingMatches > 0 && headingsOneIcon && groupMismatch.length === 0 && groupMatches > 0, JSON.stringify({ mismatched, groupMismatch, headingMatches, groupMatches, tiles: sheetTiles.map(tile => [tile.tag, tile.cat, tile.icon]) })); }
+        // Plan 058, paging. Every sheet's signs, read page by page from a fresh guide; `force` pins the box at w x h px
+        // (re-split by its ResizeObserver) and lets go after.
+        const guideSheets = force => evaluate(async force => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
+          const { suspects } = window.__cc.clue();
+          const read = [];
+          for (let i = 1; i <= suspects.length; i++) {
+            document.querySelector(`[role=dialog] [data-guide-number="${i}"]`).click();
+            await wait(300);
+            const box = document.querySelector('[role=dialog] [data-guide-signs]');
+            if (force && box) { Object.assign(box.style, { flex: 'none', width: `${force[0]}px`, height: `${force[1]}px` }); await wait(300); }
+            const pages = await window.__allPages();
+            if (force && box) box.removeAttribute('style');
+            read.push({ id: suspects[i - 1], all: pages[0]?.all ?? [], pages });
+          }
+          await window.__closeGuide();
+          return read;
+        }, force);
+        // The forced box: 2 chip lines tall (so a group can move), narrow enough for multi-line groups (so one can split).
+        const FORCED = [144, 40];
+        const forced = await guideSheets(FORCED);
+        { const bad = forced.flatMap(sheet => {
+            const problems = pagingProblems(sheet);
+            if (sheet.pages.some(page => page.height !== FORCED[1])) problems.push(`box ${sheet.pages.map(page => page.height).join()} px`);
+            return problems.length ? [{ id: sheet.id, problems }] : [];
+          });
+          const paged = forced.filter(sheet => sheet.pages.length > 1);
+          check('field guide: signs that don\'t fit split into pages; each part follows its icon, in category order, and fits; the pages together are the list, in order', forced.length === 5 && paged.length > 0 && bad.length === 0, JSON.stringify(bad.length ? bad : forced.map(sheet => [sheet.id, sheet.pages.map(page => page.shown.map(group => `${group.cat}: ${group.tags.join(' · ')}`).join(' / ')).join(' | ')])));
+          const breaks = paged.flatMap(pageBreaks);
+          const count = kind => breaks.filter(b => b.kind === kind).length;
+          check('field guide: a sign group that fits on a page starts the next page whole; a longer one breaks at a line and repeats its icon; no break comes early', count('split') >= 1 && count('move') >= 1 && breaks.every(b => b.ok), JSON.stringify({ splits: count('split'), moves: count('move'), bad: breaks.filter(b => !b.ok).length, breaks })); }
+        // P3: the sheet with the most signs, its box forced so it pages: the pages turn on their own; a tap pauses (the mark
+        // shows, the page holds); another resumes and moves on. The next animal's box starts on page 1, not paused.
+        const most = forced.reduce((best, sheet, i) => sheet.all.flatMap(group => group.tags).length > forced[best].all.flatMap(group => group.tags).length ? i : best, 0) + 1;
+        const turns = await evaluate(async ({ most, force }) => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const box = () => document.querySelector('[role=dialog] [data-guide-signs]');
+          const shown = () => Number([...(box()?.querySelectorAll('[data-sign-page]') ?? [])].at(-1)?.dataset.signPage ?? 0);
+          const button = () => box()?.querySelector('button[aria-label="Pause the signs"]');
+          const state = () => ({ page: shown(), pressed: button()?.getAttribute('aria-pressed') ?? null, mark: Boolean(box()?.previousElementSibling?.querySelector('svg')) });
+          const tap = el => { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' })); el.click(); };
+          const number = i => { document.querySelector(`[role=dialog] [data-guide-number="${i}"]`).click(); return wait(300); };
+          await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
+          await number(most === 1 ? 2 : 1);
+          await number(most); // a fresh mount: page 1, not paused
+          Object.assign(box().style, { flex: 'none', width: `${force[0]}px`, height: `${force[1]}px` });
+          await window.__until(() => Number(box().dataset.guideSigns) > 1);
+          const result = { pages: Number(box().dataset.guideSigns), start: state() };
+          result.turned = await window.__until(() => shown() === 2, 5600);
+          tap(button()); await wait(100);
+          result.paused = state();
+          await wait(5600);
+          result.held = state();
+          tap(button());
+          await window.__until(() => shown() !== result.held.page, 1000);
+          result.resumed = state();
+          box().removeAttribute('style');
+          await number(most % 5 + 1);
+          result.next = box() ? { page: shown(), pressedTrue: Boolean(box().querySelector('[aria-pressed="true"]')) } : null;
+          await window.__closeGuide();
+          return result;
+        }, { most, force: FORCED });
+        check('field guide: signs in pages turn on their own, a tap pauses them, another resumes and moves on', turns.pages > 1 && turns.start.page === 1 && turns.start.pressed === 'false' && turns.turned && turns.paused.pressed === 'true' && turns.paused.mark && turns.held.page === turns.paused.page && turns.resumed.pressed === 'false' && !turns.resumed.mark && turns.resumed.page !== turns.held.page && (!turns.next || (turns.next.page === 1 && !turns.next.pressedTrue)), JSON.stringify({ sheet: most, ...turns }));
+        // S3: on a 320 px phone the natural box is narrower; long lists page there instead of overflowing.
+        await sideNotesAt(320, 720, true);
+        const narrow = await guideSheets(null);
+        await sideNotesAt(...PHONE);
+        { const bad = narrow.flatMap(sheet => { const problems = pagingProblems(sheet); return problems.length ? [{ id: sheet.id, problems }] : []; });
+          check('field guide: on a 320 px phone the signs page instead of overflowing: every page fits, groups and icons as at 390, the pages together are the list', narrow.length === 5 && narrow.some(sheet => sheet.pages.length > 1) && bad.length === 0, JSON.stringify(bad.length ? bad : narrow.map(sheet => [sheet.id, sheet.pages.map(page => page.shown.map(group => `${group.cat}: ${group.tags.join(' · ')}`).join(' / ')).join(' | ')]))); }
         // A long press on a board tile opens the field guide too.
         const tileHeld = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
