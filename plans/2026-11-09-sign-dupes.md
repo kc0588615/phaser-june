@@ -60,7 +60,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -161,6 +161,27 @@ Read on `agent/sign-dupes` e6bb2858 (= `origin/main` 5c37fc04 + plan). Every tag
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE
+
+Checked on b99e8032 against code and content, not the architect's text.
+- F1 holds: `signCategory` throws on a tag missing from `SIGNS` (`signs.ts:257`), reached by `signsOf` from `questionMatchContent.ts:143` at pool load. Retire-not-drop is the only safe way given prod keeps old rows until the owner's content build.
+- F3 holds: recomputed over the 76 files: 201 open tags / 518 uses before; 13 notes in 12 files hold a merged tag; every holder of the 6 narrower tags also holds the survivor on the same note (52×2 56 61 63; 31 37 48; 52; 68 71; 50; 69); only 2's `shell_spines` is a replace. After: 194 tags / 506 uses. Survivor holder lists in the CSV match content.
+- F5 holds: `travelOf` (`animalBoard.ts:217-221`) reads only `glider`, `fully_aquatic`, `swimmer`, `burrower`; none merged. Deals read prefixed traits only. No test, `scripts/e2e.mjs` or `testPool.ts` names a merged tag (`tree_dweller` at e2e.mjs:2151 stays in `SIGNS`). `roundStillFits` compares note tags, so saves whose chimp note changes re-deal without a bump; 057 set the same no-bump precedent. Target 7 is right.
+- Merge judgments: all 7 are same-meaning to a player; the one cross-animal merge (2 "small spines ... along the front edge of its shell" vs 12 "spikes around the edge of its shell") is indistinguishable from the notes and both are read as `covering:shell`. Swept ~30 other candidate pairs (`loud_calls`/`screecher`, `swimmer`/`fully_aquatic`, `face_mask`/`face_markings`, `burrower`/`buries_itself`, `territorial`/`scent_marks`, `hangs_upside_down`/`roosts_in_trees`, `giant_tortoise`/`giant_turtle`, …): each has a correct keep reason in the CSV; no missed true duplicate. The 8 owner pairs are genuine judgment calls; keeping them follows the brief's rule.
+- CSV: 216 rows = `SIGNS`; verdict classes sum correctly (7 merge, 6 absorb, 15 retired-055, 12 owner rows = 8 pairs).
+- Handoff SQL: `species_deduction_clues.compare_tags` exists (`db/schema.sql:56`).
+
+MUST-FIX: none
+
+MISSED: none
+
+SHOULD-CONSIDER:
+1. Target 1: 13 tag-line edits in 12 files is hand-edit territory (KISS). If the apply script stays, keep it as the verifier (assert no note holds a merged tag, survivors present) rather than a CSV-driven rewriter; either way the committed CSV + `git diff` is the record.
+2. Target 2: keep the 15 back-filled `retired` reasons short and uniform (`'055: reads as eggs; use sleeping_nests'`); the detail already lives in `sign-map.csv`. Needed, though: the check is only complete if every retired entry is marked.
+3. Target 2: put the `retired` branch *before* `implies`/`denies`/`restates` (as written) so `tree_dweller` reports one problem, not two.
+4. Summary for the owner: say plainly that the chimp still pages at 390 px (6 lines in a 5-line box) and that this is 058 layout, not a remaining duplicate.
+5. Target 9: the "before" worktree at `/tmp/sd-before` must point at the dev copy too, or witness.ts/bot read `.env.local`; name the env source in the Steps.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -179,5 +200,6 @@ Read on `agent/sign-dupes` e6bb2858 (= `origin/main` 5c37fc04 + plan). Every tag
 
 - 2026-11-09 04:33 UTC · Baseline: typecheck, lint, 66/66 tests, preview 0 PROBLEMs; dev-copy e2e:fresh 1575/1575 (`sign-dupes/baseline-e2e/`).
 - 2026-11-09 04:52 UTC · Architecture: architect wrote findings + design; 201→194 tags, 7 merges (narrower tag retired via new `retired` field, kept in `SIGNS`), 88 kept pairs (8 for owner), no version bump; draft `sign-dupes.csv`. No code changed.
+- 2026-11-09 04:56 UTC · Fable review: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (claims and counts re-verified vs content).
 
 ## Summary
