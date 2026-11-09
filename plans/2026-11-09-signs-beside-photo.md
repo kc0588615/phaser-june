@@ -64,7 +64,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -305,7 +305,96 @@ All changes are in **Architecture**. The widths and line counts come from a stat
 
 ## Steps
 
+`M` = `/srv/critter-ai/agent-state/missions/signs-beside-photo`. V1–V4 = Verification below. Each step ends with V1, then (if it says so) V2 into `M/e2e-s<N>/`, then V3 with the step's check substrings. Check names below are exact: V3 matches on them.
+
+- [ ] S1 · **Grouped signs beside the photo; guide rows lines only; retarget 055's sheet checks.** The core change plus the checks that read it, so the suite stays green.
+  - `src/components/animalBoard/AnimalSheets.tsx`, per Architecture "Target design":
+    - Port `GuideSigns` and `SIGN_PAGE_MS = 5000` from `447e9317:270-333` / `:41`. Props `{ signs: readonly Sign[] }`; `groups` via `CHARGE_CATEGORIES` in `useMemo`; `type SignGroup`; `pages: SignGroup[][]` starts `[groups]`.
+    - New `SignGroups({ groups })`: renders the group `li`s (Architecture code block) for both the measuring `ul` (`data-sign-measure`, `invisible absolute inset-x-0 top-0`, `aria-hidden`) and the shown `motion.ul` (`data-sign-page={page + 1}`, `absolute inset-0`). Code comment: icon box is `h-(--line-xs)`, never taller than a chip line, because the split measures chip bottoms only; tune gaps, not the icon box.
+    - New module-level pure `signPages(groups, boxes, height)` per the pseudocode (`firstOf`/`lastOf`/`span` once; `from = page ? page.indexOf(firstOf[g]) : -1`; move whole when `from > 0 && span[g] <= height`). `split()` reads `[data-sign]` offsets from the measuring list and calls `setPages(signPages(…))`, `setPage(0)`. `ResizeObserver`, timer, `turn`, `AnimatePresence` and the pause button stay as in `447e9317`.
+    - Pause mark `paused && pages.length > 1` (finding 4). Box keeps `data-guide-signs={pages.length}`. `<ul className="sr-only" data-sign-list aria-label="Signs">`: one `li` per group, `{CATEGORY_LABELS[category]}: {texts.join(', ')}`.
+    - Photo row (after the `figure`, `:209`): `{animal.signs.length > 0 && <GuideSigns key={animal.id} signs={animal.signs} />}`.
+    - Guide rows (finding 1): `guides` back to `lines.length > 0 ? [{ key, lines }] : []`; drop the `ul[data-signs]` and its `pt-xxs`; rewrite the `:98` comment. `data-guide-cat`, the `CategoryMark` heading and `data-guide-line` stay.
+    - Imports: `useLayoutEffect`, `useMemo`, `AnimatePresence`, `Pause`, `type ChargeCategory`, `type Sign` (`@/clueGame/questionMatch`). `CHIP` moves next to its only user.
+  - `scripts/e2e.mjs`, the `sheets` evaluate (`:999`) and its checks (`:1029-1065`):
+    - Add `window.__signs()` and `window.__allPages()` next to `__mark`, per Architecture "In-page helpers" (`__until` for exactly one `[data-sign-page]`; `pages` from `data-guide-signs`; `all`/`shown` groups with `cat`, `first`, `marks`, `tags`, `icon` via `__mark`, per-chip `offsetTop`/`offsetHeight` from `all`; `fits`; `sr`; `aria-pressed`; pause svg shown. `__allPages` taps with the old pointerdown/up + click `tap` and waits 450 ms per turn).
+    - Per sheet read: `pages: await window.__allPages()`, `all`, `outside` (count of `[data-sign]` not inside `[data-guide-swipe] [data-guide-signs]`), and `rows` without `signs`. Drop `besidePhoto`, the `signs`/`inList` read and `row.signs`.
+    - Replace the E1 check (`:1041`) with **S1** `field guide: signs sit beside the photo, grouped in the guide's category order, one icon per group before its chips; none hidden, none in the guide rows` (Architecture S1 rules, incl. `sr` and every `[data-guide-cat]` row having ≥ 1 line and its own mark) and **S2** `field guide: the signs showing fit beside the photo, chips one line tall` (`fits` on every page).
+    - E2 (`:1049`): `bearing` from the groups in `all`; name `field guide: a dealt question's guide lines stay hidden while its category's signs show beside the photo`.
+    - E3 (`:1065`): also compare each sheet's sign-group `icon` with the tile's; name `each question tile, its answer row, its guide heading and its sign group carry the same category icon`.
+  - Before V2: `rm -rf e2e-artifacts` (the worktree still holds the baseline run; its copy is in `M/baseline-e2e/`).
+  - Checks: V1; V2 → `M/e2e-s1/`; V3 with `'signs sit beside the photo' 'the signs showing fit beside the photo' 'signs show beside the photo' 'its sign group carry the same category icon'`. The existing `the drawer keeps one height and its photo row one place` check must still pass (the lists sit out of flow). Look at `02d-field-guide-light.png` (chips grouped beside the photo, one icon per group) and `02e-field-guide-rows-light.png` (rows, no chips).
+
+- [ ] S2 · **Forced paging and 320 px checks (P1, P2, P3, S3).** Proves `signPages` on the real layout; the riskiest logic.
+  - `scripts/e2e.mjs`, in the round-1 block right after E3:
+    - New evaluate: open the guide; for each of the 5 sheets set the box's `style.flex = 'none'; height = '40px'; width = '144px'`, wait 300 ms, read `all` and `__allPages()`, clear the style. Then P3 on the sheet with the most signs, box forced (Architecture P3: turns within 5.6 s; tap pauses, `aria-pressed` true, mark shows, holds 5.6 s; tap resumes and moves on, `aria-pressed` false; flip to the next animal: `data-sign-page` = 1 and no `[aria-pressed="true"]` in the box). Clear the style, close, drop the pick.
+    - Node-side checks, per Architecture: **P1** `field guide: signs that don't fit split into pages; each part follows its icon, in category order, and fits; the pages together are the list, in order`. **P2** `field guide: a sign group that fits on a page starts the next page whole; a longer one breaks at a line and repeats its icon; no break comes early` (T/F rule; ≥ 1 split, ≥ 1 move, 0 bad; no fallback; detail lists each break). **P3** `field guide: signs in pages turn on their own, a tap pauses them, another resumes and moves on`.
+    - **S3**: `await sideNotesAt(320, 720, true)`; evaluate: open the guide, `__allPages()` for each of the 5 sheets, close, drop the pick; `await sideNotesAt(...PHONE)`. Check `field guide: on a 320 px phone the signs page instead of overflowing: every page fits, groups and icons as at 390, the pages together are the list` (P1's rules on the unforced box, incl. ≥ 1 sheet with pages > 1; measured: 14 and 41).
+  - If P1, P2 or S3 fails on a real `signPages`/`GuideSigns` bug, fix it in `AnimalSheets.tsx` in this step. If the content no longer gives a split and a move at 144 × 40, pick a new width (never taller) and record it under Decisions.
+  - Checks: V1; V2 → `M/e2e-s2/` (delete `M/e2e-s1/`); V3 with S1's substrings plus `'split into pages' 'starts the next page whole' 'turn on their own' 'on a 320 px phone the signs page'`. P2's detail shows 14 and 41 split, 13 moved (Architecture "Measured").
+
+- [ ] S3 · **Screenshots: one page, paging (both pages), desktop.**
+  - `scripts/e2e.mjs`:
+    - In the `guide` evaluate (`:871`), also read the first row's sheet `data-guide-signs` and chip count; check `field guide: the 02d shot's sheet shows its signs on one page` (signs > 0, pages = 1).
+    - In the round loop, after the round checks and before the pencil step (`:1321`), when `n > 1` and no paging sheet is shot yet: open the guide on the first row, flip the numbers 1–5 reading `data-guide-signs`, stop at the first > 1. If found, for light then dark (set and restore the theme as the 02d block does, `:880-898`): pause, shoot `02f-signs-page-1-<mode>.png`, tap tap, wait 450 ms, shoot `02f-signs-page-2-<mode>.png`. Then `sideNotesAt(1280, 800, false)`, wait for the re-split, shoot `02g-signs-desktop.png`, `sideNotesAt(...PHONE)`. Close the guide, drop the pick.
+    - After the loop: check `field guide: a sheet whose signs page at 390 px was found and shot (both pages, light and dark, and at 1280 px)`, detail = round, animal, pages (seed 7: round 2, Chimpanzee, 2).
+  - Checks: V1; V2 → `M/e2e-s3/` (delete `M/e2e-s2/`); V3 with all substrings (V3 list); rounds still equal the baseline (the shot block plays no move). Then V4's copy into `M/shots/`, and look at each shot (groups, counter `1/2`, pause mark, both themes, desktop).
+
+- [ ] S4 · **One `graphical-audit` pass against `GUI.md`.**
+  - Run `.agents/skills/graphical-audit` on `M/shots/` (390 px light/dark, one page and both pages; 1280 px; guide rows); findings to `M/audit.md`.
+  - Fix within the theme: gaps and spacing only (`AnimalSheets.tsx`; `CategoryMark.tsx` only for a size tweak the audit truly needs); the icon box stays `h-(--line-xs)`; no new colour; colour never the only cue; WCAG 2.2 AA (lint's theme check). Keep both the within-group and the between-group row gap ≤ 8 px, or the 40 px forced box no longer holds two lines and P2 can't see a move. Record each call (or "no change") under Decisions.
+  - Checks: V1. If code changed: V2 → `M/e2e-s4/` (delete `M/e2e-s3/`), V3 with all substrings, V4 copy (refresh `M/shots/`). If P2 now fails, prefer reverting the gap; otherwise apply S2's width rule.
+
+- [ ] S5 · **Docs, code comments, plan 058.**
+  - `CONTEXT.md` `:81`, `:85`, `:89`; `docs/CLUE_MATCH.md:54`; `docs/CONTENT_SOURCES.md:69`: wording per Architecture "Docs and plan".
+  - Comments: `src/clueGame/signs.ts:1-2`, `src/components/animalBoard/CategoryMark.tsx:1-4` (signs beside the photo in their category's group).
+  - New `plans/058-signs-beside-photo.md` in 057's shape: what changed, why, decisions (hanging layout, keep-together rule, 144 × 40 forced box, audit calls), no version bump, DB none, verification commands, artifact and shot paths (final run filled in at S6).
+  - Unchanged: `plans/README.md`, plan 055, `ANIMAL_RULES.version`, content, DB.
+  - Checks: V1; `rg -n "under (its|the|one) (question )?categor|guide rows|after that category" CONTEXT.md docs/CLUE_MATCH.md docs/CONTENT_SOURCES.md src/clueGame/signs.ts src/components/animalBoard` shows no stale "signs in the guide rows" text; paths named in edited docs exist. No E2E (comments and docs only).
+
+- [ ] S6 · **Verification.** Run V1–V4 in order; V2 → `M/final-e2e/` (delete `M/baseline-e2e/`, keep the latest `M/e2e-s*/`); V3 with all substrings; V4. Fill plan 058's verification line (check count, artifact path). Log the results. Mission rule 7 repeats V1–V4 after the Astra code review and replaces `M/final-e2e/`.
+
 ## Verification
+
+From the repo root `/srv/critter-ai/worktrees/signs-beside-photo`, one heavy job at a time (never two E2E runs, or an E2E beside a build). No unit tests are written: `signPages` is proven by P1, P2 and S3 on the real layout (Architecture, Rejected alternatives), so there's no Failure modes section. Known VPS flake: 1–3 timing checks (row-slide press, re-order click, sparkle) may fail on a run; rerun once; a check failing twice is real.
+
+**V1. Static**, each exit 0:
+1. `npm run typecheck`
+2. `npm run lint` (eslint + theme contrast)
+3. `npm test` (66/66 pass)
+4. `npm run content -- preview > /tmp/preview-after.txt && diff /srv/critter-ai/agent-state/missions/signs-beside-photo/preview-before.txt /tmp/preview-after.txt` prints nothing (no PROBLEM lines; content unchanged).
+
+**V2. Dev-copy E2E** (plan 055's guarded block, minus its `content -- build/check`; Decisions). Never `.env.local`; never print `DATABASE_URL` or `cat` the dev-copy file. If the guard fails, stop and add a handoff item to refresh the file. Bash timeout 1800000 ms (a run takes ~11 min).
+```
+M=/srv/critter-ai/agent-state/missions/signs-beside-photo
+rm -rf e2e-artifacts
+( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+  [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+  E2E_SEED=7 E2E_PLACE=continent:africa CHROME_PATH=/srv/critter-ai/agent-state/missions/moves-and-signs-build/chrome-nosandbox.sh npm run e2e:fresh )
+mv "$(ls -d e2e-artifacts/*/ | tail -1)" "$M/<folder>"   # e2e-s<N> for a step, final-e2e for S6
+```
+Disk: at most two artifact folders in `M`. Steps keep `baseline-e2e/` and the latest `e2e-s*/` (delete the older `e2e-s*/` after the new run); S6 deletes `baseline-e2e/` and keeps the latest `e2e-s*/` and `final-e2e/`. `mv`, not `cp`, so the worktree holds no copy.
+
+E2E scenarios: the existing suite (globe → continent → 4 rounds → resume → journal → sources; 055's E4 witness-note marks and E5 no `:no` column unchanged) plus S1, S2, E2, E3 (S1 step), P1, P2, P3, S3 (S2 step), the 02d one-page and 02f/02g paging-shot checks (S3 step).
+
+**V3. Artifact must show**: 0 failed checks, rounds equal the baseline, and every given substring names a passing check:
+```
+node -e 'const [f,...want]=process.argv.slice(1),r=require(f),bad=r.checks.filter(c=>!c.ok).map(c=>c.name),rounds=r.rounds.map(x=>x.mystery+":"+x.outcome).join(", "),miss=want.filter(w=>!r.checks.some(c=>c.ok&&c.name.includes(w)));console.log(r.checks.length,"checks |",bad.length,"failed",bad,"|",rounds,"| missing:",miss);process.exit(bad.length||miss.length||rounds!=="Hairy Frog:found, Hirola:lost, Golden-rumped Sengi:found, African Forest Elephant:found"?1:0)' "$M/<folder>/report.json" \
+  'signs sit beside the photo' 'the signs showing fit beside the photo' 'signs show beside the photo' 'its sign group carry the same category icon' \
+  'split into pages' 'starts the next page whole' 'turn on their own' 'on a 320 px phone the signs page' \
+  'shows its signs on one page' 'signs page at 390 px was found'
+```
+Steps pass only the substrings of checks added so far (each step lists them). The final run passes all ten and must exit 0.
+
+**V4. Shots and audit** (brief's named location): copy from the run's folder to `$M/shots/`: `02d-field-guide-{light,dark}.png` (one page), `02e-field-guide-rows-{light,dark}.png` (rows, no chips), `02f-signs-page-{1,2}-{light,dark}.png` (paging, both pages, 390×844 natural size), `02g-signs-desktop.png` (1280×800): 9 files, `ls $M/shots/02[defg]-*` lists them all. `$M/audit.md` holds the one `graphical-audit` pass (S4). Reproduce: V2 with the same seed and place.
+
+**Release** (runner's unit, `Release: deploy`): rebase on `origin/main`, rerun V1–V3, push, open the PR, `gh pr merge <n> --merge`, `deploy critter-connect`; smoke `curl -sL -o /dev/null -w '%{http_code}' https://play.critterconnect.org/explore/` = 200 and `curl -s https://play.critterconnect.org/version.txt` = the merge commit. No production content build.
+
+**Risks / open questions**
+- P2 rests on the measured 144 × 40 box (2 splits, 1 move). A gap change (S4) or new content after a rebase can remove the split or the move; P2 then fails loudly, and the fix is a new width, recorded under Decisions, never a taller box.
+- The 02f search depends on some later round dealing a sheet that pages at 390 px (seed 7: round 2's Chimpanzee). If a rebase changes the deal, the after-loop check fails; then pick a seed whose later round pages, record it under Decisions, and check the rounds against a fresh run instead of the baseline.
+- Waits after forcing the box (300 ms) and between page turns (450 ms) assume the VPS keeps up; if one flakes twice, replace the fixed wait with `__until` on the state it waits for (page count, `data-sign-page`), not a longer sleep.
+- Plan number 058 is free today; if another branch takes it before the release rebase, renumber.
 
 ## Code review (Astra)
 
@@ -327,5 +416,6 @@ All changes are in **Architecture**. The widths and line counts come from a stat
 - 2026-11-09 01:15 UTC: Fable review. APPROVE_WITH_CHANGES; 1 MUST-FIX (P2 fallback: narrow box width, not taller), 3 small misses. Plan only.
 - 2026-11-09 01:13 UTC: Astra review. APPROVE, no MUST-FIX; 2 SHOULD-CONSIDER (deterministic split+move E2E; 320 px/large-text chip fallback). Plan only.
 - 2026-11-09 01:24 UTC: Revision. Forced E2E box 144×40 px (2 splits, 1 move measured), signPages guard+precompute, icon h-(--line-xs), S3 320 px check, all Fable SC adopted; enlarged-text run rejected. Plan only.
+- 2026-11-09 01:35 UTC: Steps. planner wrote S1–S6 (core port+retarget checks, forced paging/320 px, shots, audit, docs/plan 058, verification) and V1–V4. Plan only.
 
 ## Summary
