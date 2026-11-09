@@ -333,7 +333,7 @@ E2E scenario: the existing suite at seed 7, Africa (globe → continent → 4 ro
 - Copy `final-e2e/02f-signs-page-{1,2}-light.png` over `$M/chimp-after-p{1,2}.png`; view all four chimp shots: before page 2 has both carry signs, after page 2 has "carries young on back" alone.
 - Reproduce: the V3 build/check/E2E block on `agent/sign-dupes` (seed 7, Africa are the defaults; same seed = same run).
 
-**V5. Record and clean up:** plan 059 gets its `Final:` line (check count, artifact path); the Summary gives tags before/after (201 → 201; uses 518 → 506), merges 0, dedupes 6 pairs on 12 notes, kept pairs 80 + 9 for the owner (listed), the chimp before/after shot paths and that it still pages (058 layout), witness notes per round and bot tables before/after, no version bump and why, `git diff --stat 5c37fc04...HEAD`, the final artifact, and "production content build waits on the owner (H12)". `git worktree list` has no `/tmp/sd-before`; `ls -d $M/*e2e*` = `e2e-s5`, `final-e2e`.
+**V5. Record and clean up:** plan 059 gets its `Final:` line and its Balance section gets the full before/after bot table from `$M/metrics/bot-tables.md` (Astra code review SC1) (check count, artifact path); the Summary gives tags before/after (201 → 201; uses 518 → 506), merges 0, dedupes 6 pairs on 12 notes, kept pairs 80 + 9 for the owner (listed), the chimp before/after shot paths and that it still pages (058 layout), witness notes per round and bot tables before/after, no version bump and why, `git diff --stat 5c37fc04...HEAD`, the final artifact, and "production content build waits on the owner (H12)". `git worktree list` has no `/tmp/sd-before`; `ls -d $M/*e2e*` = `e2e-s5`, `final-e2e`.
 
 **Release (runner's unit, after Verification):** rebase on `origin/main`, rerun V1–V4, PR, `gh pr merge --merge`, `deploy critter-connect`; smoke `curl -sL -o /dev/null -w '%{http_code}' https://play.critterconnect.org/explore/` = 200 and `curl https://play.critterconnect.org/version.txt` = merge commit. No pre-merge tag gate (Target 13).
 
@@ -346,6 +346,15 @@ Isolated checks only (content edits, pair diff, `sign-map.csv`); everything else
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. [plans/059-sign-dupes.md:76](plans/059-sign-dupes.md:76): Include the full before/after bot table as planned; currently only deltas and a VPS-local reference.
+2. Refresh `origin/main` before PR. Read-only filesystem blocked fetch; review used local `5c37fc04` against `d2e38e36`.
+
 ## Release
 
 ## Decisions
@@ -357,6 +366,8 @@ Isolated checks only (content edits, pair diff, `sign-map.csv`); everything else
 - 2026-11-09 · S4: 2 `sign-dupes.csv` reasons corrected (text only) against `pairs-removed.md`: `carries_young_on_back` said every merged link was false, but 63 with 24 59 (tail) and 61 with 54 (belly) are true; `s_shaped_horns` left out 68, whose ringed lyre horns are close to 69's.
 
 - 2026-11-09 · S1: `witness-pairs.ts` counts `animalsFromProfiles` load notices (3 at baseline: e.g. Darwin Frog has no countries) instead of throwing, as `witness.ts` does; preview PROBLEMs (0) are checked by preview itself.
+
+- 2026-11-09 · Code review (Astra): APPROVE, 0 MUST-FIX. SC1 (059 lacks full bot table) folded into V5; SC2 (stale origin/main) is covered by the release rebase.
 
 ## Log
 
@@ -375,5 +386,6 @@ Isolated checks only (content edits, pair diff, `sign-map.csv`); everything else
 - 2026-11-09 05:55 UTC · S5: dev copy (guard ok) spot 12 → build (0 citation warnings, Built) → check `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.` 0 errors, 0 warnings → e2e:fresh 1575/1575 → spot 0. report-check: 1575 checks, 0 failed; paging Chimpanzee; rounds 7:found 68:lost 46:found 41:found; 0 console errors, 0 failed requests (`$M/e2e-s5/`). Chimp after shots viewed: p2 = "carries young on back" alone, "mother carries young" on neither page. baseline-e2e removed. typecheck + lint 0.
 - 2026-11-09 06:30 UTC · S6: handoff H12 (prod content build + dump + spot check, Pool line = S5) added under Open above H11; 1 hit, Status waiting on you, no values in title/item. No repo change.
 - 2026-11-09 06:40 UTC · S7: `CONTENT_SOURCES.md` "One sign per fact" bullet; `plans/059-sign-dupes.md` (dedupe table, counts, why narrower-over-broader, 9 owner pairs + other owner items, 43 removed pairs, witness/bot tables, no bump, H12, verification, shots); all paths exist. typecheck, lint, 66/66, preview 0 PROBLEMs, dedupe-check 0.
+- 2026-11-09 06:04 UTC · Code review (Astra): APPROVE, 0 MUST-FIX, 2 SHOULD-CONSIDER (bot table into 059 → V5; refresh origin/main → release rebase).
 
 ## Summary
