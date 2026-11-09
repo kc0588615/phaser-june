@@ -2,7 +2,7 @@
 mission: sign-dupes
 project: critter-connect
 branch: agent/sign-dupes
-status: active
+status: done
 started: 2026-11-09 04:18 UTC
 ---
 
@@ -388,4 +388,20 @@ SHOULD-CONSIDER:
 - 2026-11-09 06:40 UTC · S7: `CONTENT_SOURCES.md` "One sign per fact" bullet; `plans/059-sign-dupes.md` (dedupe table, counts, why narrower-over-broader, 9 owner pairs + other owner items, 43 removed pairs, witness/bot tables, no bump, H12, verification, shots); all paths exist. typecheck, lint, 66/66, preview 0 PROBLEMs, dedupe-check 0.
 - 2026-11-09 06:04 UTC · Code review (Astra): APPROVE, 0 MUST-FIX, 2 SHOULD-CONSIDER (bot table into 059 → V5; refresh origin/main → release rebase).
 
+- 2026-11-09 06:15 UTC · Final Verification: V1 typecheck, lint, 66/66, preview 0 PROBLEMs, dedupe-check ok, no src/scripts/tests diff, sign-map unchanged; V2 pairs-final = pairs-after (1430); V3 dev copy spot 0, build 0 citation warnings, check Pool 76/2478/2086/491 0/0, e2e:fresh 1575/1575; V4 report-check ok (paging Chimpanzee, rounds as baseline, 0 console errors/failed requests), chimp after shots refreshed from `final-e2e`; V5 059 gets full bot table + Final line. Summary written, status done.
+
 ## Summary
+
+**Done.** No animal shows two signs saying the same fact. Content only (12 notes in 11 animal files); no code, `SIGNS` or rules change. Plan `plans/059-sign-dupes.md`; table `docs/research/2026-11-07-moves-and-signs/sign-dupes.csv` (all 216 `SIGNS` tags).
+
+- **Counts:** open tags 201 → 201; tag uses 518 → 506; `SIGNS` 216 (15 retired) unchanged; merges 0; 6 narrower/broader pairs deduped on 12 notes (the note keeps the narrower tag, drops the broader: `carries_young_on_back`/`mother_carries_young` ×4, `backward_pouch`/`pouch` ×3, `spectacles`/`face_markings` ×2, `shoulder_stripe`/`stripes`, `spiral_horns`/`horns`, `s_shaped_horns`/`horns`). 95 pairs compared = 6 deduped + 80 differ in meaning + 9 kept for the owner.
+- **Why no merges:** merging a narrower tag into the broader one made 50 witness notes fit animals their words aren't true of (Astra architecture MUST-FIX). Dropping the broader tag only removes fits: 1473 → 1430 witness pairs, 0 added, 43 removed (39 false, 4 true/close: 24/59→63 tail, 54→61 belly, 68→69 ringed horns).
+- **For the owner (kept both, your call):** `roosts_in_trees`~`sleeps_high_in_trees`; `walks_upright`~`stands_on_hind_legs`; `never_climbs`~`forest_floor`; `climber`~`often_in_trees`~`seldom_on_ground` (3 pairs); `dung_piles`~`scent_marks`; `leaf_litter`~`forest_floor`; `shell_spines`~`spiky_shell`. Plus out-of-scope retag ideas in 059 "For the owner".
+- **Chimpanzee:** 9 signs → 8; page 2 now "carries young on back" alone (still 2 pages at 390 px: 058's layout). Shots `/srv/critter-ai/agent-state/missions/sign-dupes/chimp-{before,after}-p{1,2}.png`.
+- **Witness notes/round** before → after: world 2.24 → 2.23, Africa 2.12 → 2.04, Asia 1.84 → 1.84, N. America 1 → 0.98, S. America 2.01 → 1.94 (0-note rounds 5 → 10). Fewer, not more: nothing merged.
+- **Bot** (400 rounds, seed 44, 4 places × 4 players): found Δ −1…0 points, moves left Δ −0.5…+0.1; noise. Full table in 059 Balance.
+- **No version bump** (`055-0`): no prefixed trait or travel tag changed, so deals/answers/scores are the same per seed; only witness notes change, and only once prod content is built; `roundStillFits` re-deals stale saves.
+- **Verification:** typecheck, lint, 66/66, preview 0 PROBLEMs; dev copy build/check (`Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.`, 0/0), spot 12 → 0; `e2e:fresh` 1575/1575. Artifact `/srv/critter-ai/agent-state/missions/sign-dupes/final-e2e/report.json` (reproduce: V3 block on `agent/sign-dupes`).
+- **Reviews:** Fable APPROVE; Astra architecture APPROVE_WITH_CHANGES (1 MUST-FIX, resolved by redesign); Astra code APPROVE, 0 MUST-FIX.
+- `git diff --stat 5c37fc04...HEAD`: 16 files changed, 713 insertions(+), 28 deletions(-) (content 11 files, docs, research CSVs, plans).
+- **Production content build waits on the owner (H12)**, after the deploy, with a fresh dump first.

@@ -73,7 +73,28 @@ Witness notes (`witness.ts`, all deals per place; before = `5c37fc04`, after = c
 
 Tagged notes 433 → 433; shareable 307 → 307. Slightly fewer notes, not more as the brief guessed: nothing merged, and the 43 removed pairs were mostly false fits.
 
-Bot (`scripts/balance-044.ts --rounds 400 --seed 44 --places africa,asia,north-america,south-america`): found Δ −1…0 points on every row, moves left at find Δ −0.5…+0.1 (South America −0.4/−0.5 on all players, matching its fewer witness notes). All within noise; no rule change. Tables: `…/sign-dupes/metrics/bot-tables.md`.
+Bot (`scripts/balance-044.ts --rounds 400 --seed 44 --places africa,asia,north-america,south-america`): found Δ −1…0 points on every row, moves left at find Δ −0.5…+0.1 (South America −0.4/−0.5 on all players, matching its fewer witness notes). All within noise; no rule change.
+
+Found rate (±95%) and moves left at find, before → after (Δ in points / moves):
+
+| Place | Player | before found | after found (Δ) | before moves left | after moves left (Δ) |
+|---|---|---|---|---|---|
+| africa | careful | 98% ±1 | 98% ±1 (+0) | 16.8 | 16.9 (+0.1) |
+| africa | novice | 98% ±2 | 98% ±2 (+0) | 16.5 | 16.6 (+0.1) |
+| africa | expert | 100% ±1 | 100% ±1 (+0) | 18.0 | 18.1 (+0.1) |
+| africa | reader | 94% ±2 | 94% ±2 (+0) | 12.2 | 12.3 (+0.1) |
+| asia | careful | 96% ±2 | 96% ±2 (+0) | 13.8 | 13.8 (+0.0) |
+| asia | novice | 94% ±2 | 94% ±2 (+0) | 13.6 | 13.6 (+0.0) |
+| asia | expert | 100% ±0 | 100% ±0 (+0) | 15.4 | 15.4 (+0.0) |
+| asia | reader | 89% ±3 | 89% ±3 (+0) | 8.9 | 8.9 (+0.0) |
+| north-america | careful | 97% ±2 | 96% ±2 (-1) | 15.9 | 15.7 (-0.2) |
+| north-america | novice | 97% ±2 | 97% ±2 (+0) | 15.9 | 15.8 (-0.1) |
+| north-america | expert | 100% ±0 | 100% ±0 (+0) | 17.0 | 17.0 (+0.0) |
+| north-america | reader | 95% ±2 | 94% ±2 (-1) | 11.1 | 11.0 (-0.1) |
+| south-america | careful | 97% ±2 | 96% ±2 (-1) | 17.2 | 16.8 (-0.4) |
+| south-america | novice | 99% ±1 | 99% ±1 (+0) | 16.6 | 16.1 (-0.5) |
+| south-america | expert | 100% ±0 | 100% ±0 (+0) | 18.1 | 17.7 (-0.4) |
+| south-america | reader | 94% ±2 | 93% ±3 (-1) | 11.9 | 11.5 (-0.4) |
 
 ## No version bump
 `ANIMAL_RULES.version` stays `055-0` (as 057). No edit touches a prefixed trait or a `travelOf` tag (`burrower`, `swimmer`, `fully_aquatic`, `glider`), so every deal, deck, answer, travel and score is the same for the same seed. Only witness notes change, and only when the production content build lands, not at deploy, so a code bump would label old-content rounds as new. `roundStillFits` already re-deals a save whose notes changed.
@@ -86,3 +107,5 @@ Static: typecheck, lint, `npm test` 66/66; `content -- preview` 0 PROBLEMs, diff
 E2E (dev copy `phaser_june_dev`): `content -- build` 0 citation warnings; `content -- check` `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.`, 0 errors, 0 warnings; spot check 12 → 0; `e2e:fresh` seed 7 Africa 1575 checks (baseline 1575), 0 failed, 0 console errors, 0 failed requests; rounds as baseline (Hairy Frog found, Hirola lost, Golden-rumped Sengi found, African Forest Elephant found); 390 px paging found the chimpanzee. Artifact `/srv/critter-ai/agent-state/missions/sign-dupes/e2e-s5/report.json`.
 
 Shots (390×844 light, round 2 chimpanzee), `/srv/critter-ai/agent-state/missions/sign-dupes/`: `chimp-before-p{1,2}.png` (page 2: both carry signs), `chimp-after-p{1,2}.png` (page 2: "carries young on back" alone).
+
+Final: 2026-11-09, after the Astra code review, on `agent/sign-dupes` at `dc9c4346` (base `origin/main` `5c37fc04`): static checks as above; dev-copy build + check same lines, spot 0; `e2e:fresh` 1575/1575, 0 console errors, 0 failed requests, paging Chimpanzee, rounds 7:found 68:lost 46:found 41:found. Artifact `/srv/critter-ai/agent-state/missions/sign-dupes/final-e2e/report.json`; the after shots are its `02f-signs-page-{1,2}-light.png`.
