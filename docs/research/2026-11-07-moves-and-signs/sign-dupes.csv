@@ -1,0 +1,217 @@
+tag,phrase,holders,verdict,reason
+above_tree_line,above tree line,33,keep both: high_mountains mountain_meadows,"vs high_mountains: above_tree_line says no trees grow there; 35 60 71 live in mountain forest. vs mountain_meadows: both above the trees, but SIGNS reads above_tree_line as no forest and 42 has forest"
+algae_fur,algae fur,30 54,keep both: camouflage,"vs camouflage: algae in the fur is a body feature, camouflage its effect; 3 and 12 are camouflaged without algae"
+ambush_hunter,ambush hunter,25 51 62 74,keep,no other sign says this
+backward_pouch,backward pouch,31 37 48,merge into pouch,"narrower case on the same note on all 3 holders; pouch is true of all 6 and keeps their link; ""opens backward"" stays in the note text (43 opens forward)"
+bamboo_eater,bamboo eater,35 60,keep both: bamboo_forest leaf_eater,"vs bamboo_forest: food vs place; same holders, different categories. vs leaf_eater: a named food"
+bamboo_forest,bamboo forest,35 60,keep both: bamboo_eater,"vs bamboo_eater: food vs place; same holders, different categories"
+basker,basker,1,keep both: rests_by_waterfalls,vs rests_by_waterfalls: basks in the sun vs rests on wet rocks (055 retired rock_basker on 11 as a day reading)
+big_ears,big ears,23 28 37 39 41 45 57 64 65 72,keep both: super_hearing,vs super_hearing: ear size vs hearing
+big_leaper,big leaper,25 61,keep,no other sign says this
+big_rivers,big rivers,18,keep both: fast_streams,vs fast_streams: big deep rivers vs fast water
+black_and_white,black and white,60 61,keep both: black_coat,vs black_coat: two colors vs all black
+black_coat,black coat,51,keep both: black_and_white,vs black_and_white: two colors vs all black
+bone_claws,bone claws,7,keep both: digging_claws,vs digging_claws: claws pushed out through the skin to defend vs claws for digging
+borrowed_burrows,borrowed burrows,26 48 55 63 65,keep both: burrower,vs burrower: sleeps in burrows others dug vs digs its own; 55 and 63's one note says both
+brackish_water,brackish water,17,keep,no other sign says this
+bright_green,bright green,5 6,keep both: warning_colors,vs warning_colors: a color vs a warning
+bromeliad_eater,bromeliad eater,71,keep both: leaf_eater,vs leaf_eater: a named food
+brown_throat,brown throat,54,keep both: throat_patch,vs throat_patch: a brown throat vs cream patches
+builds_nests,builds nests,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+buries_itself,buries itself,2 12 18,keep both: burrower rests_on_bottom,"vs burrower: sinks into sand, leaves or mud vs digs a burrow. vs rests_on_bottom: buried vs resting on the bottom unburied (10); 055 put both on 2"
+burrower,burrower,13 14 16 20 24 27 31 32 36 37 42 49 55 57 59 63 67 73,keep both: borrowed_burrows buries_itself digging_claws,"vs borrowed_burrows: sleeps in burrows others dug vs digs its own; 55 and 63's one note says both. vs buries_itself: sinks into sand, leaves or mud vs digs a burrow. vs digging_claws: claws vs the act; 52 has digging claws and no burrow. travelOf reads it (diggers leave by the bottom): holders unchanged"
+camouflage,camouflage,3 12 30 54,keep both: algae_fur,"vs algae_fur: algae in the fur is a body feature, camouflage its effect; 3 and 12 are camouflaged without algae"
+carries_young_on_back,carries young on back,52 56 61 63,merge into mother_carries_young,"narrower case on the same note on all 4 holders; mother_carries_young is true of all 8 and keeps their link; ""on her back"" stays in the note text"
+cecropia_leaves,cecropia leaves,54,keep both: leaf_eater,vs leaf_eater: a named tree's leaves on another animal: a narrower case across animals a player can tell apart
+chirps,chirps,58,keep both: loud_calls,vs loud_calls: names the sound: a bird-like chirp
+climber,climber,5 24 34 35 40 43 56 71,owner: often_in_trees seldom_on_ground; keep both: climbs_boulders,"vs often_in_trees: 71's one note: a great climber that spends lots of time in trees; time spent vs ability, but they may read as one fact. vs seldom_on_ground: 40's one note: lives almost entirely in trees, almost never on the ground; ability vs staying up, but they may read as one fact. vs climbs_boulders: rocks, not trees: 055 split them (climber reads as trees yes)"
+climbing_tail,climbing tail,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+climbs_boulders,climbs boulders,15,keep both: climber crevice_hider,"vs climber: rocks, not trees: 055 split them (climber reads as trees yes). vs crevice_hider: climbs up boulders vs hides in cracks"
+coalitions,coalitions,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+coastal_dunes,coastal dunes,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+cold_streams,cold streams,4 8 62 75,keep both: fast_streams forest_streams,"vs fast_streams: cold vs fast; 4 and 75's notes also say fast (a missing tag, out of scope). vs forest_streams: names the forest, not cold or fast water"
+crevice_hider,crevice hider,15 47,keep both: climbs_boulders kopjes,vs climbs_boulders: climbs up boulders vs hides in cracks. vs kopjes: hides in cracks vs a named place
+cub_mane,cub mane,58,keep both: mane,vs mane: the cubs only
+digging_claws,digging claws,24 27 31 36 49 52 55 57 59 63 67,keep both: bone_claws burrower raids_termite_mounds five_front_claws,vs bone_claws: claws pushed out through the skin to defend vs claws for digging. vs burrower: claws vs the act; 52 has digging claws and no burrow. vs raids_termite_mounds: claws vs what it eats. vs five_front_claws: a claw count
+dung_piles,dung piles,66,owner: scent_marks,"vs scent_marks: 66 marks its home with dung piles on the same note; dung marking is scent marking (72 73's droppings are tagged scent_marks), so possibly a narrower case; a player may not read dung as scent"
+ear_spots,ear spots,25,keep,no other sign says this
+eats_lichen,eats lichen,34,keep,no other sign says this
+egg_guarding,egg guarding,7 11 62 75,keep both: father_carries_young,vs father_carries_young: guards eggs vs carries tadpoles
+eggs_on_land,eggs on land,14,keep both: eggs_over_water,vs eggs_over_water: an underground chamber vs a leaf over water
+eggs_over_water,eggs over water,6,keep both: eggs_on_land foam_nest,"vs eggs_on_land: an underground chamber vs a leaf over water. vs foam_nest: 5's foam nest is also over a pool, but ""foam nest"" names the foam: a narrower case across animals, told apart (adding eggs_over_water to 5 would link 5 and 6: a retag, out of scope)"
+electric_sense,electric sense,27 67 74,keep both: senses_vibrations,vs senses_vibrations: electric signals vs vibrations
+ever_growing_teeth,ever growing teeth,23 31 42 57,keep both: tube_teeth,vs tube_teeth: growth vs structure; 57's one note says both
+eye_glands,eye glands,68,keep both: scent_marks,"vs scent_marks: glands below the eyes vs marking; 38's face-gland note is tagged scent_marks (a retag, out of scope)"
+face_markings,face markings,33 38 42 50 68 71,"keep, absorbs spectacles; keep both: face_mask tear_lines","survives: spectacles: narrower case on the same note on both holders. vs face_mask: a black bandit mask: a narrower case across animals, told apart. vs tear_lines: a black line eye to mouth: a narrower case across animals, told apart"
+face_mask,face mask,26,keep both: face_markings,"vs face_markings: a black bandit mask: a narrower case across animals, told apart"
+false_thumb,false thumb,23 35 60,keep,no other sign says this
+fast_runner,fast runner,58 65,keep,no other sign says this
+fast_streams,fast streams,7 11,keep both: big_rivers cold_streams,"vs big_rivers: big deep rivers vs fast water. vs cold_streams: cold vs fast; 4 and 75's notes also say fast (a missing tag, out of scope)"
+father_carries_young,father carries young,3 9 76,keep both: egg_guarding mother_carries_young,"vs egg_guarding: guards eggs vs carries tadpoles. vs mother_carries_young: the father, not the mother"
+feathery_gills,feathery gills,74,keep both: underwater_breathing,"vs underwater_breathing: gills vs breathing through the skin (2 62 75): a narrower case across animals, told apart"
+feeds_on_ground,feeds on ground,60,keep both: forest_floor,vs forest_floor: 60 feeds on the ground but its note says it climbs well
+fish_eater,fish eater,73,keep,no other sign says this
+five_front_claws,five front claws,67,keep both: digging_claws,vs digging_claws: a claw count
+flat_body,flat body,10 62 75,keep both: flat_shell,vs flat_shell: body vs shell
+flat_shell,flat shell,15,keep both: flat_body,vs flat_body: body vs shell
+flippers,flippers,17,keep both: webbed_feet paddle_tail,vs webbed_feet: paddle legs vs webbed toes. vs paddle_tail: legs vs tail
+floreana_island,floreana island,19,keep both: pinta_island one_island,"vs pinta_island: two islands: the island is what tells 19 from 22. vs one_island: a named island: a narrower case across animals, told apart; one_island is Range, this Habitat (categories kept as SIGNS gives them)"
+foam_nest,foam nest,5,keep both: eggs_over_water,"vs eggs_over_water: 5's foam nest is also over a pool, but ""foam nest"" names the foam: a narrower case across animals, told apart (adding eggs_over_water to 5 would link 5 and 6: a retag, out of scope)"
+fog_drinker,fog drinker,14,keep both: rarely_drinks,vs rarely_drinks: water from fog vs water from food
+forest_floor,forest floor,9 46 76,owner: never_climbs leaf_litter; keep both: feeds_on_ground,"vs never_climbs: 55 never climbs as 76 hardly ever climbs, same SIGNS reading (trees no, forest); but the forest_floor notes of 9 and 46 say nothing about climbing: a narrower case across animals; a merge would link 55 with 9 46 76, all true. vs leaf_litter: 46's one note shows both and 76 holds both: the leaf layer lies on the forest floor; but leaf_litter is Habitat (forest) and forest_floor Habits (stays down: trees no), and 3 and 12 hold only leaf_litter. vs feeds_on_ground: 60 feeds on the ground but its note says it climbs well"
+forest_streams,forest streams,12,keep both: cold_streams,"vs cold_streams: names the forest, not cold or fast water"
+four_toes,four toes,65,keep,no other sign says this
+fruit_eater,fruit eater,12 40 41 45 53 56 70 71 72,keep both: seed_spreader,vs seed_spreader: a food vs a role; 41 53 72's one note says both; 19 spreads seeds
+fully_aquatic,fully aquatic,62 74 75,keep both: swimmer,"vs swimmer: only in water vs swims; travelOf reads both, holders unchanged. travelOf reads it: holders unchanged"
+furry_feet,furry feet,35,keep,no other sign says this
+giant_frog,giant frog,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+giant_tortoise,giant tortoise,19 20 22,keep both: giant_turtle,"vs giant_turtle: land tortoise vs river turtle; SIGNS reads giant_tortoise as land, 18 lives in rivers"
+giant_turtle,giant turtle,18,keep both: giant_tortoise,"vs giant_tortoise: land tortoise vs river turtle; SIGNS reads giant_tortoise as land, 18 lives in rivers"
+glider,glider,5,keep both: soars,vs soars: glides tree to tree vs soars on warm air. travelOf reads it (fliers leave by the top): holders unchanged
+grasping_lip,grasping lip,44 66,keep both: trunk,vs trunk: lip vs trunk
+grazer,grazer,21 31 39 50 68,keep both: leaf_eater,vs leaf_eater: grass vs leaves
+hair_like_frills,hair like frills,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+hangs_upside_down,hangs upside down,23 30 54,keep,no other sign says this
+hard_toe_tips,hard toe tips,8,keep,no other sign says this
+high_mountains,high mountains,33 35 47 60 67 71,keep both: above_tree_line mountain_meadows,vs above_tree_line: above_tree_line says no trees grow there; 35 60 71 live in mountain forest. vs mountain_meadows: meadows name a habitat (grassland); high_mountains only height
+hinged_shell,hinged shell,1,keep,no other sign says this
+hisses,hisses,59,keep both: loud_calls,vs loud_calls: names the sound: a hiss
+hooves,hooves,29 38 39 50 53 68,keep,no other sign says this
+horns,horns,29 38 44 50 66 68 69,"keep, absorbs spiral_horns s_shaped_horns",survives: spiral_horns: narrower case on the same note (50); s_shaped_horns: narrower case on the same note (69)
+huge_head,huge head,4 62,keep,no other sign says this
+internal_fertilization,internal fertilization,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+kopjes,kopjes,15,keep both: crevice_hider,vs crevice_hider: hides in cracks vs a named place
+large_eyes,large eyes,11 23,keep both: red_eyes,vs red_eyes: size vs color
+leaf_eater,leaf eater,61,keep both: bamboo_eater cecropia_leaves bromeliad_eater grazer,vs bamboo_eater: a named food. vs cecropia_leaves: a named tree's leaves on another animal: a narrower case across animals a player can tell apart. vs bromeliad_eater: a named food. vs grazer: grass vs leaves
+leaf_litter,leaf litter,3 12 46 76,owner: forest_floor,"vs forest_floor: 46's one note shows both and 76 holds both: the leaf layer lies on the forest floor; but leaf_litter is Habitat (forest) and forest_floor Habits (stays down: trees no), and 3 and 12 hold only leaf_litter"
+leg_spurs,leg spurs,20,keep,no other sign says this
+lidless_eyes,lidless eyes,10 62 75,keep,no other sign says this
+long_arms,long arms,40 56,keep,no other sign says this
+long_finger,long finger,23,keep both: tap_forager,vs tap_forager: a body part vs how it feeds
+long_legs,long legs,69 72,keep,no other sign says this
+long_tail,long tail,4 23 24 35 43 52 59,keep both: ringed_tail paddle_tail,vs ringed_tail: length vs pattern; 35's one note says both. vs paddle_tail: length vs shape
+long_tongue,long tongue,24 27 29 37 52 55 57 59 63 67,keep both: no_tongue,vs no_tongue: opposites
+loud_calls,loud calls,56 61 72 73,keep both: chirps hisses screecher squeaker whistle_calls low_rumbles,"vs chirps: names the sound: a bird-like chirp. vs hisses: names the sound: a hiss. vs screecher: names the sound: a narrower case across animals, told apart. vs squeaker: names the sound: a narrower case across animals, told apart. vs whistle_calls: names the sound: high whistles. vs low_rumbles: names the sound: rumbles too low to hear"
+low_rumbles,low rumbles,28 64,keep both: loud_calls senses_vibrations,vs loud_calls: names the sound: rumbles too low to hear. vs senses_vibrations: makes rumbles vs feels them
+mane,mane,72,keep both: cub_mane neck_hump,vs cub_mane: the cubs only. vs neck_hump: 055 retagged 53 mane to neck_hump (covering skin)
+many_teeth,many teeth,36,keep both: toothless,vs toothless: opposites
+mother_carries_young,mother carries young,10 24 52 54 56 59 61 63,"keep, absorbs carries_young_on_back; keep both: father_carries_young","survives: carries_young_on_back: narrower case on the same note on all 4 holders. vs father_carries_young: the father, not the mother"
+mountain_meadows,mountain meadows,42,keep both: above_tree_line high_mountains,"vs above_tree_line: both above the trees, but SIGNS reads above_tree_line as no forest and 42 has forest. vs high_mountains: meadows name a habitat (grassland); high_mountains only height"
+mud_bather,mud bather,28 44 64 66 70,keep,no other sign says this
+neck_hump,neck hump,53,keep both: mane,vs mane: 055 retagged 53 mane to neck_hump (covering skin)
+nectar_drinker,nectar drinker,23,keep,no other sign says this
+never_climbs,never climbs,55,owner: forest_floor,"vs forest_floor: 55 never climbs as 76 hardly ever climbs, same SIGNS reading (trees no, forest); but the forest_floor notes of 9 and 46 say nothing about climbing: a narrower case across animals; a merge would link 55 with 9 46 76, all true"
+no_tadpoles,no tadpoles,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+no_tongue,no tongue,10,keep both: long_tongue,vs long_tongue: opposites
+nomadic,nomadic,50 64 69,keep,no other sign says this
+often_in_trees,often in trees,71,owner: climber seldom_on_ground,"vs climber: 71's one note: a great climber that spends lots of time in trees; time spent vs ability, but they may read as one fact. vs seldom_on_ground: lots of time in trees (71) vs almost never on the ground (40 54): same direction, different degree"
+one_island,one island,30 42 48 49,keep both: floreana_island pinta_island,"vs floreana_island: a named island: a narrower case across animals, told apart; one_island is Range, this Habitat (categories kept as SIGNS gives them). vs pinta_island: a named island: a narrower case across animals, told apart; one_island is Range, this Habitat (categories kept as SIGNS gives them)"
+orange_feet,orange feet,6,keep,no other sign says this
+pack_hunter,pack hunter,65 73,keep,no other sign says this
+paddle_tail,paddle tail,73 75,keep both: flippers long_tail,vs flippers: legs vs tail. vs long_tail: length vs shape
+patchy_coat,patchy coat,65,keep,no other sign says this
+pig_nose,pig nose,17,keep both: pointed_snout,vs pointed_snout: a flat pig snout; 16 and 57's pig-like snouts are long and pointed
+pinta_island,pinta island,22,keep both: floreana_island one_island,"vs floreana_island: two islands: the island is what tells 19 from 22. vs one_island: a named island: a narrower case across animals, told apart; one_island is Range, this Habitat (categories kept as SIGNS gives them)"
+pointed_snout,pointed snout,3 16 27 37 46 49 52 57 67,keep both: pig_nose snorkel_nose,vs pig_nose: a flat pig snout; 16 and 57's pig-like snouts are long and pointed. vs snorkel_nose: a snorkel for breathing
+poor_eyesight,poor eyesight,24 27 31 32 52 53 57 62 66 70 75,keep,no other sign says this
+pouch,pouch,27 31 37 43 48 67,"keep, absorbs backward_pouch",survives: backward_pouch: narrower case on the same note on all 3 holders
+prairie_dog_towns,prairie dog towns,26,keep both: town_dweller,vs town_dweller: prairie dog colonies vs people's towns
+puffs_up,puffs up,14,keep,no other sign says this
+purple_gray,purple gray,16,keep,no other sign says this
+pushes_over_trees,pushes over trees,64,keep,no other sign says this
+raids_termite_mounds,raids termite mounds,52 55 57 59 63,keep both: digging_claws,vs digging_claws: claws vs what it eats
+rain_breeder,rain breeder,13,keep both: surfaces_to_breed,vs surfaces_to_breed: after rain in pools vs comes above ground
+rarely_drinks,rarely drinks,39 50 57 68 69,keep both: fog_drinker,vs fog_drinker: water from fog vs water from food
+red_eyes,red eyes,6,keep both: large_eyes,vs large_eyes: size vs color
+red_orange,red orange,13,keep both: reddish_fur,vs reddish_fur: frog skin vs fur
+reddish_fur,reddish fur,29 33 35 40 43 72,keep both: red_orange,vs red_orange: frog skin vs fur
+regrows_body_parts,regrows body parts,74,keep,no other sign says this
+rests_by_waterfalls,rests by waterfalls,11,keep both: basker,vs basker: basks in the sun vs rests on wet rocks (055 retired rock_basker on 11 as a day reading)
+rests_on_bottom,rests on bottom,2 10,keep both: buries_itself,vs buries_itself: buried vs resting on the bottom unburied (10); 055 put both on 2
+ringed_tail,ringed tail,35 58,keep both: long_tail white_tail_tip,vs long_tail: length vs pattern; 35's one note says both. vs white_tail_tip: rings vs a white tip; 58's one note says both
+rock_basker,rock basker,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+rock_climber,rock climber,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+rodent_hunter,rodent hunter,33,keep,no other sign says this
+rolls_into_ball,rolls into ball,24 27 55 59 63 67,keep,no other sign says this
+roosts_in_trees,roosts in trees,45,owner: sleeps_high_in_trees,"vs sleeps_high_in_trees: a bat roosts where it sleeps by day, so 45 says what 23 and 35 say; but ""roosts"" is its note's own word (055 retag) and the merge needs sleep words for 45; would link 45 and 23 in Africa"
+round_body,round body,16,keep,no other sign says this
+s_shaped_horns,s shaped horns,69,merge into horns,narrower case on the same note (69); the S shape stays in the note text
+saddleback_shell,saddleback shell,19,keep,no other sign says this
+salt_licks,salt licks,29 41 44 53 66,keep,no other sign says this
+sand_dunes,sand dunes,14,keep,no other sign says this
+sand_swimmer,sand swimmer,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+sandy_bottoms,sandy bottoms,2,keep,no other sign says this
+scavenger,scavenger,48,keep,no other sign says this
+scent_marks,scent marks,25 29 33 38 51 55 60 63 66 68 72 73,owner: dung_piles; keep both: eye_glands territorial,"vs dung_piles: 66 marks its home with dung piles on the same note; dung marking is scent marking (72 73's droppings are tagged scent_marks), so possibly a narrower case; a player may not read dung as scent. vs eye_glands: glands below the eyes vs marking; 38's face-gland note is tagged scent_marks (a retag, out of scope). vs territorial: marks with scent vs defends an area: 9 20 26 39 61 75 defend without scent marks, 29 38 55 60 63 mark without defending"
+screecher,screecher,48,keep both: loud_calls,"vs loud_calls: names the sound: a narrower case across animals, told apart"
+seasonal_streams,seasonal streams,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+seed_spreader,seed spreader,19 41 53 72,keep both: fruit_eater,vs fruit_eater: a food vs a role; 41 53 72's one note says both; 19 spreads seeds
+seldom_on_ground,seldom on ground,40 54,owner: climber often_in_trees,"vs climber: 40's one note: lives almost entirely in trees, almost never on the ground; ability vs staying up, but they may read as one fact. vs often_in_trees: lots of time in trees (71) vs almost never on the ground (40 54): same direction, different degree"
+senses_vibrations,senses vibrations,32 41 62 75,keep both: electric_sense low_rumbles,vs electric_sense: electric signals vs vibrations. vs low_rumbles: makes rumbles vs feels them
+shallow_wetlands,shallow wetlands,1,keep,no other sign says this
+shares_food,shares food,65,keep,no other sign says this
+shell_spines,shell spines,2,merge into spiky_shell,"same fact on two animals: small spines along the shell's front edge (2), spikes around its edge (12); a player can't tell them apart; same category (Body) and reading (covering shell); spiky_shell reads like the other <kind> shell signs"
+shoulder_stripe,shoulder stripe,52,merge into stripes,narrower case on the same note (52); stripes keeps its link to 25 29 39 43
+side_frills,side frills,7,keep,no other sign says this
+skin_folds,skin folds,44,keep both: underwater_breathing,vs underwater_breathing: armor-like folds vs folds for breathing
+sleeping_nests,sleeping nests,23 40 46 56 71,keep both: sleeps_high_in_trees,vs sleeps_high_in_trees: a nest (46's is on the ground) vs high up (35 has no nest); 23's one note says both
+sleeps_high_in_trees,sleeps high in trees,23 35,owner: roosts_in_trees; keep both: sleeping_nests,"vs roosts_in_trees: a bat roosts where it sleeps by day, so 45 says what 23 and 35 say; but ""roosts"" is its note's own word (055 retag) and the merge needs sleep words for 45; would link 45 and 23 in Africa. vs sleeping_nests: a nest (46's is on the ground) vs high up (35 has no nest); 23's one note says both"
+slow_mover,slow mover,30 54,keep,no other sign says this
+snorkel_nose,snorkel nose,2 17,keep both: pointed_snout trunk,vs pointed_snout: a snorkel for breathing. vs trunk: 28's trunk-as-snorkel note is tagged trunk (055)
+snowy_winters,snowy winters,34,keep both: winter_rest,vs winter_rest: a place vs a rest
+snub_nose,snub nose,34,keep,no other sign says this
+soars,soars,45,keep both: glider,vs glider: glides tree to tree vs soars on warm air
+spectacles,spectacles,68 71,merge into face_markings,"narrower case on the same note on both holders; face_markings keeps their link to 33 38 42 50; ""like glasses"" stays in the note text"
+spiky_shell,spiky shell,12,"keep, absorbs shell_spines","survives: shell_spines: same fact on two animals: small spines along the shell's front edge (2), spikes around its edge (12)"
+spiny_forest,spiny forest,21,keep,no other sign says this
+spiral_horns,spiral horns,50,merge into horns,narrower case on the same note (50); the spirals stay in the note text
+spots,spots,51 58,keep both: spotted_belly,vs spotted_belly: the belly only
+spotted_belly,spotted belly,3,keep both: spots,vs spots: the belly only
+squeaker,squeaker,14,keep both: loud_calls,"vs loud_calls: names the sound: a narrower case across animals, told apart"
+stands_on_hind_legs,stands on hind legs,24 36 52 57 61 69,owner: walks_upright,"vs walks_upright: 63 walks on its back legs as 24 runs on them, but 36 52 57 69 only rear up: a narrower case across animals; a merge would link 63 with 24 57 61 69, all true"
+star_fingers,star fingers,10,keep,no other sign says this
+star_pattern,star pattern,21,keep,no other sign says this
+startle_display,startle display,6,keep,no other sign says this
+stays_larval,stays larval,74,keep,no other sign says this
+stays_underground,stays underground,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+sticky_skin,sticky skin,13,keep,no other sign says this
+stores_food,stores food,47,keep,no other sign says this
+striped_young,striped young,53 70 76,keep both: stripes,vs stripes: the young only
+stripes,stripes,25 29 39 43 52,"keep, absorbs shoulder_stripe; keep both: striped_young",survives: shoulder_stripe: narrower case on the same note (52). vs striped_young: the young only
+strong_bite,strong bite,48 51 60 71,keep,no other sign says this
+stubby_tail,stubby tail,61,keep,no other sign says this
+sucker_mouth_tadpoles,sucker mouth tadpoles,8 16,keep,no other sign says this
+super_hearing,super hearing,32,keep both: big_ears,vs big_ears: ear size vs hearing
+surfaces_to_breed,surfaces to breed,16,keep both: rain_breeder,vs rain_breeder: after rain in pools vs comes above ground
+swimmer,swimmer,53 70 73,keep both: fully_aquatic,"vs fully_aquatic: only in water vs swims; travelOf reads both, holders unchanged. travelOf reads it: holders unchanged"
+tail_organ,tail organ,8,keep,no other sign says this
+tap_forager,tap forager,23,keep both: long_finger,vs long_finger: a body part vs how it feeds
+tear_lines,tear lines,58,keep both: face_markings,"vs face_markings: a black line eye to mouth: a narrower case across animals, told apart"
+temperature_sex,temperature sex,1 17,keep,no other sign says this
+territorial,territorial,9 20 25 26 33 39 51 61 66 68 72 73 75,keep both: scent_marks,"vs scent_marks: marks with scent vs defends an area: 9 20 26 39 61 75 defend without scent marks, 29 38 55 60 63 mark without defending"
+throat_patch,throat patch,73,keep both: brown_throat,vs brown_throat: a brown throat vs cream patches
+tooth_plate,tooth plate,76,keep both: toothless,vs toothless: a bony plate that looks like teeth
+toothless,toothless,24 27 52 55 59 63 67,keep both: many_teeth tooth_plate,vs many_teeth: opposites. vs tooth_plate: a bony plate that looks like teeth
+town_dweller,town dweller,13 54,keep both: prairie_dog_towns,vs prairie_dog_towns: prairie dog colonies vs people's towns
+tree_dweller,tree dweller,,retired in 055,no holder before or after; stays in SIGNS so old rows load
+trunk,trunk,28 41 53 64 70,keep both: grasping_lip snorkel_nose,vs grasping_lip: lip vs trunk. vs snorkel_nose: 28's trunk-as-snorkel note is tagged trunk (055)
+tube_teeth,tube teeth,57,keep both: ever_growing_teeth,vs ever_growing_teeth: growth vs structure; 57's one note says both
+tusks,tusks,28 41 64,keep,no other sign says this
+underwater_breathing,underwater breathing,2 62 75,keep both: feathery_gills skin_folds,"vs feathery_gills: gills vs breathing through the skin (2 62 75): a narrower case across animals, told apart. vs skin_folds: armor-like folds vs folds for breathing"
+uses_tools,uses tools,40 56,keep,no other sign says this
+venomous,venomous,49,keep,no other sign says this
+vertical_pupils,vertical pupils,6 8,keep,no other sign says this
+voiceless,voiceless,8,keep,no other sign says this
+walks_on_knuckles,walks on knuckles,52 55 56,keep,no other sign says this
+walks_upright,walks upright,63,owner: stands_on_hind_legs,"vs stands_on_hind_legs: 63 walks on its back legs as 24 runs on them, but 36 52 57 69 only rear up: a narrower case across animals; a merge would link 63 with 24 57 61 69, all true"
+warning_colors,warning colors,9 76,keep both: bright_green,vs bright_green: a color vs a warning
+webbed_feet,webbed feet,5 10 14 73,keep both: flippers,vs flippers: paddle legs vs webbed toes
+whistle_calls,whistle calls,70,keep both: loud_calls,vs loud_calls: names the sound: high whistles
+white_belly,white belly,39,keep,no other sign says this
+white_ear_rims,white ear rims,70,keep,no other sign says this
+white_tail_tip,white tail tip,37 46 58 65,keep both: ringed_tail,vs ringed_tail: rings vs a white tip; 58's one note says both
+wings,wings,45,keep,no other sign says this
+winter_rest,winter rest,2 42,keep both: snowy_winters,vs snowy_winters: a place vs a rest
+yellow_head,yellow head,21,keep both: yellow_legs,vs yellow_legs: different body parts
+yellow_legs,yellow legs,1,keep both: yellow_head,vs yellow_head: different body parts
+yellow_scales,yellow scales,,retired in 055,no holder before or after; stays in SIGNS so old rows load
