@@ -29,6 +29,6 @@ None. No production content build needed.
 ## Verification
 Static: `npm run typecheck`, `npm run lint`, `npm test` 66/66, `npm run content -- preview` same as before.
 E2E (dev copy `phaser_june_dev`): `E2E_SEED=7 E2E_PLACE=continent:africa npm run e2e:fresh`. New checks: signs beside the photo grouped in category order, one icon per group, none in the guide rows (S1); every page fits (S2); forced-box paging, keep-together and repeat-icon breaks, auto-turn and pause (P1–P3); 320 px pages instead of overflowing (S3); one-page 02d sheet; paging sheet found and shot; pause focus ring inside the box. Rounds equal the baseline.
-Final: (filled in at S6).
+Final: 1573/1573 checks, 0 failed, rounds = baseline (Hairy Frog found, Hirola lost, Golden-rumped Sengi found, African Forest Elephant found); artifact `/srv/critter-ai/agent-state/missions/signs-beside-photo/final-e2e/report.json`.
 
 Shots (390×844 light/dark unless noted), `/srv/critter-ai/agent-state/missions/signs-beside-photo/shots/`: `02d-field-guide-*` (one page), `02e-field-guide-rows-*` (rows, no chips), `02f-signs-page-{1,2}-*` (paging, round 2 Chimpanzee), `02g-signs-desktop.png` (1280×800), `02h-signs-focus.png`. Audit: `…/signs-beside-photo/audit.md`.
