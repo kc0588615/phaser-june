@@ -107,7 +107,6 @@
       "category": "morphology",
       "text": "A black stripe outlined in white runs across its shoulders and along its back.",
       "tags": [
-        "stripes",
         "shoulder_stripe"
       ],
       "source": "sdzwa"
@@ -157,8 +156,7 @@
       "category": "reproduction",
       "text": "A baby rides on its mother's back for about six months.",
       "tags": [
-        "carries_young_on_back",
-        "mother_carries_young"
+        "carries_young_on_back"
       ],
       "source": "iucn"
     },
