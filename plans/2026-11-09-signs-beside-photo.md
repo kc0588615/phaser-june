@@ -352,6 +352,8 @@ All changes are in **Architecture**. The widths and line counts come from a stat
   - Unchanged: `plans/README.md`, plan 055, `ANIMAL_RULES.version`, content, DB.
   - Checks: V1; `rg -n "under (its|the|one) (question )?categor|guide rows|after that category" CONTEXT.md docs/CLUE_MATCH.md docs/CONTENT_SOURCES.md src/clueGame/signs.ts src/components/animalBoard` shows no stale "signs in the guide rows" text; paths named in edited docs exist. No E2E (comments and docs only).
 
+- [ ] S7 · **Astra MUST-FIX 1: keyboard pause after a drag.** `AnimalSheets.tsx` photo row `onClickCapture`: swallow only pointer clicks (`dragged.current && event.detail > 0`; keyboard Space/Enter clicks have `detail` 0), so the pause button still toggles from the keyboard after a photo-row drag. E2E (adopts Astra's SHOULD-CONSIDER): on a paging sheet, drag the photo row (real mouse, under the swipe threshold or back to start), focus the pause button by Tab, press Space; check `aria-pressed` flips and pages stop, Space again resumes. Check name `signs keyboard pause after drag`. V1; V2 -> `M/e2e-s7/` (delete `M/e2e-s4/`); V3 with the new substring.
+- [ ] S8 · **Astra MUST-FIX 2: focus kept when arrows switch animals from the pause button.** In the guide sheet's `onKeyDown`, if focus is inside the photo row before `step`, put it back after the commit: the new animal's pause button if it has one, else the photo row (`tabIndex={-1}`, no ring, as `end-title`). E2E: focus a paging sheet's pause button by Tab, press ArrowRight twice; check the animal changed twice and `document.activeElement` is inside the sheet (not `body`) each time. Check name `signs arrows keep focus`. V1; V2 -> `M/e2e-s8/` (delete `M/e2e-s7/`); V3 with both new substrings.
 - [x] S6 · **Verification.** Run V1–V4 in order; V2 → `M/final-e2e/` (delete `M/baseline-e2e/`, keep the latest `M/e2e-s*/`); V3 with all substrings; V4. Fill plan 058's verification line (check count, artifact path). Log the results. Mission rule 7 repeats V1–V4 after the Astra code review and replaces `M/final-e2e/`.
 
 ## Verification
@@ -398,6 +400,17 @@ Steps pass only the substrings of checks added so far (each step lists them). Th
 
 ## Code review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. [AnimalSheets.tsx:391](src/components/animalBoard/AnimalSheets.tsx:391): After dragging the photo row, `dragged.current` remains true until another pointer-down. The row’s click-capture handler then swallows Space/Enter activation of the pause button. Restrict drag suppression to pointer clicks so keyboard pause/resume works.
+2. [AnimalSheets.tsx:209](src/components/animalBoard/AnimalSheets.tsx:209): With the pause button focused, Left/Right switches animals and remounts `GuideSigns`, removing the focused element. Focus falls to the document; subsequent arrows stop navigating the guide. Restore focus to a persistent guide control.
+
+SHOULD-CONSIDER:
+
+- Add E2E coverage for both keyboard sequences; current pause tests synthesize pointer-down, and the keyboard check only verifies the focus ring.
+
 ## Release
 
 ## Decisions
@@ -426,5 +439,6 @@ Steps pass only the substrings of checks added so far (each step lists them). Th
 - 2026-11-09 02:33 UTC: S4. graphical-audit → `M/audit.md`: 1 fix (pause button focus ring clipped; inward `focus-visible:-outline-offset-2!`), no gap change, 1 pre-existing note (MENU_ROW). New e2e check + `02h-signs-focus.png`. V1 0 (66/66, preview same); V2 dev copy 1573/1573, rounds = baseline, artifact `M/e2e-s4/` (e2e-s3 deleted); V3 0 (11 substrings). 10 shots in `M/shots/`.
 - 2026-11-09 02:45 UTC: S5. `CONTEXT.md` (Field guide, Sign, Category mark), `CLUE_MATCH.md:54`, `CONTENT_SOURCES.md:69`: signs beside the photo in category groups, 5 s pages, tap to pause; comments in `signs.ts`, `CategoryMark.tsx`, `questionMatch.ts` (`AnimalSheets.tsx:97` already done in S1); new `plans/058-signs-beside-photo.md` (final line filled at S6). V1 0 (66/66, preview same); stale-text rg empty; named paths exist. No E2E (docs/comments only).
 - 2026-11-09 02:47 UTC: S6. V1 0 (typecheck, lint, 66/66, preview same); V2 dev copy 1573/1573, rounds = baseline, artifact `M/final-e2e/` (baseline-e2e deleted, e2e-s4 kept); V3 0 (all 11 substrings); V4 10 shots refreshed in `M/shots/`, audit present. Plan 058 final line filled.
+- 2026-11-09 02:52 UTC: Astra code review. APPROVE_WITH_CHANGES; 2 MUST-FIX, both real and inherited from the old `GuideSigns` at `447e9317` (keyboard pause swallowed after a drag; arrows from the pause button drop focus to body) -> S7, S8 before S6; SHOULD-CONSIDER (keyboard E2E) adopted into S7/S8. Plan only.
 
 ## Summary
