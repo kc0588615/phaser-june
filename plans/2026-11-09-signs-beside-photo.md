@@ -450,7 +450,7 @@ Result: done
 - 2026-11-09 03:07 UTC: S7. Photo row `onClickCapture` swallows only pointer clicks (`event.detail > 0`); e2e `signs keyboard pause after drag` (resume by tap, real mouse drag 30 px and back, no flip; Tab to pause button; Space pauses, page holds 5.6 s; Space resumes, page 2 -> 1). V1 0 (66/66, preview same); V2 dev copy 1574/1574, rounds = baseline, artifact `M/e2e-s7/` (e2e-s4 deleted); V3 0 (12 substrings). Plan 058 notes the fix.
 - 2026-11-09 03:22 UTC: S8. Guide `onKeyDown`: when focus is in the photo row, `flushSync(step)` then focus the new pause button, else the row (`tabIndex={-1}`, `outline-none!`). e2e `signs arrows keep focus` (Tab to pause, ArrowRight x2: Chimpanzee pause -> Hirola row -> Dama Gazelle row, in sheet each time). V1 0 (66/66, preview same); V2 dev copy 1575/1575, rounds = baseline, artifact `M/e2e-s8/` (e2e-s7 deleted); V3 0 (all 13 substrings). Plan 058 notes the fix.
 - 2026-11-09 03:36 UTC: Final verification (rule 7, after Astra code review and S7/S8). V1 0 (typecheck, lint, 66/66, preview same); V2 dev copy 1575/1575, rounds = baseline, artifact `M/final-e2e/` (replaced; e2e-s8 kept); V3 0 (all 13 substrings); V4 10 shots refreshed in `M/shots/`, audit present. Plan 058 final line 1575. Summary written, status done.
-- 2026-11-09 04:25 UTC: Release. V1 0; V2 1574/1575 (P3 timing flake), rerun 1575/1575, V3 0; PR #69 CI pass, merged `5c37fc04`, deployed; smoke /explore 200, version.txt = merge commit.
+- 2026-11-09 04:16 UTC: Release. V1 0; V2 1574/1575 (P3 timing flake), rerun 1575/1575, V3 0; PR #69 CI pass, merged `5c37fc04`, deployed; smoke /explore 200, version.txt = merge commit.
 
 ## Summary
 
