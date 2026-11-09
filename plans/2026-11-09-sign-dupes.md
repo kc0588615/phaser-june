@@ -294,7 +294,7 @@ Order: H12 (S6) and docs/plan 059 (S7) come after the dev run (S5), so both carr
     ```
   - Step 3's `Pool:` line is the expected one; if S5's differed, write S5's.
   - Checks: `grep -n '^### H12' /srv/critter-ai/handoff/critter-connect.md` = 1 hit, between `## Open` and `## Closed`; next line `Status: waiting on you`; no value in the title, no secret in the item. No repo change.
-- [ ] S7. **Docs and plan 059 (Target 6, 7, 8).**
+- [x] S7. **Docs and plan 059 (Target 6, 7, 8).**
   - `docs/CONTENT_SOURCES.md`: Target 6's bullet, verbatim, after `:72` ("A sign names evidence from its own note…").
   - New `plans/059-sign-dupes.md` (058 is the last), 057/058 style: What changed (F2's table; counts: open tags 201 → 201, uses 518 → 506, `SIGNS` 216 and 15 retired unchanged, 0 merges, 6 pairs deduped on 12 notes in 11 files, 95 pairs compared = 6 + 80 + 9); Why (narrower over broader, F1; rejected merge); For the owner (F4's 9 pairs and the other items, the 4 true links lost); Removed witness pairs (from `$M/metrics/pairs-removed.md`, true/false); Balance (witness and bot tables from `$M/metrics/summary.md`); No version bump (Target 8); DB (H12); Verification (S2–S5 results); Shots (`$M/chimp-{before,after}-p{1,2}.png`; chimp 9 signs → 8, still 2 pages at 390 px from 058's layout). The `Final:` line is added in the final Verification.
   - Checks: every path in 059 exists (`ls`); static checks. No E2E (Markdown only).
@@ -374,5 +374,6 @@ Isolated checks only (content edits, pair diff, `sign-map.csv`); everything else
 
 - 2026-11-09 05:55 UTC · S5: dev copy (guard ok) spot 12 → build (0 citation warnings, Built) → check `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.` 0 errors, 0 warnings → e2e:fresh 1575/1575 → spot 0. report-check: 1575 checks, 0 failed; paging Chimpanzee; rounds 7:found 68:lost 46:found 41:found; 0 console errors, 0 failed requests (`$M/e2e-s5/`). Chimp after shots viewed: p2 = "carries young on back" alone, "mother carries young" on neither page. baseline-e2e removed. typecheck + lint 0.
 - 2026-11-09 06:30 UTC · S6: handoff H12 (prod content build + dump + spot check, Pool line = S5) added under Open above H11; 1 hit, Status waiting on you, no values in title/item. No repo change.
+- 2026-11-09 06:40 UTC · S7: `CONTENT_SOURCES.md` "One sign per fact" bullet; `plans/059-sign-dupes.md` (dedupe table, counts, why narrower-over-broader, 9 owner pairs + other owner items, 43 removed pairs, witness/bot tables, no bump, H12, verification, shots); all paths exist. typecheck, lint, 66/66, preview 0 PROBLEMs, dedupe-check 0.
 
 ## Summary
