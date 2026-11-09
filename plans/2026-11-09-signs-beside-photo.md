@@ -333,7 +333,7 @@ All changes are in **Architecture**. The widths and line counts come from a stat
   - If P1, P2 or S3 fails on a real `signPages`/`GuideSigns` bug, fix it in `AnimalSheets.tsx` in this step. If the content no longer gives a split and a move at 144 × 40, pick a new width (never taller) and record it under Decisions.
   - Checks: V1; V2 → `M/e2e-s2/` (delete `M/e2e-s1/`); V3 with S1's substrings plus `'split into pages' 'starts the next page whole' 'turn on their own' 'on a 320 px phone the signs page'`. P2's detail shows 14 and 41 split, 13 moved (Architecture "Measured").
 
-- [ ] S3 · **Screenshots: one page, paging (both pages), desktop.**
+- [x] S3 · **Screenshots: one page, paging (both pages), desktop.**
   - `scripts/e2e.mjs`:
     - In the `guide` evaluate (`:871`), also read the first row's sheet `data-guide-signs` and chip count; check `field guide: the 02d shot's sheet shows its signs on one page` (signs > 0, pages = 1).
     - In the round loop, after the round checks and before the pencil step (`:1321`), when `n > 1` and no paging sheet is shot yet: open the guide on the first row, flip the numbers 1–5 reading `data-guide-signs`, stop at the first > 1. If found, for light then dark (set and restore the theme as the 02d block does, `:880-898`): pause, shoot `02f-signs-page-1-<mode>.png`, tap tap, wait 450 ms, shoot `02f-signs-page-2-<mode>.png`. Then `sideNotesAt(1280, 800, false)`, wait for the re-split, shoot `02g-signs-desktop.png`, `sideNotesAt(...PHONE)`. Close the guide, drop the pick.
@@ -419,5 +419,6 @@ Steps pass only the substrings of checks added so far (each step lists them). Th
 - 2026-11-09 01:35 UTC: Steps. planner wrote S1–S6 (core port+retarget checks, forced paging/320 px, shots, audit, docs/plan 058, verification) and V1–V4. Plan only.
 - 2026-11-09 01:48 UTC: S1. `GuideSigns` ported with category groups (`SignGroups` hanging layout, pure `signPages` keep-together split, pause mark only with >1 page, sr list per category); guide rows lines only; e2e `__signs`/`__allPages`, S1/S2/E2/E3 retargeted. V1 0 (66/66, preview same); V2 dev copy 1566/1566, rounds = baseline, artifact `M/e2e-s1/`; V3 0. 02d/02e shots checked.
 - 2026-11-09 02:05 UTC: S2. e2e P1/P2/P3 (forced 144×40 box via shared `guideSheets`, `pagingProblems`, `pageBreaks`) and S3 (320 px natural box); `__closeGuide` helper. No product change needed. V1 0 (66/66, preview same); V2 dev copy 1570/1570, rounds = baseline, artifact `M/e2e-s2/` (e2e-s1 deleted); V3 0. P2: 2 splits (14, 41), 1 move (13), 0 bad; S3: 14, 41 page by whole-group moves.
+- 2026-11-09 02:17 UTC: S3. e2e 02d one-page check; 02f paging shots (first later-round sheet that pages at 390: round 2 Chimpanzee, 2 pages; `__signPage(k)` pauses on page k) light+dark, 02g at 1280 px; after-loop found-and-shot check; theme save/restore shared as `inThemes` (02d/02e, 02f, 10-sources). No product change. V1 0 (66/66, preview same); V2 dev copy 1572/1572, rounds = baseline, artifact `M/e2e-s3/` (e2e-s2 deleted); V3 0 (all 10 substrings). 9 shots in `M/shots/`, checked: groups one icon each, counter 1/2 and 2/2, pause mark, both themes, desktop drawer pages 1/2.
 
 ## Summary

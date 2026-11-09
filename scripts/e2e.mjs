@@ -393,6 +393,18 @@ async function main() {
       return evaluate(() => ({ wide: matchMedia('(min-width: 64rem)').matches, sideNotes: Boolean(document.getElementById('side-notes')) }));
     };
     const PHONE = [390, 844, true];
+    // Runs `shoot(mode)` in the light theme, then the dark one, and puts back the theme the device had.
+    const inThemes = async shoot => {
+      const theme = await evaluate(() => ({ data: document.documentElement.dataset.theme ?? null, stored: localStorage.getItem('critter-connect:theme') }));
+      for (const mode of ['light', 'dark']) {
+        await evaluate(mode => { document.documentElement.dataset.theme = mode; localStorage.setItem('critter-connect:theme', mode); }, mode);
+        await shoot(mode);
+      }
+      await evaluate(({ data, stored }) => {
+        if (data) document.documentElement.dataset.theme = data; else delete document.documentElement.dataset.theme;
+        if (stored) localStorage.setItem('critter-connect:theme', stored); else localStorage.removeItem('critter-connect:theme');
+      }, theme);
+    };
     // The menu's Auto rule-out switch, set to `on` (opens the menu unless it's already open, then closes it),
     // with what was stored on the device before and after.
     const autoSwitch = on => evaluate(async on => {
@@ -797,6 +809,7 @@ async function main() {
       }
       if (!sameList(sortFacts(facts), sortFacts(facts, fact => fact.cheat))) sortSaw.hiddenWouldMove = true;
     };
+    let pagingShot = null;
     for (let n = 1; n <= ROUNDS; n++) {
       const start = await evaluate(() => window.__cc.clue());
       const pins = await evaluate(() => window.__cc.state().pins);
@@ -921,26 +934,20 @@ async function main() {
         });
         await sleep(1000); // its photo loads
         await screenshot('02d-field-guide.png');
+        const onePage = await evaluate(() => { const box = document.querySelector('[role=dialog] [data-guide-signs]'); return { pages: Number(box?.dataset.guideSigns ?? 0), signs: box?.querySelectorAll('[data-sign-measure] [data-sign]').length ?? 0 }; });
+        check('field guide: the 02d shot\'s sheet shows its signs on one page', onePage.signs > 0 && onePage.pages === 1, JSON.stringify(onePage));
         // Plan 055: the sheet during play, light and dark: its top, then scrolled to the guide's category rows.
-        { const theme = await evaluate(() => ({ data: document.documentElement.dataset.theme ?? null, stored: localStorage.getItem('critter-connect:theme') }));
-          for (const mode of ['light', 'dark']) {
-            for (const [shot, rows] of [['02d-field-guide', false], ['02e-field-guide-rows', true]]) {
-              await evaluate(({ mode, rows }) => {
-                document.documentElement.dataset.theme = mode;
-                localStorage.setItem('critter-connect:theme', mode);
-                const first = document.querySelector('[role=dialog] [data-guide-cat] dt');
-                if (rows) first?.scrollIntoView({ block: 'start' });
-                else document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' });
-              }, { mode, rows });
-              await sleep(300);
-              await screenshot(`${shot}-${mode}.png`);
-            }
+        await inThemes(async mode => {
+          for (const [shot, rows] of [['02d-field-guide', false], ['02e-field-guide-rows', true]]) {
+            await evaluate(rows => {
+              if (rows) document.querySelector('[role=dialog] [data-guide-cat] dt')?.scrollIntoView({ block: 'start' });
+              else document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' });
+            }, rows);
+            await sleep(300);
+            await screenshot(`${shot}-${mode}.png`);
           }
-          await evaluate(({ data, stored }) => {
-            if (data) document.documentElement.dataset.theme = data; else delete document.documentElement.dataset.theme;
-            if (stored) localStorage.setItem('critter-connect:theme', stored); else localStorage.removeItem('critter-connect:theme');
-            document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' });
-          }, theme); }
+        });
+        await evaluate(() => document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' }));
         await evaluate(async () => {
           [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
           await new Promise(resolve => setTimeout(resolve, 250));
@@ -1072,15 +1079,23 @@ async function main() {
           };
           // Every page of the open sheet's signs, in page order: pause, then turn one page at a time (tap resumes and turns,
           // a second tap pauses again). A tap is pointerdown/up then click, so the photo row's drag guard lets it through.
+          const pause = () => document.querySelector('[role=dialog] [data-guide-signs] button[aria-label="Pause the signs"]');
+          const tap = el => { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' })); el.click(); };
+          const turn = async () => { tap(pause()); await wait(50); tap(pause()); await wait(450); };
           window.__allPages = async () => {
             const first = await window.__signs();
             if (!first || first.pages < 2) return first ? [first] : [];
-            const pause = () => document.querySelector('[role=dialog] [data-guide-signs] button[aria-label="Pause the signs"]');
-            const tap = el => { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' })); el.click(); };
             tap(pause()); await wait(50);
             const read = [await window.__signs()];
-            for (let k = 1; k < first.pages; k++) { tap(pause()); await wait(50); tap(pause()); await wait(450); read.push(await window.__signs()); }
+            for (let k = 1; k < first.pages; k++) { await turn(); read.push(await window.__signs()); }
             return read.sort((a, b) => a.page - b.page);
+          };
+          // Pauses the open sheet's signs on page k (for a shot) and returns what shows.
+          window.__signPage = async k => {
+            if (pause().getAttribute('aria-pressed') !== 'true') { tap(pause()); await wait(50); }
+            for (let i = 0; i < 5 && (await window.__signs()).page !== k; i++) await turn();
+            const { page, pages, pressed, mark, counter } = await window.__signs();
+            return { page, pages, pressed, mark, counter };
           };
           // Closes the field guide and drops the pick it made.
           window.__closeGuide = async () => {
@@ -1485,6 +1500,41 @@ async function main() {
         check('the sort: a quick tap on a name that a waiting re-order moves still picks that animal', sameList(touchName.rows, card) && touchName.picked === 'true' && !touchName.guide, JSON.stringify(touchName));
         await dropPick(e);
       }
+      // Plan 058: no round-1 sheet pages at 390 px, so the paging shots come from the first later round that deals one,
+      // before its first move: both pages, light and dark, then the same sheet at 1280 px. It plays no move.
+      if (n > 1 && !pagingShot) {
+        const found = await evaluate(async () => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
+          const { suspects } = window.__cc.clue();
+          for (let i = 1; i <= suspects.length; i++) {
+            document.querySelector(`[role=dialog] [data-guide-number="${i}"]`).click();
+            const pages = () => Number(document.querySelector('[role=dialog] [data-guide-signs]')?.dataset.guideSigns ?? 0);
+            if (await window.__until(() => pages() > 1, 800)) return { id: suspects[i - 1], pages: pages() };
+          }
+          await window.__closeGuide();
+          return null;
+        });
+        if (found) {
+          const shots = {};
+          await sleep(1000); // its photo loads
+          await inThemes(async mode => {
+            await evaluate(() => document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' }));
+            await sleep(300);
+            for (const k of [1, 2]) {
+              shots[`${k}-${mode}`] = await evaluate(k => window.__signPage(k), k);
+              await screenshot(`02f-signs-page-${k}-${mode}.png`);
+            }
+          });
+          await sideNotesAt(1280, 800, false);
+          await evaluate(() => document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'end' }));
+          shots.desktop = await evaluate(async () => { await new Promise(resolve => setTimeout(resolve, 300)); return window.__signs().then(s => s && { page: s.page, pages: s.pages }); });
+          await screenshot('02g-signs-desktop.png');
+          await sideNotesAt(...PHONE);
+          await evaluate(() => window.__closeGuide());
+          pagingShot = { round: n, animal: names.get(found.id), pages: found.pages, shots };
+        }
+      }
       // Pencil a guess in every hidden answer (yes, no, yes, ...), so scouting shows right and wrong guesses.
       const pencilled = await evaluate(async () => {
         const before = window.__rows();
@@ -1872,6 +1922,8 @@ async function main() {
         await sleep(800);
       }
     }
+    { const shown = pagingShot && ['light', 'dark'].every(mode => [1, 2].every(k => { const shot = pagingShot.shots[`${k}-${mode}`]; return shot.page === k && shot.pages > 1 && shot.pressed === 'true' && shot.mark && shot.counter === `${k}/${shot.pages}`; }));
+      check('field guide: a sheet whose signs page at 390 px was found and shot (both pages, light and dark, and at 1280 px)', Boolean(shown && pagingShot.shots.desktop), JSON.stringify(pagingShot)); }
     check('the release preview was checked at least once', previewChecked);
     check('the scouting preview was checked at least once', scoutChecked);
     check('the idle hint was checked at least once', hintChecked);
@@ -2224,25 +2276,18 @@ async function main() {
         }, CARD);
         check('sources: the AmphibiaWeb entry cites AmphibiaWeb, CC BY-NC, reworded', Boolean(entry) && entry.includes('AmphibiaWeb') && entry.includes('License: CC BY-NC') && entry.includes('Reworded for this game.'), entry ?? 'no entry links to amphibiaweb.org');
         // Closed and open, light and dark; the theme as it was afterwards.
-        const theme = await evaluate(() => ({ data: document.documentElement.dataset.theme ?? null, stored: localStorage.getItem('critter-connect:theme') }));
-        for (const mode of ['light', 'dark']) {
+        await inThemes(async mode => {
           for (const open of [false, true]) {
-            await evaluate(({ selector, mode, open }) => {
-              document.documentElement.dataset.theme = mode;
-              localStorage.setItem('critter-connect:theme', mode);
+            await evaluate(({ selector, open }) => {
               const details = document.querySelector(`${selector} details[data-sources]`);
               details.open = open;
               const entry = [...details.querySelectorAll('[data-source-entry]')].find(item => [...item.querySelectorAll('a')].some(a => new URL(a.href).hostname.endsWith('amphibiaweb.org')));
               (open ? entry : details).scrollIntoView({ block: 'nearest' });
-            }, { selector: CARD, mode, open });
+            }, { selector: CARD, open });
             await sleep(300);
             await screenshot(`10-sources-${open ? 'open' : 'closed'}-${mode}.png`);
           }
-        }
-        await evaluate(({ data, stored }) => {
-          if (data) document.documentElement.dataset.theme = data; else delete document.documentElement.dataset.theme;
-          if (stored) localStorage.setItem('critter-connect:theme', stored); else localStorage.removeItem('critter-connect:theme');
-        }, theme);
+        });
       }
     }
 
