@@ -305,6 +305,14 @@ SC 1 is covered by the release step (fetch + rebase on `origin/main`, rerun V1鈥
 
 ## Release
 
+- Refresh: `origin/main` = `7edc1a5a` = merge-base, rebase no-op. Re-ran V1鈥揤4: V1 pass (66/66, voiceless = 08, quotes 274/0, JSON ok, scope ok, code untouched); V2 exit 0, 0/0, 2 clue hunks; V3 dev copy 76 playable, 2478/2086/491, 0/0, 635/1127 ok, voiceless = 8; V4 `1565 checks (baseline 1565), 0 failed, 0 console errors, 0 failed requests; rounds same as baseline: true` (replaced `final-e2e/`).
+- PR #68: CI check + e2e pass. Merge commit `fd7ecea178a76ded41828f0d1eda4c65d35c9923`.
+- Deploy last line: `deploy critter-connect: live at https://critterconnect.org` (38 OK, 0 FAIL).
+- Smoke: `explore: 200`, `version.txt = merge commit`.
+- Log: `/srv/critter-ai/agent-state/missions/frog-fact-fixes/deploy.log`. H11 step 1 marked done.
+
+Result: done
+
 ## Decisions
 
 - S1 路 Goliath line kept verbatim on amphibiaweb (Architecture finding 2): AW backs the claim (it calls, how, open mouth); "no vocal sac" is ADW's, true and uncontested, recorded in the research note; one source per clue.
@@ -324,6 +332,7 @@ SC 1 is covered by the release step (fetch + rebase on `origin/main`, rerun V1鈥
 - 2026-11-08 23:55 UTC 路 S2: dev copy (guard = phaser_june_dev) build 0 cite warn; check 76 playable, 2478 clues (2086 deductive), 491 facts, 0/0; rows 635/1127 new text on amphibiaweb, 1127 no tags; voiceless = 8. e2e:fresh seed 7 Africa 1565/1565; V4 0 failed, 0 console errors, rounds same as baseline: true. H11 added to handoff.
 - 2026-11-09 00:15 UTC 路 Astra code review: APPROVE, no MUST-FIX; 1 SC (refresh origin/main before PR, already in release step). Doc-only, no checks needed.
 - 2026-11-09 00:11 UTC 路 Final Verification: V1 (66/66, voiceless = 08, quotes 274/0, JSON ok, scope ok, code untouched), V2 (exit 0, 0/0, 2 clue hunks), V3 dev copy (76 playable, 2478/2086/491, 0/0; 635/1127 ok; voiceless = 8), V4 1565/1565, rounds = baseline. Artifact `final-e2e/`. Summary written.
+- 2026-11-09 00:50 UTC 路 Release: V1鈥揤4 re-run pass (1565/1565, rounds = baseline); PR #68 CI pass, merged as fd7ecea1, deployed; smoke explore 200, version.txt = merge commit.
 
 ## Summary
 
@@ -342,3 +351,5 @@ Verification (final, after code review):
 Reviews: architecture Fable APPROVE, Astra APPROVE_WITH_CHANGES (1 MUST-FIX, fresh prod dump before build, folded into H11); code review Astra APPROVE, no MUST-FIX; SC 1 (refresh `origin/main` before PR) handled by the release step.
 
 **Players see the fixes only after the owner's production content build (handoff H11)**; the deploy alone doesn't change prod clue rows.
+
+**Released 2026-11-09:** PR #68 merged as `fd7ecea1` and deployed (smoke pass). Prod clue rows still wait on H11 (owner's content build).
