@@ -270,7 +270,7 @@ Order: H12 (S6) and docs/plan 059 (S7) come after the dev run (S5), so both carr
   - Disk: `rm -rf $M/baseline-e2e` once `chimp-before-p{1,2}.png` exist. Folders left: `e2e-s5/`.
   - Log the `Pool:` line, check count and rounds (S6, S7 quote them).
   - Checks: guard passes; the above; `git status` clean apart from the plan; typecheck + lint exit 0.
-- [ ] S6. **Handoff H12 (Target 13).**
+- [x] S6. **Handoff H12 (Target 13).**
   - In `/srv/critter-ai/handoff/critter-connect.md`, under `## Open` above H11 (next free number; H12 today, else the next, and S7 uses it), H11's format:
     ```
     ### H12 · Production content build for the sign dedupe
@@ -373,5 +373,6 @@ Isolated checks only (content edits, pair diff, `sign-map.csv`); everything else
 - 2026-11-09 06:20 UTC · S4: `sign-map.csv` recomputed (`$T/sign-map-update.ts`): 216 rows, written then unchanged, categories match SIGNS; numstat 11 11, broader uses/holders as planned, narrower rule only, CRLF kept. `sign-dupes.csv` check: 216 rows = SIGNS keys, holders = 5c37fc04 sign-map, verdicts 6/5/14/15; 2 reasons corrected. typecheck, lint, 66/66, preview 0 PROBLEMs.
 
 - 2026-11-09 05:55 UTC · S5: dev copy (guard ok) spot 12 → build (0 citation warnings, Built) → check `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.` 0 errors, 0 warnings → e2e:fresh 1575/1575 → spot 0. report-check: 1575 checks, 0 failed; paging Chimpanzee; rounds 7:found 68:lost 46:found 41:found; 0 console errors, 0 failed requests (`$M/e2e-s5/`). Chimp after shots viewed: p2 = "carries young on back" alone, "mother carries young" on neither page. baseline-e2e removed. typecheck + lint 0.
+- 2026-11-09 06:30 UTC · S6: handoff H12 (prod content build + dump + spot check, Pool line = S5) added under Open above H11; 1 hit, Status waiting on you, no values in title/item. No repo change.
 
 ## Summary
