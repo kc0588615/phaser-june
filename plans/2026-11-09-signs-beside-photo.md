@@ -59,7 +59,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -67,6 +67,10 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+From `agent/signs-beside-photo` @ `80de5c36` (= `origin/main` `fd7ecea1` + mission start). `node_modules` present; no migrations in this repo. Old pager: `src/components/animalBoard/AnimalSheets.tsx` at `447e9317` (`GuideSigns` line 270, `SIGN_PAGE_MS = 5000` line 41).
+- `npm run typecheck` 0, `npm run lint` 0, `npm test` 66/66 pass, `npm run content -- preview` 0 (no PROBLEM lines; output `/srv/critter-ai/agent-state/missions/signs-beside-photo/preview-before.txt`).
+- `npm run e2e:fresh` on dev copy (`current_database()` guard = `phaser_june_dev`, no-sandbox Chrome wrapper `/srv/critter-ai/agent-state/missions/moves-and-signs-build/chrome-nosandbox.sh`), seed 7, `continent:africa`: **1565/1565 checks** (rounds: Hairy Frog found, Hirola lost, Golden-rumped Sengi found, African Forest Elephant found). Artifact `/srv/critter-ai/agent-state/missions/signs-beside-photo/baseline-e2e/`.
 
 ## Architecture
 
@@ -87,5 +91,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-09 00:50 UTC: Baseline. typecheck/lint/test (66/66)/preview 0; dev-copy E2E 1565/1565, artifact `M/baseline-e2e/`.
 
 ## Summary
