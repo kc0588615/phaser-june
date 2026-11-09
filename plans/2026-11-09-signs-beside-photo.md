@@ -340,7 +340,7 @@ All changes are in **Architecture**. The widths and line counts come from a stat
     - After the loop: check `field guide: a sheet whose signs page at 390 px was found and shot (both pages, light and dark, and at 1280 px)`, detail = round, animal, pages (seed 7: round 2, Chimpanzee, 2).
   - Checks: V1; V2 → `M/e2e-s3/` (delete `M/e2e-s2/`); V3 with all substrings (V3 list); rounds still equal the baseline (the shot block plays no move). Then V4's copy into `M/shots/`, and look at each shot (groups, counter `1/2`, pause mark, both themes, desktop).
 
-- [ ] S4 · **One `graphical-audit` pass against `GUI.md`.**
+- [x] S4 · **One `graphical-audit` pass against `GUI.md`.**
   - Run `.agents/skills/graphical-audit` on `M/shots/` (390 px light/dark, one page and both pages; 1280 px; guide rows); findings to `M/audit.md`.
   - Fix within the theme: gaps and spacing only (`AnimalSheets.tsx`; `CategoryMark.tsx` only for a size tweak the audit truly needs); the icon box stays `h-(--line-xs)`; no new colour; colour never the only cue; WCAG 2.2 AA (lint's theme check). Keep both the within-group and the between-group row gap ≤ 8 px, or the 40 px forced box no longer holds two lines and P2 can't see a move. Record each call (or "no change") under Decisions.
   - Checks: V1. If code changed: V2 → `M/e2e-s4/` (delete `M/e2e-s3/`), V3 with all substrings, V4 copy (refresh `M/shots/`). If P2 now fails, prefer reverting the gap; otherwise apply S2's width rule.
@@ -382,11 +382,11 @@ E2E scenarios: the existing suite (globe → continent → 4 rounds → resume �
 node -e 'const [f,...want]=process.argv.slice(1),r=require(f),bad=r.checks.filter(c=>!c.ok).map(c=>c.name),rounds=r.rounds.map(x=>x.mystery+":"+x.outcome).join(", "),miss=want.filter(w=>!r.checks.some(c=>c.ok&&c.name.includes(w)));console.log(r.checks.length,"checks |",bad.length,"failed",bad,"|",rounds,"| missing:",miss);process.exit(bad.length||miss.length||rounds!=="Hairy Frog:found, Hirola:lost, Golden-rumped Sengi:found, African Forest Elephant:found"?1:0)' "$M/<folder>/report.json" \
   'signs sit beside the photo' 'the signs showing fit beside the photo' 'signs show beside the photo' 'its sign group carry the same category icon' \
   'split into pages' 'starts the next page whole' 'turn on their own' 'on a 320 px phone the signs page' \
-  'shows its signs on one page' 'signs page at 390 px was found'
+  'shows its signs on one page' 'signs page at 390 px was found' 'focus ring inside the box'
 ```
-Steps pass only the substrings of checks added so far (each step lists them). The final run passes all ten and must exit 0.
+Steps pass only the substrings of checks added so far (each step lists them). The final run passes all eleven (the last added in S4) and must exit 0.
 
-**V4. Shots and audit** (brief's named location): copy from the run's folder to `$M/shots/`: `02d-field-guide-{light,dark}.png` (one page), `02e-field-guide-rows-{light,dark}.png` (rows, no chips), `02f-signs-page-{1,2}-{light,dark}.png` (paging, both pages, 390×844 natural size), `02g-signs-desktop.png` (1280×800): 9 files, `ls $M/shots/02[defg]-*` lists them all. `$M/audit.md` holds the one `graphical-audit` pass (S4). Reproduce: V2 with the same seed and place.
+**V4. Shots and audit** (brief's named location): copy from the run's folder to `$M/shots/`: `02d-field-guide-{light,dark}.png` (one page), `02e-field-guide-rows-{light,dark}.png` (rows, no chips), `02f-signs-page-{1,2}-{light,dark}.png` (paging, both pages, 390×844 natural size), `02g-signs-desktop.png` (1280×800), `02h-signs-focus.png` (pause button keyboard focus, S4): 10 files, `ls $M/shots/02[defgh]-*` lists them all. `$M/audit.md` holds the one `graphical-audit` pass (S4). Reproduce: V2 with the same seed and place.
 
 **Release** (runner's unit, `Release: deploy`): rebase on `origin/main`, rerun V1–V3, push, open the PR, `gh pr merge <n> --merge`, `deploy critter-connect`; smoke `curl -sL -o /dev/null -w '%{http_code}' https://play.critterconnect.org/explore/` = 200 and `curl -s https://play.critterconnect.org/version.txt` = the merge commit. No production content build.
 
@@ -408,6 +408,9 @@ Steps pass only the substrings of checks added so far (each step lists them). Th
 - 2026-11-09 (Revision): rejected an enlarged-text E2E run: the tokens are px and page zoom scales everything; S3 at 320 px covers reflow. A chip taller than the box keeps the old clip-on-its-own-page; growing the box was rejected.
 - 2026-11-09 (Revision): the `02f` paging shots come from the first sheet that pages at 390 px at a later round's start (seed 7: round 2's Chimpanzee), because no round-1 sheet pages at 390.
 - 2026-11-09 (Revision): the final run drops 055's V3 `content -- build/check`; no content changes.
+- 2026-11-09 (S4 audit): pause button's keyboard focus ring was clipped by the box's `overflow-hidden` (global `:focus-visible` offset 2px, ported from `447e9317`). Fix: `focus-visible:-outline-offset-2!` (inward, as `MENU_ROW`; `!` because the global rule is unlayered). Added e2e check (real Shift+Tab/Tab) and shot `02h-signs-focus.png`. Rejected moving the global rule into `@layer base` (utility outlines like the pencil marks' would override focus).
+- 2026-11-09 (S4 audit): no gap/spacing change. Equal `xxs` gaps within/between groups; the hanging icon column marks group starts, and a larger between-group gap costs a line of the 5-line box. `CategoryMark.tsx` unchanged.
+- 2026-11-09 (S4 audit): `MENU_ROW`'s `focus-visible:-outline-offset-2` also loses to the global rule (ring outside, not clipped, still visible). Pre-existing, out of scope; left for the owner (Summary).
 
 ## Log
 
@@ -420,5 +423,6 @@ Steps pass only the substrings of checks added so far (each step lists them). Th
 - 2026-11-09 01:48 UTC: S1. `GuideSigns` ported with category groups (`SignGroups` hanging layout, pure `signPages` keep-together split, pause mark only with >1 page, sr list per category); guide rows lines only; e2e `__signs`/`__allPages`, S1/S2/E2/E3 retargeted. V1 0 (66/66, preview same); V2 dev copy 1566/1566, rounds = baseline, artifact `M/e2e-s1/`; V3 0. 02d/02e shots checked.
 - 2026-11-09 02:05 UTC: S2. e2e P1/P2/P3 (forced 144×40 box via shared `guideSheets`, `pagingProblems`, `pageBreaks`) and S3 (320 px natural box); `__closeGuide` helper. No product change needed. V1 0 (66/66, preview same); V2 dev copy 1570/1570, rounds = baseline, artifact `M/e2e-s2/` (e2e-s1 deleted); V3 0. P2: 2 splits (14, 41), 1 move (13), 0 bad; S3: 14, 41 page by whole-group moves.
 - 2026-11-09 02:17 UTC: S3. e2e 02d one-page check; 02f paging shots (first later-round sheet that pages at 390: round 2 Chimpanzee, 2 pages; `__signPage(k)` pauses on page k) light+dark, 02g at 1280 px; after-loop found-and-shot check; theme save/restore shared as `inThemes` (02d/02e, 02f, 10-sources). No product change. V1 0 (66/66, preview same); V2 dev copy 1572/1572, rounds = baseline, artifact `M/e2e-s3/` (e2e-s2 deleted); V3 0 (all 10 substrings). 9 shots in `M/shots/`, checked: groups one icon each, counter 1/2 and 2/2, pause mark, both themes, desktop drawer pages 1/2.
+- 2026-11-09 02:33 UTC: S4. graphical-audit → `M/audit.md`: 1 fix (pause button focus ring clipped; inward `focus-visible:-outline-offset-2!`), no gap change, 1 pre-existing note (MENU_ROW). New e2e check + `02h-signs-focus.png`. V1 0 (66/66, preview same); V2 dev copy 1573/1573, rounds = baseline, artifact `M/e2e-s4/` (e2e-s3 deleted); V3 0 (11 substrings). 10 shots in `M/shots/`.
 
 ## Summary

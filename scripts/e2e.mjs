@@ -1531,6 +1531,17 @@ async function main() {
           shots.desktop = await evaluate(async () => { await new Promise(resolve => setTimeout(resolve, 300)); return window.__signs().then(s => s && { page: s.page, pages: s.pages }); });
           await screenshot('02g-signs-desktop.png');
           await sideNotesAt(...PHONE);
+          // Keyboard focus on the pause button (Shift+Tab away, Tab back, real keys): its ring must sit inside the box,
+          // which clips its overflow (plan 058 audit).
+          await evaluate(() => document.querySelector('[role=dialog] [data-guide-signs] button[aria-pressed]')?.focus());
+          for (const modifiers of [8, 0]) for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, modifiers });
+          await sleep(100);
+          shots.focus = await evaluate(() => {
+            const button = document.querySelector('[role=dialog] [data-guide-signs] button[aria-pressed]');
+            const style = button && getComputedStyle(button);
+            return button && { focused: document.activeElement === button, visible: button.matches(':focus-visible'), outline: style.outlineStyle, width: parseFloat(style.outlineWidth), offset: parseFloat(style.outlineOffset) };
+          });
+          await screenshot('02h-signs-focus.png');
           await evaluate(() => window.__closeGuide());
           pagingShot = { round: n, animal: names.get(found.id), pages: found.pages, shots };
         }
@@ -1923,7 +1934,9 @@ async function main() {
       }
     }
     { const shown = pagingShot && ['light', 'dark'].every(mode => [1, 2].every(k => { const shot = pagingShot.shots[`${k}-${mode}`]; return shot.page === k && shot.pages > 1 && shot.pressed === 'true' && shot.mark && shot.counter === `${k}/${shot.pages}`; }));
-      check('field guide: a sheet whose signs page at 390 px was found and shot (both pages, light and dark, and at 1280 px)', Boolean(shown && pagingShot.shots.desktop), JSON.stringify(pagingShot)); }
+      check('field guide: a sheet whose signs page at 390 px was found and shot (both pages, light and dark, and at 1280 px)', Boolean(shown && pagingShot.shots.desktop), JSON.stringify(pagingShot));
+      const focus = pagingShot?.shots.focus;
+      check('field guide: the signs\' pause button shows its keyboard focus ring inside the box', Boolean(focus?.focused && focus.visible && focus.outline !== 'none' && focus.width > 0 && focus.offset + focus.width <= 0), JSON.stringify(focus ?? null)); }
     check('the release preview was checked at least once', previewChecked);
     check('the scouting preview was checked at least once', scoutChecked);
     check('the idle hint was checked at least once', hintChecked);

@@ -389,7 +389,9 @@ function GuideSigns({ signs }: { signs: readonly Sign[] }) {
             aria-pressed={paused}
             aria-label="Pause the signs"
             onClick={() => { if (paused) turn(); setPaused(!paused); }}
-            className="absolute inset-0"
+            // The box clips its overflow, so the focus ring is drawn inside the button; `!` beats the unlayered global
+            // :focus-visible rule in globals.css (plan 058 audit).
+            className="absolute inset-0 focus-visible:-outline-offset-2!"
           />
         )}
       </div>
