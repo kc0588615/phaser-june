@@ -240,7 +240,7 @@ Revision 1 (architect, after both reviews, on 66911a42).
 `M` = `/srv/critter-ai/agent-state/missions/sign-dupes`, `T` = `$M/tools`, repo root = `/srv/critter-ai/worktrees/sign-dupes` (run everything there unless a step says otherwise; set `M`/`T` in the same command, shells don't persist). **Static checks** = Verification V1 items 1–4. Heavy jobs (bot, e2e) one at a time. The tools, bot and preview read `db/content` only: no env file sourced (Fable SC5). Database only through V3's guarded blocks. Before = `5c37fc04` (`origin/main` at baseline).
 Order: H12 (S6) and docs/plan 059 (S7) come after the dev run (S5), so both carry its real `Pool:` line, check count and shots. The before tree is only needed in S1, so it goes at S1's end.
 
-- [ ] S1. **Tools, before tree, before metrics, chimp before (Target 2, 10, 12).**
+- [x] S1. **Tools, before tree, before metrics, chimp before (Target 2, 10, 12).**
   - `mkdir -p $T $M/metrics`. Copy `/srv/critter-ai/agent-state/missions/moves-and-signs-build/tools/{run.sh,bot.sh,botsum.py,witness.ts}` to `$T/`. Repoint: `run.sh` `REPO=/srv/critter-ai/worktrees/sign-dupes`, tmp names `sd-`; `bot.sh` `M=$M`; `botsum.py` `MET=$M/metrics`, every run read from `MET` (drop `BOT` and the design runs); comments name this mission.
   - Write, after Failure modes: `$T/witness-pairs.ts <label>` (book as in `witness.ts`, 76 asserted; for each animal, each tagged note of `notes` at index i, as `witnessNotes` reads them, each other animal whose `tags` hold every note tag → `<mystery id> <i> <other id>\t<full ?? text>`; lines sorted in code-unit order; writes `$M/metrics/pairs-<label>.txt`; prints `pairs-<label>: N pairs; tree <cwd> at <short head>`). `$T/dedupe-check.py` (D1–D6). `$T/spot.sql` (Target 13 step 4's `select count(*) …` as one line, `;`-terminated). `$T/report-check.cjs <report.json>`: prints `<n> checks, <k> failed; paging: <animal>; rounds: <id:outcome …>; console errors: <n>; failed requests: <n>`, exit 1 unless 0 failed, paging `Chimpanzee`, rounds `7:found 68:lost 46:found 41:found`, 0 console errors, 0 failed requests.
   - Before tree: `git worktree add --detach /tmp/sd-before 5c37fc04 && ln -s /srv/critter-ai/worktrees/sign-dupes/node_modules /tmp/sd-before/node_modules`.
@@ -352,6 +352,8 @@ Isolated checks only (content edits, pair diff, `sign-map.csv`); everything else
 
 - 2026-11-09 · Revision (architect): narrower cases keep the narrower tag on their holders and drop the broader one there (one sign per fact), instead of merging into the broader tag. A merge made notes fit animals their words aren't true of (Astra MUST-FIX 1). No tag retires, `SIGNS` is unchanged, and `shell_spines`/`spiky_shell` are kept for the owner. The brief's "drop the other from `SIGNS`" doesn't arise: both tags of every pair stay in use.
 
+- 2026-11-09 · S1: `witness-pairs.ts` counts `animalsFromProfiles` load notices (3 at baseline: e.g. Darwin Frog has no countries) instead of throwing, as `witness.ts` does; preview PROBLEMs (0) are checked by preview itself.
+
 ## Log
 
 - 2026-11-09 04:33 UTC · Baseline: typecheck, lint, 66/66 tests, preview 0 PROBLEMs; dev-copy e2e:fresh 1575/1575 (`sign-dupes/baseline-e2e/`).
@@ -360,5 +362,7 @@ Isolated checks only (content edits, pair diff, `sign-map.csv`); everything else
 - 2026-11-09 04:58 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (narrower→broader merges make witness notes state false shared facts, e.g. backward_pouch, spiral_horns), 5 SHOULD-CONSIDER; to architect in Revision.
 - 2026-11-09 05:11 UTC · Revision: architect resolved Astra MUST-FIX via design change: no merges; 6 on-animal dupes drop the broader tag (narrower kept), 0 witness pairs added, 43 removed (~39 false today, 4 to owner); shell_spines/spiky_shell → owner pair; SIGNS untouched; CSV 13 rows revised. No code changed.
 - 2026-11-09 05:21 UTC · Steps: planner wrote S1–S7 (before metrics, 12 hand tag edits, pair diff 0 added/43 removed, sign-map recompute, dev-copy build+e2e + chimp shots, H12, docs + plan 059), Verification V1–V5, Failure modes. No code changed.
+
+- 2026-11-09 05:35 UTC · S1: tools in `$M/tools` (055's run/bot/botsum/witness repointed; new witness-pairs.ts, dedupe-check.py, spot.sql, report-check.cjs). Before (5c37fc04, /tmp/sd-before, removed after): witness tagged 433, shareable 307, notes/round world 2.24 / africa 2.12 / asia 1.84 / n-am 1 / s-am 2.01; pairs 1473; preview 0 PROBLEMs; bot exit 0 (7m22s). dedupe-check exits 1 pre-edit (12 notes with both, uses 518); report-check on baseline: 1575/0, paging Chimpanzee. Chimp before shots viewed (p2 = both carry signs). typecheck + lint 0.
 
 ## Summary
