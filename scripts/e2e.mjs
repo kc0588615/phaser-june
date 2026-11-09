@@ -1542,6 +1542,40 @@ async function main() {
             return button && { focused: document.activeElement === button, visible: button.matches(':focus-visible'), outline: style.outlineStyle, width: parseFloat(style.outlineWidth), offset: parseFloat(style.outlineOffset) };
           });
           await screenshot('02h-signs-focus.png');
+          // Astra code review: a photo-row drag leaves the drag guard set, which swallowed the pause button's keyboard
+          // clicks too. Resume by tap, drag the row with a real mouse and bring it back (no flip), focus the button by
+          // Tab, then Space pauses (the page holds 5.6 s) and Space again resumes and moves on.
+          const sheetNow = () => evaluate(() => {
+            const b = document.querySelector('[role=dialog] [data-guide-signs]'), button = b?.querySelector('button[aria-pressed]');
+            return { name: document.querySelector('[role=dialog] [data-guide-name]')?.textContent ?? null, page: Number(b?.querySelector('[data-sign-page]')?.dataset.signPage ?? 0), pressed: button?.getAttribute('aria-pressed') ?? null, focused: Boolean(button && document.activeElement === button), x: document.querySelector('[role=dialog] [data-guide-swipe]')?.style.transform ?? '' };
+          });
+          await evaluate(async () => {
+            const button = document.querySelector('[role=dialog] [data-guide-signs] button[aria-pressed]');
+            if (button?.getAttribute('aria-pressed') === 'true') { button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })); button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' })); button.click(); }
+            document.querySelector('[role=dialog] [data-guide-swipe]')?.scrollIntoView({ block: 'center' });
+            await new Promise(resolve => setTimeout(resolve, 300));
+          });
+          const from = await evaluate(() => { const r = document.querySelector('[role=dialog] [data-guide-swipe] figure').getBoundingClientRect(); return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 3) }; });
+          const drag = { before: await sheetNow() };
+          const mouseAt = (type, dx) => page('Input.dispatchMouseEvent', { type, x: from.x + dx, y: from.y, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1 });
+          await mouseAt('mousePressed', 0);
+          for (const dx of [5, 10, 15, 20, 25, 30]) { await mouseAt('mouseMoved', dx); await sleep(16); }
+          drag.during = await sheetNow();
+          for (const dx of [25, 20, 15, 10, 5, 0]) { await mouseAt('mouseMoved', dx); await sleep(16); }
+          await mouseAt('mouseReleased', 0);
+          await sleep(500);
+          drag.after = await sheetNow();
+          await evaluate(() => document.querySelector('[role=dialog] [data-guide-signs] button[aria-pressed]')?.focus());
+          for (const modifiers of [8, 0]) for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, modifiers });
+          const space = async () => { for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: ' ', code: 'Space', windowsVirtualKeyCode: 32, ...(type === 'keyDown' ? { text: ' ' } : {}) }); await sleep(100); };
+          await space();
+          drag.paused = await sheetNow();
+          await sleep(5600);
+          drag.held = await sheetNow();
+          await space();
+          await sleep(500);
+          drag.resumed = await sheetNow();
+          shots.keyboardAfterDrag = drag;
           await evaluate(() => window.__closeGuide());
           pagingShot = { round: n, animal: names.get(found.id), pages: found.pages, shots };
         }
@@ -1936,7 +1970,9 @@ async function main() {
     { const shown = pagingShot && ['light', 'dark'].every(mode => [1, 2].every(k => { const shot = pagingShot.shots[`${k}-${mode}`]; return shot.page === k && shot.pages > 1 && shot.pressed === 'true' && shot.mark && shot.counter === `${k}/${shot.pages}`; }));
       check('field guide: a sheet whose signs page at 390 px was found and shot (both pages, light and dark, and at 1280 px)', Boolean(shown && pagingShot.shots.desktop), JSON.stringify(pagingShot));
       const focus = pagingShot?.shots.focus;
-      check('field guide: the signs\' pause button shows its keyboard focus ring inside the box', Boolean(focus?.focused && focus.visible && focus.outline !== 'none' && focus.width > 0 && focus.offset + focus.width <= 0), JSON.stringify(focus ?? null)); }
+      check('field guide: the signs\' pause button shows its keyboard focus ring inside the box', Boolean(focus?.focused && focus.visible && focus.outline !== 'none' && focus.width > 0 && focus.offset + focus.width <= 0), JSON.stringify(focus ?? null));
+      const kd = pagingShot?.shots.keyboardAfterDrag;
+      check('field guide: signs keyboard pause after drag: after a photo-row drag (no flip), Space on the pause button pauses the pages and Space again resumes them', Boolean(kd && kd.before.pressed === 'false' && kd.during.x && kd.during.x !== 'none' && !/translateX\(0px\)/.test(kd.during.x) && kd.after.name === kd.before.name && kd.paused.focused && kd.paused.pressed === 'true' && kd.held.pressed === 'true' && kd.held.page === kd.paused.page && kd.resumed.pressed === 'false' && kd.resumed.page !== kd.held.page && kd.resumed.name === kd.before.name), JSON.stringify(kd ?? null)); }
     check('the release preview was checked at least once', previewChecked);
     check('the scouting preview was checked at least once', scoutChecked);
     check('the idle hint was checked at least once', hintChecked);

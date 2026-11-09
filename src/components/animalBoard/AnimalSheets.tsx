@@ -193,7 +193,8 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
         onPointerDownCapture={() => { dragged.current = false; }}
         onDragStart={() => { dragged.current = true; }}
         onDragEnd={onDragEnd}
-        onClickCapture={event => { if (dragged.current) { event.preventDefault(); event.stopPropagation(); } }}
+        // Swallow only the pointer click that ends a drag; keyboard clicks (detail 0) still reach the pause button.
+        onClickCapture={event => { if (dragged.current && event.detail > 0) { event.preventDefault(); event.stopPropagation(); } }}
       >
         {/* The neighbours' photos peek in from the sheet's edges: there is more to either side. */}
         <GuidePeek species={speciesById.get(at(-1))} side="left" />

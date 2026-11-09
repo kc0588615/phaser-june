@@ -18,6 +18,7 @@ The owner wants the signs where players look first, with the paging that let lon
 - **Measured cost:** at 390 px the box is 186 × 106 px (5 lines); 23 of 76 animals page. At 320 px more do; nothing overflows sideways (widest word fits the 98 px chips column).
 - **E2E forced box 144 × 40 px** for the paging checks: gives 2 splits (animals 14, 41) and 1 whole-group move (13) on seed 7 round 1. A box narrower, never taller, is the fix if content changes break it.
 - **Audit (one `graphical-audit` pass):** the pause button's keyboard focus ring was clipped by the box's `overflow-hidden`; fixed with an inward ring (`focus-visible:-outline-offset-2!`; `!` because the global `:focus-visible` rule is unlayered), with an e2e check and shot. Gaps unchanged (equal `xxs` within and between groups; the icon column marks group starts, and a bigger gap would cost a line of the box). Pre-existing, left alone: `MENU_ROW`'s inward ring also loses to the global rule (visible, not clipped).
+- **Code review (Astra), keyboard:** the photo row's drag guard swallowed the pause button's keyboard clicks after any drag; it now swallows only pointer clicks (`event.detail > 0`), with an e2e check (real mouse drag, Tab, Space).
 - Rejected: one group per page, a scrolling box, no auto-turn under reduced motion (the crossfade isn't movement; pause meets WCAG 2.2.2), a dev-bridge hook to inject signs, a unit test for `signPages` (E2E checks it on the real layout).
 
 ## No version bump
@@ -28,7 +29,7 @@ None. No production content build needed.
 
 ## Verification
 Static: `npm run typecheck`, `npm run lint`, `npm test` 66/66, `npm run content -- preview` same as before.
-E2E (dev copy `phaser_june_dev`): `E2E_SEED=7 E2E_PLACE=continent:africa npm run e2e:fresh`. New checks: signs beside the photo grouped in category order, one icon per group, none in the guide rows (S1); every page fits (S2); forced-box paging, keep-together and repeat-icon breaks, auto-turn and pause (P1–P3); 320 px pages instead of overflowing (S3); one-page 02d sheet; paging sheet found and shot; pause focus ring inside the box. Rounds equal the baseline.
+E2E (dev copy `phaser_june_dev`): `E2E_SEED=7 E2E_PLACE=continent:africa npm run e2e:fresh`. New checks: signs beside the photo grouped in category order, one icon per group, none in the guide rows (S1); every page fits (S2); forced-box paging, keep-together and repeat-icon breaks, auto-turn and pause (P1–P3); 320 px pages instead of overflowing (S3); one-page 02d sheet; paging sheet found and shot; pause focus ring inside the box; keyboard pause after a photo-row drag. Rounds equal the baseline.
 Final: 1573/1573 checks, 0 failed, rounds = baseline (Hairy Frog found, Hirola lost, Golden-rumped Sengi found, African Forest Elephant found); artifact `/srv/critter-ai/agent-state/missions/signs-beside-photo/final-e2e/report.json`.
 
 Shots (390×844 light/dark unless noted), `/srv/critter-ai/agent-state/missions/signs-beside-photo/shots/`: `02d-field-guide-*` (one page), `02e-field-guide-rows-*` (rows, no chips), `02f-signs-page-{1,2}-*` (paging, round 2 Chimpanzee), `02g-signs-desktop.png` (1280×800), `02h-signs-focus.png`. Audit: `…/signs-beside-photo/audit.md`.
