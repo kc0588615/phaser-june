@@ -1576,6 +1576,21 @@ async function main() {
           await sleep(500);
           drag.resumed = await sheetNow();
           shots.keyboardAfterDrag = drag;
+          // Astra code review: ←/→ from the pause button remounted the signs and dropped focus to the page, so the next
+          // arrow did nothing. Tab to the pause button, then ArrowRight twice (real keys): each flips, focus stays in the sheet.
+          const focusNow = () => evaluate(() => {
+            const dialog = document.querySelector('[role=dialog]'), active = document.activeElement;
+            return { name: dialog?.querySelector('[data-guide-name]')?.textContent ?? null, inSheet: Boolean(dialog && active && active !== document.body && dialog.contains(active)), on: active?.hasAttribute('aria-pressed') ? 'pause' : active?.hasAttribute('data-guide-swipe') ? 'row' : active?.tagName ?? null };
+          });
+          await evaluate(() => document.querySelector('[role=dialog] [data-guide-signs] button[aria-pressed]')?.focus());
+          for (const modifiers of [8, 0]) for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, modifiers });
+          const arrows = [await focusNow()];
+          for (let i = 0; i < 2; i++) {
+            for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
+            await sleep(400);
+            arrows.push(await focusNow());
+          }
+          shots.arrowsKeepFocus = arrows;
           await evaluate(() => window.__closeGuide());
           pagingShot = { round: n, animal: names.get(found.id), pages: found.pages, shots };
         }
@@ -1972,7 +1987,9 @@ async function main() {
       const focus = pagingShot?.shots.focus;
       check('field guide: the signs\' pause button shows its keyboard focus ring inside the box', Boolean(focus?.focused && focus.visible && focus.outline !== 'none' && focus.width > 0 && focus.offset + focus.width <= 0), JSON.stringify(focus ?? null));
       const kd = pagingShot?.shots.keyboardAfterDrag;
-      check('field guide: signs keyboard pause after drag: after a photo-row drag (no flip), Space on the pause button pauses the pages and Space again resumes them', Boolean(kd && kd.before.pressed === 'false' && kd.during.x && kd.during.x !== 'none' && !/translateX\(0px\)/.test(kd.during.x) && kd.after.name === kd.before.name && kd.paused.focused && kd.paused.pressed === 'true' && kd.held.pressed === 'true' && kd.held.page === kd.paused.page && kd.resumed.pressed === 'false' && kd.resumed.page !== kd.held.page && kd.resumed.name === kd.before.name), JSON.stringify(kd ?? null)); }
+      check('field guide: signs keyboard pause after drag: after a photo-row drag (no flip), Space on the pause button pauses the pages and Space again resumes them', Boolean(kd && kd.before.pressed === 'false' && kd.during.x && kd.during.x !== 'none' && !/translateX\(0px\)/.test(kd.during.x) && kd.after.name === kd.before.name && kd.paused.focused && kd.paused.pressed === 'true' && kd.held.pressed === 'true' && kd.held.page === kd.paused.page && kd.resumed.pressed === 'false' && kd.resumed.page !== kd.held.page && kd.resumed.name === kd.before.name), JSON.stringify(kd ?? null));
+      const ak = pagingShot?.shots.arrowsKeepFocus;
+      check('field guide: signs arrows keep focus: from the pause button, ArrowRight twice shows the next animal each time and focus stays in the sheet', Boolean(ak && ak.length === 3 && ak[0].on === 'pause' && ak.every(at => at.inSheet) && new Set(ak.map(at => at.name)).size === 3), JSON.stringify(ak ?? null)); }
     check('the release preview was checked at least once', previewChecked);
     check('the scouting preview was checked at least once', scoutChecked);
     check('the idle hint was checked at least once', hintChecked);

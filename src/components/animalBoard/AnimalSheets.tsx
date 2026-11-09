@@ -4,6 +4,7 @@
 // comparison on made-up answers, never the live round's). Players see the mystery as "the one caught on camera".
 import Link from 'next/link';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { ArrowUpRight, Ban, BookOpen, Camera, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
 import { animate, AnimatePresence, motion, useIsPresent, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
 import { PENCIL_POINTS, sharpEye, type AnimalRound } from '@/clueGame/animalBoard';
@@ -140,7 +141,12 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
       onKeyDown={event => {
         if ((event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
         event.preventDefault();
-        step(event.key === 'ArrowLeft' ? -1 : 1);
+        const by = event.key === 'ArrowLeft' ? -1 : 1;
+        // The photo row remounts its signs per animal, so focus there (the pause button) would fall to the page:
+        // commit the flip now, then focus the new pause button, or the row if this animal's signs don't page.
+        if (!row.current?.contains(document.activeElement)) { step(by); return; }
+        flushSync(() => step(by));
+        (row.current.querySelector<HTMLElement>('[data-guide-signs] button') ?? row.current).focus();
       }}
       onClose={onClose}
       modeless
@@ -184,7 +190,8 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
       <motion.div
         ref={row}
         data-guide-swipe
-        className="relative flex select-none gap-s"
+        tabIndex={-1}
+        className="relative flex select-none gap-s outline-none!"
         style={{ x }}
         drag="x"
         dragDirectionLock
