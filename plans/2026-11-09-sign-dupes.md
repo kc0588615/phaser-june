@@ -61,7 +61,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -184,6 +184,16 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. **F3 / Target 1 broadens witness matching without broadening note wording.** The same tags drive displayed signs and witness eligibility. Verified in a reachable world round: removing `backward_pouch` makes “Its pouch opens backward” fit both the wombat and the tree-kangaroo, whose pouch opens forward. Likewise, removing `spiral_horns` makes the addax’s spiral-horn note fit okapi, hirola and dama gazelle. These are false shared facts. Rewrite affected notes to express only the shared meaning, or retain the distinguishing tags. Audit all narrower-to-broader merges before retiring them.
+
+SHOULD-CONSIDER:
+
+1. Validate newly enabled witness links against note meaning. Balance metrics and existing tag-based checks cannot detect these semantic contradictions.
+
 ## Revision notes
 
 ## Steps
@@ -201,5 +211,6 @@ SHOULD-CONSIDER:
 - 2026-11-09 04:33 UTC · Baseline: typecheck, lint, 66/66 tests, preview 0 PROBLEMs; dev-copy e2e:fresh 1575/1575 (`sign-dupes/baseline-e2e/`).
 - 2026-11-09 04:52 UTC · Architecture: architect wrote findings + design; 201→194 tags, 7 merges (narrower tag retired via new `retired` field, kept in `SIGNS`), 88 kept pairs (8 for owner), no version bump; draft `sign-dupes.csv`. No code changed.
 - 2026-11-09 04:56 UTC · Fable review: APPROVE, 0 MUST-FIX, 5 SHOULD-CONSIDER (claims and counts re-verified vs content).
+- 2026-11-09 04:58 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (narrower→broader merges make witness notes state false shared facts, e.g. backward_pouch, spiral_horns), 5 SHOULD-CONSIDER; to architect in Revision.
 
 ## Summary
