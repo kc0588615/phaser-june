@@ -63,7 +63,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -104,16 +104,16 @@ All code is in `src/components/animalBoard/AnimalSheets.tsx`.
 **A group** (one helper, `SignGroups({ groups })`, renders the `li`s for both the hidden measuring list and the page showing, so the two lay out the same):
 ```
 <li data-sign-group={category} className="flex items-start gap-xxs">
-  <CategoryMark category={category} word={false} className="h-4 shrink-0 text-neutral-7" />
+  <CategoryMark category={category} word={false} className="h-(--line-xs) shrink-0 text-neutral-7" />
   <ul className="m-0 flex min-w-0 flex-1 list-none flex-wrap gap-xxs p-0">
     {signs: <li key={tag} data-sign={tag} className={CHIP}>{text}</li>}
   </ul>
 </li>
 ```
-- **Icon:** 14 px (the `CategoryMark` default, same as the headings), centred in a 16 px box, which is one chip line (`text-xs`, 16 px line). It's neutral-7 like the headings and has no fill, so it reads as a label, not a sign.
-- **Chips** are unchanged (`CHIP`, 16 px tall). They aren't tappable, so the 24 px target rule doesn't apply. Their column at 390 px is about 168 px (342 − 144 photo − 12 gap − 18 icon).
+- **Icon:** 14 px (the `CategoryMark` default, same as the headings), centred in a box exactly one chip line tall: `h-(--line-xs)`, the token `text-xs` chips use (16 px; same pattern as `EvidenceGrid`'s `h-(--ev-row)`). **Constraint:** the icon box never exceeds `--line-xs`. The split measures chip bottoms only, so a taller icon box would hang below a one-line group's chips and past a page's bottom unmeasured. Tying it to the token makes this structural; the code comment on `SignGroups` states it, and says the audit tunes gaps only, not the icon box. The icon is neutral-7 like the headings, with no fill, so it reads as a label, not a sign.
+- **Chips** are unchanged (`CHIP`, 16 px tall). They aren't tappable, so the 24 px target rule doesn't apply. At 390 px the box is 186 px wide (342 − 144 photo − 12 gap) and the chips column 168 px (− 14 icon − 4 gap).
 - **Outer list:** `m-0 flex list-none flex-col gap-xxs p-0`, the groups stacked at the same 4 px pitch as the lines inside a group. The audit may tune the gaps; the measurement takes whatever gap there is.
-- **Cost:** every group starts a new line, so more animals page than before. By estimate, 14 and 41 in seed 7's round 1 take 2 pages at 390 px. The brief accepts this (paging stays).
+- **Cost (measured, not estimated):** a static copy of this layout in the e2e's Chrome build (chromium-1208), Nunito 700 from `public/fonts`, every content animal's signs. At 390 px the box is 186 × 106 px (photo 108 + 4 + caption 14 − label 16 − 4) and holds 5 lines. 23 of the 76 animals page. Seed 7: none of round 1 (4–5 lines each), round 2's Chimpanzee (2 pages), round 3's Chimpanzee and Aardvark. At 320 px (box 116 × 106) round 1's 14 and 41 take 2 pages each, with a whole-group move. The brief accepts this (paging stays). The architecture's first estimate (14 and 41 page at 390) was wrong; the screenshot plan below is fixed for it.
 
 **`GuideSigns({ signs }: { signs: readonly Sign[] })`** is the old component (`447e9317:270-333`), changed only here:
 - **Groups:** `groups = useMemo(() => CHARGE_CATEGORIES.flatMap(category => { const of = signs.filter(s => s.category === category); return of.length ? [{ category, signs: of }] : []; }), [signs])`, typed `SignGroup = { category: ChargeCategory; signs: readonly Sign[] }`.
@@ -129,23 +129,25 @@ All code is in `src/components/animalBoard/AnimalSheets.tsx`.
   - the measuring `ul`: `data-sign-measure`;
   - the shown `motion.ul`: `data-sign-page={page + 1}`;
   - the screen-reader list: `data-sign-list`.
-- **Screen readers:** the pages showing, the measuring list and the counter stay `aria-hidden`. `<ul className="sr-only" data-sign-list>` has one `li` per group: `{CATEGORY_LABELS[category]}: {texts.join(', ')}`. This list is where the category word reaches the reader; inside the hidden pages, `CategoryMark`'s own name is hidden along with them.
+- **Screen readers:** the pages showing, the measuring list and the counter stay `aria-hidden`. `<ul className="sr-only" data-sign-list aria-label="Signs">` has one `li` per group: `{CATEGORY_LABELS[category]}: {texts.join(', ')}`. This list is where the category word reaches the reader; inside the hidden pages, `CategoryMark`'s own name is hidden along with them. The `aria-label` names the list like 055's sign lists did (`aria-label` on the `ul`).
 
 **`signPages(groups, boxes, height): SignGroup[][]`** is pure and module-level, next to `GuideSigns`. It is a query, and `split` is the command that sets state.
 ```
 items = groups.flatMap((group, g) => group.signs.map(sign => ({ g, sign })))  // boxes[i] belongs to items[i]
-span[g] = bottom of g's last chip - top of g's first chip
+// once, before the loop:
+firstOf[g] = index in items of g's first chip; lastOf[g] = index of its last
+span[g] = boxes[lastOf[g]].bottom - boxes[firstOf[g]].top
 pages: number[][] = []; top = 0
 for each item i (group g, box b):
-  page = last page
+  page = pages.at(-1)                                  // undefined on the first item
   if (!page || b.bottom - top > height):
-    from = index in page of g's first chip (-1 if g didn't start on this page)
-    if (from > 0 && span[g] <= height) { pages.push(page.splice(from)); top = boxes[new page[0]].top }  // move the group whole
+    from = page ? page.indexOf(firstOf[g]) : -1        // -1: no page yet, or g didn't start on this page
+    if (from > 0 && span[g] <= height) { moved = page.splice(from); pages.push(moved); top = boxes[moved[0]].top }  // move the group whole
     else { pages.push([]); top = b.top }
-  push i onto the last page
+  pages.at(-1).push(i)
 return each page as runs of one g -> { category, signs }
 ```
-- **From the old split:** the same loop and the same test (`447e9317:283-287`). New: the group index and the keep-together branch.
+- **From the old split:** the same loop and the same test (`447e9317:283-287`). New: the group index, `firstOf`/`span` computed once, and the keep-together branch.
 - **What it guarantees:**
   - pages of whole lines, no taller than the box;
   - a group that breaks starts each later page with its icon, because each run renders its own;
@@ -155,8 +157,8 @@ return each page as runs of one g -> { category, signs }
 - **Edge cases:**
   - no signs: nothing renders;
   - box not laid out yet (height 0): one page;
-  - a chip wider than its column (320 px phones): its words wrap inside the chip, and it's measured that way;
-  - a chip taller than the box: its own page, clipped (as before);
+  - a chip wider than its column (320 px phones): its words wrap inside the chip, and it's measured that way. Measured at 320 px (chips column 98 px): the tallest chip of any animal is 2 text lines (32 px), and the widest single word ("underground", 87 px) fits, so nothing overflows sideways;
+  - a chip taller than the box: it opens its own page. So does any later chip on its line, since the line shares one bottom. Every item is pushed onto exactly one page in one forward pass, so nothing loops and nothing is dropped. The page shows the chip's top lines, clipped (as before), and the screen-reader list has it whole. This case doesn't occur at supported sizes: the 106 px box (5 lines) is over 3 times the tallest chip at 320 px, page zoom scales the photo with the text, and the font tokens are px, so a larger default font size doesn't grow chips. The S3 check (E2E) holds the 320 px case;
   - a resize (window, desktop, or the e2e's forced box): the `ResizeObserver` re-splits and goes back to page 1;
   - a new animal: remount, page 1, not paused;
   - one page: no counter, button, timer or mark.
@@ -168,8 +170,8 @@ return each page as runs of one g -> { category, signs }
 ### E2E (`scripts/e2e.mjs`, seed 7 `continent:africa`, the default)
 
 **In-page helpers**, put on `window` in the `sheets` evaluate (`:999`) the way `__mark` is:
-- `__signs()` reads the open sheet:
-  - `pages`, `page`, `height` (the box's `clientHeight`);
+- `__signs()` reads the open sheet. It first waits (`__until`) until exactly one `[data-sign-page]` is mounted, so a read during the crossfade can't pick up the exiting page:
+  - `pages` = `Number(box.dataset.guideSigns)` (one source, no separate count), `page` (from `data-sign-page`), `height` (the box's `clientHeight`);
   - `all` (the measuring list) and `shown` (the page showing), each as `[{ cat, first: the first child's data-category-mark, marks: count, tags, per-chip offsetTop/offsetHeight (from all only), offsetHeight }]`;
   - `fits`: every shown chip is inside the box rect and no taller than 2 line heights (the old `:922` rule);
   - `sr`: the `[data-sign-list] li` texts;
@@ -189,9 +191,13 @@ return each page as runs of one g -> { category, signs }
   - `sr` has one item per group, starting `CATEGORY_WORD[cat]: `.
   - Every `[data-guide-cat]` row has at least one `[data-guide-line]`, and its heading's mark equals the row's category.
 - **S2**: "the signs showing fit beside the photo, chips one line tall" (old `:986`), for every page of each sheet (`__allPages` when there's more than one).
+- **S3** (natural size at 320×720, all 5 sheets; `sideNotesAt(320, 720, true)`, then back to `PHONE`): "on a 320 px phone the signs page instead of overflowing: every page fits, groups and icons as S1, the pages together are the list". It applies P1's rules to the unforced box. Measured: 14 and 41 take 2 pages here, each by a whole-group move, and wrapped chips (2 lines, 32 px) pass `fits`. This covers Astra's 320 px item on the real layout.
 - **E2** (`:1049`): same meaning, with `bearing` read from the groups in `all`, worded "…while its category's signs show beside the photo".
 - **E3** (`:1065`): extended so each sign group's svg `lucide-*` class equals the icon on its category's tiles and headings.
-- **Forced paging** (a new evaluate after `sheets`): for each of the 5 sheets, set `box.style.flex = 'none'; box.style.height = '40px'` (two chip lines), wait 300 ms, run `__allPages()`, then clear the style. That also exercises the resize re-split.
+- **Forced paging** (a new evaluate after `sheets`): for each of the 5 sheets, set `box.style.flex = 'none'; box.style.height = '40px'; box.style.width = '144px'`, wait 300 ms, run `__allPages()`, then clear the style. That also exercises the resize re-split.
+  - **Why 40 × 144 px:** 40 px holds two chip lines (36 px). That is the floor: with one-line pages every group starts a page, so no move can happen. 144 px (a 126 px chips column, narrowed from the natural 186 px box) makes multi-line groups, which give the splits. The measuring `ul` is `inset-x-0`, so it re-wraps, and the `ResizeObserver` re-splits. Fixing the width also makes the run independent of the viewport and the photo column.
+  - **Measured** (same Chrome build and font, seed 7 round 1): at 144 × 40 there are **2 splits** (14 habits: `webbed feet · squeaker | puffs up · burrower`; 41 habits: `senses vibrations · fruit eater | seed spreader · salt licks`) and **1 move** (13 habits: `red orange | sticky skin · burrower`). The other breaks are full pages, and no chip wraps.
+  - **Margin:** the same breaks hold for any width from 137 to 148 px. At least 1 split and 1 move hold for any width from 96 to 188 px. Below 137 px, chips wrap ("rests by waterfalls"), which still passes but muddies `fits`. So narrowing to ~96 px (Fable's example) was rejected.
   - **P1**: "signs that don't fit split into pages; each part follows its icon, in category order, and fits; the pages together are the list, in order".
     - At least one sheet has pages > 1.
     - Every page passes S1's group rules and `fits`.
@@ -199,21 +205,20 @@ return each page as runs of one g -> { category, signs }
   - **P2**: "a group that fits on a page starts the next page whole; a longer one breaks at a line and repeats its icon; no break comes early". It uses the offsets in `all`. For each break, T is the top of page k's first chip and F is page k+1's first chip:
     - **Same group (a split):** needs `F.bottom − T > height`, and either that group is page k's only run or its `span > height`.
     - **New group:** `F.bottom − T ≤ height` counts as a move and needs `span ≤ height`; otherwise the page was full.
-    - Required: at least 1 split, at least 1 move, 0 bad.
-    - If seed 7's round 1 doesn't give both at 40 px, use 60 px (3 lines) and record that under Decisions.
-  - **P3** (old `:987-988`), on the sheet with the most signs, box forced:
+    - Required: at least 1 split, at least 1 move, 0 bad. No fallback: the forced box is fixed at 144 × 40 (measured above). If content changes break this, the failure says so; the fix is a new width, recorded under Decisions, never a taller box (taller makes splits rarer).
+  - **P3** (old `:987-988`), on the sheet with the most signs, box forced (144 × 40):
     - the page turns by itself within 5.6 s;
     - a tap pauses: `aria-pressed` true, the mark shows, and the page holds for 5.6 s;
     - another tap resumes and moves on: `aria-pressed` false;
-    - flipping to the next animal starts its signs on page 1, not paused.
+    - flipping to the next animal remounts its box at natural size, so it may have one page and no button. The check reads "`data-sign-page` = 1 and no `[aria-pressed="true"]` in the box", not "the button is unpressed", so a one-page neighbour passes.
 - **Removed:** 055's `besidePhoto`, `inList`/`ul[data-signs]` and `row.signs` checks, and the "none beside the photo" wording.
 - **No product test hook:** forcing the box height works whatever the content, so the dev bridge needs nothing new.
 - **Screenshots** (390×844):
   - the existing `02d-field-guide-{light,dark}.png` (the first row's animal, one page);
-  - new `02f-signs-page-{1,2}-{light,dark}.png`, of the round-1 sheet with the most pages at natural size (pause, shoot page 1, tap tap, shoot page 2). A check that such a sheet exists makes a missing shot fail loudly;
+  - new `02f-signs-page-{1,2}-{light,dark}.png`, at natural size, of the first sheet that pages at 390 px (pause, shoot page 1, tap tap, shoot page 2). None of round 1's does (measured, above). So at the start of each later round, before its first move and while no such sheet has been shot, the e2e opens the guide, flips through the 5 numbers reading `data-guide-signs`, and stops at the first > 1. For seed 7 that is round 2's Chimpanzee: 2 pages, body and habits, then life. After the shots it closes the guide and drops the pick, as the round-1 block does, so the rounds still match the baseline. A check that such a sheet was found before the last round makes a missing shot fail loudly;
   - `02g-signs-desktop.png` at 1280×800 (the viewport `sideNotesAt` uses), the same sheet, then back to `PHONE`;
   - all copied to `M/shots/`.
-- **Final run:** the baseline's guarded dev-copy run (`current_database()` = `phaser_june_dev`). Nothing in the content changes, so 055's V3 `content -- build/check` adds nothing here; the planner decides whether to keep it. The rounds must match the baseline (Hairy Frog found, Hirola lost, Golden-rumped Sengi found, African Forest Elephant found).
+- **Final run:** the baseline's guarded dev-copy run (`current_database()` = `phaser_june_dev`). It drops 055's V3 `content -- build/check`: nothing in the content changes, so it adds nothing. The rounds must match the baseline (Hairy Frog found, Hirola lost, Golden-rumped Sengi found, African Forest Elephant found).
 
 ### Docs and plan
 
@@ -239,6 +244,11 @@ return each page as runs of one g -> { category, signs }
 - **No auto-turn under reduced motion**: changes the brief's behaviour. The crossfade isn't movement, and the pause meets WCAG 2.2.2.
 - **A dev-bridge hook to inject many signs**: product code for a test. Forcing the box height from the e2e does the same job.
 - **A unit test for `signPages`**: the owner prefers E2E, and P1/P2 check the same rules on the real layout.
+- **A taller forced box (60 px) as P2's fallback** (first draft): with 3-line pages a split needs a 4-line group, so it makes splits rarer. Narrowing the box is what makes splits (Fable MUST-FIX 1).
+- **Forcing ~96 px wide** (Fable's example): chips wrap below 137 px. 144 px gives the same split and move with one-line chips.
+- **An enlarged-text E2E run**: the font tokens are px, and page zoom scales the photo, box and chips together. The 320 px check (S3) is the reflow case. A chip taller than the box is handled (its own page, the screen-reader list whole) and doesn't occur at supported sizes.
+- **Growing the box to fit a chip taller than it**: that breaks "the photo alone sets the row height" for a case that doesn't occur. The old clip stays.
+- **The paging shots from a forced box or at 320 px**: the brief asks for 390×844 at natural size. Round 2's start gives a real one.
 
 ## Architecture review (Fable)
 
@@ -276,6 +286,23 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+All changes are in **Architecture**. The widths and line counts come from a static copy of the layout in the e2e's Chrome (chromium-1208), with Nunito 700 and every content animal's signs.
+- **Fable MUST-FIX 1** (P2 fallback taller): adopted, and the fix replaces the fallback outright. The forced box is now 144 × 40 px (width narrowed, height kept at 40). Measured: 2 splits and 1 move; the same breaks hold from 137 to 148 px, and ≥ 1 of each from 96 to 188 px. Changed in: E2E "Forced paging" (why, measured, margin), P2 (no fallback), P3. Rejected alternatives: 60 px, ~96 px.
+- **Fable MISSED `!page` guard + precompute**: adopted. `signPages` pseudocode: `firstOf`/`lastOf`/`span` computed once, `from = page ? page.indexOf(firstOf[g]) : -1`.
+- **Fable MISSED icon ≤ `--line-xs`**: adopted, structurally. The icon box is `h-(--line-xs)`, not `h-4`, and the `SignGroups` code comment states the constraint. Changed in: "A group" code block and Icon bullet.
+- **Fable MISSED P3 last step**: adopted. It reads `data-sign-page` = 1 and no `aria-pressed="true"`.
+- **Fable SC1** (precompute): adopted (same edit as the `!page` guard).
+- **Fable SC2** (crossfade read): adopted. `__signs` waits for exactly one `[data-sign-page]`.
+- **Fable SC3** (name the sr list): adopted. `aria-label="Signs"` on `[data-sign-list]` (Screen readers bullet).
+- **Fable SC4** (one source for the page count): adopted. `pages` = `data-guide-signs`.
+- **Fable SC5** (drop V3 content build/check): adopted. Final run bullet.
+- **Astra SC1** (deterministic split + move): adopted, with Fable MUST-FIX 1.
+- **Astra SC2** (320 px / enlarged text / a chip taller than the box):
+  - 320 px: adopted as the new **S3** check (natural box at 320×720; 14 and 41 page there, by whole-group moves).
+  - Enlarged-text run: rejected. The tokens are px and page zoom scales everything together (Rejected alternatives).
+  - The tall-chip behaviour is now stated in Edge cases: own page, one forward pass, none dropped, clipped, the screen-reader list whole. It doesn't occur at supported sizes: the tallest chip anywhere at 320 px is 32 px, against a 106 px box.
+- **Own correction found while measuring:** "14 and 41 page at 390 px" was wrong. No round-1 sheet pages at 390 (the box holds 5 lines). The Cost bullet now has measured numbers. The `02f` shots now come from the first sheet that pages at a later round's start (seed 7: round 2's Chimpanzee) instead of an existence check that would have failed.
+
 ## Steps
 
 ## Verification
@@ -286,11 +313,19 @@ SHOULD-CONSIDER:
 
 ## Decisions
 
+- 2026-11-09 (Revision): E2E forced box for P1–P3 is **144 × 40 px**, fixed with no fallback. Measured in the e2e's Chrome: 2 splits (14, 41) and 1 move (13). The same breaks hold from 137 to 148 px, and ≥ 1 split and ≥ 1 move from 96 to 188 px. If content changes break it, choose a new width; never make the box taller.
+- 2026-11-09 (Revision): rejected the 60 px fallback (it makes splits rarer) and ~96 px (chips wrap below 137 px).
+- 2026-11-09 (Revision): the icon box is `h-(--line-xs)`, so it can never be taller than one chip line.
+- 2026-11-09 (Revision): rejected an enlarged-text E2E run: the tokens are px and page zoom scales everything; S3 at 320 px covers reflow. A chip taller than the box keeps the old clip-on-its-own-page; growing the box was rejected.
+- 2026-11-09 (Revision): the `02f` paging shots come from the first sheet that pages at 390 px at a later round's start (seed 7: round 2's Chimpanzee), because no round-1 sheet pages at 390.
+- 2026-11-09 (Revision): the final run drops 055's V3 `content -- build/check`; no content changes.
+
 ## Log
 
 - 2026-11-09 00:50 UTC: Baseline. typecheck/lint/test (66/66)/preview 0; dev-copy E2E 1565/1565, artifact `M/baseline-e2e/`.
 - 2026-11-09 01:07 UTC: Architecture. Hanging layout (one icon column per group), pure `signPages` with keep-together rule, guide rows back to lines only; E2E S1/S2/P1-P3 via forced 40 px box. Plan only, no code.
 - 2026-11-09 01:15 UTC: Fable review. APPROVE_WITH_CHANGES; 1 MUST-FIX (P2 fallback: narrow box width, not taller), 3 small misses. Plan only.
 - 2026-11-09 01:13 UTC: Astra review. APPROVE, no MUST-FIX; 2 SHOULD-CONSIDER (deterministic split+move E2E; 320 px/large-text chip fallback). Plan only.
+- 2026-11-09 01:24 UTC: Revision. Forced E2E box 144×40 px (2 splits, 1 move measured), signPages guard+precompute, icon h-(--line-xs), S3 320 px check, all Fable SC adopted; enlarged-text run rejected. Plan only.
 
 ## Summary
