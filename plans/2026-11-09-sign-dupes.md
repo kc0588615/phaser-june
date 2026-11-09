@@ -357,6 +357,13 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- Rebase: none needed (branch already on `origin/main` 5c37fc04). Reran V1–V4: typecheck, lint, 66/66, preview 0 PROBLEMs, dedupe-check ok, no src/scripts/tests diff, sign-map unchanged; V2 pairs-final = pairs-after (1430); dev copy spot 0, build 0 citation warnings, check Pool 76/2478/2086/491 0/0, e2e:fresh 1575/1575 (`$M/final-e2e/` replaced with this run; report-check ok).
+- PR #70 (https://github.com/kc0588615/phaser-june/pull/70). CI `check` pass; `e2e` 1574/1575 first run (globe spin timing check "arrow keys move the globe while it spins", restMs 132, known flake class), rerun of failed job passed.
+- Merge commit: `4fa92a8e4cebfd08a0f069fe61ca33e05649c656` (`gh pr merge 70 --merge`).
+- Deploy: `deploy critter-connect` exit 0; last line `deploy critter-connect: live at https://critterconnect.org`; check.sh 38 OK, 0 FAIL. Log `/srv/critter-ai/agent-state/missions/sign-dupes/deploy.log`.
+- Smoke: `https://play.critterconnect.org/explore/` 200; `version.txt` = `4fa92a8e4cebfd08a0f069fe61ca33e05649c656`. Content-only change: players see it only after the owner's prod content build (H12).
+Result: done
+
 ## Decisions
 
 - 2026-11-09 · Revision (architect): narrower cases keep the narrower tag on their holders and drop the broader one there (one sign per fact), instead of merging into the broader tag. A merge made notes fit animals their words aren't true of (Astra MUST-FIX 1). No tag retires, `SIGNS` is unchanged, and `shell_spines`/`spiky_shell` are kept for the owner. The brief's "drop the other from `SIGNS`" doesn't arise: both tags of every pair stay in use.
@@ -390,6 +397,8 @@ SHOULD-CONSIDER:
 
 - 2026-11-09 06:15 UTC · Final Verification: V1 typecheck, lint, 66/66, preview 0 PROBLEMs, dedupe-check ok, no src/scripts/tests diff, sign-map unchanged; V2 pairs-final = pairs-after (1430); V3 dev copy spot 0, build 0 citation warnings, check Pool 76/2478/2086/491 0/0, e2e:fresh 1575/1575; V4 report-check ok (paging Chimpanzee, rounds as baseline, 0 console errors/failed requests), chimp after shots refreshed from `final-e2e`; V5 059 gets full bot table + Final line. Summary written, status done.
 
+- 2026-11-09 06:58 UTC · Release: V1–V4 rerun ok (1575/1575); PR #70 merged (4fa92a8e) after 1 CI globe-timing flake rerun; `deploy critter-connect` ok, /explore 200, version.txt = merge commit.
+
 ## Summary
 
 **Done.** No animal shows two signs saying the same fact. Content only (12 notes in 11 animal files); no code, `SIGNS` or rules change. Plan `plans/059-sign-dupes.md`; table `docs/research/2026-11-07-moves-and-signs/sign-dupes.csv` (all 216 `SIGNS` tags).
@@ -405,3 +414,4 @@ SHOULD-CONSIDER:
 - **Reviews:** Fable APPROVE; Astra architecture APPROVE_WITH_CHANGES (1 MUST-FIX, resolved by redesign); Astra code APPROVE, 0 MUST-FIX.
 - `git diff --stat 5c37fc04...HEAD`: 16 files changed, 713 insertions(+), 28 deletions(-) (content 11 files, docs, research CSVs, plans).
 - **Production content build waits on the owner (H12)**, after the deploy, with a fresh dump first.
+- **Released:** PR #70 merged as `4fa92a8e`, deployed; `/explore` 200, `version.txt` = merge commit. Needs the production content build (H12) to reach players.
