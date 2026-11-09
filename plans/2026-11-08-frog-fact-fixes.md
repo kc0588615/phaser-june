@@ -2,7 +2,7 @@
 mission: frog-fact-fixes
 project: critter-connect
 branch: agent/frog-fact-fixes
-status: active
+status: done
 started: 2026-11-08 23:09 UTC
 ---
 
@@ -323,5 +323,22 @@ SC 1 is covered by the release step (fetch + rebase on `origin/main`, rerun V1�
 - 2026-11-09 00:05 UTC · S1: 06 + 11 clues on amphibiaweb, `voiceless` off 11, sign-map row, 2 research bullets resolved, plan 057. V1 all pass (66/66, voiceless = 08 only, quotes 274/0, JSON ok, scope ok, code untouched); V2 exit 0, 0 PROBLEM, 0 cite warn, diff = 2 clue lines.
 - 2026-11-08 23:55 UTC · S2: dev copy (guard = phaser_june_dev) build 0 cite warn; check 76 playable, 2478 clues (2086 deductive), 491 facts, 0/0; rows 635/1127 new text on amphibiaweb, 1127 no tags; voiceless = 8. e2e:fresh seed 7 Africa 1565/1565; V4 0 failed, 0 console errors, rounds same as baseline: true. H11 added to handoff.
 - 2026-11-09 00:15 UTC · Astra code review: APPROVE, no MUST-FIX; 1 SC (refresh origin/main before PR, already in release step). Doc-only, no checks needed.
+- 2026-11-09 00:11 UTC · Final Verification: V1 (66/66, voiceless = 08, quotes 274/0, JSON ok, scope ok, code untouched), V2 (exit 0, 0/0, 2 clue hunks), V3 dev copy (76 playable, 2478/2086/491, 0/0; 635/1127 ok; voiceless = 8), V4 1565/1565, rounds = baseline. Artifact `final-e2e/`. Summary written.
 
 ## Summary
+
+Fixed two frog clues players read; content only, no code.
+- **06 Red-eyed tree frog:** "since 2008" → "since 2010 (CITES Appendix II)", re-sourced `iucn` → `amphibiaweb`.
+- **11 Goliath frog:** "can't croak" → owner's wording ("no vocal sac, but it still calls: whistles, chirps, even a deep roar, made with its mouth open"), `adw` → `amphibiaweb`; `voiceless` tag dropped (now only 08).
+- Also: `sign-map.csv` row, 2 research-note disagreements marked resolved, plan `057-frog-fact-fixes.md`. No `ANIMAL_RULES.version` bump (deals read only prefixed traits; see Decisions).
+- Diff vs `origin/main`: 6 files, +360 −10 (2 JSONs, CSV, research note, 2 plans).
+
+Verification (final, after code review):
+- V1: typecheck, lint, 66/66 tests; `rg voiceless` = 08 only; quote check 274 quotes, 0 misses; JSON exact; scope only the 6 files, code untouched.
+- V2: preview exit 0, 0 PROBLEM, 0 cite warn; diff = the 2 clue lines (+ npm banner, see Decisions).
+- V3 (dev copy `phaser_june_dev`): build 0 citation warnings; check `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.` `0 errors, 0 warnings.`; rows 635/1127 new text on `amphibiaweb`, no tags; `voiceless` holders `8`.
+- V4: `1565 checks (baseline 1565), 0 failed, 0 console errors, 0 failed requests; rounds same as baseline: true`. Artifact `/srv/critter-ai/agent-state/missions/frog-fact-fixes/final-e2e/` (report.json + screenshots); reproduce: V3 then V4.
+
+Reviews: architecture Fable APPROVE, Astra APPROVE_WITH_CHANGES (1 MUST-FIX, fresh prod dump before build, folded into H11); code review Astra APPROVE, no MUST-FIX; SC 1 (refresh `origin/main` before PR) handled by the release step.
+
+**Players see the fixes only after the owner's production content build (handoff H11)**; the deploy alone doesn't change prod clue rows.

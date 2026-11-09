@@ -24,3 +24,4 @@ No schema change. Prod needs `npm run content -- build` (handoff H11), which del
 ## Verification
 Static: typecheck, lint, `npm test` 66/66; `rg voiceless db/content/animals` = 08 only; quote check 274 quotes, 0 misses; content preview 0 PROBLEM, 0 cite warn, diff vs before = the two clue lines.
 E2E (dev copy `phaser_june_dev`): `content -- build` 0 citation warnings; `content -- check` 76 playable, 2478 clues (2086 deductive), 491 facts, 0 errors; `e2e:fresh` seed 7 Africa 1565 checks (baseline 1565), 0 failed, 0 console errors, 0 failed requests; rounds same as baseline: true.
+Final (after code review, artifact `/srv/critter-ai/agent-state/missions/frog-fact-fixes/final-e2e/`): 1565 checks (baseline 1565), 0 failed, 0 console errors, 0 failed requests; rounds same as baseline: true.
