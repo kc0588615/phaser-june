@@ -119,7 +119,6 @@
       "category": "reproduction",
       "text": "Its pouch opens backward, so it doesn't fill with dirt when it digs.",
       "tags": [
-        "pouch",
         "backward_pouch",
         "burrower"
       ],

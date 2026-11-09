@@ -70,6 +70,7 @@ A clue's open tags are its **signs**: each shows as a phrase (`digging_claws` â†
 
 The sign rule:
 - A sign names evidence from its own note, in the note's own words ("sleeps high in trees", "seldom on ground"), never a question's answer (`tree_dweller` is "Lives in trees: yes" and is retired).
+- One sign per fact: never tag a note with a tag and its narrower case (`carries_young_on_back` and `mother_carries_young`); keep the narrower one its words state. A witness note fits every animal holding all its tags, so the broader tag alone would make it fit animals its words aren't true of.
 - It never contradicts its holder's traits on a plain reading: `swimmer` on a land-only animal reads as fresh water, `builds_nests` on a live-born mammal reads as eggs, `climber` on a `trees: no` animal reads as trees yes.
 - If no evidence word in the note fits, drop the tag (the note stays untagged); never invent one.
 - Reuse a shared tag where notes say the same thing: a witness note shows only when two suspects share its tag (plan 044).
