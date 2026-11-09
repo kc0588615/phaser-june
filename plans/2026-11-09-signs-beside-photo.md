@@ -62,7 +62,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -265,6 +265,15 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. Make E2E coverage deterministic for both group splitting and whole-group moves; increasing box height alone cannot guarantee both.
+2. Validate 320 px and enlarged-text layouts. The photo-constrained height needs a readable fallback when an individual chip cannot fit.
+
 ## Revision notes
 
 ## Steps
@@ -282,5 +291,6 @@ SHOULD-CONSIDER:
 - 2026-11-09 00:50 UTC: Baseline. typecheck/lint/test (66/66)/preview 0; dev-copy E2E 1565/1565, artifact `M/baseline-e2e/`.
 - 2026-11-09 01:07 UTC: Architecture. Hanging layout (one icon column per group), pure `signPages` with keep-together rule, guide rows back to lines only; E2E S1/S2/P1-P3 via forced 40 px box. Plan only, no code.
 - 2026-11-09 01:15 UTC: Fable review. APPROVE_WITH_CHANGES; 1 MUST-FIX (P2 fallback: narrow box width, not taller), 3 small misses. Plan only.
+- 2026-11-09 01:13 UTC: Astra review. APPROVE, no MUST-FIX; 2 SHOULD-CONSIDER (deterministic split+move E2E; 320 px/large-text chip fallback). Plan only.
 
 ## Summary
