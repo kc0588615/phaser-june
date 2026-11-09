@@ -2,7 +2,7 @@
 mission: signs-beside-photo
 project: critter-connect
 branch: agent/signs-beside-photo
-status: active
+status: done
 started: 2026-11-09 00:40 UTC
 ---
 
@@ -443,5 +443,13 @@ SHOULD-CONSIDER:
 - 2026-11-09 02:52 UTC: Astra code review. APPROVE_WITH_CHANGES; 2 MUST-FIX, both real and inherited from the old `GuideSigns` at `447e9317` (keyboard pause swallowed after a drag; arrows from the pause button drop focus to body) -> S7, S8 before S6; SHOULD-CONSIDER (keyboard E2E) adopted into S7/S8. Plan only.
 - 2026-11-09 03:07 UTC: S7. Photo row `onClickCapture` swallows only pointer clicks (`event.detail > 0`); e2e `signs keyboard pause after drag` (resume by tap, real mouse drag 30 px and back, no flip; Tab to pause button; Space pauses, page holds 5.6 s; Space resumes, page 2 -> 1). V1 0 (66/66, preview same); V2 dev copy 1574/1574, rounds = baseline, artifact `M/e2e-s7/` (e2e-s4 deleted); V3 0 (12 substrings). Plan 058 notes the fix.
 - 2026-11-09 03:22 UTC: S8. Guide `onKeyDown`: when focus is in the photo row, `flushSync(step)` then focus the new pause button, else the row (`tabIndex={-1}`, `outline-none!`). e2e `signs arrows keep focus` (Tab to pause, ArrowRight x2: Chimpanzee pause -> Hirola row -> Dama Gazelle row, in sheet each time). V1 0 (66/66, preview same); V2 dev copy 1575/1575, rounds = baseline, artifact `M/e2e-s8/` (e2e-s7 deleted); V3 0 (all 13 substrings). Plan 058 notes the fix.
+- 2026-11-09 03:36 UTC: Final verification (rule 7, after Astra code review and S7/S8). V1 0 (typecheck, lint, 66/66, preview same); V2 dev copy 1575/1575, rounds = baseline, artifact `M/final-e2e/` (replaced; e2e-s8 kept); V3 0 (all 13 substrings); V4 10 shots refreshed in `M/shots/`, audit present. Plan 058 final line 1575. Summary written, status done.
 
 ## Summary
+
+Signs are back in the box beside the species photo, grouped by category: a "Signs" label, then for each category that has signs one `CategoryMark` icon followed by its chips, in the guide's order (Body, Habits, Habitat, Range, Life cycle). When the chips don't fit, they split into pages that turn every 5 s, with the `1/2` counter, tap (or Space/Enter) to pause, the pause mark, and a screen-reader list of every sign by category. Page breaks keep a group whole when it fits on the next page; a longer group breaks at a line and repeats its icon. Guide rows show their lines only again, and a row with no lines is hidden. Everything else from 055 stays. Code: `AnimalSheets.tsx` (`GuideSigns`, `SignGroups`, pure `signPages`); docs in `CONTEXT.md`, `docs/CLUE_MATCH.md`, `docs/CONTENT_SOURCES.md`; notes in `plans/058-signs-beside-photo.md`.
+
+- **Verification:** typecheck, lint, `npm test` (66/66) and content preview (unchanged) exit 0. The dev-copy E2E passed **1575/1575** checks, with rounds equal to the baseline. Artifact: `/srv/critter-ai/agent-state/missions/signs-beside-photo/final-e2e/report.json`. Reproduce with `E2E_SEED=7 E2E_PLACE=continent:africa npm run e2e:fresh` on `phaser_june_dev`.
+- **Shots:** in `/srv/critter-ai/agent-state/missions/signs-beside-photo/shots/` (10 files): one-page sheet, guide rows, a paging sheet on both pages (Chimpanzee in round 2) in light and dark at 390×844, desktop at 1280, and the pause button's focus ring. The audit is in `audit.md` next to them.
+- **Reviews:** architecture: Fable APPROVE_WITH_CHANGES (1 MUST-FIX, adopted), Astra APPROVE. Code: Astra APPROVE_WITH_CHANGES, with 2 MUST-FIX items, both fixed (S7: keyboard pause after a drag; S8: arrows from the pause button keep focus) and covered by E2E.
+- **For the owner:** pre-existing, out of scope: `MENU_ROW`'s inward focus offset loses to the global `:focus-visible` rule, so the ring draws outside (still visible). Fixing it needs `!` as the pause button has, or moving the global rule into a layer. No `ANIMAL_RULES.version` bump, no DB change, no production content build needed.
