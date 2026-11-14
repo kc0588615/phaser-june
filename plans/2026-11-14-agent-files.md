@@ -354,7 +354,7 @@ Rules for every step:
 - Each step ends with `npm run typecheck` and `npm run lint` exiting 0, plus its own checks. Then commit code and plan together and push (pre-push reruns both).
 - Order: hook and CI go first because they're the riskiest. Once the hook is in, every later Edit is a live check that it blocks nothing legitimate.
 
-- [ ] S1. **Hook (A15)**, `.claude/hooks/guard-edits.sh`.
+- [x] S1. **Hook (A15)**, `.claude/hooks/guard-edits.sh`.
   - Edit tool: `:3-4` become the two target header lines (SC4: two lines, no more). `:8` becomes `.env|.env.*|*.env)`, followed by the new `*.prisma)` arm.
   - Shell: `sed -i 's/prisma\\.schema/schema\\.prisma/' .claude/hooks/guard-edits.sh`. The pattern line never goes through Edit.
   - Check: V4 (`bash -n`, `test -x`, no mode change, control run to `$ST/guard-after.txt` where exactly 4 cases go 0 → 2, then the **required** live Write probes, Fable SC1). `grep -c 'schema\\.prisma' .claude/hooks/guard-edits.sh` gives 1. V7's hook hunks hold. If a live probe goes through, the hook fails open: fix it before committing.
@@ -537,5 +537,6 @@ The hook and CI's guard are tested in isolation. These tests existed before the 
 - 2026-11-14 10:57 UTC · Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only; no checks needed.
 - 2026-11-14 10:58 UTC · Revision: none needed (0 MUST-FIX in either review); Fable notes routed to Steps. Plan-only; no checks needed.
 - 2026-11-14 11:12 UTC · Steps: planner wrote S1-S8 (hook, CI step, 34 skills + lock, D17, link, docs/agents, AGENTS.md, CODING_STANDARDS + playtest), Verification V1-V9 + Failure modes; target design dry-run in /tmp matched. Plan-only; no checks needed.
+- 2026-11-14 11:09 UTC · S1 hook: header + `*.env` / `*.prisma` arms via Edit, pattern typo via sed (count 1). bash -n + exec ok, no mode change; hunks `-3,2 +3,2`, `-8 +8,2`, `-11 +12`; control run (`$ST/guard-after.txt`): exactly cases 5, 6, 10, 11 go 0 → 2, other 17 unchanged; live Write probes `app.env` and `x.prisma` both refused with the hook's messages, probe dir empty. typecheck 0, lint 0.
 
 ## Summary
