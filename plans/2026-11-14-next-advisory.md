@@ -2,7 +2,7 @@
 mission: next-advisory
 project: critter-connect
 branch: agent/next-advisory
-status: active
+status: done
 started: 2026-11-14 08:48 UTC
 ---
 
@@ -485,5 +485,18 @@ SHOULD-CONSIDER:
 - 2026-11-14 09:52 UTC · S2: e2e:fresh on dev copy (guard ok) exit 0, 1575/1575, seed 7, same 4 round lines as baseline; artifact `e2e-s2/` (e2e-s1 removed). Block E: same 45-shot set; 14 differ byte-wise: 5 globe (spin), 9 game shots. Viewed the in-group ones plus 08: 02c-notes (clue toast scroll frame), 06-end-after-reload and 08-pencil-bonus-end (card entrance: star/photo scale, points fade-in, earlier frame on either side), same layout and content. Not viewed (not in E's groups, mid-animation captures): 03-called-it, 04-round-1/3/4-landed, 06-before/after-reload. Board, sheets, settled round-end shots (04-round-*-end, 03-round-3-out-of-moves) byte-identical. AGENTS.md rewritten by next dev (D4). No code change.
 - 2026-11-14 10:01 UTC · S3: `npm run build` exit 0 (only the React 18 notice, D2); block D on the dev copy (guard ok, port 3100 free before/after): `probe ok` (route handler gzip under next start, --compressed JSON parses, journal `{"entries":[]}`, SVG image 400). Logs copied to `e2e-s2/`; start log notes D5. No code change.
 - 2026-11-14 10:03 UTC · Code review (Astra): APPROVE, no MUST-FIX; SC1 (curl -f + shape check) applied to block D and Release smoke (D6); SC2 = Verification. No code change.
+- 2026-11-14 10:20 UTC · Verification on 4ba385b8: `npm ci`; ls/audit as S1 (`--omit=dev` 0; full audit 9 dev-only, Finding 6); block A 4 / config ok / 4 files / tree ok / lock ok; e2e:fresh 1575/1575 seed 7, same rounds + shot set as baseline, 18 differ byte-wise (5 globe spin; board/sheet shots ~0.1% px in the board = gem idle frames; 02c-notes toast scroll + header fade, 06-end-after-reload / 08 card entrance frames; viewed 02-board-320x720, 02c-notes, 06-end-after-reload pairs: same layout and content); typecheck, lint, test 61/61, build 0 (only D2 notice); e2e:site 444/444; probe ok (start log as D5); tree clean, ports free; artifact `final-e2e/` + COMMAND.txt. No code change.
 
 ## Summary
+
+Next.js upgraded past the locked advisories (audit M1, finding A3). Branch `agent/next-advisory`, verified on `4ba385b8`.
+
+- **Deps:** `next` and `eslint-config-next` `^16.1.0` → `^16.4.6` (locked 16.3.6 → 16.4.6, deduped under `@clerk/nextjs`); `sharp` 0.35.4 → 0.35.5; `source-map-js` 1.2.1 → 1.2.2 (under `postcss` and `@tailwindcss/node`); `shell-quote` already gone (M6). `next.config.mjs` unchanged; nothing else in `package.json`.
+- **Audit `--omit=dev`:** baseline 3 (1 critical `next`, 2 high `sharp`, `source-map-js`) → **0**. Full audit: 9 dev-only left (`brace-expansion` high, `esbuild` 0.19.12 pinned, `minimatch`, via typescript-eslint), Finding 6; no action taken.
+- **Code changes:** none. `AGENTS.md`'s generated block heading was rewritten by `next dev` 16.4.6 (`#` → `##`), committed as-is (D4).
+- **New build notice (D2):** "React 18 support is deprecated in Next.js 16". React 19 is needed before Next 17; out of scope here.
+- **Verification** (artifact `/srv/critter-ai/agent-state/missions/next-advisory/final-e2e/`, repeat with its `COMMAND.txt`): `npm ci`, guards, typecheck, lint, test 61/61, build; `e2e:fresh` 1575/1575 (seed 7, same rounds and shot set as baseline; byte diffs are globe spin and animation frames only); `e2e:site` 444/444; `next start` probe ok (route handlers now gzip, JSON valid, signed-out journal `{"entries":[]}`, SVG `_next/image` 400).
+- **Security note:** A3's "out of path" conclusion (default `dangerouslyAllowSVG: false`) is no longer proven: GHSA-7qx7 (next ≤16.4.4) can get past that setting, though it needs an attacker-supplied SVG, which nothing here takes (Finding 1, Fable). 16.4.6 closes it.
+- **Reviews:** architecture Fable APPROVE_WITH_CHANGES (2 MUST-FIX, resolved), Astra APPROVE; code review Astra APPROVE (SC1 applied, D6).
+- **No production content build needed.**
+- Release (deploy + smoke on play.critterconnect.org, plus a handoff item for the owner's signed-in Field Journal check) follows below.
