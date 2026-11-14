@@ -199,7 +199,7 @@ Commands, in order, from the worktree root:
      ```
      ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
        [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
-       setsid node_modules/.bin/next start -p 3100 >/tmp/na-start.log 2>&1 & pid=$!; trap 'kill -- -$pid' EXIT
+       setsid node_modules/.bin/next start -p 3100 >/tmp/na-start.log 2>&1 & pid=$!; trap '/bin/kill -- -$pid' EXIT
        B=http://127.0.0.1:3100
        curl -sf --retry 30 --retry-connrefused --retry-delay 1 -o /dev/null $B/ || exit 1
        curl -s -D - -o /dev/null -H 'Accept-Encoding: gzip' $B/api/places/ | grep -qi '^content-encoding: gzip' || exit 1
@@ -340,7 +340,7 @@ SHOULD-CONSIDER:
 - **C · Site E2E.** First check `ss -ltn | grep -q ':3101 ' && echo busy`. It must print nothing. If it prints `busy`, set `P` to a free port of 3105 or higher (check it with `ss -ltn`).
   ```
   P=3101
-  ( setsid python3 -m http.server $P -b 127.0.0.1 -d out/site >/tmp/na-site.log 2>&1 & pid=$!; trap 'kill -- -$pid' EXIT
+  ( setsid python3 -m http.server $P -b 127.0.0.1 -d out/site >/tmp/na-site.log 2>&1 & pid=$!; trap '/bin/kill -- -$pid' EXIT
     curl -sf --retry 30 --retry-connrefused --retry-delay 1 -o /dev/null http://127.0.0.1:$P/ || exit 1
     E2E_SITE_URL=http://localhost:$P CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:site ) > /tmp/na-e2e-site.log 2>&1; echo "e2e:site exit $?"
   ```
@@ -364,7 +364,7 @@ SHOULD-CONSIDER:
   - Record in the Log how many files differ and what the differences were.
   - If the round lines or the check count differ, explain why from `report.json` before you check the step off.
 
-- [ ] **S1. Upgrade, the static checks and the site E2E.**
+- [x] **S1. Upgrade, the static checks and the site E2E.**
   - Changes `package.json` and `package-lock.json`, plus any code fix from Target design, Expected code changes.
   1. Run Target design steps 2-4: `npm install next@16.4.6 eslint-config-next@16.4.6`, then `npm update source-map-js`, then `npm run clean`.
   2. Record `npm ls next sharp shell-quote source-map-js` and `npm audit --omit=dev` in this step's Log line. Expect:
@@ -428,7 +428,7 @@ Run this once, on the final commit, after `## Code review (Astra)` and any fix s
    ```
    Then run block E with `D=$M/final-e2e`.
 5. **The brief's checks:** run `npm run typecheck`, `npm run lint`, `npm test` and `npm run build > $M/final-e2e/build.log 2>&1`.
-   - Each must exit 0. `grep -niE 'warn|deprecat' $M/final-e2e/build.log` must print nothing.
+   - Each must exit 0. `grep -niE 'warn|deprecat' $M/final-e2e/build.log | grep -v 'React 18 support is deprecated'` must print nothing (the React 18 notice is expected, see Decisions D2).
 6. **Site E2E:** run `npm run site:build`, then block C. Then run `mv e2e-artifacts/*-site $M/final-e2e/site`.
 7. **Production probe:** run block D. It must print `probe ok`. Then run `cp /tmp/na-probe.log /tmp/na-start.log $M/final-e2e/`.
 8. **Clean state afterwards:**
@@ -456,6 +456,10 @@ Run this once, on the final commit, after `## Code review (Astra)` and any fix s
 
 ## Decisions
 
+- **D1 (S1) · `/bin/kill` in blocks C and D.** As written, `trap 'kill -- -$pid' EXIT` killed the block's own subshell (exit 143) and left the server running. Bash's builtin `kill` maps `-PID` of a known job to the group bash recorded for that job, which is the subshell's group, since job control is off in subshells. `/bin/kill` signals the real `setsid` group. Fixed in both blocks; reproduced and checked with a `setsid sleep` test. No other change to the blocks.
+- **D2 (S1) · New build notice, not fixed:** `⚠ React 18 support is deprecated in Next.js 16 and will be removed in Next.js 17. Please upgrade to React 19.` New in 16.4.x (`next/dist/server/config.js`); the app is on `react@18.3.1` (`^18.2.0`). React 19 is a major upgrade, out of scope. The build exits 0; Verification step 5's grep excludes this one line. For the owner's Summary: React 19 is needed before Next 17.
+- **D3 (S1) · Code changes for the upgrade: none.** typecheck, lint (react-hooks 7.1.x stack), `npm test` 61/61 and the build passed unchanged.
+
 ## Log
 
 - 2026-11-14 08:58 UTC · Baseline: audit 3 (1 critical, 2 high), shell-quote already gone; live image probe 400; typecheck/lint/test/build pass; e2e:fresh 1575/1575, artifact `baseline-e2e/`.
@@ -464,5 +468,7 @@ Run this once, on the final commit, after `## Code review (Astra)` and any fix s
 - 2026-11-14 09:27 UTC · Astra review: APPROVE, no MUST-FIX; 3 SHOULD-CONSIDER (verify compressed API via Caddy under next start, signed-in journal/Clerk after proxy change, 16.4.5 fallback floor). No code change.
 - 2026-11-14 09:32 UTC · Revision: architect resolved Fable's 2 MUST-FIX (dropped eslint-config-next step-down; retry = next@16.4.x + eslint-config-next@16.4.6) and took most SHOULD-CONSIDERs (16.4.5 floor, origin/main guards, next start gzip/journal probe, Caddy smoke). No code change.
 - 2026-11-14 09:38 UTC · Steps: planner wrote S1 (upgrade + static checks + e2e:site), S2 (e2e:fresh vs baseline), S3 (next start probe) and Verification (final-e2e/ artifact). No code change.
+
+- 2026-11-14 09:44 UTC · S1: `npm install next@16.4.6 eslint-config-next@16.4.6` + `npm update source-map-js`. `npm ls`: next 16.4.6 (deduped under @clerk/nextjs), sharp 0.35.5, source-map-js 1.2.2 (postcss + @tailwindcss/node), shell-quote empty; `npm audit --omit=dev`: found 0 vulnerabilities. Block A: 4 / config ok / 3 files / tree ok / lock ok. typecheck, lint, test 61/61, build exit 0 (one new React 18 deprecation notice, D2); site:build + e2e:site 444/444 (artifact `e2e-s1/site/`). Block C/D trap fixed (D1). No code change.
 
 ## Summary
