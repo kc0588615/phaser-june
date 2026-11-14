@@ -25,7 +25,7 @@ import { hash32 } from '@/lib/seededRng';
 // A new rule flag the board needs travels ANIMAL_RULES -> useAnimalSession (`clue-board-setup`, typed in EventBus)
 // -> ClueBoardScene -> BoardModel; the bot (scripts/balance-044.ts) sets its own. Bumping `version` drops saved games.
 export interface AnimalRules {
-  /** Saved with every round (clue_match_solves.rules_version). */
+  /** Names the rule set; a game saved in the tab under another version isn't resumed (useAnimalSession). */
   version: string;
   suspects: number;
   clues: number;

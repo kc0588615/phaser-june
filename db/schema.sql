@@ -88,7 +88,7 @@ CREATE TABLE habitat_colormap (
 
 -- Players ---------------------------------------------------------------------
 
--- One row per signed-in player (a Clerk user), created on their first solve.
+-- One row per signed-in player (a Clerk user) who saved a round before 2026-10-01; nothing adds rows now (the journal route reads them).
 CREATE TABLE profiles (
   user_id        uuid PRIMARY KEY,
   clerk_user_id  text,
@@ -97,9 +97,8 @@ CREATE TABLE profiles (
 );
 CREATE UNIQUE INDEX uq_profiles_clerk_user_id ON profiles (clerk_user_id);
 
--- One row per solved mystery (POST /api/clue-game/solves), for analysis with SQL
--- (db/analysis/clue-match/07_solve_stats.sql). Anonymous play has no player_id.
--- The bounds match src/clueGame/solveReport.ts.
+-- One row per round finished before 2026-10-01, solved or lost; nothing writes here now. For analysis with SQL
+-- (db/analysis/clue-match/07_solve_stats.sql) and the journal route. Anonymous play has no player_id.
 CREATE TABLE clue_match_solves (
   id               bigserial PRIMARY KEY,
   player_id        uuid REFERENCES profiles(user_id) ON DELETE SET NULL,
@@ -116,7 +115,7 @@ CREATE TABLE clue_match_solves (
   solved_at        timestamptz NOT NULL DEFAULT now(),
   -- clue_match_places.key when played from the globe.
   place_key        text CHECK (place_key IS NULL OR place_key ~ '^(country|area|continent):[A-Za-z0-9-]{1,80}$'),
-  -- Plan 041: every round is saved. Discoveries (the journal) count only 'solved'.
+  -- From plan 041 until 2026-10-01 every finished round was saved. Discoveries (the journal) count only 'solved'.
   outcome           text NOT NULL DEFAULT 'solved' CHECK (outcome IN ('solved', 'lost')),
   -- Solved (or lost) on a last chance, to tell first-try and rescued solves apart; NULL for rounds saved before 2026-09-28.
   last_chance       boolean,

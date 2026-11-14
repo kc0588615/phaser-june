@@ -174,7 +174,7 @@ Content builds, range imports and `REFRESH MATERIALIZED VIEW CONCURRENTLY`
 
 **Since 2026-11-01 (owner's decision), agents on the Oracle box use the live
 `phaser_june` as `postgres`, through PgBouncer (`db.critterconnect.org:6432`, TLS).**
-Writes reach real players, and e2e runs add rounds to `clue_match_solves`. Backups
+Writes reach real players. (The game itself writes nothing, so an e2e run only reads.) Backups
 run nightly; take a fresh dump (`deploy/backup/pg-backup.sh` on the server) before a
 schema change or bulk write.
 

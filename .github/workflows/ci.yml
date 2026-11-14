@@ -39,8 +39,8 @@ jobs:
           DATABASE_URL: postgres://build@127.0.0.1:1/build
           NEXT_TELEMETRY_DISABLED: 1
 
-  # Plays the game in headless Chrome. It writes rounds to clue_match_solves, so it uses the scrubbed copy
-  # phaser_june_dev, never the live database (docs/DATABASE_ACCESS.md). Next dev needs both keys of Clerk's dev instance.
+  # Plays the game in headless Chrome against the scrubbed copy phaser_june_dev, so CI holds no live database
+  # credentials (docs/DATABASE_ACCESS.md). Next dev needs both keys of Clerk's dev instance.
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15

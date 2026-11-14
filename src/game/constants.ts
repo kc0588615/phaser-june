@@ -1,7 +1,7 @@
 // Board constants shared by the model (BackendPuzzle), view (BoardView) and
 // input (BoardController).
 
-/** Gem color keys (saved with each solve). The game uses six: four clue gems, the pebble and the rare witness gem (src/clueGame/animalBoard.ts). A key names the gem, not its look: 'black' draws a grey pebble. */
+/** Gem color keys. The game uses six: four clue gems, the pebble and the rare witness gem (src/clueGame/animalBoard.ts). A key names the gem, not its look: 'black' draws a grey pebble. */
 export const GEM_TYPES = ['black', 'blue', 'green', 'orange', 'red', 'white', 'yellow', 'purple'] as const;
 export type GemType = typeof GEM_TYPES[number];
 

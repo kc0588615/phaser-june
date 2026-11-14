@@ -396,7 +396,7 @@ Order D2 → audit S3 → D13 → audit S8 (Architecture, Order of work). `S/` =
 
 Every step ends: `npm run typecheck` 0, `npm run lint` 0, `npm test` passes, the step's own checks, then check it off, one Log line, commit `server-cleanup: …` (why, not what), push (pre-push hook = typecheck + lint).
 
-- [ ] S1. **D2: delete the save route and its code.**
+- [x] S1. **D2: delete the save route and its code.**
   - `git rm src/app/api/clue-game/solves/route.ts src/lib/player.ts src/clueGame/solveReport.ts tests/clueGame/solveReport.test.ts`, then at once `npm run clean` (no `e2e:fresh` or dev server from this worktree running).
   - Every F1 "Lines to correct" edit, as written: `src/proxy.ts:3-4`, `animalBoard.ts:28`, `questionMatch.ts:70`, `db/schema.sql:91`, `:100-102`, `:119`, `AGENTS.md:55`, `:57` (the route only), `:59`, `README.md:25`, playtest `SKILL.md:16`, `ci.yml:42-43`, `docs/CLUE_MATCH.md:10`, `:24`, `:45`, `:52`, `:74` (with "~90 s" → "90 s to 2.5 min"), `:101`, `ANIMAL_BOARD_PAPER.md:247`, `DATABASE_ACCESS.md:177`.
   - Fable MISSED 1: `src/game/constants.ts:4` drop " (saved with each solve)". Under **Decisions**: outside the Scope list, comment only, made because Goal 1 covers every line that says rounds are saved.
@@ -530,6 +530,9 @@ Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Th
 
 ## Decisions
 
+- S1 · `src/game/constants.ts:4` (outside Scope list): dropped " (saved with each solve)" from a comment. Goal 1 covers every line that says rounds are saved (Fable MISSED 1).
+- S1 · `src/db/schema/player.ts:3` still names the player helper; left for S2, which deletes the file.
+
 ## Log
 
 - 2026-11-14 05:52 UTC · Baseline: fresh greps (no new callers), packages, live places, saved rounds (max 2026-10-01), typecheck/lint/test 66/66, E2E 1575/1575 → `baseline-e2e/`.
@@ -538,5 +541,6 @@ Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Th
 - 2026-11-14 06:28 UTC · Astra review: APPROVE, 0 must-fix, 2 should-consider (signed-in journal check; continent-only places vs fresh-device sightings).
 - 2026-11-14 06:33 UTC · Revision: none needed (0 MUST-FIX in both reviews); review follow-ups listed under Revision notes for the Steps stage. Plan-only.
 - 2026-11-14 06:50 UTC · Steps: planner wrote S1–S7 (D2→S3 code→S3 docs→D13→S8 docs→S8 runbook/pages→final), V1–V4 + failure modes; folded in all review follow-ups; `043-0` confirmed by one dev-copy read (19 rows). Plan-only.
+- 2026-11-14 07:05 UTC · S1: deleted save route, `player.ts`, `solveReport.ts` + test; `npm run clean`; all F1 line fixes + `constants.ts:4`; handoff H13 (owner: `~/AGENTS.md` sentence). typecheck 0, lint 0, test 61/61; D2 grep: only `src/db/schema/player.ts:3` (S2 deletes it); saved-rounds grep empty. No E2E (S2 runs it).
 
 ## Summary
