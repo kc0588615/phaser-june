@@ -437,7 +437,7 @@ Every step ends: `npm run typecheck` 0, `npm run lint` 0, `npm test` passes, the
   - `src/pages/_app.tsx:9` comment; `src/pages/_document.tsx:6` → `<Html lang="en">`.
   - E2E: DEV `npm run e2e:fresh` → `S/e2e-s6/`; delete `S/e2e-s4/`. Compare the screenshots listed in V1.4 with `S/baseline-e2e/` by eye; they must look the same.
 
-- [ ] S7. **Final Verification.** Run V1 and V2 in full on the final commit; artifacts `S/final-e2e/plain/` and `S/final-e2e/africa/`; then delete `S/e2e-s6/`. Record every result in Log; draft the Summary (V4). After this, the Astra code review runs (CLAUDE.md, mission step 6). Fix steps it adds go after S7, followed by a new "Re-run S7" step. With no fix steps, the closing session re-runs V2 only and keeps S7's E2E artifacts.
+- [x] S7. **Final Verification.** Run V1 and V2 in full on the final commit; artifacts `S/final-e2e/plain/` and `S/final-e2e/africa/`; then delete `S/e2e-s6/`. Record every result in Log; draft the Summary (V4). After this, the Astra code review runs (CLAUDE.md, mission step 6). Fix steps it adds go after S7, followed by a new "Re-run S7" step. With no fix steps, the closing session re-runs V2 only and keeps S7's E2E artifacts.
 
 ## Verification
 
@@ -549,7 +549,28 @@ Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Th
 - 2026-11-14 07:12 UTC · S4: `/api/places` continents only (`WHERE kind = 'continent' ORDER BY name`); dropped the four old place-list helpers + `PlaceCard` branch; e2e.mjs, playtest skill, CLUE_MATCH journal note (Astra SC2). Picked up H13 (closed). typecheck 0, lint 0, test 61/61; DoD grep empty. E2E 1575/1575 (incl. globe lists the continents), 0 console errors, 0 failed requests → `e2e-s4/`; `e2e-s2/` deleted.
 - 2026-11-14 07:15 UTC · S5: S8 docs/comments: app route (DATABASE_ACCESS intro, map block, port + route tables, AGENTS.md:19; guide route already right from S3), `--production`/`CLUE_USE_TUNNEL` same-database notes (scripts/db, DATABASE_ACCESS, SHAPEFILE), dev-copy (DATABASE_ACCESS settings line, dev-role.sql header + timeout note, docker-compose), refresh times → 90 s to 2.5 min, schema.sql :1-2/:13/:68/rules_version (043-0 kept). Comments-only diff check empty; `node --check scripts/db` 0; typecheck 0, lint 0, test 61/61; DoD grep empty. No E2E (no behavior; S6 runs it).
 - 2026-11-14 07:24 UTC · S6: runbook check (`DATABASE_ACCESS.md` step 4) replaced by the Architecture block, run verbatim before commit: species 76, `OK` (matched `permission denied for database "phaser_june"` first try); misspelled dev-copy path: "No such file or directory", exit 1, no DB contact. `_app.tsx` font comment; `_document.tsx` → `<Html lang="en">`. typecheck 0, lint 0, test 61/61. E2E 1575/1575, 0 console errors, 0 failed requests → `e2e-s6/`; `e2e-s4/` deleted. Screenshots vs baseline: 8 of 9 byte-identical (02d/02e/10-sources light+dark); `01-globe.png` differs in bytes, same by eye.
+- 2026-11-14 07:58 UTC · S7: V2 on `d77a0b9b`: typecheck 0, lint 0, test 61/61; DoD grep empty; `npm ls` gel/shell-quote/@esbuild-kit (empty), exit 1; `npm audit --omit=dev` 3 (2 high, 1 critical: next, sharp, source-map-js) → `final-npm-audit.txt`; lock check L vs origin/main: removed 37, added 0, changed 0, root ok true; status clean, diff only Scope files + `constants.ts` + plan. V1: E2E plain 1575/1575, 0/0 → `final-e2e/plain/`; `E2E_PLACE=continent:africa` 1575/1575, 0/0, place Africa → `final-e2e/africa/` (plain run also picks Africa by default, same seed); `site:build` 0, `e2e:site` 444/444 (needs `site:serve` up; first try without it failed to connect, not a code fault); 9 V1.4 screenshots byte-identical to baseline. `e2e-s6/` deleted. Summary drafted.
 
 ## Summary
 
-- (S4, for the owner) Only continents become journal sightings now: on a fresh device, a signed-in player's pre-2026-10-01 solve in a country or wildlife area adds no sighting; sightings already on a device stay.
+Draft (S7); the closing session adds the Astra code review, the final V2 re-run and the release results.
+
+**What changed** (audit M6: D2, S3, D13, S8):
+- **D2, save route gone.** Deleted `src/app/api/clue-game/solves/route.ts`, `src/lib/player.ts`, `src/clueGame/solveReport.ts`, `tests/clueGame/solveReport.test.ts`. Every line saying rounds are saved fixed (AGENTS.md, README, playtest skill, CLUE_MATCH, ANIMAL_BOARD_PAPER, DATABASE_ACCESS, schema.sql comments, ci.yml comment, `proxy.ts`, `animalBoard.ts`, `questionMatch.ts`, `constants.ts`).
+- **S3, no models.** Deleted `src/db/schema/` (4 files), `drizzle.config.ts`, the `db:introspect` script and `drizzle-kit` (lock: 37 packages removed, none added or changed). `src/db/index.ts` is a schema-less `drizzle(client)`; `drizzle-orm` stays. `docs/DRIZZLE_ORM_GUIDE.md` rewritten (one client, raw SQL, 9 queries, how to add a model later).
+- **D13, continents only.** `loadPlaces` returns `kind = 'continent'`; deleted the 4 place-list helpers (labels, grouping, group label, realm names); `PlaceCard` keeps "Continent".
+- **S8, database docs.** App's route, `--production`/tunnel notes, dev copy, refresh times (90 s to 2.5 min), schema.sql header/pgcrypto comments; runbook check now fails unless `current_user` is `critter_dev` (ran: `OK`, 76 species; bad path exits 1). `_document.tsx` `<Html lang="en">`.
+
+**npm audit --omit=dev:** before 4 (2 critical: next, shell-quote; 2 high: sharp, source-map-js); after 3 (1 critical: next, M1's; 2 high: sharp, source-map-js). `gel`, `shell-quote`, `@esbuild-kit/esm-loader` gone from the prod tree.
+
+**Verification** (dev copy `phaser_june_dev`, artifacts in `/srv/critter-ai/agent-state/missions/server-cleanup/`):
+- Baseline E2E 1575/1575 → `baseline-e2e/`. Final: plain 1575/1575 → `final-e2e/plain/`; `E2E_PLACE=continent:africa` 1575/1575 → `final-e2e/africa/`; 0 console errors, 0 failed requests each. `e2e:site` 444/444. Screenshots vs baseline byte-identical. Reproduce: the E2E command under Verification.
+- Signed-in journal (J): signed out and signed in both `200 {"entries":[]}`; control with a dead DB URL gave signed-in 500, proving the query path ran. Local POST to the save route: 404.
+- typecheck, lint 0; `npm test` 61/61 (66 − the 5 deleted save-report tests).
+
+**For the owner:**
+- No production content build needed.
+- Run `npm run clean` once after pulling in each checkout with a `.next*` folder (the generated types import the deleted route): your WSL clone, and `/srv/critter-ai/critter-connect` if it has one (none there now). Only this mission's worktree has one on the VPS.
+- Only continents become journal sightings now: on a fresh device, a signed-in player's pre-2026-10-01 solve in a country or wildlife area adds no sighting; sightings already on a device stay.
+- Handoff H13 (drop the "game tests add rows to `clue_match_solves`" line from `~/AGENTS.md`) was answered and closed.
+- Left for later missions (Notes under Architecture): `clue_match_solves`, `profiles`, the `clue_match_places` view (M13), sign-in and the journal route (M11).
