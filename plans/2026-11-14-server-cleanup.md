@@ -526,6 +526,16 @@ Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Th
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. Refresh `origin/main` before opening the PR. Read-only restrictions blocked fetch; review used local `origin/main` at `2aa3bd2c`.
+
+Note: this session fetched `origin/main` before the review; it was `2aa3bd2c`, the commit Astra read. The release rebases on a fresh `origin/main` anyway (SC1).
+
 ## Release
 
 ## Decisions
@@ -550,10 +560,13 @@ Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Th
 - 2026-11-14 07:15 UTC · S5: S8 docs/comments: app route (DATABASE_ACCESS intro, map block, port + route tables, AGENTS.md:19; guide route already right from S3), `--production`/`CLUE_USE_TUNNEL` same-database notes (scripts/db, DATABASE_ACCESS, SHAPEFILE), dev-copy (DATABASE_ACCESS settings line, dev-role.sql header + timeout note, docker-compose), refresh times → 90 s to 2.5 min, schema.sql :1-2/:13/:68/rules_version (043-0 kept). Comments-only diff check empty; `node --check scripts/db` 0; typecheck 0, lint 0, test 61/61; DoD grep empty. No E2E (no behavior; S6 runs it).
 - 2026-11-14 07:24 UTC · S6: runbook check (`DATABASE_ACCESS.md` step 4) replaced by the Architecture block, run verbatim before commit: species 76, `OK` (matched `permission denied for database "phaser_june"` first try); misspelled dev-copy path: "No such file or directory", exit 1, no DB contact. `_app.tsx` font comment; `_document.tsx` → `<Html lang="en">`. typecheck 0, lint 0, test 61/61. E2E 1575/1575, 0 console errors, 0 failed requests → `e2e-s6/`; `e2e-s4/` deleted. Screenshots vs baseline: 8 of 9 byte-identical (02d/02e/10-sources light+dark); `01-globe.png` differs in bytes, same by eye.
 - 2026-11-14 07:58 UTC · S7: V2 on `d77a0b9b`: typecheck 0, lint 0, test 61/61; DoD grep empty; `npm ls` gel/shell-quote/@esbuild-kit (empty), exit 1; `npm audit --omit=dev` 3 (2 high, 1 critical: next, sharp, source-map-js) → `final-npm-audit.txt`; lock check L vs origin/main: removed 37, added 0, changed 0, root ok true; status clean, diff only Scope files + `constants.ts` + plan. V1: E2E plain 1575/1575, 0/0 → `final-e2e/plain/`; `E2E_PLACE=continent:africa` 1575/1575, 0/0, place Africa → `final-e2e/africa/` (plain run also picks Africa by default, same seed); `site:build` 0, `e2e:site` 444/444 (needs `site:serve` up; first try without it failed to connect, not a code fault); 9 V1.4 screenshots byte-identical to baseline. `e2e-s6/` deleted. Summary drafted.
+- 2026-11-14 08:20 UTC · Astra code review (`--code origin/main`): APPROVE, 0 MUST-FIX, 1 SHOULD-CONSIDER (refresh `origin/main` before the PR; the release rebases on it). No fix steps; closing session re-runs V2 only.
 
 ## Summary
 
-Draft (S7); the closing session adds the Astra code review, the final V2 re-run and the release results.
+Draft (S7); the closing session adds the final V2 re-run and the release results.
+
+**Astra code review:** APPROVE, no MUST-FIX. SHOULD-CONSIDER: refresh `origin/main` before the PR (the release rebases on it).
 
 **What changed** (audit M6: D2, S3, D13, S8):
 - **D2, save route gone.** Deleted `src/app/api/clue-game/solves/route.ts`, `src/lib/player.ts`, `src/clueGame/solveReport.ts`, `tests/clueGame/solveReport.test.ts`. Every line saying rounds are saved fixed (AGENTS.md, README, playtest skill, CLUE_MATCH, ANIMAL_BOARD_PAPER, DATABASE_ACCESS, schema.sql comments, ci.yml comment, `proxy.ts`, `animalBoard.ts`, `questionMatch.ts`, `constants.ts`).
