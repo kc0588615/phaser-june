@@ -82,7 +82,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -105,9 +105,10 @@ Checked 2026-11-14 against the registry, the 16.4.x release notes, and the `next
 
 ### Findings (ranked)
 
-1. **The 400 probe does not prove the live server is out of GHSA-2464's path.** [GHSA-7qx7-33qx-rqx2](https://github.com/vercel/next.js/security/advisories/GHSA-7qx7-33qx-rqx2) (medium, published 2026-11-03) covers next `>=16.0.0 <=16.4.4` and is fixed in 16.4.5. It says the optimizer "can be made to process an attacker-supplied SVG even when SVG support is disabled with `dangerouslyAllowSVG: false`" on self-hosted servers. The live server runs 16.3.6 with sharp 0.35.4 (the vulnerable librsvg) on glibc, so the single guard A3 relied on can be bypassed.
+1. **The 400 probe no longer proves the live server is out of GHSA-2464's path.** [GHSA-7qx7-33qx-rqx2](https://github.com/vercel/next.js/security/advisories/GHSA-7qx7-33qx-rqx2) (medium, published 2026-11-03) covers next `>=16.0.0 <=16.4.4` and is fixed in 16.4.5. It says the optimizer "can be made to process an attacker-supplied SVG even when SVG support is disabled with `dangerouslyAllowSVG: false`" on self-hosted servers. The live server runs 16.3.6 with sharp 0.35.4 (the vulnerable librsvg) on glibc, so the single guard A3 relied on can be bypassed.
+   - Exposure isn't shown either: the bypass needs an attacker-supplied SVG to reach the optimizer, and this app has no `images` config (no `remotePatterns`), no `next/image` and no upload route.
    - This advisory is not in npm's database yet (the GitHub global-advisory API returns 404 for it), so `npm audit` does not list it.
-   - Effects: the design is unchanged, because the upgrade is the fix. Release without delay, avoid falling back below 16.4.5 (see Risks), and tell the owner in the Summary that A3's "out of path" conclusion is outdated. The vault edit is out of scope.
+   - Effects: the design is unchanged, because the upgrade is the fix. Release without delay, and prefer 16.4.5 as the fallback floor (see Risks). The Summary tells the owner that A3's "out of path" conclusion is no longer proven; it does not say that the live server was exploitable. The vault edit is out of scope.
 2. **Targets and paths. Every target fits the existing ranges.**
    | Package | Locked | Comes from | Target | How |
    |---|---|---|---|---|
@@ -121,7 +122,8 @@ Checked 2026-11-14 against the registry, the 16.4.x release notes, and the `next
 3. **Clerk is compatible.** `@clerk/nextjs@7.7.8` declares the peer `next ^16.1.0-0`. Every `next/*` subpath it imports exists in 16.4.6, including `next/dist/server/api-utils`, `next/dist/shared/lib/app-router-context.shared-runtime` and `next/compat/router`. The React peers are unchanged.
 4. **What changes from 16.3.6 to 16.4.6 for this app:**
    - **`next dev` rewrites the managed block in `AGENTS.md`:** the heading `# This is NOT the Next.js you know` (`AGENTS.md:102`) becomes `## ...` (`dist/server/lib/generate-agent-files.js`). The rewrite happens only when an AI agent is detected, so it happens in mission sessions and not in CI. The first `e2e:fresh` therefore leaves a one-line diff in `AGENTS.md`.
-     - Fix: commit it with the upgrade, as the block itself says to.
+     - Fix: commit it with the upgrade, as the block itself says to, and list it under Decisions as the one file outside the brief's Scope.
+     - If the mission's `next dev` doesn't rewrite it (no agent detected), leave it as it is. Never edit the block by hand.
      - Rejected: `agentRules: false`, because it would change `next.config.mjs`.
      - This is the only tracked file outside the lock and `package.json` that should change.
    - **New lint rule `@next/next/no-location-assign-relative-destination`:** it is a warning, and `npm run lint` uses `--max-warnings 0`. `git grep` finds no `location.assign` or `location.href =` in `src`, `tests` or `scripts`, so expect no hit.
@@ -132,14 +134,18 @@ Checked 2026-11-14 against the registry, the 16.4.x release notes, and the `next
    - **Route handlers are now compressed under `next start`** (16.4.6, upstream #101220). This affects the 6 routes under `src/app/api/**`.
      - None of them sets `Content-Encoding` or `Content-Length`, so the 16.4.5 header strip from GHSA-pc58 does not affect them either.
      - Caddy's `encode zstd gzip` (`deploy/Caddyfile:2`) passes responses that are already encoded through unchanged.
-     - `deploy/check.sh` runs curl without `--compressed`, so it gets an uncompressed body.
-     - No code change; the smoke tests cover it.
+     - `deploy/check.sh` runs curl without `--compressed`, so it gets an uncompressed body and never sees this path.
+     - The E2E runs on `next dev`, so it doesn't see this path either.
+     - No code change. Check it under `next start` before the commit (Target design step 8) and through Caddy after the deploy (release smoke).
+     - Live today (16.3.6, Caddy compressing, checked 2026-11-14): `/api/places/` sent with `Accept-Encoding: gzip` returns 200 with `content-encoding: gzip`, and with `--compressed` the body parses as JSON. After the release it must still do both.
    - **Other changes, all fine:**
      - Next now refuses a `distDir` outside the app; `.next` and `.next-e2e` (`next.config.mjs:7`, `scripts/e2e-fresh.mjs:8`) are both inside it.
      - The SVG refusal still returns 400 (`dist/server/image-optimizer/transform.js:146-149`), so the smoke test's 400 still holds.
      - The code that writes `tsconfig.json` and `next-env.d.ts` is byte-identical between the two versions, so `tsconfig.json` will not be rewritten.
      - The app uses no removed experimental flag. Next 16.4.6 needs Node `>=20.9.0`.
-     - 16.4.3 changes how `proxy.ts` loads ("Don't load the app-page runtime in proxy.ts"). `src/proxy.ts` (Clerk) is covered by the E2E and by `deploy/check.sh`.
+     - 16.4.3 changes how `proxy.ts` loads ("Don't load the app-page runtime in proxy.ts"). `src/proxy.ts` (Clerk) is covered by the E2E (`next dev`) and by `deploy/check.sh`.
+       - Signed out, `GET /api/clue-game/journal/` calls `auth()` through `clerkMiddleware` and returns 200 `{"entries":[]}` (live, 2026-11-14). A 500 there would mean `auth()` no longer sees the proxy. Check it under `next start` (step 8) and after the deploy.
+       - The signed-in path needs a real Clerk account, and the E2E plays signed out. That check is the owner's: a handoff item after the release, with `Blocks: nothing`.
    - **Generated types:** `.next/types` and `.next-e2e/types` from 16.3.6 may be stale. CI typechecks from a clean checkout without them, so run `npm run clean` after the install as a normal step, not as a fallback.
 5. **Expected lock diff: 81 entries in the dry run.**
    - **Production (not `dev`):**
@@ -152,7 +158,8 @@ Checked 2026-11-14 against the registry, the 16.4.x release notes, and the `next
      - `typescript-eslint` and `@typescript-eslint/*` go from 8.50.0 to 8.72.x, with their nested `minimatch`, `brace-expansion`, `balanced-match`, `eslint-visitor-keys` and `ignore`.
      - `eslint-plugin-react-hooks` goes to 7.1.1, with `@babel/*` and `zod`.
      - Also moving: the browserslist chain, `@eslint-community/*`, `ts-api-utils` and `fastq`.
-     - `debug` and `ms` only change their flag from `devOptional` to `dev`.
+     - `debug` goes from 4.4.1 to 4.4.3 (typescript-eslint 8.72 needs `^4.4.3`). It and `ms` also change their flag from `devOptional` to `dev`.
+     - No production package depends on `debug` or `ms` in either lock, so the image built with `npm ci --omit=dev` is unaffected.
    - Unchanged: `postcss`, `react`, `@clerk/*`, `@tailwindcss/*` and every other direct dependency.
    - `--prefer-dedupe` produced the identical diff: the dev churn comes from npm resolving the replaced packages' subtrees again, and no flag avoids it. All of it is dev-only and inside the ranges, so accept it.
 6. **Audit after the change (dry-run lock):** `npm audit --omit=dev` reports 0 vulnerabilities.
@@ -162,7 +169,7 @@ Checked 2026-11-14 against the registry, the 16.4.x release notes, and the `next
 
 ### Target design
 
-What changes: `package.json` (two ranges), `package-lock.json`, the generated block in `AGENTS.md`, and this plan. No `src` change is expected.
+What changes: `package.json` (two ranges), `package-lock.json`, the generated block in `AGENTS.md` (only if `next dev` rewrites it), and this plan. No `src` change is expected.
 
 Commands, in order, from the worktree root:
 1. `git fetch origin --prune`
@@ -174,8 +181,9 @@ Commands, in order, from the worktree root:
 4. `npm run clean`
 5. Record `npm ls next sharp shell-quote source-map-js` and `npm audit --omit=dev` in the plan (the Log now, the Summary at the end).
 6. Guards, each of which must pass:
-   - `git diff -U0 package.json | grep -c '^[-+] '` prints `4`.
+   - `git diff -U0 origin/main -- package.json | grep -c '^[-+] '` prints `4`. It compares with `origin/main`, so it still holds after the commit and after the release rebase.
    - `git diff --quiet origin/main -- next.config.mjs`.
+   - `git diff --name-only origin/main` lists only `package.json`, `package-lock.json`, this plan, `AGENTS.md` (if rewritten), and any code fix listed under Decisions.
    - `npm ls --depth=0` exits 0.
    - The lock shape check: `git show origin/main:package-lock.json > /tmp/lock.base.json`, then run the command below. It must print `lock ok`; it passed on the dry-run lock.
      ```
@@ -184,7 +192,31 @@ Commands, in order, from the worktree root:
      It allows any production entry to change only if it is in Next's own tree or is `source-map-js`. Dev entries may move.
 7. Run `typecheck`, `lint`, `test`, `build`, `site:build`, `e2e:site` and `e2e:fresh` (the brief's dev-copy block).
    - Compare the build log with Baseline's, which had no warnings, and record any new deprecation notice.
-   - Then commit the regenerated `AGENTS.md` block with `package.json`, the lock and the plan.
+8. **Run a production-mode probe on the `.next` from step 7's `npm run build`.** It covers what the E2E (`next dev`) can't: route-handler compression and `proxy.ts` under `next start`.
+   - Run it alone; no E2E may be running at the same time. Check `ss -ltn` first: port 3100 must be free.
+   - It uses the dev copy, with the brief's guard. Variables from the shell take precedence over `.env.local`.
+   - Each check must pass:
+     ```
+     ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+       [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+       setsid node_modules/.bin/next start -p 3100 >/tmp/na-start.log 2>&1 & pid=$!; trap 'kill -- -$pid' EXIT
+       B=http://127.0.0.1:3100
+       curl -sf --retry 30 --retry-connrefused --retry-delay 1 -o /dev/null $B/ || exit 1
+       curl -s -D - -o /dev/null -H 'Accept-Encoding: gzip' $B/api/places/ | grep -qi '^content-encoding: gzip' || exit 1
+       curl -s --compressed $B/api/places/ | node -e 'JSON.parse(require("fs").readFileSync(0,"utf8"))' || exit 1
+       [ "$(curl -s $B/api/clue-game/journal/)" = '{"entries":[]}' ] || exit 1
+       [ "$(curl -s -o /dev/null -w '%{http_code}' "$B/_next/image/?url=%2Ffavicon.svg&w=64&q=75")" = 400 ] || exit 1
+       echo probe ok )
+     ```
+   - It must print `probe ok`. Afterwards, `ss -ltn` must show port 3100 free again.
+   - On 16.3.6, `next start` sent route handlers uncompressed: `base-http/node.js` stored a single header value as an array, and the compression filter skipped it. 16.4.6 stores a single value as a string. So the `content-encoding` line is what proves the new path runs.
+9. Commit the regenerated `AGENTS.md` block, if any, with `package.json`, the lock and the plan.
+
+**Release smoke, on top of the brief's** (after `deploy critter-connect`, on `https://play.critterconnect.org`; all of these passed on live 16.3.6 on 2026-11-14):
+- `curl -s -D - -o /dev/null -H 'Accept-Encoding: gzip' …/api/places/` shows `content-encoding: gzip`.
+- `curl -s --compressed …/api/places/` parses as JSON. This proves Caddy passes Next's encoding through and doesn't encode the body twice.
+- `curl -s …/api/clue-game/journal/` prints `{"entries":[]}`.
+- Then add a handoff item with `Blocks: nothing`: the owner signs in on play., opens the Field Journal, and confirms that it loads and that signing out works. Rolling back is the release rules' revert.
 
 **Expected code changes:** none. The likely ones and their fixes:
 - A finding from the react-hooks 7.1.1 compiler: fix the code minimally. If it is a false positive, add a line-level `// eslint-disable-next-line <rule> -- <reason>`, the pattern the repo already uses (`src/components/clueGame/GemIcon.tsx:4`).
@@ -195,11 +227,23 @@ Commands, in order, from the worktree root:
 **Risks and fallbacks**, per the brief's rules:
 - **Next 16.4.6 breaks the build or the E2E in a way a small change can't fix:**
   - Reset first with `git checkout origin/main -- package.json package-lock.json && npm ci`.
-  - Retry with `npm install next@16.4.5`. Leave `eslint-config-next` at 16.4.6: it has no peer on `next`.
-  - If that fails too, try 16.4.4, then lower, down to 16.4.1. `sharp` reaches 0.35.5 in every case.
-  - Below 16.4.5, GHSA-7qx7-33qx-rqx2 and the other six 16.4.5 moderates stay open. Record that under Decisions and in the Summary.
-  - `package.json` then reads `^16.4.x`: record that deviation from the brief.
-- **`eslint-config-next@16.4.6` causes lint failures that a small change can't fix:** use the same procedure on `eslint-config-next` alone, newest first.
+  - Retry with `npm install next@16.4.5 eslint-config-next@16.4.6`, then continue from Target design step 3.
+    - Name both packages. With `next` alone, `eslint-config-next` stays at 16.1.0 and `^16.1.0`.
+  - 16.4.5 is the preferred floor: it closes GHSA-7qx7 and the six other 16.4.5 advisories.
+  - Only if 16.4.5 fails too, try 16.4.4, then lower, down to the brief's 16.4.1. Use the same pattern each time: `npm install next@16.4.<n> eslint-config-next@16.4.6`. `sharp` reaches 0.35.5 in every case.
+  - **Below 16.4.5:** `npm audit --omit=dev` still prints 0, because npm doesn't list these advisories yet.
+    - Record the open 16.4.5 advisories under Decisions and in the Summary.
+    - Add a handoff item (`Blocks: nothing`). It lists each advisory and whether its prerequisites hold here. GHSA-7qx7 needs an attacker-supplied SVG, and nothing here takes one. GHSA-pc58 (cross-client response injection) and GHSA-f3mh (HttpOnly cookie exposure) do apply to a self-hosted app with Clerk cookies.
+    - Still release: it closes the critical GHSA-2464 and sharp's high.
+  - `package.json` then reads `next ^16.4.<n>`: record that deviation from the brief.
+- **Lint findings from the new lint stack** (react-hooks 7.1.1, typescript-eslint 8.72):
+  - Stepping `eslint-config-next` down is no fix. Every version from 16.4.0 to 16.4.6 declares `eslint-plugin-react-hooks ^7.1.0` and `typescript-eslint ^8.56.0`, so npm resolves the same 7.1.1 and 8.72.x. The only thing that would change is `@next/eslint-plugin-next`, and its one new rule has no hit here.
+  - Fix each finding in code, or add a line-level `// eslint-disable-next-line <rule> -- <reason>` for a false positive (see Expected code changes).
+  - **If that isn't a small change:**
+    - Reset as above, then run `npm install next@16.4.6` alone. `eslint-config-next` stays at 16.1.0 and `^16.1.0`, and the `package.json` guard prints `2`.
+    - Ship the security fix this way. Every production advisory is in `next`, `sharp` or `source-map-js`, and `eslint-config-next` is dev-only. Record the deviation under Decisions.
+    - Add a handoff item with the rule, the files and the finding count. For the owner only: 16.3.8 is the newest `eslint-config-next` that keeps the locked react-hooks 7.0.1 and typescript-eslint 8.50.0. It is below the brief's 16.4.1 floor, so the choice is his.
+    - Don't walk the versions.
 - **A new high or critical advisory appears at implementation time:** try `npm update <name>`. If no update within range fixes it, record it under Decisions as `GHSA id · package@version · npm explain <name> path · why no in-range fix`, and continue.
 - **Newer dev patch versions** (typescript-eslint, @babel) published before the implementation: accept them. The lock shape check still holds.
 
@@ -210,6 +254,10 @@ Commands, in order, from the worktree root:
 - `--prefer-dedupe` to cut the dev churn: it produced the identical diff.
 - Hand-editing the lock to undo incidental dev bumps: fragile, and it breaks the lock's integrity data for `npm ci`.
 - `images.unoptimized: true` or `agentRules: false`: both change `next.config.mjs`, which is out of scope and the owner's decision.
+- Stepping `eslint-config-next` down within 16.4.x to avoid react-hooks findings: every 16.4.x resolves the same react-hooks 7.1.1 and typescript-eslint 8.72.
+- `eslint-config-next@16.3.8` to keep the old lint dependencies: it is below the brief's 16.4.1 floor, so it's the owner's call (handoff item).
+- A hard stop at 16.4.5 instead of the brief's 16.4.1 floor: 16.4.1 to 16.4.4 still close the critical and sharp's high. Releasing one, with a handoff item, beats leaving 16.3.6 live.
+- A signed-in E2E with a Clerk test user: it needs a Clerk account and a secret the mission doesn't have, and adding it would be new test scope. The signed-out journal probe plus the owner's sign-in check cover it.
 
 ## Architecture review (Fable)
 
@@ -242,6 +290,25 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+- **Fable MUST-FIX 1 (the `eslint-config-next` step-down can't fix the react-hooks risk):** removed it. I confirmed with `npm view` that every 16.4.0-16.4.6 declares react-hooks `^7.1.0` and typescript-eslint `^8.56.0`, while 16.3.8 declares `^7.0.0` and `^8.46.0`.
+  - Lint findings are now fixed in code or with line-level disables.
+  - If that isn't a small change: ship `next@16.4.6` alone, keep `eslint-config-next` at 16.1.0, and add a handoff item that mentions 16.3.8 for the owner only. No walking versions.
+- **Fable MUST-FIX 2 (wrong retry command):** the retry is now `npm install next@16.4.5 eslint-config-next@16.4.6`, with the same pattern for each lower version, then Target design from step 3.
+- **Fable corrections:**
+  - Finding 1 now says A3's conclusion is no longer proven: no `images` config, no `next/image` and no upload route. It no longer implies the live server was exploitable.
+  - Finding 5 now has `debug` 4.4.1 to 4.4.3, dev-only, with no production dependent.
+- **Fable SC1 (guard against `origin/main`):** taken. I also added a `--name-only origin/main` file-list guard.
+- **Fable SC2 (`AGENTS.md` block):** taken. It is listed under Decisions, and left alone if `next dev` doesn't rewrite it. Never edited by hand.
+- **Fable SC3 and Astra SC3 (handoff item below 16.4.5; 16.4.5 as the floor):** taken. 16.4.5 is now the preferred floor. Below it, a handoff item assesses each open advisory against this app.
+  - The brief's 16.4.1 floor stays. A 16.4.1-16.4.4 release still closes the critical and sharp's high (see Rejected alternatives).
+- **Astra SC1 (compressed responses under `next start` and Caddy):** taken.
+  - Target design step 8 adds a local `next start` probe on the dev copy, port 3100: `content-encoding: gzip`, a `--compressed` body that parses as JSON, signed-out journal, and the image 400.
+  - The release smoke repeats the compression and journal checks through Caddy.
+  - I confirmed in the tarballs that 16.3.6 left route handlers uncompressed: it stored a single header value as an array in `base-http/node.js`. Live passes these checks today, through Caddy's encoding.
+- **Astra SC2 (signed-in Clerk/journal):** taken in part.
+  - The signed-out `GET /api/clue-game/journal/` returning `{"entries":[]}` proves that `proxy.ts` and `auth()` work after the 16.4.3 proxy change. It is checked under `next start` and on live.
+  - The signed-in session needs the owner's Clerk account: a handoff item after the release, with `Blocks: nothing`. A Clerk test-user E2E was rejected (no account or secret, new scope).
+
 ## Steps
 
 ## Verification
@@ -258,5 +325,6 @@ SHOULD-CONSIDER:
 - 2026-11-14 09:17 UTC · Architecture: architect wrote findings + target design (16.4.6 in range; sharp/source-map-js reachable; dry-run lock audit --omit=dev 0; new GHSA-7qx7 bypasses dangerouslyAllowSVG on <=16.4.4, so 400 probe isn't proof; no src change expected). No code change, no checks needed.
 - 2026-11-14 09:24 UTC · Fable review: APPROVE_WITH_CHANGES, 2 MUST-FIX (both fallbacks: eslint-config-next step-down can't fix react-hooks risk; next retry must also pass eslint-config-next@16.4.6). Main path reproduced (^16.4.6, lock ok, audit --omit=dev 0). No code change.
 - 2026-11-14 09:27 UTC · Astra review: APPROVE, no MUST-FIX; 3 SHOULD-CONSIDER (verify compressed API via Caddy under next start, signed-in journal/Clerk after proxy change, 16.4.5 fallback floor). No code change.
+- 2026-11-14 09:32 UTC · Revision: architect resolved Fable's 2 MUST-FIX (dropped eslint-config-next step-down; retry = next@16.4.x + eslint-config-next@16.4.6) and took most SHOULD-CONSIDERs (16.4.5 floor, origin/main guards, next start gzip/journal probe, Caddy smoke). No code change.
 
 ## Summary
