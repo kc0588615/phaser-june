@@ -374,7 +374,7 @@ Rules for every step:
   - `issue-tracker.md`: delete `:16-25` (from the PR-triage heading to the blank line before the bare `#42` sentence) and `:35-45` (Wayfinding, to the end of the file). `:26` then closes Conventions, which is the same file as the Target design's "delete `:16-27`, re-add `:26` after `:14`" (simulated).
   - `domain.md`: `:5`, `:13` and `:47` as in the Target design. `:11` and `:49-53` (ADR template text) stay.
   - Check: V7's hunks for both files. `issue-tracker.md` has 24 lines (`wc -l`), its `tail -n1` is ``Run `gh issue view <number> --comments`.``, `tail -c1` is LF, and `grep -c '#42'` gives 1. V6 grep 1 now prints nothing.
-- [ ] S7. **`AGENTS.md` (S1).** Edit tool on `:55`, `:56` and `:92`, with the Target design's exact text.
+- [x] S7. **`AGENTS.md` (S1).** Edit tool on `:55`, `:56` and `:92`, with the Target design's exact text.
   - Untouched: `:19` (already true, M6), the safeguards `:38`, `:39` and `:71`, the Clerk lines, and the lines other missions own.
   - Facts for `:56` (Fable MISSED 1): **three** scripts import `./connect`. `git grep -l "from './connect'" -- scripts` gives `clue-world-map.ts`, `content.ts` and `iucn.ts`. `git grep -lE 'postgres\(|psql' -- scripts ':!scripts/connect.ts'` gives `scripts/db` and `scripts/import-natural-earth.mjs`. `shots/run.mjs` is a port probe. Never write "four".
   - Check: V7's `AGENTS.md` hunks (`-55,2 +55,2`, `-92 +92` only).
@@ -543,5 +543,6 @@ The hook and CI's guard are tested in isolation. These tests existed before the 
 - 2026-11-14 11:12 UTC · S4 D17: `git rm` .codex, .kiro, .understand-anything; .gitignore `:49-50` dropped via Edit (hunk `-49,2 +48,0`); grep 2 no hits (exit 1); dirs gone; status shows only the 3 D + .gitignore, no untracked. typecheck 0, lint 0.
 - 2026-11-14 11:13 UTC · S5 link: `.claude/skills/writing-for-agents` -> `../../.agents/skills/writing-for-agents`; V8 (`$ST/link.txt`) readlink + resolved path ok, 120000 twice, SKILL.md ok. typecheck 0, lint 0.
 - 2026-11-14 11:15 UTC · S6 docs/agents: issue-tracker.md drops PR-triage + Wayfinding sections (24 lines, ends fetch section + LF, one `#42`); domain.md :5/:13/:47 per Target design. V7 hunks match (-5/-13/-47; -16,10 +15,0; -35,11 +24,0); V6 grep 1 empty. typecheck 0, lint 0.
+- 2026-11-14 11:16 UTC · S7 AGENTS.md: `:55` EventBus line (EventPayloads map; sfx/debugBridge direct imports), `:56` drop expedition-tables clause + connect.ts exceptions (`scripts/db`, `import-natural-earth.mjs`; 3 scripts import connect), `:92` no ADRs. Hunks `-55,2 +55,2`, `-92 +92` only. typecheck 0, lint 0.
 
 ## Summary
