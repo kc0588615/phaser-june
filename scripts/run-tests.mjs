@@ -1,7 +1,8 @@
 // Offline test runner.
 //
-// This repo can't install test frameworks (network-restricted), so we lean on
-// two things that are already here:
+// The network limit is the agent's, not the repo's: an agent's sandbox may
+// have no network, so this runner adds no test framework and leans on two
+// things that are already installed:
 //   1. esbuild (a devDependency) bundles each `tests/**/*.test.ts` file into
 //      plain JavaScript, resolving the `@/` path alias to `src/`.
 //   2. Node's built-in test runner (`node --test`) executes the bundles.
