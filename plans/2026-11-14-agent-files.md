@@ -148,7 +148,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -156,6 +156,18 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+Taken 2026-11-14 10:40-10:41 UTC on `origin/main` `e91ad1fa` (M6 and M1 merged; branch = origin/main + mission start commit). Files in `/srv/critter-ai/agent-state/missions/agent-files/` (`$ST`).
+
+- **Checks:** `npm run typecheck` 0, `npm run lint` 0, `npm test` 0: **61 tests, 61 pass** (`$ST/*-before.log`). No install or migration needed (node_modules present; repo has no migrations). **No E2E**: the brief says "No E2E in this mission" (no file the game builds, serves or runs changes); CI's `e2e` job runs on the PR.
+- **Lock** (`$ST/lock-before.txt`): `folders 45 | locked 40 | v1 matches 40 | v2 matches 0`, `lock entries with no folder: []`. As expected.
+- **Hook** (`$ST/guard-before.txt`, runner `$ST/tools/guard-run.sh <hook>`): all 19 audit cases give the audit's exit codes. Added: Write `app.env` at root 0, normal Edit of a `src/` file 0. So today: `deploy/app.env` 0, root `app.env` 0, content naming the schema file 0, a `*.prisma` file with a plain schema body 0.
+- **Live** (`$ST/live-before.txt`): `version.txt` `e91ad1fa…`; `/`, `/explore/`, `/api/places/`, `/api/clue-game/pool/`, `critterconnect.org/` all 200; `/api/places/` sha256 `1472dfe4…bd10` (stable across two fetches).
+- **Fresh greps** (`$ST/greps-before.txt`). Sites outside the 34 folders, all already listed in the brief, nothing new:
+  - grep 1 (deleted skill names): `docs/agents/domain.md:13` (`/domain-modeling`, `/grill-with-docs`, `/improve-codebase-architecture`), `:47` ("note it for `/domain-modeling`"); `docs/agents/issue-tracker.md:18` (`/triage` flag, PR section), `:38-41` (Wayfinding section); `skills-lock.json:142,145,207,210` (entries that go with the lock edit). The rest: 76 hits inside deleted folders (`ask-matt` 33, `setup-matt-pocock-skills` 22, `wayfinder` 6, others ≤4).
+  - grep 2 (tool folders): `.gitignore:49-50`, `.understand-anything/.understandignore:1`.
+  - grep 3 (TiTiler): `.claude/skills/playtest/SKILL.md:34`, `CODING_STANDARDS.md:5`.
+  - grep 4 (`how-to:v4`): `.claude/skills/playtest/SKILL.md:40`.
 
 ## Architecture
 
@@ -175,6 +187,10 @@ Out:
 
 ## Decisions
 
+- Baseline: no E2E run (stage template says E2E; brief says none, as no shipped file changes).
+
 ## Log
+
+- 2026-11-14 10:42 UTC · Baseline: typecheck/lint/test 0 (61 tests), lock 45/40/40, hook control matches audit (+ root app.env 0), live all 200, greps recorded; no E2E per brief.
 
 ## Summary
