@@ -136,7 +136,7 @@ Out:
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none): none needed
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -366,7 +366,293 @@ None needed: Fable MUST-FIX none, Astra MUST-FIX none, no REJECT. Fable's 5 SHOU
 
 ## Steps
 
+Each step is one session and one commit, `rules-cleanup: S<n> · <title>`, together with the plan (item checked, one Log line: UTC time, what was done, the checks' results). Push it; the pre-push hook runs typecheck and lint. `S=/srv/critter-ai/agent-state/missions/rules-cleanup`. Run heavy jobs (test, bot, content check, E2E) one at a time. Line numbers are from `3436aac5`, so match on the quoted text. "Architecture's text" means the after-text in Target design above.
+- **Orphan check:** `npx tsc --noEmit --noUnusedLocals --noUnusedParameters -p .` (exit 0 at baseline).
+- **E2E block:** the Brief's dev-copy block, verbatim, ending in `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh )`. Its output goes to a log in `$S`.
+- **Content block:** the same guard, with `npm run content -- check ) > <file> 2>&1` as its last line.
+- Never print a connection string or `cat` the secrets file. If the guard fails, stop and add a handoff item.
+- Every scratch file goes in `/tmp/rules-cleanup-scratch/`, never in the repo (`tsconfig.json` includes `**/*.ts`, and lint covers `scripts/`).
+
+- [ ] S1 · Unit cases first: the content check's one-value rule and warnings, and mergeServerJournal's rule (green on today's code)
+  - `tests/clueGame/validatePool.test.ts` (also import `species` from `./testPool` and `type CluePool` from `@/clueGame/pool`):
+    - `test('two values of a one-value trait are an error', …)`: `validatePool(pool).errors` has nothing containing `takes one value`. With `clue(7, 'morphology', 'It is large.', ['size:large'])` and `clue(7, 'morphology', 'It is small.', ['size:small'], 2)` added, `errors` includes `'Species 7: holds size:large and size:small, but size takes one value'`.
+    - `test('the content check warns about each gap, by animal, group and kind', …)` uses its own pool (not testPool's `pool`). Species 101 `AMPHIBIA`, 102 `MAMMALIA`, 103 `REPTILIA`, each with a class.
+      - 101's clues: taxonomy `['class:amphibia']`; morphology `['size:small']` with `isFiltering` false (a clue that can't deduce); diet `['diet:insects']` (Behavior & diet from one of its two categories); habitat `['system:freshwater']`; geography `['realm:neotropical']`. 101's facts: one `life_description` (Life cycle from a fact only) and one `key_fact`.
+      - 102: one clue, taxonomy `['family:felidae']`, no facts.
+      - 103: one `key_fact` fact and no clue, so it isn't playable and gets no warnings.
+      - Plain fact texts: no placeholder, no Red List code, no run-together numbers, and none the start of another fact.
+      - The 15 expected warnings, as `[animal, label, kind]`:
+        - 101: Body tagged, Life cycle tagged, Conservation any.
+        - 102: tagged and any for each of Body, Behavior & diet, Habitat, Range and Life cycle, plus Conservation any and Key facts any.
+      - Stable starts: tagged is `` `${animal}: no tagged ${label} clue` ``; any is `` `${animal}: no ${label} ` ``. Assert that every warning begins with exactly one expected start, and every start begins exactly one warning: two `deepEqual`s on count arrays, with the warnings joined as the message.
+  - `tests/clueGame/journal.test.ts` (also import `mergeServerJournal`, `type Journal`, `type ServerJournalEntry`): `test('saved solves merge in: the larger count, the lower best, the earliest and latest dates, the local names, class and badges', …)`.
+    - Use literal entries with no `sightings`. Don't call `recordSolve`: its fifth parameter changes in S3. Call `mergeServerJournal` with two arguments, which is valid before and after S3.
+    - `Rhinoderma darwinii`:
+      - Local: Darwin Frog, 2 solves, best 9, 2026-09-10 → 2026-09-20, `AMPHIBIA`, sharpEyes 1.
+      - Server: Darwin's Frog, `Amphibia`, 5 solves, best 12, 2026-09-01 → 2026-09-15, placeKeys `['continent:south_america']`.
+      - Expect: Darwin Frog, 5, 9, 2026-09-01, 2026-09-20, `AMPHIBIA`, sharpEyes 1.
+    - `Astrochelys radiata`:
+      - Local: Radiated Tortoise, 7 solves, best 30, 2026-08-01 → 2026-09-01, no class.
+      - Server: `REPTILIA`, 3 solves, best 4, 2026-08-15 → 2026-10-01, placeKeys `['continent:africa']`.
+      - Expect: Radiated Tortoise, 7, 4, 2026-08-01, 2026-10-01, `REPTILIA`, no sharpEyes.
+    - Local only, `Panthera tigris`: unchanged.
+    - Server only, `Okapia johnstoni`: Okapi, `MAMMALIA`, 2 solves, best 11, placeKeys `[]`. Expect it copied, with no sharpEyes.
+    - `deepEqual` on the whole merged journal. Merging the result again gives the same journal (safe to repeat).
+  - S16's exhaustive proof, taken before the cut:
+    - `node_modules/.bin/esbuild src/clueGame/categories.ts --bundle --platform=node --format=cjs --outfile=/tmp/rules-cleanup-scratch/categories.cjs`
+    - then `node -e 'const { GEM_CATEGORIES } = require("/tmp/rules-cleanup-scratch/categories.cjs"); console.log(JSON.stringify(GEM_CATEGORIES.map(({ label, clueCategories, factCategories, deduces }) => ({ label, clueCategories, factCategories, deduces }))))' > $S/categories-before.json` (8 rows).
+  - **Check:** typecheck and lint pass; `npm test` is **64/64** (61 + 3). Each new case passes on today's code. If one fails, the test is wrong: fix the test.
+
+- [ ] S2 · D14 tests first: the old-journal fixture, its unit case and the two E2E checks, all seen to FAIL on today's code
+  - **Fixture** `tests/clueGame/old-journal.json`, written by today's `recordSolve`:
+    - Run `git fetch origin --prune`. Then `git diff origin/main -- src/clueGame/journal.ts src/clueGame/places.ts` must print nothing.
+    - Bundle: `node_modules/.bin/esbuild src/clueGame/journal.ts --bundle --platform=node --format=cjs --outfile=/tmp/rules-cleanup-scratch/journal.cjs`.
+    - Write a generator, kept as `$S/make-old-journal.cjs` and never in the repo. Starting from `{}`, it folds in these `recordSolve` calls. Each sighting is `{ placeKey, placeName, lon, lat }`, with literal numbers.
+      - `Okapia johnstoni` "Okapi", `MAMMALIA`: 18 moves at `2026-09-20T10:00:00.000Z`, sighting `continent:africa`/`Africa`, not sharp. Then 12 moves at `2026-10-05T09:30:00.000Z`, sighting `country:COD`/`Dem. Rep. Congo`, sharp. Result: 2 solves, 2 sightings, 1 Sharp eye.
+      - `Trichobatrachus robustus` "Hairy Frog", `AMPHIBIA`: 14 moves at `2026-10-12T16:45:00.000Z`, Africa sighting, sharp. This is seed 7's first mystery on Africa (baseline), so the E2E find lands on an old entry.
+      - `Canis simensis` "Ethiopian Wolf", `MAMMALIA`: 9 moves at `2026-10-20T08:15:00.000Z`, Africa sighting, sharp.
+    - Then one entry added by hand: `"Addax nasomaculatus": { "scientificName": "Addax nasomaculatus", "commonName": "Addax", "timesSolved": 3, "bestMoves": 15, "firstSolvedAt": "2026-09-12T12:00:00.000Z", "lastSolvedAt": "2026-10-28T18:20:00.000Z", "className": "MAMMALIA", "sightings": [{ "placeKey": "x" }], "sharpEyes": 2, "legacy": true }`. It has the malformed sighting and one unknown field.
+    - Write it as `JSON.stringify(journal, null, 2) + '\n'`.
+    - All four are content animals on Africa, the run's continent (`continent:africa`, seed 7). They are in the pool, which plays all 76 species.
+  - **Unit case** in `tests/clueGame/journal.test.ts`: `test('a journal saved with sightings (before 2026-11) keeps every find; old and unknown fields are left out', …)`.
+    - Read the file as a string, `readFileSync(path.join(process.cwd(), 'tests/clueGame/old-journal.json'), 'utf8')`, and pass it straight to `parseJournal`. That is what `useJournal` gets from localStorage.
+    - Assert the fixture is the old shape: at least 4 entries, each with a `sightings` array.
+    - `deepEqual(parseJournal(raw), <each stored entry without sightings and legacy>)`. This checks every entry with `commonName`, `timesSolved`, `bestMoves`, both dates, `className` and `sharpEyes` unchanged, and no other key (Fable 4).
+    - A copy of one entry with `sharpEyes: -1` and `className: 7` parses to that entry without both fields: a bad count or class drops the field, not the animal. The class rule is the Architecture's decision.
+  - **E2E** in `scripts/e2e.mjs`:
+    - Add `readFileSync` to the `node:fs` import. Declare `const requests = [];` before `browser.on`. Add a last branch to the listener: `else if (method === 'Network.requestWillBeSent' && params.request.url.startsWith(BASE)) requests.push(params.request.url);`.
+    - DRY: move step 3's journal read (the `evaluate` that clicks Menu → "Field journal" and returns `#journal-title`'s next sibling's text) into `const fieldJournalText = () => evaluate(<same function>)`, defined before step 3. Step 3 calls it, and its check stays the same.
+    - Put the new block after the AmphibiaWeb `if (amphibia.place) { … }` and before `check('no console errors', …)`. Every existing check runs first, so their counts don't change, and the last two checks cover the new loads.
+    - Both checks load one URL: `` const fresh = `${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(report.place.key)}` ``. A `?seed=` game is never resumed, so the find is always recorded (Fable 3). `loadPlace` ignores the seed.
+    - 1. **Network check** (1 `check()`):
+      - `const from = requests.length; await goto(fresh); await waitFor(boardReady, 'a dealt round', 60_000); await sleep(1500);`
+      - `const paths = requests.slice(from).map(url => new URL(url).pathname);`
+      - `check('a game on a continent asks nothing of /api/places/', paths.some(p => p.startsWith('/api/clue-game/pool')) && !paths.some(p => p.startsWith('/api/places')), JSON.stringify(paths.filter(p => p.startsWith('/api/'))));`
+      - The pool request is the control: it proves the listener and the window work. The assert comes after the first deal, which on today's code waits for `loadPlace` (Fable 2).
+    - 2. **Fixture checks** (2 `check()`s):
+      - Read the fixture: `const oldJournal = readFileSync(path.join(process.cwd(), 'tests/clueGame/old-journal.json'), 'utf8');`.
+      - On the current page, `evaluate`: `sessionStorage.removeItem('cc:explore:game'); localStorage.clear(); localStorage.setItem('clue-match:journal:v1', raw)`. This is how the AmphibiaWeb probe does it; the init script sets the how-to flags again.
+      - Then `goto(fresh)`, `waitFor(boardReady, …)`, `sleep(1500)`.
+      - (a) Count: `const listed = await fieldJournalText();`, then click `button[aria-label="Close journal"]` and wait 400 ms. Check `'an old journal (saved before 2026-11) loads every find: the Field Journal counts all of them'` passes when there are at least 3 fixture names, every one is a `scientificName` in `poolSpecies`, and `listed.startsWith(`${names.length} of`)`. Detail: `{ listed, names, notInPool }`.
+      - Find: `const { mysteryId } = await evaluate(() => window.__cc.clue()); await evaluate(id => window.__nameIt(id), mysteryId);`. Wait for the round-end card (`CARD`), then read `localStorage.getItem('clue-match:journal:v1')`.
+      - (b) Kept: every fixture name is still in storage.
+        - The found animal (`poolSpecies.get(mysteryId).scientificName`) must have `timesSolved` = its old count (0 if it's new) + 1. If it's in the fixture, its `firstSolvedAt` must also be unchanged.
+        - Every other entry keeps `timesSolved`, `bestMoves`, `firstSolvedAt`, `lastSolvedAt`, `className` and `sharpEyes`, compared by name.
+        - Check `'after a find, every old journal entry is kept unchanged (the find counted once)'`, with detail `{ found, changed }`.
+    - Neither check names `sightings` or `Sighting` in code, because the final grep doesn't exclude `e2e.mjs`. A comment may say "sightings".
+    - **The two checks add 3 `check()` calls** (network 1, fixture 2). Every later E2E expects **1578** (1575 + 3). Confirm the number in the Log.
+  - **Check:**
+    - typecheck and lint pass.
+    - `npm test`: 64 pass and **1 fails, the fixture case**, because `Addax nasomaculatus` is dropped. Put the assertion message in the Log. If the case passes, the fixture isn't today's shape: fix the fixture, not the test.
+    - Run the E2E block on unchanged app code, log to `$S/e2e-s2.log`. Expect **1578 checks: 1575 pass and exactly the 3 new ones fail** (`/api/places/` in the list; the journal shows "3 of"; Addax missing after the find). If something outside them fails, rerun once (A10).
+    - Copy the run to `$S/e2e-s2-red/` and record the red results in the Log.
+    - This commit leaves the fixture case red on purpose; S3 turns it green.
+
+- [ ] S3 · D14: stop building sightings, keep every find, and drop /explore's place request (E2E green)
+  - `src/clueGame/journal.ts`, as in the Target design:
+    - Delete `import { sightingPoint, type Place } from '@/clueGame/places';`, the `sightings?: Sighting[];` field with its doc, the `Sighting` interface and `isSighting`.
+    - `recordSolve(journal, species, moves, at, sharp = false)`: drop the `const sightings = …` line and `...(sightings.length ? { sightings } : {}),`.
+    - `mergeServerJournal(journal, entries)`: drop `placeFor` and the sightings lines; the rest stays byte for byte.
+    - `isEntry` and `parseJournal`'s `.filter`/`.map` become `toEntry` plus the `flatMap`.
+    - Comments: `className` and `placeKeys` get the Architecture's texts. The merge doc drops "Places become sightings when `placeFor` knows them.". The header (lines 1-3) waits for S6.
+  - `src/clueGame/places.ts`: delete `sightingPoint` with its doc ("Where a discovery marker goes: …"), `clamp` and `round`.
+  - `src/components/animalBoard/useAnimalSession.ts`:
+    - Delete `loadPlace`, `place: Place | null;` in `Content`, `const place = requested ? await loadPlace(requested) : null;`, `place: continent ? place : null, ` in `data`, and `place: content?.place ?? null,` in the return.
+    - The import becomes `import { MIN_PLACE_ANIMALS } from '@/clueGame/places';`.
+  - `src/components/animalBoard/AnimalGame.tsx`:
+    - Delete `import { sightingPoint } from '@/clueGame/places';`, `place` in the `useAnimalSession()` destructure, and the `point`/`sighting` lines.
+    - The record call becomes `record(species, done.movesUsed, { score: session.score, streak: session.bestStreak }, sharpEye(done));`, with deps `[session, end, speciesById, record, recordedRound]`.
+  - `src/components/clueGame/useJournal.ts`:
+    - `useJournal()`, `record(species, moves, session, sharp = false)` and `recordSolve(previous, species, moves, new Date().toISOString(), sharp)`.
+    - The merge effect is `mergeServerJournal(previous, saved)` with deps `[saved]`.
+    - Drop `type Sighting` and the `Place` import. The doc gets the Architecture's text.
+  - `src/components/globe/GlobeScreen.tsx`: `const { journal } = useJournal();`.
+  - `tests/clueGame/journal.test.ts`: delete only `test('a malformed sighting drops the entry', …)`, which pins the old behavior.
+  - Docs:
+    - `.claude/skills/playtest/SKILL.md`: "- With `?place=`, a find adds a sighting for that continent to the journal." becomes the Architecture's line. Check "fewer than 12" against `MIN_PLACE_ANIMALS` and `useAnimalSession.ts` (Fable 5).
+    - `docs/CLUE_MATCH.md`: delete the sentence "Only continents become sightings: on a fresh device an old solve's country or area adds none (sightings already on a device stay)." Record this under **Decisions**: it goes beyond Goal's list (F1).
+  - **Check:**
+    - typecheck, the orphan check and lint pass.
+    - `npm test` is **64/64**. S1's merge case and S2's fixture case are unchanged: `git diff <S2 commit> -- tests/clueGame/journal.test.ts` shows only the deleted case.
+    - `git diff origin/main -- src/components/animalBoard/savedGame.ts` prints nothing.
+    - `git grep -n -E '\b(loadPlace|isSighting|sightingPoint|Sighting)\b|\.sightings\b' -- src scripts` prints nothing.
+    - Run the E2E block, log to `$S/e2e-s3.log`. Expect **1578/1578**, with the 3 new checks passing.
+    - Copy the run to `$S/e2e-s3/`. Save `$S/e2e-s2-red/report.json` as `$S/e2e-s2-red-report.json`, then delete `$S/e2e-s2-red/` (disk rule). Record the green results in the Log.
+
+- [ ] S4 · D8: delete the 041 and 043 rules and the other leftovers
+  - `src/clueGame/questionMatch.ts`:
+    - Delete `import { hash32 } from '@/lib/seededRng';`, `import { neverAsked } from '@/clueGame/traits';`, `export const GEM_KINDS …` and `const PREFIX_ORDER = Object.keys(PREFIX_CATEGORY);`.
+    - In `Animal`, delete `redList: string;`, `redListUrl: string;`, and `/** Where each trait tag's fact comes from. */` with `traitSources: Record<string, Source>;`.
+    - Delete `function animal(book: Book, id: number): Animal { … }`.
+    - Delete everything from `// ---- Rounds ----` to the end of the file, except `likeness` with its doc ("How alike two animals' records are: …"). It moves under `// ---- Looking animals up ----`, after `poolFor`.
+    - The header (lines 1-6, "Question Match rules (plan 041): …") becomes the Architecture's five lines.
+    - `Rules`, `FamilyTreeCost`, `RULES_041`, `DEFAULT_RULES` and their comments stay.
+  - `src/clueGame/questionMatchContent.ts`:
+    - Delete `redList: { category: string; url: string };` in `AnimalInput`, `const traitSources: Record<string, Source> = {};`, `const redListSource: Source = …;`, `for (const tag of traits.region) traitSources[tag] = redListSource;`, and both `redList: { category: …, url: … },` fills.
+    - `traitSources[tag] = clue.source;` goes; the loop becomes `for (const tag of askable) (traits[prefixOf(tag)] ??= []).push(tag);`.
+    - The return's `redList: input.redList.category, redListUrl: input.redList.url, continents, traits, traitSources, familyTree, …` becomes `continents, traits, familyTree, notes, revealNotes, guide,`.
+    - The header and the "prototype's door" doc wait for S6.
+  - Run `git rm src/clueGame/gems.ts`, then `rm -rf .next .next-e2e .test-dist`.
+  - `src/clueGame/deduction.ts`: delete `evaluateClue`, `usefulCategories` with its doc, and `import type { SpeciesClueCategory } from '@/clueGame/categories';`. `fitClue` stays until S5.
+  - `src/clueGame/categories.ts`: delete `const BY_GEM = …` and `gemCategory`. The `GemType` import stays until S5, because `gem` and `CLUE_GAME_GEM_TYPES` still use it (Fable 1).
+  - `tests/clueGame/testPool.ts`: delete `records`, `find`, `OTHERS` and `matched` (with their docs), and the `buildSpeciesRecords` and `GemType` imports.
+  - `src/clueGame/animalSession.ts`: delete `export const startTrail = newTrail;`, and `newTrail` from the `animalBoard` import.
+  - `src/clueGame/animalBoard.ts`:
+    - Delete `export function pencilBonus(…) { … }` and the one-line doc `` /** `pencilBonus`, with how many pencils counted and how many were wrong (Sharp eye: enough, none wrong). */ ``.
+    - The long "Plan 054: the pencil bonus for a right name, …" comment moves onto `scorePencils` unchanged, with one added last line: ` * Returns the bonus with how many pencils counted and how many were wrong (Sharp eye: enough, none wrong).`.
+    - `scorePencils` stays private, and `AnimalRound.pencilBonus` is untouched.
+  - Docs:
+    - `AGENTS.md`: "`signs` sign vocabulary + checks, `regions`, `gems`; plus glossary" becomes "`signs` sign vocabulary + checks, `regions`; plus glossary".
+    - `docs/CLUE_MATCH.md`, Rules row: drop ", `gems.ts` (gem color ↔ category)".
+  - **Check:**
+    - typecheck (after the `rm -rf`), the orphan check and lint pass; `npm test` is 64/64.
+    - Bot: `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 100 --seed 44 > $S/bot-s4.txt`, then `diff $S/bot-before.txt $S/bot-s4.txt` must print nothing. A difference is a bug in the cut: find it before going on.
+    - `grep -c "version: '055-0'" src/clueGame/animalBoard.ts` prints 1.
+
+- [ ] S5 · S16: cut the content check down to what the game needs
+  - `src/clueGame/validatePool.ts`:
+    - Delete the loop `for (const clue of pool.clues.filter(isDeductive)) {` that holds "The answer must always fit its own clues" and "does not fit its own species".
+    - The import becomes `import { isDeductive } from '@/clueGame/deduction';`.
+    - The two warnings become the Architecture's two lines; their conditions don't change.
+  - `src/clueGame/deduction.ts`: delete `ClueFit` with its doc ("fits: the candidate's record has every tag. …") and `fitClue`. The traits import becomes `import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, clueTags, prefixOf } from '@/clueGame/traits';`.
+  - `src/clueGame/categories.ts`:
+    - `GemCategory` keeps `label`, `clueCategories`, `factCategories` and `deduces`. Their comments stay until S6; the deleted fields' comments go with them.
+    - The eight rows become the Architecture's rows, with the values copied exactly.
+    - Delete `CLUE_GAME_GEM_TYPES` and `import type { GemType } from '@/game/constants';`.
+  - **Check:**
+    - typecheck, the orphan check and lint pass.
+    - `npm test` is 64/64, and `git diff <S1 commit> -- tests/clueGame/validatePool.test.ts` prints nothing: the S1 cases pass unchanged.
+    - Rerun S1's esbuild dump to `$S/categories-after.json`. `diff` against `categories-before.json` prints nothing.
+    - Run the content block into `$S/content-check-s5.txt`. `diff $S/content-check-before.txt $S/content-check-s5.txt` prints nothing.
+
+- [ ] S6 · S10: the comment-only commit in `src` and `scripts`
+  - Only comment lines change. No blank line and no code line is added or removed. Before → after (after-texts from the Architecture's S10):
+    - `src/clueGame/animalBoard.ts` header: "… the rng passed in. Shared" / "// by the balance bot (scripts/balance-044.ts) and, later, the game." → "… the rng passed in. The game" / "// (useAnimalSession.ts) and the balance bot (scripts/balance-044.ts) both play it."
+    - `src/clueGame/questionMatchContent.ts`:
+      - The six-line header "// Content -> the data the Question Match rules play with (plan 041): …" → the Architecture's six lines.
+      - "/** The prototype's and the bot's door: …" → "/** The bot's and the unit tests' door: the animal files, with the source registry for source names. */".
+    - `src/clueGame/places.ts`:
+      - "plus small pure helpers for the globe and the journal." → "plus small pure helpers for the globe."
+      - "a round shows 8 of them. */" → "a round's suspects (5) are drawn from them. */"
+    - `src/clueGame/profiles.ts`: "/** Fun notes, shown once a color's clues run out and on the reveal card. */" → the Architecture's line.
+    - `src/clueGame/categories.ts`:
+      - The two-line header "// Clue-category game: each gem color outputs clues …" → the Architecture's three lines.
+      - The field comments "values this gem draws from, merged by reveal order", "values used once the clues run out (never deductive)" and "Whether this color's clues narrow the candidates …" → the Architecture's three.
+    - `src/clueGame/journal.ts` header: "… A signed-in" / "// player's solves are also on the server; mergeServerJournal folds them in." → the Architecture's three lines.
+    - `src/clueGame/questionMatch.ts`: "/** Two-line versions for the gem legend (rules 043). */" → "/** Short versions: what the board calls each clue gem (screen readers), and columnLabel's fallback. */". Confirm `useAnimalSession.ts` → `ClueBoardScene.ts` and `columnLabel` first.
+    - `scripts/balance-044.ts` usage comment: `[--order 24]` → `[--order 20]`, `[--stars 6,13]` → `[--stars 8,14]`, matching `ANIMAL_RULES`' `orderSize: 20` and `starMoves: [8, 14]`.
+  - Record under **Decisions**: the `questionMatchContent.ts` door doc and the `places.ts` header fixes go beyond Goal's list (F4, Fable 5).
+  - **Check:**
+    - typecheck and lint pass.
+    - Commit. On that commit, `git diff -U0 HEAD^ HEAD -- src scripts | grep -E '^[+-]' | grep -v -E '^(\+\+\+|---)' | grep -v -E '^[+-]\s*(//|/?\*)'` must print nothing. If it prints, amend before pushing.
+    - Put the commit hash in the Log; Verification uses it. The plan file may be in this commit, since it's outside `src` and `scripts`.
+
+- [ ] S7 · S10: the docs stop calling the 044-0 paper "the rules"
+  - `docs/ANIMAL_BOARD_PAPER.md`: after the title and its blank line, add the Architecture's one-line note, then a blank line. Nothing else changes: `git diff --numstat` shows 2 added, 0 deleted.
+  - `docs/CLUE_MATCH.md`: line 3 "…; rules in `docs/ANIMAL_BOARD_PAPER.md` and `plans/044-animal-board.md`). …" and the Rules paragraph's "The full rules, a worked example and why random play fails: `docs/ANIMAL_BOARD_PAPER.md` §2–3 (written for 044-0; …)" → the Architecture's two texts.
+  - `AGENTS.md`: "Guide: `docs/CLUE_MATCH.md`; rules: `docs/ANIMAL_BOARD_PAPER.md`; design and decisions: `plans/044-animal-board.md`; terms: `CONTEXT.md`." → the Architecture's sentence.
+  - `.claude/skills/playtest/SKILL.md`: "Rules: `docs/CLUE_MATCH.md` (Rules), in full `docs/ANIMAL_BOARD_PAPER.md` §2." → the Architecture's sentence. The rest of the line stays.
+  - `CONTEXT.md`, four lines → the Architecture's texts:
+    - Pencil mark: "The game never checks it during play."
+    - Name it: "Right is a find worth one star; wrong loses the round."
+    - Journal: "kept on the device (and synced when signed in)."
+    - Source: "Players can open it to check and read more once the round is over."
+  - Read each new line against the code first:
+    - Stars and Sharp eye: `starsFor`, `PENCIL_POINTS` and `sharp` (`animalBoard.ts`).
+    - Pencil marks: `AnimalSession.pencil`'s doc (`animalSession.ts`).
+    - Sign-in merge: the journal route.
+    - Sources: that a source number opens the citation under Sources (`AnimalSheets.tsx`, `FactsWithSources.tsx`, `JournalSheet.tsx`; Fable 5).
+    - If the code says otherwise, follow the code and note it in the Log.
+  - **Check:**
+    - typecheck and lint pass.
+    - `git grep -n ANIMAL_BOARD_PAPER -- AGENTS.md docs/CLUE_MATCH.md .claude` shows only lines that call it the frozen 044-0 paper.
+    - `git diff --name-only HEAD^` lists only those five Markdown files and the plan.
+
 ## Verification
+
+E2E first. Run everything on the final commit (after S7 and any steps the Astra code review adds), from the worktree root, one heavy job at a time. `S=/srv/critter-ai/agent-state/missions/rules-cleanup`. Put each result in the Log and the Summary.
+
+1. **E2E**, against the dev copy, never `.env.local`, with no content build. The Brief's block verbatim, its output saved:
+   ```
+   ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+     [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+     CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh ) > "$S/e2e-final.log" 2>&1; echo "exit $?"
+   ```
+   - It must print `exit 0` and `1578/1578 checks passed`: the baseline's 1575 plus the 3 new `check()` calls.
+     - The network check: no `/api/places/` request on `/explore/?seed=7&place=continent:africa`.
+     - The old journal counted in the Field Journal.
+     - Every old entry kept after a find.
+   - **Artifact:** copy `e2e-artifacts/<run>/` (named on the log's last line) to `$S/final-e2e/` (`report.json` plus screenshots). To reproduce it, rerun the same block: same seed, same run. Then delete `$S/e2e-s3/`.
+   - If it fails only outside the new checks, rerun once (A10). A new check is never waived.
+2. `npm run typecheck`, the orphan check `npx tsc --noEmit --noUnusedLocals --noUnusedParameters -p .`, and `npm run lint` all exit 0.
+3. `npm test > $S/test-after.txt 2>&1` must show `ℹ tests 64`, `ℹ pass 64`, `ℹ fail 0`. That is the baseline's 61, plus 4 new cases (two-value size, warnings pin, `mergeServerJournal`, old-journal fixture), minus the deleted "a malformed sighting drops the entry".
+4. **Bot:** `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 100 --seed 44 > $S/bot-after.txt`, then `diff $S/bot-before.txt $S/bot-after.txt` must print nothing.
+5. **Content check:**
+   ```
+   ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+     [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+     npm run content -- check ) > "$S/content-check-after.txt" 2>&1
+   diff "$S/content-check-before.txt" "$S/content-check-after.txt"
+   ```
+   The `diff` must print nothing: `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.` / `0 errors, 0 warnings.`
+6. **The S10 comment commit** (`C` = S6's hash from the Log): `git diff -U0 $C^ $C -- src scripts | grep -E '^[+-]' | grep -v -E '^(\+\+\+|---)' | grep -v -E '^[+-]\s*(//|/?\*)'` must print nothing.
+7. **Version:** `grep -c "version: '055-0'" src/clueGame/animalBoard.ts` prints `1`, and `git diff origin/main -- src/components/animalBoard/savedGame.ts` prints nothing.
+8. **This prints nothing** (verbatim from the Brief):
+   ```
+   git grep -n -E '\b(pickRound|newRound|chargesEarned|applyMatches|familyTreeQuote|buyFamilyTreeStep|questionsFor|splitOf|canAsk|scoreSolve|RoundState|RoundStatus|LogEntry|MatchedGroup|FamilyTreeQuote|ScorePart|GEM_KINDS|GEM_OF|evaluateClue|usefulCategories|gemCategory|BY_GEM|fitClue|ClueFit|CLUE_GAME_GEM_TYPES|startTrail|traitSources|redListUrl|loadPlace|isSighting|sightingPoint|Sighting)\b|\.sightings\b|clueGame/gems|gems\.ts|pencilBonus\(|never narrows|does not fit its own species' -- . ':!plans' ':!docs/research' ':!docs/playtests' ':!db/content' ':!src/game/ClueBoardScene.ts' ':!tests/clueGame/old-journal.json' ':!tests/clueGame/journal.test.ts'
+   ```
+9. **Scope:** `git diff --name-only origin/main` lists only the Scope's files and this plan, with `src/clueGame/gems.ts` deleted. `git status` is clean. If `next dev` rewrote `AGENTS.md`'s managed Next.js block, commit it, as the repo's `AGENTS.md` says.
+
+### Release smoke
+
+Record these in `## Release`. If the rebase brings in changes to `db/content/` or the rules, retake the bot and E2E baselines on the new base first (Decision rules).
+```
+B=https://play.critterconnect.org
+smoke() {
+  curl -fsS "$B/api/places/" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log("places "+JSON.parse(s).places.map(p=>p.key).join(",")))'
+  curl -fsS "$B/api/clue-game/pool/" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);console.log("pool "+["species","clues","facts"].map(k=>k+"="+j[k].length).join(" "))})'
+  for p in / /explore/ /api/clue-game/journal/; do curl -s -o /dev/null -w "status $p %{http_code}\n" "$B$p"; done
+}
+```
+- **Just before the merge** (after the rebase, the rerun of Verification, and CI's `check` job): `smoke > "$S/release-before.txt"`, and paste its five lines under `## Release`.
+- **After `deploy critter-connect`:**
+  - `EXPECT_COMMIT=<merge commit> bash deploy/check.sh` exits 0.
+  - `curl -fsS "$B/version.txt"` shows the merge commit.
+  - `smoke > "$S/release-after.txt"; diff "$S/release-before.txt" "$S/release-after.txt"` prints nothing: same place keys, same pool lengths, same three status codes.
+- If anything fails, follow the Brief's release rules (revert for critter-connect).
+- No production content build is needed: no content and no `/api/*` code changes.
+
+### Risks / open questions
+
+- `next dev`, which every E2E runs, can rewrite `AGENTS.md`'s managed block. It was stable at baseline. If an E2E dirties `AGENTS.md`, commit that block (repo `AGENTS.md`).
+- The count of 1578 assumes the dev copy's content is the baseline's. The fixture checks name no mystery, so a different seed-7 deal doesn't break them; it only stops the find from landing on an old entry.
+- Open questions: none.
+
+## Failure modes
+
+The journal parser can lose player data. It, `mergeServerJournal` and the content check are tested in isolation, so every way they could fail is listed here before any code is written. S1 and S2 write their cases from this list. Each line says what catches it.
+
+**Journal (D14)**
+1. An old entry with a malformed `sightings` is dropped (today's bug). → S2 fixture case (red first); E2E fixture checks (a) and (b).
+2. A well-formed old `sightings`, or an unknown field, survives parsing and is saved again forever. → The fixture case's `deepEqual` checks the exact key set, including the hand-added `legacy` field.
+3. The rebuilt entry loses or changes a kept field (`commonName`, `timesSolved`, `bestMoves`, either date, `className`, `sharpEyes`). → Fixture case; E2E (b).
+4. A bad `sharpEyes` or a non-string `className` drops the whole animal instead of that field. → The fixture case's last assertion.
+5. The required-field rules loosen: `timesSolved` 0, a non-finite `bestMoves`, a missing date, or a key that isn't the entry's `scientificName` is accepted; or non-object JSON no longer returns `{}`. → The existing case "stored journals round-trip; malformed storage is dropped", unchanged.
+6. A find on an old entry restarts it (new `firstSolvedAt`, count 1) instead of counting once more. → E2E (b): seed 7's first mystery, Hairy Frog, is in the fixture.
+7. `mergeServerJournal`'s rule changes when `placeFor` and the sightings lines go. → S1's merge case, run before and after.
+8. A caller still passes a sighting in the fifth slot of `recordSolve` or `record`, where `sharp` now sits. An object is truthy, so every find would earn a Sharp eye. → Typecheck (argument count and type); the E2E pencil-bonus checks ("adds no badge").
+9. `/explore` still requests `/api/places/`, or the check passes for nothing (listener not wired, or assert before the deal). → Network check with the pool request as its control, seen red on today's code first.
+10. The fixture check passes for nothing: a resumed game skips the find (`recordedRound`), storage is set after the page read it, or fixture animals aren't in the pool. → The `?seed=` load, storage set before navigating, the in-pool condition, and the red run on today's code.
+
+**Content check (S16)**
+11. The table rewrite changes a row, label, category list or `deduces` flag. → The `categories-before.json`/`categories-after.json` diff; the warnings pin.
+12. Rewording a warning changes its condition. → The warnings pin (the same 15 warnings, by animal, group and kind); the content check's counts.
+13. Deleting the fit rule takes the one-value rule (the next loop, over the same `records`) with it. → The two-value case.
+14. The deleted rule wasn't tautological: some real clue didn't fit its own species. → The content check diff: 0 errors before, proved in F2.
+
+**D8**
+15. A kept export goes (`likeness`, `poolFor`, `makeBook`, the text tables, `Rules`/`DEFAULT_RULES`), or an orphan stays. → Typecheck, the orphan check, the final grep.
+16. The `Animal` build changes for the game, for example the rewritten `traits` loop drops a push. → The bot diff (`animalsFromProfiles` plays the same rounds); the E2E.
 
 ## Code review (Astra)
 
@@ -381,5 +667,6 @@ None needed: Fable MUST-FIX none, Astra MUST-FIX none, no REJECT. Fable's 5 SHOU
 - 2026-11-14 20:06 UTC · Fable review: APPROVE_WITH_CHANGES, MUST-FIX none, MISSED none, 5 SHOULD-CONSIDER (for Steps). Final grep dry-run: all hits on lines the design changes; old messages pinned by no test. Plan-only.
 - 2026-11-14 20:30 UTC · Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only.
 - 2026-11-14 20:35 UTC · Revision: none needed (no MUST-FIX, no REJECT). Plan-only.
+- 2026-11-14 20:24 UTC · Steps: `planner` wrote S1–S7 (tests first; S2 red on purpose: 1 unit + 3 E2E), Verification (64 unit, 1578 E2E), Release smoke, Failure modes. Plan-only.
 
 ## Summary
