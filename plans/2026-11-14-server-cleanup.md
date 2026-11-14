@@ -2,7 +2,7 @@
 mission: server-cleanup
 project: critter-connect
 branch: agent/server-cleanup
-status: active
+status: done
 started: 2026-11-14 05:45 UTC
 ---
 
@@ -561,10 +561,11 @@ Note: this session fetched `origin/main` before the review; it was `2aa3bd2c`, t
 - 2026-11-14 07:24 UTC · S6: runbook check (`DATABASE_ACCESS.md` step 4) replaced by the Architecture block, run verbatim before commit: species 76, `OK` (matched `permission denied for database "phaser_june"` first try); misspelled dev-copy path: "No such file or directory", exit 1, no DB contact. `_app.tsx` font comment; `_document.tsx` → `<Html lang="en">`. typecheck 0, lint 0, test 61/61. E2E 1575/1575, 0 console errors, 0 failed requests → `e2e-s6/`; `e2e-s4/` deleted. Screenshots vs baseline: 8 of 9 byte-identical (02d/02e/10-sources light+dark); `01-globe.png` differs in bytes, same by eye.
 - 2026-11-14 07:58 UTC · S7: V2 on `d77a0b9b`: typecheck 0, lint 0, test 61/61; DoD grep empty; `npm ls` gel/shell-quote/@esbuild-kit (empty), exit 1; `npm audit --omit=dev` 3 (2 high, 1 critical: next, sharp, source-map-js) → `final-npm-audit.txt`; lock check L vs origin/main: removed 37, added 0, changed 0, root ok true; status clean, diff only Scope files + `constants.ts` + plan. V1: E2E plain 1575/1575, 0/0 → `final-e2e/plain/`; `E2E_PLACE=continent:africa` 1575/1575, 0/0, place Africa → `final-e2e/africa/` (plain run also picks Africa by default, same seed); `site:build` 0, `e2e:site` 444/444 (needs `site:serve` up; first try without it failed to connect, not a code fault); 9 V1.4 screenshots byte-identical to baseline. `e2e-s6/` deleted. Summary drafted.
 - 2026-11-14 08:20 UTC · Astra code review (`--code origin/main`): APPROVE, 0 MUST-FIX, 1 SHOULD-CONSIDER (refresh `origin/main` before the PR; the release rebases on it). No fix steps; closing session re-runs V2 only.
+- 2026-11-14 08:35 UTC · Closing: V2 re-run on `4ddbc184` (origin/main `2aa3bd2c`): typecheck 0, lint 0, test 61/61; DoD grep empty; `npm ls` gel/shell-quote/@esbuild-kit (empty), exit 1; `npm audit --omit=dev` 3 (next, sharp, source-map-js) → `final-npm-audit.txt`; lock check L: removed 37, added 0, changed 0, root ok true; status clean, diff only Scope files + `constants.ts` + plan. S7 E2E artifacts kept (`final-e2e/plain/`, `final-e2e/africa/`, 1575/1575 each, 0/0). Summary final; status done. Release next.
 
 ## Summary
 
-Draft (S7); the closing session adds the final V2 re-run and the release results.
+Final (closing session, 2026-11-14 08:35 UTC). The release unit adds its results under Release and below.
 
 **Astra code review:** APPROVE, no MUST-FIX. SHOULD-CONSIDER: refresh `origin/main` before the PR (the release rebases on it).
 
@@ -580,6 +581,7 @@ Draft (S7); the closing session adds the final V2 re-run and the release results
 - Baseline E2E 1575/1575 → `baseline-e2e/`. Final: plain 1575/1575 → `final-e2e/plain/`; `E2E_PLACE=continent:africa` 1575/1575 → `final-e2e/africa/`; 0 console errors, 0 failed requests each. `e2e:site` 444/444. Screenshots vs baseline byte-identical. Reproduce: the E2E command under Verification.
 - Signed-in journal (J): signed out and signed in both `200 {"entries":[]}`; control with a dead DB URL gave signed-in 500, proving the query path ran. Local POST to the save route: 404.
 - typecheck, lint 0; `npm test` 61/61 (66 − the 5 deleted save-report tests).
+- Closing V2 re-run on `4ddbc184`: all pass again (DoD grep empty, lock check removed 37/added 0/changed 0, audit 3). E2E not re-run (no code change since S7, per plan).
 
 **For the owner:**
 - No production content build needed.
