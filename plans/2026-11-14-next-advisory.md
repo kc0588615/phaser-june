@@ -79,7 +79,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -101,6 +101,116 @@ On `fade86be` (= `origin/main` `8b645766`, M6 server-cleanup merged), 2026-11-14
 
 ## Architecture
 
+Checked 2026-11-14 against the registry, the 16.4.x release notes, and the `next@16.4.6` / `eslint-config-next@16.4.6` tarballs, read in `/tmp` and not run. The lock was resolved in a temp copy with `--package-lock-only --ignore-scripts`; the worktree was not touched.
+
+### Findings (ranked)
+
+1. **The 400 probe does not prove the live server is out of GHSA-2464's path.** [GHSA-7qx7-33qx-rqx2](https://github.com/vercel/next.js/security/advisories/GHSA-7qx7-33qx-rqx2) (medium, published 2026-11-03) covers next `>=16.0.0 <=16.4.4` and is fixed in 16.4.5. It says the optimizer "can be made to process an attacker-supplied SVG even when SVG support is disabled with `dangerouslyAllowSVG: false`" on self-hosted servers. The live server runs 16.3.6 with sharp 0.35.4 (the vulnerable librsvg) on glibc, so the single guard A3 relied on can be bypassed.
+   - This advisory is not in npm's database yet (the GitHub global-advisory API returns 404 for it), so `npm audit` does not list it.
+   - Effects: the design is unchanged, because the upgrade is the fix. Release without delay, avoid falling back below 16.4.5 (see Risks), and tell the owner in the Summary that A3's "out of path" conclusion is outdated. The vault edit is out of scope.
+2. **Targets and paths. Every target fits the existing ranges.**
+   | Package | Locked | Comes from | Target | How |
+   |---|---|---|---|---|
+   | `next` | 16.3.6 | direct `^16.1.0` (`package.json:58`); `@clerk/nextjs` peer, deduped | 16.4.6 | `npm install` |
+   | `sharp` | 0.35.4 | next `optionalDependencies` `^0.35.4` | 0.35.5 | automatic: every next 16.4.1-16.4.6 declares `sharp ^0.35.5` |
+   | `source-map-js` | 1.2.1 | `postcss@8.5.23` `^1.2.1`; `@tailwindcss/node@4.1.11` `^1.2.1` | 1.2.2 | `npm update source-map-js` (the dry run moved only this entry) |
+   | `shell-quote` | gone (M6) | - | gone | record `npm ls` as empty |
+   | `eslint-config-next` | 16.1.0 (not 16.3.6) | direct `^16.1.0` (`package.json:73`) | 16.4.6 | `npm install` |
+   - `postcss` does not move: next pins `postcss` 8.5.23 exactly in both 16.3.6 and 16.4.6. The lock has one `postcss`, 8.5.23.
+   - `eslint-config-next@16.4.6` needs `typescript-eslint ^8.56.0` (8.50.0 is locked) and `eslint-plugin-react-hooks ^7.1.0` (7.0.1 is locked), so those dev dependencies have to move. Their peers fit: typescript-eslint 8.72 needs eslint `^9`, and 9.33.0 is installed; it needs TypeScript `<6.1`, and 5.8.3 is installed.
+3. **Clerk is compatible.** `@clerk/nextjs@7.7.8` declares the peer `next ^16.1.0-0`. Every `next/*` subpath it imports exists in 16.4.6, including `next/dist/server/api-utils`, `next/dist/shared/lib/app-router-context.shared-runtime` and `next/compat/router`. The React peers are unchanged.
+4. **What changes from 16.3.6 to 16.4.6 for this app:**
+   - **`next dev` rewrites the managed block in `AGENTS.md`:** the heading `# This is NOT the Next.js you know` (`AGENTS.md:102`) becomes `## ...` (`dist/server/lib/generate-agent-files.js`). The rewrite happens only when an AI agent is detected, so it happens in mission sessions and not in CI. The first `e2e:fresh` therefore leaves a one-line diff in `AGENTS.md`.
+     - Fix: commit it with the upgrade, as the block itself says to.
+     - Rejected: `agentRules: false`, because it would change `next.config.mjs`.
+     - This is the only tracked file outside the lock and `package.json` that should change.
+   - **New lint rule `@next/next/no-location-assign-relative-destination`:** it is a warning, and `npm run lint` uses `--max-warnings 0`. `git grep` finds no `location.assign` or `location.href =` in `src`, `tests` or `scripts`, so expect no hit.
+     - `eslint.config.mjs:6-7` builds `nextRulesOff` from the plugin's rule list, so `src/site` switches the new rule off by itself.
+     - The `core-web-vitals` export keeps its shape: one config with `plugins["@next/next"]`.
+   - **`eslint-plugin-react-hooks` 7.1.1:** the `recommended` set has the same compiler rules (`component-hook-factories` was dropped), but the compiler behind those rules changed. New findings are possible; this is the one unverified risk (see Expected code changes).
+     - typescript-eslint contributes only the parser and the plugin registration, with no rules, so its upgrade affects parsing only.
+   - **Route handlers are now compressed under `next start`** (16.4.6, upstream #101220). This affects the 6 routes under `src/app/api/**`.
+     - None of them sets `Content-Encoding` or `Content-Length`, so the 16.4.5 header strip from GHSA-pc58 does not affect them either.
+     - Caddy's `encode zstd gzip` (`deploy/Caddyfile:2`) passes responses that are already encoded through unchanged.
+     - `deploy/check.sh` runs curl without `--compressed`, so it gets an uncompressed body.
+     - No code change; the smoke tests cover it.
+   - **Other changes, all fine:**
+     - Next now refuses a `distDir` outside the app; `.next` and `.next-e2e` (`next.config.mjs:7`, `scripts/e2e-fresh.mjs:8`) are both inside it.
+     - The SVG refusal still returns 400 (`dist/server/image-optimizer/transform.js:146-149`), so the smoke test's 400 still holds.
+     - The code that writes `tsconfig.json` and `next-env.d.ts` is byte-identical between the two versions, so `tsconfig.json` will not be rewritten.
+     - The app uses no removed experimental flag. Next 16.4.6 needs Node `>=20.9.0`.
+     - 16.4.3 changes how `proxy.ts` loads ("Don't load the app-page runtime in proxy.ts"). `src/proxy.ts` (Clerk) is covered by the E2E and by `deploy/check.sh`.
+   - **Generated types:** `.next/types` and `.next-e2e/types` from 16.3.6 may be stale. CI typechecks from a clean checkout without them, so run `npm run clean` after the install as a normal step, not as a fallback.
+5. **Expected lock diff: 81 entries in the dry run.**
+   - **Production (not `dev`):**
+     - `next`, `@next/env` and the 8 `@next/swc-*` packages go to 16.4.6.
+     - `sharp` goes to 0.35.5, with 26 `@img/*` packages (0.35.5, or 1.3.4 for libvips).
+     - `caniuse-lite` and `baseline-browser-mapping` move because npm resolves next's own ranges again.
+     - `source-map-js` goes to 1.2.2.
+   - **Dev:**
+     - `eslint-config-next` and `@next/eslint-plugin-next` go to 16.4.6.
+     - `typescript-eslint` and `@typescript-eslint/*` go from 8.50.0 to 8.72.x, with their nested `minimatch`, `brace-expansion`, `balanced-match`, `eslint-visitor-keys` and `ignore`.
+     - `eslint-plugin-react-hooks` goes to 7.1.1, with `@babel/*` and `zod`.
+     - Also moving: the browserslist chain, `@eslint-community/*`, `ts-api-utils` and `fastq`.
+     - `debug` and `ms` only change their flag from `devOptional` to `dev`.
+   - Unchanged: `postcss`, `react`, `@clerk/*`, `@tailwindcss/*` and every other direct dependency.
+   - `--prefer-dedupe` produced the identical diff: the dev churn comes from npm resolving the replaced packages' subtrees again, and no flag avoids it. All of it is dev-only and inside the ranges, so accept it.
+6. **Audit after the change (dry-run lock):** `npm audit --omit=dev` reports 0 vulnerabilities.
+   - The full audit drops from 13 to 9, all dev-only. What is left: `brace-expansion` (high), `esbuild` (moderate; a direct dev dependency pinned at `0.19.12`) and `minimatch` (moderate).
+   - These are out of scope: the brief measures `--omit=dev`, and fixing `esbuild` would be another upgrade. Mention them in the Summary and take no action.
+7. **Fine as is:** `next.config.mjs` (no change needed), `postcss.config.js`, the Dockerfile (`npm ci` from the lock, Node 24) and CI (`npm ci`).
+
+### Target design
+
+What changes: `package.json` (two ranges), `package-lock.json`, the generated block in `AGENTS.md`, and this plan. No `src` change is expected.
+
+Commands, in order, from the worktree root:
+1. `git fetch origin --prune`
+2. `npm install next@16.4.6 eslint-config-next@16.4.6`
+   - Exact versions pin the lock to 16.4.6.
+   - npm's default prefix is `^` (no `.npmrc`; `save-exact=false`), so `package.json` gets `^16.4.6`, which the dry run confirmed.
+   - Don't use `@^16.4.6` (it would pick a later patch) or `--save-exact` (it would write `16.4.6` without the `^`).
+3. `npm update source-map-js`
+4. `npm run clean`
+5. Record `npm ls next sharp shell-quote source-map-js` and `npm audit --omit=dev` in the plan (the Log now, the Summary at the end).
+6. Guards, each of which must pass:
+   - `git diff -U0 package.json | grep -c '^[-+] '` prints `4`.
+   - `git diff --quiet origin/main -- next.config.mjs`.
+   - `npm ls --depth=0` exits 0.
+   - The lock shape check: `git show origin/main:package-lock.json > /tmp/lock.base.json`, then run the command below. It must print `lock ok`; it passed on the dry-run lock.
+     ```
+     node -e 'const a=require("/tmp/lock.base.json").packages,b=require("./package-lock.json").packages;const ok=/^node_modules\/(next|@next\/(env|swc-[^/]+)|sharp|@img\/[^/]+|caniuse-lite|baseline-browser-mapping|source-map-js)$/;const bad=Object.keys({...a,...b}).filter(k=>k&&JSON.stringify(a[k])!==JSON.stringify(b[k])&&!(b[k]||a[k]).dev&&!ok.test(k));console.log(bad.length?bad.join("\n"):"lock ok");process.exit(bad.length?1:0)'
+     ```
+     It allows any production entry to change only if it is in Next's own tree or is `source-map-js`. Dev entries may move.
+7. Run `typecheck`, `lint`, `test`, `build`, `site:build`, `e2e:site` and `e2e:fresh` (the brief's dev-copy block).
+   - Compare the build log with Baseline's, which had no warnings, and record any new deprecation notice.
+   - Then commit the regenerated `AGENTS.md` block with `package.json`, the lock and the plan.
+
+**Expected code changes:** none. The likely ones and their fixes:
+- A finding from the react-hooks 7.1.1 compiler: fix the code minimally. If it is a false positive, add a line-level `// eslint-disable-next-line <rule> -- <reason>`, the pattern the repo already uses (`src/components/clueGame/GemIcon.tsx:4`).
+- Never turn a rule off in `eslint.config.mjs`.
+- A type error from new `next` or `next/server` types: make the minimal type fix.
+- List every change under Decisions.
+
+**Risks and fallbacks**, per the brief's rules:
+- **Next 16.4.6 breaks the build or the E2E in a way a small change can't fix:**
+  - Reset first with `git checkout origin/main -- package.json package-lock.json && npm ci`.
+  - Retry with `npm install next@16.4.5`. Leave `eslint-config-next` at 16.4.6: it has no peer on `next`.
+  - If that fails too, try 16.4.4, then lower, down to 16.4.1. `sharp` reaches 0.35.5 in every case.
+  - Below 16.4.5, GHSA-7qx7-33qx-rqx2 and the other six 16.4.5 moderates stay open. Record that under Decisions and in the Summary.
+  - `package.json` then reads `^16.4.x`: record that deviation from the brief.
+- **`eslint-config-next@16.4.6` causes lint failures that a small change can't fix:** use the same procedure on `eslint-config-next` alone, newest first.
+- **A new high or critical advisory appears at implementation time:** try `npm update <name>`. If no update within range fixes it, record it under Decisions as `GHSA id · package@version · npm explain <name> path · why no in-range fix`, and continue.
+- **Newer dev patch versions** (typescript-eslint, @babel) published before the implementation: accept them. The lock shape check still holds.
+
+### Rejected alternatives
+- `npm audit fix`: it also tries to fix the dev advisories, and what it touches is not deterministic. The brief wants named, in-range updates.
+- `overrides` or `resolutions` for `sharp` or `source-map-js`: the brief forbids them, and they aren't needed because both fit their ranges.
+- `npm install sharp@0.35.5`: it would add a direct dependency to `package.json`. Next's `^0.35.5` already forces that version.
+- `--prefer-dedupe` to cut the dev churn: it produced the identical diff.
+- Hand-editing the lock to undo incidental dev bumps: fragile, and it breaks the lock's integrity data for `npm ci`.
+- `images.unoptimized: true` or `agentRules: false`: both change `next.config.mjs`, which is out of scope and the owner's decision.
+
 ## Architecture review (Fable)
 
 ## Architecture review (Astra)
@@ -120,5 +230,6 @@ On `fade86be` (= `origin/main` `8b645766`, M6 server-cleanup merged), 2026-11-14
 ## Log
 
 - 2026-11-14 08:58 UTC · Baseline: audit 3 (1 critical, 2 high), shell-quote already gone; live image probe 400; typecheck/lint/test/build pass; e2e:fresh 1575/1575, artifact `baseline-e2e/`.
+- 2026-11-14 09:17 UTC · Architecture: architect wrote findings + target design (16.4.6 in range; sharp/source-map-js reachable; dry-run lock audit --omit=dev 0; new GHSA-7qx7 bypasses dangerouslyAllowSVG on <=16.4.4, so 400 probe isn't proof; no src change expected). No code change, no checks needed.
 
 ## Summary
