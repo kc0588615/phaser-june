@@ -386,6 +386,6 @@ E2E first, one heavy job at a time, each started after the Gate (load < 0.6). Us
 - 2026-11-14 17:35 UTC · Revision: architect adopted all Fable items (origin/main `cmp` check fails loud, group 0 before-run of build/site:build/e2e:site, lock rule by entry, dummy-DATABASE_URL build, no local serve+curl, app.env.example last-line delete); none rejected. Plan-only change.
 - 2026-11-14 17:13 UTC · Steps: planner wrote S1–S7 (S1 before-run of build/site E2E, S2 D18+D19, S3 D10, S4 D5+D11, S5 D24, S6 S15, S7 final Verification) and Verification (E2E first, DoD greps, 14-file scope check). Plan-only change.
 - 2026-11-14 17:17 UTC · S1: before-run on unedited branch: Build 0, site:build 0, e2e:site 444/444 → `baseline-site/`. Fixed self-matching `pkill` in the Site E2E block.
-- 2026-11-14 17:25 UTC · S2: removed `docs`, `typecheck:watch`, `clean` scripts; `git rm` docs/index.html, docs/_sidebar.md. origin/main still af4b0453. Scripts list matches, greps empty, lock untouched; typecheck 0, lint 0, test 61/61.
+- 2026-11-14 17:17 UTC · S2: removed `docs`, `typecheck:watch`, `clean` scripts; `git rm` docs/index.html, docs/_sidebar.md. origin/main still af4b0453. Scripts list matches, greps empty, lock untouched; typecheck 0, lint 0, test 61/61.
 
 ## Summary
