@@ -150,7 +150,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -317,6 +317,23 @@ if printf '%s' "$content" | grep -qiE '<PATTERN>'; then   # only change in it: p
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE
+
+Checked on `7082fb64` (= `origin/main` `e91ad1fa` + plan). Every cited site opened. Re-ran in a `/tmp` folder (removed after): the target hook through `$ST/tools/guard-run.sh` (only the 4 target cases change 0 -> 2, the other 17 keep their codes, `bash -n` ok, mode kept by `sed -i`, pattern count 1); the lock filter (`0 204`, the 6 entries, round-trip byte-identical); CI's command under `bash -e -c` (0 clean, 1 and prints the file with a staged nested `*.prisma`). Final grep 1 with the 34 folders excluded gives only the six `docs/agents/` lines and the lock's `:142,145,207,210`. Grep 2 gives only `.gitignore:49-50` and the `.understandignore` file. `EventPayloads` has 17 keys. `nameIt`, `ANIMAL_HOW_TO_KEY` (`v5`), `GlobeScreen.tsx:40`, `debugBridge.ts:214,216`, `AGENTS.md:19` and playtest `:36` are as the findings say. No test, lint script, tsconfig or eslint config reads `.agents/`, the lock or the hook. The target covers every Goal item and stays inside Scope.
+
+MUST-FIX: none
+
+MISSED:
+1. Finding 6 misreads one file: `scripts/shots/run.mjs` is not a database script. Its only "connect" is `net.connect(port, 'localhost')` at `:30-31` (a port probe). Three scripts use `scripts/connect.ts`: `clue-world-map.ts:10`, `content.ts:19`, `iucn.ts:10`. The target wording for `AGENTS.md:56` is still true (no other script under `scripts/` opens a connection). Don't carry "four" into Steps or the Summary.
+2. Review text also passes through the hook. The Astra outputs (architecture now, code review after the hook change) are appended to this plan and may quote the package names (blocked today) or the schema file's full name (blocked once the pattern is fixed). Add to Constraints: if an Edit of the plan is refused, insert the text from the shell, word for word; never paraphrase a review to get past the hook.
+3. Checking off a Steps item re-writes its line as an Edit's new text. The planner writes Steps while the old hook is live, so nothing stops a line with the schema file's full name then, and it can't be checked off with Edit later. Steps, Verification and Log lines must use `*.prisma` and name no package, from the start.
+
+SHOULD-CONSIDER:
+1. Make the live probe required, not optional: a Write tool call to `/tmp/<dir>/app.env` and one to `/tmp/<dir>/x.prisma`, both refused with the hook's message, recorded in `guard-after.txt`. `guard-run.sh` runs `bash "$hook"`, so it is the only check of the exec bit and the `settings.json` wiring end to end.
+2. Summary notes (no edits, per the decision rule): `src/game/EventBus.ts:2` "Neither side imports the other"; `domain.md:11` and `:49-53` still describe ADRs; `.agents/skills/smux/references/tmux.md:10` links `../tmux-bridge/SKILL.md`, which doesn't exist (kept vendored skill).
+3. Tell the owner in the Summary: with `.gitignore:49-50` gone, any generated `.understand-anything/` output left in his WSL clone shows as untracked after the merge.
+4. Hook `:4` target comment: keep it to one line as designed; the `*.prisma` arm's message already cites `AGENTS.md`, so no further header text is needed.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -337,5 +354,6 @@ if printf '%s' "$content" | grep -qiE '<PATTERN>'; then   # only change in it: p
 
 - 2026-11-14 10:42 UTC · Baseline: typecheck/lint/test 0 (61 tests), lock 45/40/40, hook control matches audit (+ root app.env 0), live all 200, greps recorded; no E2E per brief.
 - 2026-11-14 10:52 UTC · Architecture: architect wrote findings + target design (AGENTS.md:19, playtest:36 already true; hook = Edit + one sed; lock JSON filter dry-run 0 added/204 deleted; CI step dry-run exits 1 with staged *.prisma, 0 clean). Plan-only change; no checks needed.
+- 2026-11-14 11:00 UTC · Fable review: APPROVE, 0 MUST-FIX; 3 MISSED items (shots/run.mjs not a DB script; review text vs hook; Steps lines use *.prisma) + 4 SHOULD-CONSIDER for planner. Plan-only; no checks needed.
 
 ## Summary
