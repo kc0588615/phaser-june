@@ -203,7 +203,7 @@ Commands, in order, from the worktree root:
        B=http://127.0.0.1:3100
        curl -sf --retry 30 --retry-connrefused --retry-delay 1 -o /dev/null $B/ || exit 1
        curl -s -D - -o /dev/null -H 'Accept-Encoding: gzip' $B/api/places/ | grep -qi '^content-encoding: gzip' || exit 1
-       curl -s --compressed $B/api/places/ | node -e 'JSON.parse(require("fs").readFileSync(0,"utf8"))' || exit 1
+       curl -sf --compressed $B/api/places/ | node -e 'const j=JSON.parse(require("fs").readFileSync(0,"utf8")); if(!Array.isArray(j.places)||!j.places.length) process.exit(1)' || exit 1
        [ "$(curl -s $B/api/clue-game/journal/)" = '{"entries":[]}' ] || exit 1
        [ "$(curl -s -o /dev/null -w '%{http_code}' "$B/_next/image/?url=%2Ffavicon.svg&w=64&q=75")" = 400 ] || exit 1
        echo probe ok )
@@ -214,7 +214,7 @@ Commands, in order, from the worktree root:
 
 **Release smoke, on top of the brief's** (after `deploy critter-connect`, on `https://play.critterconnect.org`; all of these passed on live 16.3.6 on 2026-11-14):
 - `curl -s -D - -o /dev/null -H 'Accept-Encoding: gzip' …/api/places/` shows `content-encoding: gzip`.
-- `curl -s --compressed …/api/places/` parses as JSON. This proves Caddy passes Next's encoding through and doesn't encode the body twice.
+- `curl -sf --compressed …/api/places/` parses as JSON with a non-empty `places` array (same check as block D; Astra code review SC1). This proves Caddy passes Next's encoding through and doesn't encode the body twice.
 - `curl -s …/api/clue-game/journal/` prints `{"entries":[]}`.
 - Then add a handoff item with `Blocks: nothing`: the owner signs in on play., opens the Field Journal, and confirms that it loads and that signing out works. Rolling back is the release rules' revert.
 
@@ -452,6 +452,15 @@ Run this once, on the final commit, after `## Code review (Astra)` and any fix s
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. `plans/2026-11-14-next-advisory.md:206`: use `curl -f` and validate the response shape; `JSON.parse` also accepts API error payloads.
+2. Complete planned final verification before merge. Typecheck and lint passed here; remote freshness and a fresh audit remain unverified because of sandbox restrictions.
+
 ## Release
 
 ## Decisions
@@ -461,6 +470,7 @@ Run this once, on the final commit, after `## Code review (Astra)` and any fix s
 - **D3 (S1) · Code changes for the upgrade: none.** typecheck, lint (react-hooks 7.1.x stack), `npm test` 61/61 and the build passed unchanged.
 - **D4 (S2) · `AGENTS.md` changed, outside the brief's Scope.** `next dev` 16.4.6 rewrote its generated block heading `# This is NOT the Next.js you know` → `## …` (one line, Finding 4). Written by `next dev`, never edited by hand; committed so the tree stays clean.
 - **D5 (S3) · `next start` log, nothing to fix.** Two non-Ready lines: Clerk's dev-instance telemetry notice (dev-copy keys) and `⨯ … "/favicon.svg" has type "image/svg+xml" but dangerouslyAllowSVG is disabled`, which is the probe's own `_next/image` SVG request being refused (the expected 400). No other error or warning.
+- **D6 (code review) · Astra SC1 taken, SC2 already planned.** SC1: block D and the Release smoke now use `curl -sf` and check `places` is a non-empty array, since a 500 `{"error":…}` body also parses as JSON. Plan-only change (the probe is in the plan, not the repo). SC2 (final verification, fresh audit) is the Verification section, run next.
 
 ## Log
 
@@ -474,5 +484,6 @@ Run this once, on the final commit, after `## Code review (Astra)` and any fix s
 - 2026-11-14 09:44 UTC · S1: `npm install next@16.4.6 eslint-config-next@16.4.6` + `npm update source-map-js`. `npm ls`: next 16.4.6 (deduped under @clerk/nextjs), sharp 0.35.5, source-map-js 1.2.2 (postcss + @tailwindcss/node), shell-quote empty; `npm audit --omit=dev`: found 0 vulnerabilities. Block A: 4 / config ok / 3 files / tree ok / lock ok. typecheck, lint, test 61/61, build exit 0 (one new React 18 deprecation notice, D2); site:build + e2e:site 444/444 (artifact `e2e-s1/site/`). Block C/D trap fixed (D1). No code change.
 - 2026-11-14 09:52 UTC · S2: e2e:fresh on dev copy (guard ok) exit 0, 1575/1575, seed 7, same 4 round lines as baseline; artifact `e2e-s2/` (e2e-s1 removed). Block E: same 45-shot set; 14 differ byte-wise: 5 globe (spin), 9 game shots. Viewed the in-group ones plus 08: 02c-notes (clue toast scroll frame), 06-end-after-reload and 08-pencil-bonus-end (card entrance: star/photo scale, points fade-in, earlier frame on either side), same layout and content. Not viewed (not in E's groups, mid-animation captures): 03-called-it, 04-round-1/3/4-landed, 06-before/after-reload. Board, sheets, settled round-end shots (04-round-*-end, 03-round-3-out-of-moves) byte-identical. AGENTS.md rewritten by next dev (D4). No code change.
 - 2026-11-14 10:01 UTC · S3: `npm run build` exit 0 (only the React 18 notice, D2); block D on the dev copy (guard ok, port 3100 free before/after): `probe ok` (route handler gzip under next start, --compressed JSON parses, journal `{"entries":[]}`, SVG image 400). Logs copied to `e2e-s2/`; start log notes D5. No code change.
+- 2026-11-14 10:03 UTC · Code review (Astra): APPROVE, no MUST-FIX; SC1 (curl -f + shape check) applied to block D and Release smoke (D6); SC2 = Verification. No code change.
 
 ## Summary
