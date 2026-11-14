@@ -78,7 +78,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -86,6 +86,18 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+On `fade86be` (= `origin/main` `8b645766`, M6 server-cleanup merged), 2026-11-14 08:50 UTC, Node 24.21.0. No migrations (no schema change in scope).
+
+- **Live `/_next/image/` probe:** `400` (not in the advisory's path). Live `version.txt` = `8b645766`.
+- `npm ci`, `npm run typecheck`, `npm run lint`, `npm test` (61/61), `npm run build`: all exit 0, build has no warnings.
+- **`npm run e2e:fresh`** (dev copy `phaser_june_dev`, guard passed): exit 0, `1575/1575 checks passed`, seed 7, 4 rounds. Artifact + run log: `/srv/critter-ai/agent-state/missions/next-advisory/baseline-e2e/`.
+- **`npm ls next sharp shell-quote source-map-js`:** `next@16.3.6` (also via `@clerk/nextjs@7.7.8`, deduped), `sharp@0.35.4` (via next), `source-map-js@1.2.1` (via `postcss@8.5.23` and `@tailwindcss/postcss@4.1.11` → `@tailwindcss/node@4.1.11`). **`shell-quote` is gone** (M6 removed `drizzle-kit`).
+- `package.json`: `next` and `eslint-config-next` both `^16.1.0`.
+- **`npm audit --omit=dev`:** 3 vulnerabilities (2 high, 1 critical), all "fix available via `npm audit fix`":
+  - `next` 16.0.0-16.4.0, critical: GHSA-3w37-wq28-93x7, GHSA-4jqv-mc3x-m676, GHSA-39w2-rjm5-chcv, GHSA-f87g-xv8r-7p7x, GHSA-mcj8-r9mp-w47p, GHSA-cjq9-62q9-8jv4, GHSA-2464-fhr4-w9xw (image optimizer SVG RCE), GHSA-p3m5-59mp-jv5r, GHSA-h694-7cp9-m8p3, GHSA-673q-mjm6-r5xr.
+  - `sharp` <0.35.5, high: GHSA-wq5f-xc86-pv6w (librsvg).
+  - `source-map-js` 1.0.0-1.2.1, high: GHSA-68fv-2mgg-jv7q.
 
 ## Architecture
 
@@ -106,5 +118,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-14 08:58 UTC · Baseline: audit 3 (1 critical, 2 high), shell-quote already gone; live image probe 400; typecheck/lint/test/build pass; e2e:fresh 1575/1575, artifact `baseline-e2e/`.
 
 ## Summary
