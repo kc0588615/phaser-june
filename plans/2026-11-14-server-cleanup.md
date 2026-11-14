@@ -538,6 +538,13 @@ Note: this session fetched `origin/main` before the review; it was `2aa3bd2c`, t
 
 ## Release
 
+- Pre-release Verification on `9ae77e92` (origin/main `2aa3bd2c`, no rebase needed): V2 all pass (typecheck 0, lint 0, test 61/61, DoD grep empty, `npm ls` (empty) exit 1, audit 3 → `release-npm-audit.txt`, lock check removed 37/added 0/changed 0/root ok). V1: E2E plain 1575/1575 → `release-e2e/plain/`, Africa 1575/1575 → `release-e2e/africa/`, 0/0 each; `e2e:site` 444/444; 8/9 screenshots byte-identical to baseline, `01-globe.png` differs only by the 2 non-continent place dots (D13, intended); J both `200 {"entries":[]}`, 0 Error lines, local POST solves 404. `final-e2e/` deleted (superseded).
+- PR #72; CI `check` pass, `e2e` pass. Merge commit `8b6457664b59c5924f2e64dc46407f0d3d5aa629`.
+- Deploy last line: `deploy critter-connect: live at https://critterconnect.org` (log `/srv/critter-ai/agent-state/missions/server-cleanup/deploy.log`).
+- Smoke: `deploy/check.sh` exit 0; `version.txt` = `8b645766…`; `/api/places/` = baseline's continents exactly (diff empty, kinds: continent only) → `places-after.json`; pool 200, journal 200; POST `/api/clue-game/solves/` 404.
+
+Result: done
+
 ## Decisions
 
 - S1 · `src/game/constants.ts:4` (outside Scope list): dropped " (saved with each solve)" from a comment. Goal 1 covers every line that says rounds are saved (Fable MISSED 1).
@@ -563,6 +570,8 @@ Note: this session fetched `origin/main` before the review; it was `2aa3bd2c`, t
 - 2026-11-14 08:20 UTC · Astra code review (`--code origin/main`): APPROVE, 0 MUST-FIX, 1 SHOULD-CONSIDER (refresh `origin/main` before the PR; the release rebases on it). No fix steps; closing session re-runs V2 only.
 - 2026-11-14 08:35 UTC · Closing: V2 re-run on `4ddbc184` (origin/main `2aa3bd2c`): typecheck 0, lint 0, test 61/61; DoD grep empty; `npm ls` gel/shell-quote/@esbuild-kit (empty), exit 1; `npm audit --omit=dev` 3 (next, sharp, source-map-js) → `final-npm-audit.txt`; lock check L: removed 37, added 0, changed 0, root ok true; status clean, diff only Scope files + `constants.ts` + plan. S7 E2E artifacts kept (`final-e2e/plain/`, `final-e2e/africa/`, 1575/1575 each, 0/0). Summary final; status done. Release next.
 
+- 2026-11-14 08:55 UTC · Release: full Verification re-run (all pass, artifacts `release-e2e/`), PR #72 CI pass, merged `8b645766`, deployed; smoke all pass (check.sh, version, continents-only places, pool/journal 200, POST solves 404).
+
 ## Summary
 
 Final (closing session, 2026-11-14 08:35 UTC). The release unit adds its results under Release and below.
@@ -578,7 +587,7 @@ Final (closing session, 2026-11-14 08:35 UTC). The release unit adds its results
 **npm audit --omit=dev:** before 4 (2 critical: next, shell-quote; 2 high: sharp, source-map-js); after 3 (1 critical: next, M1's; 2 high: sharp, source-map-js). `gel`, `shell-quote`, `@esbuild-kit/esm-loader` gone from the prod tree.
 
 **Verification** (dev copy `phaser_june_dev`, artifacts in `/srv/critter-ai/agent-state/missions/server-cleanup/`):
-- Baseline E2E 1575/1575 → `baseline-e2e/`. Final: plain 1575/1575 → `final-e2e/plain/`; `E2E_PLACE=continent:africa` 1575/1575 → `final-e2e/africa/`; 0 console errors, 0 failed requests each. `e2e:site` 444/444. Screenshots vs baseline byte-identical. Reproduce: the E2E command under Verification.
+- Baseline E2E 1575/1575 → `baseline-e2e/`. Final: plain 1575/1575 → `final-e2e/plain/`; `E2E_PLACE=continent:africa` 1575/1575 → `final-e2e/africa/` (deleted at release, superseded by `release-e2e/`, same counts); 0 console errors, 0 failed requests each. `e2e:site` 444/444. Screenshots vs baseline byte-identical. Reproduce: the E2E command under Verification.
 - Signed-in journal (J): signed out and signed in both `200 {"entries":[]}`; control with a dead DB URL gave signed-in 500, proving the query path ran. Local POST to the save route: 404.
 - typecheck, lint 0; `npm test` 61/61 (66 − the 5 deleted save-report tests).
 - Closing V2 re-run on `4ddbc184`: all pass again (DoD grep empty, lock check removed 37/added 0/changed 0, audit 3). E2E not re-run (no code change since S7, per plan).
@@ -589,3 +598,5 @@ Final (closing session, 2026-11-14 08:35 UTC). The release unit adds its results
 - Only continents become journal sightings now: on a fresh device, a signed-in player's pre-2026-10-01 solve in a country or wildlife area adds no sighting; sightings already on a device stay.
 - Handoff H13 (drop the "game tests add rows to `clue_match_solves`" line from `~/AGENTS.md`) was answered and closed.
 - Left for later missions (Notes under Architecture): `clue_match_solves`, `profiles`, the `clue_match_places` view (M13), sign-in and the journal route (M11).
+
+**Released:** PR #72 merged as `8b645766`, deployed; smoke all pass (see Release). No production content build needed.
