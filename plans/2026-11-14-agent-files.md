@@ -523,6 +523,14 @@ The hook and CI's guard are tested in isolation. These tests existed before the 
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+MUST-FIX: none
+SHOULD-CONSIDER:
+
+1. Refresh `origin/main` before opening the PR; read-only permissions blocked fetch, so remote freshness remains unverified.
+
+(Lead note: the mission session's own `git fetch origin --prune` ran fine; the release step rebases on a fresh `origin/main` anyway. For the Summary.)
+
 ## Release
 
 ## Decisions
@@ -545,5 +553,6 @@ The hook and CI's guard are tested in isolation. These tests existed before the 
 - 2026-11-14 11:15 UTC · S6 docs/agents: issue-tracker.md drops PR-triage + Wayfinding sections (24 lines, ends fetch section + LF, one `#42`); domain.md :5/:13/:47 per Target design. V7 hunks match (-5/-13/-47; -16,10 +15,0; -35,11 +24,0); V6 grep 1 empty. typecheck 0, lint 0.
 - 2026-11-14 11:16 UTC · S7 AGENTS.md: `:55` EventBus line (EventPayloads map; sfx/debugBridge direct imports), `:56` drop expedition-tables clause + connect.ts exceptions (`scripts/db`, `import-natural-earth.mjs`; 3 scripts import connect), `:92` no ADRs. Hunks `-55,2 +55,2`, `-92 +92` only. typecheck 0, lint 0.
 - 2026-11-14 11:19 UTC · S8 CODING_STANDARDS `:5` drops TiTiler; playtest `:8` MCP note, `:34` no habitat picture, `:40` v4 → v5, `:42` e2e exception, `:48` nameIt rule, 2 bridge rows after validMoves(). Text replaced via `python3 -I` exact-match (each old string asserted unique) instead of Edit. Hunks `-5 +5`; `-8`, `-34`, `-40`, `-42`, `-48`, `-65,0 +66,2` as V7; greps 3, 4 exit 1; facts hold (AnimalSheets how-to:v5, debugBridge touchedBy/nearColorsBy, animalBoard nameIt). typecheck 0, lint 0.
+- 2026-11-14 11:21 UTC · Astra code review (`--code origin/main`): APPROVE, MUST-FIX none; 1 SHOULD-CONSIDER (fetch before PR; release rebases on fresh origin/main) for the Summary. Plan-only; no checks needed.
 
 ## Summary
