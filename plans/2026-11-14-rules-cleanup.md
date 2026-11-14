@@ -134,7 +134,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -354,6 +354,12 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER: none
+
 ## Revision notes
 
 ## Steps
@@ -371,5 +377,6 @@ SHOULD-CONSIDER:
 - 2026-11-14 19:47 UTC · Baseline: greps clean (no new readers), typecheck/lint 0, test 61/61, bot + content check saved, E2E 1575/1575 (dev copy).
 - 2026-11-14 20:12 UTC · Architecture: `architect` wrote findings + target design (D14 > S16 > D8 > S10; delete-only except journal `toEntry`; extra stale comments + `docs/CLUE_MATCH.md:10` added; open questions none). Plan-only; typecheck 0.
 - 2026-11-14 20:06 UTC · Fable review: APPROVE_WITH_CHANGES, MUST-FIX none, MISSED none, 5 SHOULD-CONSIDER (for Steps). Final grep dry-run: all hits on lines the design changes; old messages pinned by no test. Plan-only.
+- 2026-11-14 20:30 UTC · Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only.
 
 ## Summary
