@@ -667,6 +667,23 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- Rebase: no-op (`origin/main` `3436aac5` = merge-base). Code identical to the final Verification's `dd1302f9` (only the plan changed since); reran typecheck 0, orphan check 0, lint 0, `npm test` 64/64.
+- PR #76 (https://github.com/kc0588615/phaser-june/pull/76). CI run 43643726136: `check` pass; `e2e` failed once (1577/1578, timing check "arrow keys move the globe while it spins, then the spin returns", `restMs` 128), passed on `gh run rerun --failed`.
+- Smoke before merge (`$S/release-before.txt`):
+  ```
+  places continent:africa,continent:asia,continent:north-america,continent:oceania,continent:south-america
+  pool species=76 clues=2478 facts=491
+  status / 200
+  status /explore/ 200
+  status /api/clue-game/journal/ 200
+  ```
+- Merge commit `2fa9675b79753d88fbac16f4f2e0baffde530658`.
+- `deploy critter-connect` exit 0, last line: `deploy critter-connect: live at https://critterconnect.org`. Log: `/srv/critter-ai/agent-state/missions/rules-cleanup/deploy.log`.
+- `EXPECT_COMMIT=2fa9675b… bash deploy/check.sh` exit 0; `version.txt` = `2fa9675b79753d88fbac16f4f2e0baffde530658`; smoke after (`$S/release-after.txt`) `diff` vs before: empty.
+- No production content build needed.
+
+Result: done
+
 ## Decisions
 
 - S2: the fixture check reloads `fresh` after reading the Field Journal, before the find, instead of clicking "Close journal": nothing else in the E2E closes the journal and plays on, and a `?seed=` load deals the same round with storage untouched. One more page load, no extra `check()`.
@@ -694,6 +711,8 @@ SHOULD-CONSIDER:
 
 - 2026-11-14 21:34 UTC · Final Verification on `dd1302f9` (= `origin/main` `3436aac5` + mission): (1) E2E (dev copy, guard passed) exit 0, **1578/1578**: network `["/api/clue-game/pool/","/api/clue-game/pool/"]`, journal `"4 of 76 animals identified"`, after the find (Hairy Frog) `changed: []`; artifact `$S/final-e2e/`, log `$S/e2e-final.log`; `$S/e2e-s3/` deleted. (2) typecheck 0, orphan check 0, lint 0. (3) `npm test` 64/64 (`$S/test-after.txt`). (4) bot `diff` empty. (5) content check `diff` empty (76/76, 2478 clues, 0/0). (6) S6 comment-only grep empty. (7) version `055-0` ×1, `savedGame.ts` diff empty. (8) forbidden grep empty. (9) scope: 26 Scope files + plan, `gems.ts` deleted; tree clean, `AGENTS.md` block untouched.
 
+- 2026-11-14 22:10 UTC · Release: PR #76 merged `2fa9675b`, deployed, check.sh 0, version.txt matches, smoke diff empty. CI e2e: 1 timing flake, rerun pass.
+
 ## Summary
 
 Audit M7 done: the unreachable 041/043 rules, the content check's dead fit rule and gem fields, the stale "the rules" pointers to the 044-0 paper, and journal sightings are gone. No gameplay, content or API change.
@@ -706,4 +725,4 @@ Audit M7 done: the unreachable 041/043 rules, the content check's dead fit rule 
 - **`ANIMAL_RULES.version` stays `055-0`:** the saved game holds `Omit<AnimalSession, 'book'>` and none of its types changed (`savedGame.ts` diff empty); the journal is a separate key whose old values the new parser accepts.
 - **Reviews:** Fable APPROVE_WITH_CHANGES (0 MUST-FIX), Astra architecture APPROVE, Astra code review APPROVE (0 MUST-FIX; its SHOULD-CONSIDER 1 = this final E2E, 2 = fetch, both done).
 - **No production content build needed:** no `db/content/` and no `/api/*` change.
-- **Release smoke:** pending (next unit).
+- **Release:** PR #76 merged (`2fa9675b`), deployed; `deploy/check.sh` 0, `version.txt` = merge commit, smoke before/after identical. CI `e2e` failed once on the globe-spin timing check, passed on rerun.
