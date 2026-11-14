@@ -114,7 +114,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -122,6 +122,26 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+Recorded 2026-11-14 ~05:50 UTC on `447c8151` (= `origin/main` `2aa3bd2c` + this plan). State folder `/srv/critter-ai/agent-state/missions/server-cleanup/` (`S/` below).
+
+**Checks:** `npm run typecheck` 0, `npm run lint` 0, `npm test` 66/66 pass. **E2E** (dev copy, guard ok): `npm run e2e:fresh` 1575/1575, seed 7, 4 rounds; artifact `S/baseline-e2e/` (screenshots, `report.json`, `run.log`).
+
+**Fresh greps on `origin/main` `2aa3bd2c`** (same results as the audit's at `4fa92a8e`; no new caller of the save route, no new model user, no new non-continent place reader):
+- D2 `git grep -n "clue-game/solves" -- . ':!plans'`: 9 hits, none a call: `AGENTS.md:57`, `README.md:25` (M2's route list), `db/schema.sql:100`, `docs/CLUE_MATCH.md:24,45`, `solves/route.ts:7,50`, `solveReport.ts:1`, `proxy.ts:3`.
+- D2 `fetch(|sendBeacon|XMLHttpRequest` in `src`: only `src/lib/getJson.ts:8` (GET). `method: '...'` in scripts/.claude/tests: only `create-test-player.mjs:24` (Clerk).
+- D2 `solveReport|currentPlayerId` in src/scripts/tests: `solves/route.ts:3,4,23`, `player.ts:10`, `tests/clueGame/solveReport.test.ts:4`. Same in `*.mjs *.cjs scripts/db .github Dockerfile deploy .githooks .claude`: 0 hits. `insert(clueMatchSolves)|INSERT INTO clue_match_solves`: only `solves/route.ts:24`.
+- S3 `db\.(select|query|update|delete|insert)\b` in src/scripts: `solves/route.ts:24`, `player.ts:15` only. `speciesTable|speciesDeductionClues|speciesFacts`: only inside `src/db/schema/` (`game.ts`, `species.ts`). Imports of `@/db`: journal, pool, range, ranges routes and `lib/places.ts` take `db` only; models only in `solves/route.ts:2` and `player.ts:3`. `db/schema|drizzle.config` in mjs/cjs/scripts/db/.github/Dockerfile/deploy/.githooks/.claude: 0. `db:introspect|drizzle-kit`: `AGENTS.md:48`, `docs/DRIZZLE_ORM_GUIDE.md:39`, `drizzle.config.ts:2`, `package.json:44,72`.
+- D13 `wildlife_area|PLACE_KIND_LABELS|groupPlaces` in src/scripts/tests: only `src/clueGame/places.ts:5,39,41,58,62`. `groupLabel|REALM_NAMES`: `places.ts:46,57,58,65`, `PlaceCard.tsx:2,25`. `.kind === 'continent'|kind = 'country'`: `scripts/content.ts:64`, `scripts/e2e.mjs:433,2310`, `GlobeScreen.tsx:43`, `PlaceCard.tsx:25`. `clue_match_places` in src/scripts: queries `lib/places.ts:15,36`, `content.ts:64`; comments `places/route.ts:7`, `clueGame/places.ts:2`, `solveReport.ts:20`, `db/schema/game.ts:19`, `lib/places.ts:1`. `places` in `tests/`: 0 hits. Readers of `/api/places/`: `GlobeScreen.tsx:30`, `useAnimalSession.ts:36`, `Dockerfile:42`, `deploy/check.sh:107,118`, `scripts/e2e-fresh.mjs:61`, `scripts/e2e.mjs:102,432,2308`, playtest `SKILL.md:34`.
+- Note for the architect: `useAnimalSession.ts:36` resolves `?place=` against `/api/places/`; after D13 a `?place=country:…` or `area:…` link no longer finds its place. Check what it does then (falls back to all animals? errors?).
+
+**Packages** (`S/baseline-npm-ls.txt`, `S/baseline-npm-audit.txt`):
+- `npm ls --omit=dev --package-lock-only gel shell-quote @esbuild-kit/esm-loader` (exit 0): `drizzle-orm@0.45.2 > gel@2.2.0 > shell-quote@1.10.0`. `@esbuild-kit/esm-loader` not in the prod tree.
+- `npm audit --omit=dev` (exit 1): 4 vulnerabilities (2 high, 2 critical): `next` 16.0.0-16.4.0 critical (M1's), `shell-quote` 1.8.4-1.10.0 critical (GHSA-pqg4-j6r4-53mv), `sharp` <0.35.5 high, `source-map-js` 1.0.0-1.2.1 high.
+
+**Live places:** `GET https://play.critterconnect.org/api/places/` 200, 41945 bytes, saved to `S/places-before.json`. 156 places: continent 5, country 77, wildlife_area 74. Fields `kind, key, name, group, speciesIds, bbox, center`. Continents (speciesIds): africa 27, asia 22, north-america 14, oceania 6, south-america 15.
+
+**Saved rounds** (live `phaser_june` as `postgres`, read-only, no exported `DATABASE_URL`): `SELECT count(*), max(solved_at) FROM clue_match_solves` = 188, `2026-10-01 04:24:22+00`. Nothing newer than 2026-10-07: nothing saves rounds.
 
 ## Architecture
 
@@ -142,5 +162,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-14 05:52 UTC · Baseline: fresh greps (no new callers), packages, live places, saved rounds (max 2026-10-01), typecheck/lint/test 66/66, E2E 1575/1575 → `baseline-e2e/`.
 
 ## Summary
