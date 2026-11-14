@@ -153,7 +153,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: none needed (Fable APPROVE, Astra APPROVE, 0 MUST-FIX)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -346,7 +346,180 @@ None needed: both reviews APPROVE, 0 MUST-FIX. Architecture unchanged. Fable's M
 
 ## Steps
 
+Rules for every step:
+- **Text in this plan** (Fable MISSED 3): write the schema file as `*.prisma` and name no Supabase/Prisma package, in Steps check-offs, Log, Decisions and Summary too. The hook reads every Edit's new text.
+- **Hook refuses a plan Edit** (Fable MISSED 2, e.g. the Astra code review's output): insert that text from the shell word for word (`python3 -I` reading a quoted heredoc). Never paraphrase a review to get past the hook. Never Write the whole plan (Brief lines 101 and 105 hold the full name).
+- Make env-named and `*.prisma` test files from the shell only, `/tmp` included.
+- Exact wording of every edit: Architecture → Target design. Shell: `R=/srv/critter-ai/worktrees/agent-files`, `ST=/srv/critter-ai/agent-state/missions/agent-files`, `B=$(git -C $R merge-base origin/main HEAD)` (= `e91ad1fa`). `V<n>` = the block under Verification.
+- Each step ends with `npm run typecheck` and `npm run lint` exiting 0, plus its own checks. Then commit code and plan together and push (pre-push reruns both).
+- Order: hook and CI go first because they're the riskiest. Once the hook is in, every later Edit is a live check that it blocks nothing legitimate.
+
+- [ ] S1. **Hook (A15)**, `.claude/hooks/guard-edits.sh`.
+  - Edit tool: `:3-4` become the two target header lines (SC4: two lines, no more). `:8` becomes `.env|.env.*|*.env)`, followed by the new `*.prisma)` arm.
+  - Shell: `sed -i 's/prisma\\.schema/schema\\.prisma/' .claude/hooks/guard-edits.sh`. The pattern line never goes through Edit.
+  - Check: V4 (`bash -n`, `test -x`, no mode change, control run to `$ST/guard-after.txt` where exactly 4 cases go 0 → 2, then the **required** live Write probes, Fable SC1). `grep -c 'schema\\.prisma' .claude/hooks/guard-edits.sh` gives 1. V7's hook hunks hold. If a live probe goes through, the hook fails open: fix it before committing.
+- [ ] S2. **CI step (A15)**, `.github/workflows/ci.yml`. Edit tool: the old text is the `:25` comment line only, and the new text is the 4 target lines plus `:25`. Never include `:24`.
+  - Check: V7's ci.yml hunk (`-24,0 +25,4`, adds only). `python3 -I -c "import yaml;s=yaml.safe_load(open('.github/workflows/ci.yml'))['jobs']['check']['steps'];print([x.get('name') for x in s][4:7])"` prints `['No Supabase/Prisma', 'No Prisma schema files', 'No game links to site pages']`.
+  - V5 writes `$ST/ci-guard.txt`. It reads the step from `$R`'s working tree, so it works before the commit.
+- [ ] S3. **D1: 34 skill folders and the lock.**
+  - `git rm -r -q -- $(printf '.agents/skills/%s ' ask-matt claude-handoff codebase-design domain-modeling git-guardrails-claude-code grill-me grill-with-docs grilling handoff implement implement-spec improve-codebase-architecture loop-me migrate-to-shoehorn pr prototype research resolving-merge-conflicts scaffold-exercises setup-matt-pocock-skills setup-pre-commit setup-ts-deep-modules tdd teach to-questionnaire to-spec to-tickets triage wait-what wayfinder wizard writing-beats writing-fragments writing-shape)`
+  - Then the Target design's `python3 -I` lock filter on `skills-lock.json`. No `npx skills`.
+  - Check: V2, then V3 (writes `$ST/lock-after.txt`; numstat `0 204`), then V9's `.agents/skills` lines (93 `D`, 34 folders, no kept folder).
+  - V6 grep 1 now hits only `docs/agents/domain.md` and `docs/agents/issue-tracker.md` (S6 fixes those).
+- [ ] S4. **D17.** `git rm -r -q -- .codex .kiro .understand-anything`, then Edit tool on `.gitignore`: delete `:49-50`. `:47` (the comment) and `:48` stay.
+  - Check: V7's `.gitignore` hunk (`-49,2 +48,0`). V6 grep 2 prints nothing. `ls -d .codex .kiro .understand-anything` finds none of them. `git status --short` shows no new untracked file.
+- [ ] S5. **Link.** `ln -s ../../.agents/skills/writing-for-agents .claude/skills/writing-for-agents && git add .claude/skills/writing-for-agents`.
+  - Check: V8 (writes `$ST/link.txt`).
+- [ ] S6. **`docs/agents/` (D1 and S1 `domain.md:5`).** Edit tool.
+  - `issue-tracker.md`: delete `:16-25` (from the PR-triage heading to the blank line before the bare `#42` sentence) and `:35-45` (Wayfinding, to the end of the file). `:26` then closes Conventions, which is the same file as the Target design's "delete `:16-27`, re-add `:26` after `:14`" (simulated).
+  - `domain.md`: `:5`, `:13` and `:47` as in the Target design. `:11` and `:49-53` (ADR template text) stay.
+  - Check: V7's hunks for both files. `issue-tracker.md` has 24 lines (`wc -l`), its `tail -n1` is ``Run `gh issue view <number> --comments`.``, `tail -c1` is LF, and `grep -c '#42'` gives 1. V6 grep 1 now prints nothing.
+- [ ] S7. **`AGENTS.md` (S1).** Edit tool on `:55`, `:56` and `:92`, with the Target design's exact text.
+  - Untouched: `:19` (already true, M6), the safeguards `:38`, `:39` and `:71`, the Clerk lines, and the lines other missions own.
+  - Facts for `:56` (Fable MISSED 1): **three** scripts import `./connect`. `git grep -l "from './connect'" -- scripts` gives `clue-world-map.ts`, `content.ts` and `iucn.ts`. `git grep -lE 'postgres\(|psql' -- scripts ':!scripts/connect.ts'` gives `scripts/db` and `scripts/import-natural-earth.mjs`. `shots/run.mjs` is a port probe. Never write "four".
+  - Check: V7's `AGENTS.md` hunks (`-55,2 +55,2`, `-92 +92` only).
+- [ ] S8. **`CODING_STANDARDS.md` and the playtest skill (S1).** Edit tool.
+  - `CODING_STANDARDS.md:5` drops `, TiTiler`.
+  - `.claude/skills/playtest/SKILL.md`: change `:8`, `:34`, `:40` (`v4` → `v5` only), `:42` and `:48`, and add the 2 rows after `validMoves()` (`:65`), with the Target design's exact text.
+  - Untouched: `:36` (already true), `:50` (sightings, M7), `:40`'s §2 pointer (M7) and the sign-in steps.
+  - Check: V7's hunks for both files. V6 greps 3 and 4 print nothing. The facts still hold: `grep -n 'how-to:v5' src/components/animalBoard/AnimalSheets.tsx` and `grep -nE 'touchedBy|nearColorsBy' src/game/debugBridge.ts`.
+
 ## Verification
+
+**No E2E.** No file the game builds, serves or runs changes (Brief), and CI's `e2e` job runs on the PR.
+
+The full run happens once, on the final commit with a clean tree, after the Astra code review, from `$R`, in order. Each block writes its artifact to `$ST`, overwriting a step's earlier run. Preamble:
+```
+R=/srv/critter-ai/worktrees/agent-files; ST=/srv/critter-ai/agent-state/missions/agent-files; cd $R
+git fetch origin --prune; B=$(git merge-base origin/main HEAD)
+K='code-review|diagnosing-bugs|frontend-design|graphical-audit|graphical-convert|graphical-ui|improve|react-doctor|retro|smux|writing-for-agents'
+```
+- **V1. Checks.** Run `npm run typecheck > $ST/typecheck-after.log 2>&1`, `npm run lint > $ST/lint-after.log 2>&1` and `npm test > $ST/test-after.log 2>&1`.
+  - Each exits 0.
+  - The test log shows `ℹ tests 61`, `ℹ pass 61` and `ℹ fail 0`, the baseline count.
+- **V2. Skills.**
+  - `diff <(ls -1 .agents/skills | LC_ALL=C sort) <(tr '|' '\n' <<<"$K" | LC_ALL=C sort)` prints nothing.
+  - `test -f .claude/skills/retro/SKILL.md` passes.
+- **V3. Lock.** Run `python3 -I /srv/critter-ai/agent-state/missions/critter-connect-audit/audit/area-8/tools/lock-hash.py $R > $ST/lock-after.txt`.
+  - It shows `folders 11 | locked 6 | v1 matches 6` and `lock entries with no folder: []`.
+  - The `not in lock` lines are exactly `graphical-audit`, `graphical-convert`, `graphical-ui`, `improve` and `react-doctor`.
+  - `grep -c '"version": 1' skills-lock.json` gives 1, and `git diff --numstat $B -- skills-lock.json` gives `0	204`.
+- **V4. Hook.** Writes `$ST/guard-after.txt`.
+  ```
+  bash -n .claude/hooks/guard-edits.sh && test -x .claude/hooks/guard-edits.sh && echo syntax+exec ok
+  git diff --summary $B -- .claude/hooks/guard-edits.sh        # prints nothing: mode 100755 kept
+  bash $ST/tools/guard-run.sh .claude/hooks/guard-edits.sh > $ST/guard-after.txt
+  diff <(grep -v '^#' $ST/guard-before.txt | cut -c1-65) <(grep -v '^#' $ST/guard-after.txt | cut -c1-65)
+  ```
+  - The diff shows exactly cases 5, 6, 10 and 11 going from `exit 0` to `exit 2`: `deploy/app.env`, root `app.env`, content naming the schema file, and a `*.prisma` file with a plain body.
+  - The other 17 cases are unchanged, including `.env.local` and `.env.example` (2), the Prisma client import (2), `deploy/app.env.example` (0), Supabase prose (0), the normal `src/` Edit (0) and `edits[]` (0, out of scope).
+  - **Live probes (required):**
+    - `mkdir -p /tmp/agent-files-probe`.
+    - With the **Write tool**, write `/tmp/agent-files-probe/app.env` (content `X=1`) and `/tmp/agent-files-probe/x.prisma` (content `model A {`, `  id Int @id`, `}`).
+    - Both must be refused with the hook's messages: `… is an env file; edit it manually` and `… is a Prisma file; project is Drizzle-only (AGENTS.md)`.
+    - `ls -A /tmp/agent-files-probe` prints nothing.
+    - From the shell, append one line per probe to `guard-after.txt`: `# live Write tool: <path>: <message shown>`. Then `rm -rf /tmp/agent-files-probe`.
+- **V5. CI step, tried locally.** Writes `$ST/ci-guard.txt`. Dry-run by the planner: the new step gives 0 clean and 1 staged, and the existing step gives 0.
+  ```
+  WT=/tmp/agent-files-ci; step() { grep -A2 -- "- name: $1\$" "$R/.github/workflows/ci.yml" | tail -1; }
+  NEW=$(step 'No Prisma schema files'); OLD=$(step 'No Supabase/Prisma')
+  git -C "$R" worktree add -q --detach "$WT" HEAD
+  { echo "# ci-guard $(date -u +%FT%TZ) on $(git -C "$WT" rev-parse --short HEAD)"; cd "$WT"
+    bash -e -c "$NEW"; echo "new step, clean tree: exit $?"
+    bash -e -c "$OLD"; echo "existing step, clean tree: exit $?"
+    n=schema; mkdir -p prisma; printf 'datasource db {\n  provider = "postgresql"\n}\n' > "prisma/$n.prisma"; git add "prisma/$n.prisma"
+    bash -e -c "$NEW"; echo "new step, staged prisma file: exit $?"; } > "$ST/ci-guard.txt" 2>&1
+  cd "$R"; git worktree remove --force "$WT"; git worktree prune; git worktree list | grep -c agent-files-ci   # 0
+  ```
+  - The output shows clean `exit 0`, existing `exit 0`, then the staged file's path and `exit 1`.
+  - Nothing is committed or pushed, and `git status --short` in `$R` is clean.
+- **V6. Greps.** Writes `$ST/greps-after.txt`.
+  ```
+  { echo '# grep 1'; <Brief → Definition of done, the N=… block (lines 94-95), verbatim>; echo "exit $?"
+    echo '# grep 2'; git grep -n -I -E '\.kiro|understand-anything|understandignore|(^|[^/~])\.codex\b' -- . ':!plans'; echo "exit $?"
+    echo '# grep 3'; git grep -n -i titiler -- AGENTS.md CODING_STANDARDS.md .claude; echo "exit $?"
+    echo '# grep 4'; git grep -n 'how-to:v4' -- .claude; echo "exit $?"; } > $ST/greps-after.txt 2>&1
+  grep -cvE '^(# grep [1-4]|exit 1)$' $ST/greps-after.txt     # 0: no hits anywhere
+  ```
+- **V7. Line scope.** Writes `$ST/hunks.txt`. Every expected header below was confirmed by simulating the Target design on a `/tmp` copy.
+  ```
+  for f in AGENTS.md CODING_STANDARDS.md .claude/skills/playtest/SKILL.md docs/agents/domain.md docs/agents/issue-tracker.md .gitignore .github/workflows/ci.yml .claude/hooks/guard-edits.sh; do echo "# $f"; git diff -U0 $B -- "$f" | grep -o '^@@ [^@]*@@'; done > $ST/hunks.txt
+  ```
+  Expect exactly these (old-side lines on `e91ad1fa`; if a rebase moves the base, the line contents must still match):
+
+  | File | Hunks |
+  |---|---|
+  | `AGENTS.md` | `-55,2 +55,2`, `-92 +92` (the safeguards and `:19` untouched) |
+  | `CODING_STANDARDS.md` | `-5 +5` |
+  | playtest `SKILL.md` | `-8 +8`, `-34 +34`, `-40 +40`, `-42 +42`, `-48 +48`, `-65,0 +66,2` |
+  | `docs/agents/domain.md` | `-5 +5`, `-13 +13`, `-47 +47` |
+  | `docs/agents/issue-tracker.md` | `-16,10 +15,0`, `-35,11 +24,0` |
+  | `.gitignore` | `-49,2 +48,0` |
+  | `ci.yml` | `-24,0 +25,4` |
+  | hook | `-3,2 +3,2`, `-8 +8,2`, `-11 +12` |
+- **V8. Link.** Writes `$ST/link.txt`.
+  ```
+  { readlink .claude/skills/writing-for-agents; readlink -f .claude/skills/writing-for-agents
+    git ls-files -s .claude/skills/retro .claude/skills/writing-for-agents | cut -c1-6
+    test -f .claude/skills/writing-for-agents/SKILL.md && echo 'SKILL.md ok'; } > $ST/link.txt
+  ```
+  Expect `../../.agents/skills/writing-for-agents`, then `$R/.agents/skills/writing-for-agents`, then `120000` twice, then `SKILL.md ok`.
+- **V9. Diff scope.** Writes `$ST/diff-scope.txt`.
+  ```
+  { git diff --stat origin/main...HEAD | tail -1
+    git diff --name-only $B | grep -vE '^(\.agents/skills/[^/]+/|skills-lock\.json$|\.codex$|\.kiro/|\.understand-anything/|\.gitignore$|\.claude/hooks/guard-edits\.sh$|\.claude/skills/(writing-for-agents|playtest/SKILL\.md)$|\.github/workflows/ci\.yml$|AGENTS\.md$|CODING_STANDARDS\.md$|docs/agents/(issue-tracker|domain)\.md$|plans/2026-11-14-agent-files\.md$)'; echo "out of scope: exit $? (1 = none)"
+    git diff --name-status $B -- .agents/skills | grep -c '^D'; git diff --name-status $B -- .agents/skills | grep -vc '^D'
+    git diff --name-only $B -- .agents/skills | cut -d/ -f3 | sort -u | wc -l
+    git diff --name-only $B -- .agents/skills | cut -d/ -f3 | sort -u | grep -xE "$K"; echo "kept folders touched: exit $? (1 = none)"; } > $ST/diff-scope.txt
+  ```
+  Expect `out of scope: exit 1`, then `93`, `0` and `34`, then `kept folders touched: exit 1`.
+
+**Release** (the release unit, not this run; Brief and `~/.claude/CLAUDE.md`):
+```
+live() { echo "# live $(date -u +%FT%TZ)"; echo "version.txt: $(curl -fsS https://play.critterconnect.org/version.txt)"
+  for u in https://play.critterconnect.org/{,explore/,api/places/,api/clue-game/pool/} https://critterconnect.org/; do echo "$(curl -s -o /dev/null -w '%{http_code}' "$u") $u"; done
+  echo "places sha256: $(curl -fsS https://play.critterconnect.org/api/places/ | sha256sum | cut -d' ' -f1)"; }
+```
+- Right before the merge: `live > $ST/live-release-before.txt`.
+- CI's `check` job must pass, and it runs the new step. The `e2e` job is advice: rerun it once if it fails, then report.
+- After `deploy critter-connect`:
+  - `bash deploy/check.sh` exits 0.
+  - `live > $ST/live-after.txt`, and its `version.txt` shows the merge commit.
+  - `diff <(grep -v '^#\|^version' $ST/live-release-before.txt) <(grep -v '^#\|^version' $ST/live-after.txt)` prints nothing: same 5 status codes and the same places sha256.
+
+**For the Summary** (notes, no edits, per the decision rule). Besides the Brief's list (deletions, kept skills, the lock's 6 entries, corrected references, hook before/after from V4, the CI test from V5, smoke, and the link with its `readlink` from V8):
+- `.agents/skills/code-review/SKILL.md:13` still names the deleted setup skill. It's kept vendored and reinstalled from the lock.
+- `src/game/EventBus.ts:2` "Neither side imports the other" is false in the same way the old `AGENTS.md:55` was. It's a src file, out of scope (Fable SC2).
+- `docs/agents/domain.md:11` and `:49-53` still describe ADRs. They're template text, covered by "proceed silently" (SC2).
+- `.agents/skills/smux/references/tmux.md:10` links `../tmux-bridge/SKILL.md`, which doesn't exist. It's a kept vendored skill (SC2).
+- The owner's WSL clone: with `.gitignore:49-50` gone, any generated `.understand-anything/` output there shows as untracked after the merge. Delete it by hand (SC3).
+- Three scripts use `scripts/connect.ts` (`clue-world-map.ts`, `content.ts`, `iucn.ts`), not four (MISSED 1).
+- An `edits[]` payload still passes the hook (0). That's out of scope, and the baseline keeps it.
+- No production content build is needed: no content or game file changes.
+
+## Failure modes
+
+The hook and CI's guard are tested in isolation. These tests existed before the code: `$ST/tools/guard-run.sh` (baseline) and V5 (dry-run). The failure modes:
+- **Hook** (V4):
+  1. An env file passes by base name: `.env`, `.env.local`, `.env.example`, `.env.vps.example`, `deploy/app.env` and root `app.env` must each give 2.
+  2. The name rule over-blocks: `deploy/app.env.example` (base `app.env.example`), a normal `src/` Edit, Supabase prose and `{}` must each give 0.
+  3. A `*.prisma` path with a plain body passes: must give 2.
+  4. Content naming the schema file passes (the typo survives, or `sed` hit another token): must give 2, `grep -c` 1, and hunk `-11 +12` only.
+  5. A package rule regresses: the Prisma client import, the bare-package import, the Supabase client import, the Supabase project URL, the ssr-helper prose, and the hook's own line and CI's guard line must each still give 2.
+  6. It fails open: a lost exec bit (exit 126 is non-blocking) or broken `settings.json` wiring. Caught by `test -x`, an empty `git diff --summary`, and the live Write probes.
+  7. It fails closed: a syntax error exits 2 on every call. Caught by `bash -n`, and the control-run diff would flip every 0 case.
+  8. The header drifts: hunk `-3,2 +3,2` (two lines, SC4).
+- **CI step** (V5, S2):
+  1. It is silenced by `bash -e` with `!` not last: it's its own one-line step, and with a staged file it exits 1.
+  2. The pathspec misses nested files: the test stages the file under `prisma/`.
+  3. A false positive on a clean tree: it exits 0 on the final commit.
+  4. The tested command differs from the committed one: V5 reads it from `ci.yml`.
+  5. Broken YAML, or the wrong job or order: S2's `yaml.safe_load` names check, and CI's `check` job at release.
+  6. The existing step changes: hunk `-24,0 +25,4` (adds only), and its command exits 0.
+- **Lock** (V3, V9):
+  1. The formatting drifts: numstat `0	204`.
+  2. A wrong entry is dropped or kept: `locked 6 | v1 matches 6`, `no folder: []` and the 5 `not in lock` names.
+  3. A kept folder is touched: V9's kept-folder check.
 
 ## Code review (Astra)
 
@@ -363,5 +536,6 @@ None needed: both reviews APPROVE, 0 MUST-FIX. Architecture unchanged. Fable's M
 - 2026-11-14 11:00 UTC · Fable review: APPROVE, 0 MUST-FIX; 3 MISSED items (shots/run.mjs not a DB script; review text vs hook; Steps lines use *.prisma) + 4 SHOULD-CONSIDER for planner. Plan-only; no checks needed.
 - 2026-11-14 10:57 UTC · Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only; no checks needed.
 - 2026-11-14 10:58 UTC · Revision: none needed (0 MUST-FIX in either review); Fable notes routed to Steps. Plan-only; no checks needed.
+- 2026-11-14 11:12 UTC · Steps: planner wrote S1-S8 (hook, CI step, 34 skills + lock, D17, link, docs/agents, AGENTS.md, CODING_STANDARDS + playtest), Verification V1-V9 + Failure modes; target design dry-run in /tmp matched. Plan-only; no checks needed.
 
 ## Summary
