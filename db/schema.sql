@@ -1,5 +1,5 @@
--- Critter Connect: the Postgres objects the app uses, as they stand on
--- 2026-09-25. This is a baseline, not a migration history: migrations 001-044
+-- Critter Connect: the Postgres objects the app uses. A baseline taken on 2026-09-25
+-- and edited to match each change since, not a migration history: migrations 001-044
 -- were squashed into it (git log --all -- src/db/migrations).
 --
 -- To change the schema, apply the change (./scripts/db -1 -f change.sql), then
@@ -10,7 +10,7 @@
 --   iucn                         IUCN range polygons (docs/SHAPEFILE_BEST_PRACTICES.md)
 --   oneearth.oneearth_bioregion  OneEarth bioregions: realm, sub_realm, wkb_geometry
 --   natural_earth.countries      Natural Earth countries (scripts/import-natural-earth.mjs)
--- Extensions: postgis, pgcrypto (init/01-extensions.sql).
+-- Extensions: postgis. init/01-extensions.sql also installs pgcrypto, which no SQL in the repo calls.
 BEGIN;
 SET LOCAL search_path = public;
 
@@ -65,7 +65,7 @@ CREATE INDEX ix_deduction_clues_species ON species_deduction_clues (species_id);
 CREATE INDEX ix_deduction_clues_category ON species_deduction_clues (species_id, category);
 CREATE INDEX ix_deduction_clues_compare ON species_deduction_clues USING gin (compare_tags);
 
--- Fun notes, shown once a color's clues run out.
+-- Fun facts: field notes in the field guide, after the hand-written clues (src/clueGame/questionMatchContent.ts).
 CREATE TABLE species_facts (
   id          serial PRIMARY KEY,
   species_id  integer NOT NULL REFERENCES species(id) ON DELETE CASCADE,
@@ -119,7 +119,7 @@ CREATE TABLE clue_match_solves (
   outcome           text NOT NULL DEFAULT 'solved' CHECK (outcome IN ('solved', 'lost')),
   -- Solved (or lost) on a last chance, to tell first-try and rescued solves apart; NULL for rounds saved before 2026-09-28.
   last_chance       boolean,
-  -- Rules.version of the rules played (src/clueGame/questionMatch.ts): 041-1 charges; 041-5 charges with toys and 12 look-alikes; 041-2 to 041-4 were removed experiments (plans/041); NULL before plan 041.
+  -- Rules.version of the rules played, from the 041 and 043 games' Rules (src/clueGame/questionMatch.ts; the 044 board never saved): 041-1 charges; 041-5 charges with toys and 12 look-alikes; 043-0 gems ask questions; 041-2 to 041-4 were removed experiments (plans/041); NULL before plan 041.
   rules_version     text CHECK (rules_version IS NULL OR rules_version ~ '^[a-z0-9.-]{1,20}$'),
   moves_left        smallint CHECK (moves_left IS NULL OR moves_left BETWEEN 0 AND 100),
   -- Animals still standing at the first guess.
@@ -204,7 +204,7 @@ CREATE UNIQUE INDEX clue_match_ranges_species_id ON clue_match_ranges (species_i
 -- bbox and center use the place's largest part, so France flies to France, not
 -- to a box that also holds French Guiana. outline is simplified for drawing.
 --
--- Refresh after range, clue-species or place changes (~90 s):
+-- Refresh after range, clue-species or place changes (90 s to 2.5 min):
 --   REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_places;
 CREATE MATERIALIZED VIEW clue_match_places AS
 WITH playable AS (

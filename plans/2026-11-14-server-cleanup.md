@@ -423,7 +423,7 @@ Every step ends: `npm run typecheck` 0, `npm run lint` 0, `npm test` passes, the
   - E2E: DEV `npm run e2e:fresh` → `S/e2e-s4/`; delete `S/e2e-s2/`. All checks pass, incl. the globe-list check.
   - Check: the full DoD grep prints nothing.
 
-- [ ] S5. **Audit S8, docs and comments (no behavior).**
+- [x] S5. **Audit S8, docs and comments (no behavior).**
   - App's route: `DATABASE_ACCESS.md:4-5`, the map block, port table `:31`/`:32`, route table `:47`; `AGENTS.md:19` (guide `:3` done in S3; confirm).
   - `--production`/`CLUE_USE_TUNNEL`: `scripts/db:2`, `:6`, the new comment above `:38`; `DATABASE_ACCESS.md:70-75`, `:77-80`, after `:128`; `SHAPEFILE_BEST_PRACTICES.md:21`.
   - Dev copy: `DATABASE_ACCESS.md:192`; `deploy/db/dev-role.sql:1-3` and after `:33` (never run the file); `docker-compose.yml:35-36`.
@@ -547,6 +547,7 @@ Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Th
 - 2026-11-14 06:56 UTC · S2: deleted `src/db/schema/` (4), `drizzle.config.ts`, the introspect script, Drizzle's CLI; `db` schema-less. Lock check L: removed 37, added 0, changed 0, root ok true; `npm ls` gel/shell-quote/@esbuild-kit (empty), exit 1; `npm audit --omit=dev` 3 (next critical, sharp high, source-map-js high) → `s2-npm-audit.txt`. typecheck 0, lint 0, test 61/61. E2E 1575/1575, 0 console errors, 0 failed requests → `e2e-s2/`. J: signed-out/signed-in both `200 {"entries":[]}`, no journal Error; control: signed-out 200, signed-in `500 {"error":"Failed to load the journal"}`, 1 Error line; local POST save route 404 (both runs).
 - 2026-11-14 06:58 UTC · S3: `AGENTS.md` introspect line deleted, `:57` models sentence → one client/raw SQL; `README.md:26`; guide rewritten (§1–5; 9 queries checked against `git grep "execute<" src`). typecheck 0, lint 0, test 61/61; DoD grep: only D13 hits (`src/clueGame/places.ts`, `PlaceCard.tsx`). No E2E (docs only).
 - 2026-11-14 07:12 UTC · S4: `/api/places` continents only (`WHERE kind = 'continent' ORDER BY name`); dropped the four old place-list helpers + `PlaceCard` branch; e2e.mjs, playtest skill, CLUE_MATCH journal note (Astra SC2). Picked up H13 (closed). typecheck 0, lint 0, test 61/61; DoD grep empty. E2E 1575/1575 (incl. globe lists the continents), 0 console errors, 0 failed requests → `e2e-s4/`; `e2e-s2/` deleted.
+- 2026-11-14 07:15 UTC · S5: S8 docs/comments: app route (DATABASE_ACCESS intro, map block, port + route tables, AGENTS.md:19; guide route already right from S3), `--production`/`CLUE_USE_TUNNEL` same-database notes (scripts/db, DATABASE_ACCESS, SHAPEFILE), dev-copy (DATABASE_ACCESS settings line, dev-role.sql header + timeout note, docker-compose), refresh times → 90 s to 2.5 min, schema.sql :1-2/:13/:68/rules_version (043-0 kept). Comments-only diff check empty; `node --check scripts/db` 0; typecheck 0, lint 0, test 61/61; DoD grep empty. No E2E (no behavior; S6 runs it).
 
 ## Summary
 

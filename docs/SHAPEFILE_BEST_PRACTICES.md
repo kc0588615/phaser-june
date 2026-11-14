@@ -18,7 +18,7 @@ npm run iucn -- find ~/data/iucn/shp "Lycaon pictus" "Tapirus bairdii"      # fi
 npm run iucn -- import ~/data/iucn/shp/MAMMALS_TERRESTRIAL_ONLY/MAMMALS_TERRESTRIAL_ONLY.shp "Lycaon pictus"
 ```
 
-`scripts/iucn.ts` reads the `.dbf` table, then only the matching shapes through the `.shx` offsets, and appends them with every IUCN attribute in one transaction (about a second per file). A species already in `iucn` (same `id_no`) is skipped; to replace a range, delete its rows first. It connects through `DATABASE_URL`; `CLUE_USE_TUNNEL=1` goes through the agent tunnel instead.
+`scripts/iucn.ts` reads the `.dbf` table, then only the matching shapes through the `.shx` offsets, and appends them with every IUCN attribute in one transaction (about a second per file). A species already in `iucn` (same `id_no`) is skipped; to replace a range, delete its rows first. It connects through `DATABASE_URL`; `CLUE_USE_TUNNEL=1` takes the WSL agent tunnel to the same database instead (docs/DATABASE_ACCESS.md#wsl-agentraw-tunnel).
 
 Why not the standard tools: `shp2pgsql` and `ogr2ogr` aren't installed in WSL, and `shp2pgsql` can't filter rows, so it would push a whole group file through the connection. If the owner installs GDAL (`sudo apt install gdal-bin`), `ogr2ogr` can do the same filtered append:
 

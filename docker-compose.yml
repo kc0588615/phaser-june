@@ -32,8 +32,8 @@ services:
       db:
         condition: service_healthy
     environment:
-      # One [databases] entry per URL: prod, and the VPS agents' copy
-      # (docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps). Other roles log in via
+      # One [databases] entry per URL: prod, and the scrubbed copy phaser_june_dev
+      # (CI's e2e database; docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps). Other roles log in via
       # auth_user. The ini is written only on a fresh container: `up -d`, not `restart`.
       DATABASE_URLS: "postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-phaser_june},postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/phaser_june_dev"
       POOL_MODE: transaction

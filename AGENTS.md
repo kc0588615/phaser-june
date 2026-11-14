@@ -16,7 +16,7 @@ When implementing solutions, prefer the simplest approach that works. Do not ove
 
 ## Database Access
 - Codex and Claude Code use the installed `postgres-tunnel` skill for WSL database work.
-- App/runtime traffic uses `DATABASE_URL` through TLS PgBouncer on port 6432.
+- `DATABASE_URL` (agents, scripts, dev servers) goes through TLS PgBouncer on port 6432; the live app connects as `critter_app` straight to the db container (`deploy/app.env.example`).
 - WSL agents inspect/query raw Postgres through `127.0.0.1:55432` via the SSH tunnel.
 - Windows/QGIS uses a separate Windows-local tunnel on port 5433; agents do not use it.
 - Do not set up a new database MCP server.
