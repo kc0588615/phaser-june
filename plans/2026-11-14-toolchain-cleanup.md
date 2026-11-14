@@ -122,7 +122,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -236,6 +236,12 @@ Confirmed, no change needed: all hits of the brief's two final greps are in file
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER: none
+
 ## Revision notes
 
 ## Steps
@@ -253,5 +259,6 @@ Confirmed, no change needed: all hits of the brief's two final greps are in file
 - 2026-11-14 16:46 UTC · Baseline: fresh greps as audit (nothing kept, no `npm run clean` outside plans), packages (EBADENGINE 22.x, @types/node 20.17.57), eol counts, live headers 3×6 + codes, typecheck/lint/test 61/61, E2E 1575/1575 → `baseline-e2e/` (2 earlier runs at load 2: 1574/1575, different timing checks).
 - 2026-11-14 16:55 UTC · Architecture: architect verified every site at 7f91ecd1 (nothing moved), dry run in /tmp: @types/node 24.19.2 typechecks with 0 fixes, npm ci 0 EBADENGINE, lint 0, test 61/61, lock diff 9 lines; 5 change groups + final Verification.
 - 2026-11-14 17:10 UTC · Fable review: APPROVE WITH CHANGES, 1 MUST-FIX (.env.example `cmp -s` check silent on mismatch and pinned to HEAD), 1 missed (no before-run of build/site:build/e2e:site), 4 should-consider. Closed handoff H14 (owner verified).
+- 2026-11-14 17:25 UTC · Astra review: APPROVE, no MUST-FIX, no SHOULD-CONSIDER. Fable's MUST-FIX goes to Revision.
 
 ## Summary
