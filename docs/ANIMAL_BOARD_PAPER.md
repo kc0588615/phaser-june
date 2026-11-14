@@ -1,5 +1,7 @@
 # The Animal Board: How It Plays, How to Play It Well, and What It Teaches
 
+> **A dated paper, not kept current.** This is the 2026-10-01 paper for rules 044-0, with the notes below for later rules up to 053-1. The current rules are summarised in `docs/CLUE_MATCH.md` (Rules) and `CONTEXT.md`; the numbers are in `ANIMAL_RULES` (`src/clueGame/animalBoard.ts`).
+
 *Critter Connect, rules 044-0 (branch `variant/044-animal-board`, plan `plans/044-animal-board.md`). Written 2026-10-01 from the built rules, the playable graybox at `/explore`, and the balance bot's results. Every success rate in this paper comes from simulated players, not from children; section 6 says what a human study should measure.*
 
 > **Rules 045-0 (2026-10-11) change §2.3–2.4:** orders need 20 gems, stars at 8 and 14 moves left, and each suspect's own answers start hidden. A move's own clear of a clue's color next to an unmarked tile *scouts* that animal's answer (cascades don't); players may pencil their own guesses; the field guide hides its lines about the round's four questions until the round ends. Bot results and why: `plans/045-scout-the-suspects.md`.
