@@ -67,7 +67,7 @@ export interface Animal {
 export type FamilyTreeCost = 'match' | 'charges' | 'one-of-each';
 
 export interface Rules {
-  /** Saved with every round (clue_match_solves.rules_version). */
+  /** Names the rule set (clue_match_solves.rules_version, rounds saved before 2026-10-01). */
   version: string;
   moves: number;
   candidates: number;

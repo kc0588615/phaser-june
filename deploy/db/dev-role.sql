@@ -1,6 +1,7 @@
--- critter_dev: the Oracle VPS agents' role. Owns phaser_june_dev (a copy of
--- phaser_june, docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps) and has no
--- access to prod. Run as postgres in phaser_june after each copy; safe to rerun.
+-- critter_dev: owns phaser_june_dev, the scrubbed copy of phaser_june that CI's e2e job
+-- (E2E_DATABASE_URL) and mission E2E runs on the Oracle VPS use
+-- (docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps). No access to prod.
+-- Run as postgres in phaser_june after each copy; safe to rerun.
 -- The login password is set once by the owner (\password critter_dev).
 -- Undo: DROP DATABASE phaser_june_dev; DROP ROLE critter_dev;
 --       GRANT CONNECT ON DATABASE phaser_june TO PUBLIC;
@@ -31,6 +32,8 @@ DELETE FROM profiles;
 
 -- critter_dev owns every app object (content builds, range imports, view
 -- refreshes, schema changes). Extension objects (PostGIS) stay postgres's.
+-- Its 60 s statement_timeout (above) stops a clue_match_places refresh (90 s to 2.5 min):
+-- run that refresh with SET LOCAL statement_timeout = 0 in its transaction.
 DO $$
 DECLARE r record;
 BEGIN

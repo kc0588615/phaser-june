@@ -1,8 +1,9 @@
 # Database Access
 
 > Verified 2026-08-29: the WSL tunnel reached database `phaser_june` as role
-> `postgres` on PostgreSQL 17.5. Application traffic uses the public PgBouncer
-> endpoint defined by `DATABASE_URL`.
+> `postgres` on PostgreSQL 17.5. Agents, scripts and dev servers use the public
+> PgBouncer endpoint in `DATABASE_URL`; the live app connects as `critter_app`
+> straight to the db container.
 
 > 2026-09-26 owner handoff: password rotated, SSH keys only, UFW enabled.
 > See [hardening status](DEPLOY.md#hardening-status-2026-09-26) for credential
@@ -15,9 +16,12 @@ There is one PostgreSQL server. `db.critterconnect.org` resolves to the Hetzner
 host; PostgreSQL itself remains inside its Docker network.
 
 ```text
-App / compatible psql
+Dev servers, scripts, agents / compatible psql
   └─ TLS ─► db.critterconnect.org:6432 ─► PgBouncer (transaction mode)
                                              └─► 172.18.0.2:5432 PostgreSQL
+
+Live app container (critter_app, deploy/app.env)
+  └─ db:5432 on the Docker network ─► PostgreSQL (no PgBouncer, no TLS)
 
 WSL agents / raw PostgreSQL
   └─ 127.0.0.1:55432 ─► SSH to Hetzner:22 ─► 172.18.0.2:5432 PostgreSQL
@@ -28,8 +32,8 @@ Windows / QGIS
 
 | Port | Scope | Purpose |
 |---|---|---|
-| 6432 | Public | PgBouncer with TLS; app runtime and compatible clients |
-| 5432 | Docker-internal | Raw PostgreSQL; not internet-accessible |
+| 6432 | Public | PgBouncer with TLS; dev servers, scripts, agents, CI |
+| 5432 | Docker-internal | Raw PostgreSQL; the live app connects here; not internet-accessible |
 | 55432 | WSL loopback | Agent/raw PostgreSQL SSH tunnel |
 | 5433 | Windows loopback | Separate QGIS/Windows tunnel |
 | 22 | Allowed by host UFW; provider firewall separate | Key-only SSH and tunnel transport |
@@ -44,7 +48,8 @@ server-session affinity matters.
 
 | Client or task | Route | Tunnel required? |
 |---|---|---|
-| Next.js, Drizzle | `DATABASE_URL` → port 6432 | No |
+| Live app (container) | critter_app → db:5432 (deploy/app.env) | No |
+| Dev server, e2e, npm run content/iucn | DATABASE_URL → port 6432 | No |
 | Human `psql`, PgBouncer-compatible SQL | `./scripts/db` → port 6432 | No |
 | Codex/other WSL agents | `127.0.0.1:55432` → raw PostgreSQL | Yes |
 | Session-bound SQL, raw imports, recovery | `127.0.0.1:55432` → raw PostgreSQL | Yes |
@@ -72,12 +77,14 @@ pooling:
 ./scripts/db "select count(*) from species;"      # one-off query
 ./scripts/db -f change.sql                        # stop on first SQL error
 ./scripts/db -1 -f change.sql                     # one transaction
+./scripts/db --production -1 -f change.sql        # WSL: same database, through the 55432 tunnel
 ```
 
 The helper loads `DATABASE_URL` from the environment or `.env.local`, parses it
 in memory, and passes discrete `PG*` variables to `psql`. The password is not
 placed in process arguments. Non-interactive calls use `-X` and
-`ON_ERROR_STOP=1`.
+`ON_ERROR_STOP=1`. Every form reaches the database `DATABASE_URL` names, which
+on WSL and the Oracle VPS is the live `phaser_june`.
 
 ### `pgbouncer=true`
 
@@ -132,6 +139,9 @@ and port to `127.0.0.1:55432`, and disables database TLS only for this local
 forward. The SSH channel encrypts traffic to the server. Never apply
 `sslmode=disable` to public port 6432.
 
+From the repo, `./scripts/db --production …` and `CLUE_USE_TUNNEL=1 npm run
+content|iucn …` (`scripts/connect.ts`) take the same tunnel to the same database.
+
 ### Port 22 timeout
 
 If SSH remains silent but `ss` shows no listener, check whether the connection
@@ -168,13 +178,13 @@ from `ss -ltnp`) tells a fresh session from an old one.
 While the tunnel is down, the repo scripts (`npm run content`, `npm run iucn`)
 and `./scripts/db` still work: they use `DATABASE_URL` through PgBouncer.
 Content builds, range imports and `REFRESH MATERIALIZED VIEW CONCURRENTLY`
-(about 2.5 minutes for `clue_match_places`) all ran that way on 2026-09-29.
+(90 s to 2.5 minutes for `clue_match_places`) all ran that way on 2026-09-29.
 
 ## Agents on the Oracle VPS
 
 **Since 2026-11-01 (owner's decision), agents on the Oracle box use the live
 `phaser_june` as `postgres`, through PgBouncer (`db.critterconnect.org:6432`, TLS).**
-Writes reach real players, and e2e runs add rounds to `clue_match_solves`. Backups
+Writes reach real players. (The game itself writes nothing, so an e2e run only reads.) Backups
 run nightly; take a fresh dump (`deploy/backup/pg-backup.sh` on the server) before a
 schema change or bulk write.
 
@@ -189,7 +199,7 @@ identities, and its settings are kept on the Oracle box if agents go back to it.
 the `postgres-tunnel` skill are WSL-only. How the VPS itself runs lives in its
 ops repo.
 
-`.env.local` there holds only:
+Its settings (the Oracle box's `.env.local` before 2026-11-01, now the dev-copy file below):
 
 ```text
 DATABASE_URL=postgres://critter_dev:<password>@db.critterconnect.org:6432/phaser_june_dev?sslmode=require
@@ -246,10 +256,18 @@ step 2 from WSL through the tunnel. To refresh the copy later, repeat 1–2.
    ```bash
    # live game: 200, and the round loads at https://play.critterconnect.org/explore
    curl -s -o /dev/null -w '%{http_code}\n' https://play.critterconnect.org/api/clue-game/pool/
-   # on the Oracle box, from the repo: critter_dev reaches the copy...
-   ./scripts/db "select current_database(), current_user, count(*) from species;"
-   # ...but not prod (expect: permission denied for database "phaser_june")
-   DATABASE_URL=$(sed -n 's#^DATABASE_URL=\(.*\)/phaser_june_dev#\1/phaser_june#p' .env.local) ./scripts/db "select 1;"
+   # On the Oracle box, from the repo, with the copy's settings (never .env.local: that is the
+   # live database as postgres). Prints OK, or FAIL and exits 1.
+   ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy || exit 1; set +a
+     : "${DATABASE_URL:?dev-copy settings not loaded}"
+     # critter_dev reaches the copy...
+     [ "$(./scripts/db -tA -F/ -c 'select current_user, current_database()')" = critter_dev/phaser_june_dev ] \
+       || { echo 'FAIL: not critter_dev on phaser_june_dev'; exit 1; }
+     ./scripts/db -tA -c 'select count(*) from species'
+     # ...but not prod
+     out=$(DATABASE_URL=${DATABASE_URL/\/phaser_june_dev//phaser_june} ./scripts/db -tA -c 'select 1' 2>&1) \
+       && { echo 'FAIL: critter_dev reached phaser_june'; exit 1; }
+     case $out in *'permission denied for database "phaser_june"'*) echo OK ;; *) echo "FAIL: ${out%%$'\n'*}"; exit 1 ;; esac )
    ```
 
 ## Windows/QGIS

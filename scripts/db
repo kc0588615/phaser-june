@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Direct psql through DATABASE_URL/PgBouncer without exposing credentials in argv.
+// psql to the database DATABASE_URL names (the environment's, else .env.local's: the live phaser_june on WSL and the Oracle VPS), without credentials in argv.
 //   ./scripts/db                      interactive shell
 //   ./scripts/db "select 1;"          one-off query
 //   ./scripts/db -f change.sql        run a file (stops on first error)
-//   ./scripts/db --production -1 -f change.sql   raw Postgres through the WSL SSH tunnel
+//   ./scripts/db --production -1 -f change.sql   same database, raw Postgres through the WSL SSH tunnel (127.0.0.1:55432)
 
 const { existsSync } = require('node:fs');
 const { resolve } = require('node:path');
@@ -35,6 +35,7 @@ try {
 }
 
 const userArgs = process.argv.slice(2);
+// --production changes only the route (the WSL tunnel), not the database.
 if (userArgs[0] === '--production') {
   userArgs.shift();
   url.hostname = '127.0.0.1';

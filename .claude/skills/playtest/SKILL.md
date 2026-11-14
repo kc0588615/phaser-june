@@ -13,7 +13,7 @@ Drive the dev build through the chrome-devtools MCP like a player. React UI (glo
 - In a git worktree (a variant fork): `cp -al ~/phaser-june/node_modules node_modules` (hard links; Turbopack rejects a symlinked `node_modules`), copy `.env.local`, serve with `./node_modules/.bin/next dev -p 8090`, and e2e with `E2E_BASE_URL=http://localhost:8090 npm run e2e`.
 - Stale CSS: a `globals.css` edit that doesn't show after an `ignoreCache` reload (`getComputedStyle(document.documentElement)` still has the old value) means Turbopack missed it, typically after `git stash`/checkout. Restarting alone doesn't clear it: `pkill -f '[n]ext dev'` (brackets stop it matching its own shell), `rm -rf .next/dev` (not `.next`, which holds the prod build), `npm run dev`. To compare against a baseline commit, use a worktree (above), not a stash.
 - `npm run e2e:fresh` (own server, beside :8080): run it in the background instead of under `timeout`. A `WARN load` line at the start means something else is eating CPU (often a stray headless Chrome), so expect false timeouts.
-- Signing in is optional (rounds then save with the player's profile). Google OAuth is blocked in the automated Chrome and Clerk sign-up hits a CAPTCHA; email-code sign-in has neither. `+clerk_test` addresses take code `424242` in Clerk dev instances. Run on any page, then reload:
+- Signing in is optional and saves nothing (the journal only merges an account's solves from before 2026-10-01). Google OAuth is blocked in the automated Chrome and Clerk sign-up hits a CAPTCHA; email-code sign-in has neither. `+clerk_test` addresses take code `424242` in Clerk dev instances. Run on any page, then reload:
 
   ```js
   async () => {
@@ -33,7 +33,7 @@ Drive the dev build through the chrome-devtools MCP like a player. React UI (glo
 
 - The list shows the continents from `GET /api/places`; one with fewer than 12 animals says "coming soon". Tap a row (or a dot on the globe): the globe flies there and outlines it, and the card shows the animal count, found animals by name, `?` for the rest, and a habitat picture (TiTiler, 1–5 s; hidden if it fails).
 - **Explore** opens `/explore/?place=continent:<name>`; **Anywhere** opens `/explore/`.
-- Found animals glow on the globe (green amphibians/reptiles, amber mammals); they come from the journal's sightings in localStorage (`clue-match:journal:v1`).
+- Found animals' ranges light up the globe (green amphibians/reptiles, amber mammals): the animals come from the journal's finds in localStorage (`clue-match:journal:v1`), their ranges from `GET /api/clue-game/ranges`.
 
 ## 3. The game (`/explore`)
 

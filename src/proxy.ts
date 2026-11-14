@@ -1,7 +1,6 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
 
-// Makes the Clerk session available to routes (POST /api/clue-game/solves reads
-// it to save a solve under the player's profile).
+// Makes the Clerk session available to routes (GET /api/clue-game/journal reads it with auth()).
 export default clerkMiddleware();
 
 export const config = {

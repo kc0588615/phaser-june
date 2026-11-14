@@ -22,8 +22,8 @@ npm run typecheck && npm run lint
 - `src/pages/explore.tsx` → `src/components/animalBoard/`: the game screen (rules in `src/clueGame/animalBoard.ts`, `animalSession.ts` and `questionMatch.ts`); pieces it shares with the journal are in `src/components/clueGame/`.
 - `src/clueGame/`: the game's rules as pure, tested TypeScript.
 - `src/game/`: the Phaser board (model, view, input), talking to React only through `EventBus.ts`.
-- `src/app/api/`: `places`, `places/outline`, `clue-game/pool`, `clue-game/range`, `clue-game/ranges`, `clue-game/journal`, `clue-game/solves`.
-- `src/db/`: Drizzle client and schema.
+- `src/app/api/`: `places`, `places/outline`, `clue-game/pool`, `clue-game/range`, `clue-game/ranges`, `clue-game/journal`.
+- `src/db/index.ts`: the database client (Drizzle over postgres.js; queries are raw SQL).
 - `db/schema.sql`: the database schema (tables and views); `db/content/`: the animal profiles and their sources (`npm run content`); `db/analysis/clue-match/`: read-only SQL exercises.
 
 ## Docs

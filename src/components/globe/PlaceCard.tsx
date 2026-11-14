@@ -1,5 +1,5 @@
 import { ArrowLeft, Play } from 'lucide-react';
-import { groupLabel, type Place, type PlaceAnimal } from '@/clueGame/places';
+import type { Place, PlaceAnimal } from '@/clueGame/places';
 import { speciesBadge } from '@/clueGame/speciesInfo';
 
 /** The picked place: who lives there (named once found) and the button to play. */
@@ -22,7 +22,7 @@ export function PlaceCard({ place, animals, isFound, minAnimals, onBack, onStart
         </button>
         <div className="min-w-0 flex-1 pt-xxs">
           <h2 className="m-0 font-brand text-l font-heavy text-neutral-10">{place.name}</h2>
-          <p className="m-0 text-xs text-neutral-7">{place.kind === 'continent' ? 'Continent' : groupLabel(place)}</p>
+          <p className="m-0 text-xs text-neutral-7">Continent</p>
         </div>
         {/* Phones: play sits by the name, above the fold; wider screens keep it at the bottom. */}
         {!soon && (

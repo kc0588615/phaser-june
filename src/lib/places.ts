@@ -1,4 +1,4 @@
-// Loads the globe's places from the clue_match_places view (db/schema.sql).
+// The globe's continents and any place's outline, from the clue_match_places view (db/schema.sql).
 import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 import type { Place, PlaceAnimal, PlaceKind, PlacesResponse } from '@/clueGame/places';
@@ -12,7 +12,7 @@ type AnimalRow = { id: number; common_name: string; scientific_name: string; cla
 export async function loadPlaces(): Promise<PlacesResponse> {
   const rows = await db.execute<PlaceRow>(sql`
     SELECT kind, key, name, grp, species_ids, west, south, east, north, lon, lat
-    FROM clue_match_places ORDER BY kind, name`);
+    FROM clue_match_places WHERE kind = 'continent' ORDER BY name`);
   const places: Place[] = [...rows].map(row => ({
     kind: row.kind, key: row.key, name: row.name, group: row.grp, speciesIds: row.species_ids,
     bbox: [row.west, row.south, row.east, row.north], center: [row.lon, row.lat],

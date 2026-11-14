@@ -1,6 +1,5 @@
-// Places to explore from the home globe (GET /api/places, built from the
-// clue_match_places view in db/schema.sql), plus the small pure helpers the globe
-// screen uses. Unit-tested in tests/clueGame/places.test.ts.
+// Places to explore from the home globe (GET /api/places: the continents of the
+// clue_match_places view in db/schema.sql), plus small pure helpers for the globe and the journal.
 
 export type PlaceKind = 'country' | 'wildlife_area' | 'continent';
 
@@ -35,43 +34,6 @@ export interface PlacesResponse {
 
 /** A continent opens once it has this many animals (plan 041); a round shows 8 of them. */
 export const MIN_PLACE_ANIMALS = 12;
-
-export const PLACE_KIND_LABELS: Record<PlaceKind, string> = {
-  country: 'Countries',
-  wildlife_area: 'Wildlife areas',
-  continent: 'Continents',
-};
-
-/** OneEarth realm names, in words kids know (same wording as the Range clues). */
-const REALM_NAMES: Record<string, string> = {
-  Afrotropics: 'Africa south of the Sahara',
-  Australasia: 'Australia and New Guinea',
-  IndoMalay: 'South and Southeast Asia',
-  Nearctic: 'North America',
-  Neotropics: 'Central and South America',
-  Oceania: 'Pacific islands',
-  Palearctic: 'Europe, North Africa and northern Asia',
-  Antarctic: 'Antarctica',
-};
-
-export function groupLabel(place: Pick<Place, 'kind' | 'group'>): string {
-  return place.kind === 'wildlife_area' ? REALM_NAMES[place.group] ?? place.group : place.group;
-}
-
-/** Places of one kind, grouped (alphabetical groups, most animals first within each). */
-export function groupPlaces(places: readonly Place[], kind: PlaceKind): Array<{ label: string; places: Place[] }> {
-  const groups = new Map<string, Place[]>();
-  for (const place of places.filter(p => p.kind === kind)) {
-    const label = groupLabel(place);
-    groups.set(label, [...(groups.get(label) ?? []), place]);
-  }
-  return [...groups.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([label, list]) => ({
-      label,
-      places: list.sort((a, b) => b.speciesIds.length - a.speciesIds.length || a.name.localeCompare(b.name)),
-    }));
-}
 
 /** Discovery marker color by animal group: green for amphibians and reptiles, amber for mammals. */
 export function classColor(className: string | null | undefined): string {
