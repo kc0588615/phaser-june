@@ -80,7 +80,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -213,6 +213,21 @@ Commands, in order, from the worktree root:
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. **The `eslint-config-next` step-down fallback cannot fix the risk it is paired with.** Every `eslint-config-next` 16.4.0-16.4.6 declares `eslint-plugin-react-hooks ^7.1.0` and `typescript-eslint ^8.56.0`, and npm resolves them to 7.1.1 and 8.72.2 each time (lock-only dry run with `eslint-config-next@16.4.1`: react-hooks 7.1.1, typescript-eslint 8.72.2). Stepping down inside 16.4.x only changes `@next/eslint-plugin-next`, whose one new rule has no hit here. It would break Definition of done item 1 and give the same lint result. Replace it: react-hooks 7.1.1 findings are fixed in code or with line-level disables, as "Expected code changes" already says. If that is not a small change, add a handoff item; don't walk the versions. For the owner's information only: 16.3.8 is the newest version that keeps the locked react-hooks 7.0.1 and typescript-eslint 8.50.0 (dry run), and it is below the brief's 16.4.1 floor.
+2. **The `next` retry command is wrong as written.** After `git checkout origin/main -- package.json package-lock.json && npm ci`, `npm install next@16.4.5` leaves `eslint-config-next` at 16.1.0 with range `^16.1.0` (dry run), so "leave `eslint-config-next` at 16.4.6" can't happen. The retry must be `npm install next@16.4.5 eslint-config-next@16.4.6`, and the same for each lower version. The `grep -c` guard would print 2 and catch it, but the command should be right.
+
+MISSED: nothing that changes the design. Two corrections to the findings:
+- Finding 1 overstates the exposure. GHSA-7qx7 is real and its range and fix are as stated (repository advisory read; seven advisories are fixed in 16.4.5). But it needs an attacker-supplied SVG to reach the optimizer, and this app has no `images` config (no `remotePatterns`), no `next/image` and no upload route. The Summary should say A3's conclusion is no longer proven, not that the live server was exploitable.
+- Finding 5: `debug` also moves 4.4.1 to 4.4.3 (typescript-eslint 8.72 needs `^4.4.3`), not only its flag. No production package depends on `debug` or `ms` in either lock, so the `npm ci --omit=dev` image is unaffected.
+
+SHOULD-CONSIDER:
+1. Make the `package.json` guard `git diff -U0 origin/main -- package.json | grep -c '^[-+] '`. As written it compares with HEAD, so it prints 0 once the change is committed (final Verification, after the rebase).
+2. List the `AGENTS.md` block under Decisions as the one file outside the brief's Scope. If the mission's `next dev` doesn't rewrite it (no agent detected), leave it; don't edit it by hand.
+3. If the `next` fallback ends below 16.4.5, add a handoff item as well as the Summary note: `npm audit --omit=dev` will still report 0, and GHSA-pc58 (cross-client response injection) and GHSA-f3mh (HttpOnly cookie exposure) apply to a self-hosted app with Clerk cookies.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -231,5 +246,6 @@ Commands, in order, from the worktree root:
 
 - 2026-11-14 08:58 UTC · Baseline: audit 3 (1 critical, 2 high), shell-quote already gone; live image probe 400; typecheck/lint/test/build pass; e2e:fresh 1575/1575, artifact `baseline-e2e/`.
 - 2026-11-14 09:17 UTC · Architecture: architect wrote findings + target design (16.4.6 in range; sharp/source-map-js reachable; dry-run lock audit --omit=dev 0; new GHSA-7qx7 bypasses dangerouslyAllowSVG on <=16.4.4, so 400 probe isn't proof; no src change expected). No code change, no checks needed.
+- 2026-11-14 09:24 UTC · Fable review: APPROVE_WITH_CHANGES, 2 MUST-FIX (both fallbacks: eslint-config-next step-down can't fix react-hooks risk; next retry must also pass eslint-config-next@16.4.6). Main path reproduced (^16.4.6, lock ok, audit --omit=dev 0). No code change.
 
 ## Summary
