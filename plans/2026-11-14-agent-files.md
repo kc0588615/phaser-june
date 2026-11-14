@@ -539,7 +539,7 @@ SHOULD-CONSIDER:
 - Merge commit: `af4b0453e55418abddab153a9a2eba58369afbe4`.
 - Deploy (`deploy critter-connect`, log `$ST/deploy.log`), last line: `deploy critter-connect: live at https://critterconnect.org`.
 - Smoke: `bash deploy/check.sh` exit 0 (`$ST/check-after.txt`); `live-after.txt` version.txt = `af4b0453`, same 5 status codes (200), same places sha256 (diff empty).
-- Result: done
+Result: done
 
 ## Decisions
 
