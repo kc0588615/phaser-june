@@ -381,7 +381,7 @@ SHOULD-CONSIDER:
   5. Run `npm run site:build`, then block C. Move the artifact to the intermediate folder: `mkdir -p $M/e2e-s1 && mv e2e-artifacts/*-site $M/e2e-s1/site`.
   6. If you fixed code, run block A again. Commit `package.json`, `package-lock.json`, this plan and any code fix, then push.
 
-- [ ] **S2. Game E2E on the dev copy, compared with the baseline.**
+- [x] **S2. Game E2E on the dev copy, compared with the baseline.**
   - Changes only `AGENTS.md`, and only if `next dev` rewrites it.
   1. Run block B. It must pass.
   2. Save the run as the one intermediate folder:
@@ -459,6 +459,7 @@ Run this once, on the final commit, after `## Code review (Astra)` and any fix s
 - **D1 (S1) · `/bin/kill` in blocks C and D.** As written, `trap 'kill -- -$pid' EXIT` killed the block's own subshell (exit 143) and left the server running. Bash's builtin `kill` maps `-PID` of a known job to the group bash recorded for that job, which is the subshell's group, since job control is off in subshells. `/bin/kill` signals the real `setsid` group. Fixed in both blocks; reproduced and checked with a `setsid sleep` test. No other change to the blocks.
 - **D2 (S1) · New build notice, not fixed:** `⚠ React 18 support is deprecated in Next.js 16 and will be removed in Next.js 17. Please upgrade to React 19.` New in 16.4.x (`next/dist/server/config.js`); the app is on `react@18.3.1` (`^18.2.0`). React 19 is a major upgrade, out of scope. The build exits 0; Verification step 5's grep excludes this one line. For the owner's Summary: React 19 is needed before Next 17.
 - **D3 (S1) · Code changes for the upgrade: none.** typecheck, lint (react-hooks 7.1.x stack), `npm test` 61/61 and the build passed unchanged.
+- **D4 (S2) · `AGENTS.md` changed, outside the brief's Scope.** `next dev` 16.4.6 rewrote its generated block heading `# This is NOT the Next.js you know` → `## …` (one line, Finding 4). Written by `next dev`, never edited by hand; committed so the tree stays clean.
 
 ## Log
 
@@ -470,5 +471,6 @@ Run this once, on the final commit, after `## Code review (Astra)` and any fix s
 - 2026-11-14 09:38 UTC · Steps: planner wrote S1 (upgrade + static checks + e2e:site), S2 (e2e:fresh vs baseline), S3 (next start probe) and Verification (final-e2e/ artifact). No code change.
 
 - 2026-11-14 09:44 UTC · S1: `npm install next@16.4.6 eslint-config-next@16.4.6` + `npm update source-map-js`. `npm ls`: next 16.4.6 (deduped under @clerk/nextjs), sharp 0.35.5, source-map-js 1.2.2 (postcss + @tailwindcss/node), shell-quote empty; `npm audit --omit=dev`: found 0 vulnerabilities. Block A: 4 / config ok / 3 files / tree ok / lock ok. typecheck, lint, test 61/61, build exit 0 (one new React 18 deprecation notice, D2); site:build + e2e:site 444/444 (artifact `e2e-s1/site/`). Block C/D trap fixed (D1). No code change.
+- 2026-11-14 09:52 UTC · S2: e2e:fresh on dev copy (guard ok) exit 0, 1575/1575, seed 7, same 4 round lines as baseline; artifact `e2e-s2/` (e2e-s1 removed). Block E: same 45-shot set; 14 differ byte-wise: 5 globe (spin), 9 game shots. Viewed the in-group ones plus 08: 02c-notes (clue toast scroll frame), 06-end-after-reload and 08-pencil-bonus-end (card entrance: star/photo scale, points fade-in, earlier frame on either side), same layout and content. Not viewed (not in E's groups, mid-animation captures): 03-called-it, 04-round-1/3/4-landed, 06-before/after-reload. Board, sheets, settled round-end shots (04-round-*-end, 03-round-3-out-of-moves) byte-identical. AGENTS.md rewritten by next dev (D4). No code change.
 
 ## Summary
