@@ -151,7 +151,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -336,6 +336,10 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+MUST-FIX: none
+SHOULD-CONSIDER: none
+
 ## Revision notes
 
 ## Steps
@@ -355,5 +359,6 @@ SHOULD-CONSIDER:
 - 2026-11-14 10:42 UTC · Baseline: typecheck/lint/test 0 (61 tests), lock 45/40/40, hook control matches audit (+ root app.env 0), live all 200, greps recorded; no E2E per brief.
 - 2026-11-14 10:52 UTC · Architecture: architect wrote findings + target design (AGENTS.md:19, playtest:36 already true; hook = Edit + one sed; lock JSON filter dry-run 0 added/204 deleted; CI step dry-run exits 1 with staged *.prisma, 0 clean). Plan-only change; no checks needed.
 - 2026-11-14 11:00 UTC · Fable review: APPROVE, 0 MUST-FIX; 3 MISSED items (shots/run.mjs not a DB script; review text vs hook; Steps lines use *.prisma) + 4 SHOULD-CONSIDER for planner. Plan-only; no checks needed.
+- 2026-11-14 10:57 UTC · Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only; no checks needed.
 
 ## Summary
