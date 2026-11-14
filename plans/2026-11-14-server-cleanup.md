@@ -403,7 +403,7 @@ Every step ends: `npm run typecheck` 0, `npm run lint` 0, `npm test` passes, the
   - Handoff item (next free number; H13 today) in `/srv/critter-ai/handoff/critter-connect.md`: owner drops "Game tests play real rounds, so they add rows to `clue_match_solves`" from `~/AGENTS.md` (Critter Connect section). Blocks: nothing.
   - Check: `npm test` 61/61 (66 − 5). `git grep -n -E "clue-game/solves|solveReport|lib/player" -- . ':!plans' ':!package-lock.json' ':!db/analysis'` prints nothing. `git grep -n -i -E "saved with (each|every)|add rounds|first solve" -- src docs AGENTS.md README.md .claude .github db/schema.sql` prints nothing. No E2E: no game code calls the route (Baseline greps); S2 runs it.
 
-- [ ] S2. **Audit S3, code: drop the models and Drizzle's CLI** (one commit; `drizzle.config.ts` imports the CLI's types).
+- [x] S2. **Audit S3, code: drop the models and Drizzle's CLI** (one commit; `drizzle.config.ts` imports the CLI's types).
   - `git rm -r src/db/schema drizzle.config.ts`; `npm uninstall drizzle-kit --no-audit --no-fund --prefer-offline`; `npm pkg delete "scripts.db:introspect"`.
   - `src/db/index.ts`: delete `import * as schema …` and `export * from './schema'`; end as Target design (the "No models" comment + `export const db = drizzle(client);`).
   - Lock check **L** (Verification) against `HEAD`: `removed 37, added 0, changed 0, root ok true` (Fable SC1). Anything else: stop, `git checkout package.json package-lock.json`, `npm explain gel`, record under Decisions. No `overrides`.
@@ -542,5 +542,6 @@ Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Th
 - 2026-11-14 06:33 UTC · Revision: none needed (0 MUST-FIX in both reviews); review follow-ups listed under Revision notes for the Steps stage. Plan-only.
 - 2026-11-14 06:50 UTC · Steps: planner wrote S1–S7 (D2→S3 code→S3 docs→D13→S8 docs→S8 runbook/pages→final), V1–V4 + failure modes; folded in all review follow-ups; `043-0` confirmed by one dev-copy read (19 rows). Plan-only.
 - 2026-11-14 06:40 UTC · S1: deleted save route, `player.ts`, `solveReport.ts` + test; `npm run clean`; all F1 line fixes + `constants.ts:4`; handoff H13 (owner: `~/AGENTS.md` sentence). typecheck 0, lint 0, test 61/61; D2 grep: only `src/db/schema/player.ts:3` (S2 deletes it); saved-rounds grep empty. No E2E (S2 runs it).
+- 2026-11-14 07:05 UTC · S2: deleted `src/db/schema/` (4), `drizzle.config.ts`, the introspect script, Drizzle's CLI; `db` schema-less. Lock check L: removed 37, added 0, changed 0, root ok true; `npm ls` gel/shell-quote/@esbuild-kit (empty), exit 1; `npm audit --omit=dev` 3 (next critical, sharp high, source-map-js high) → `s2-npm-audit.txt`. typecheck 0, lint 0, test 61/61. E2E 1575/1575, 0 console errors, 0 failed requests → `e2e-s2/`. J: signed-out/signed-in both `200 {"entries":[]}`, no journal Error; control: signed-out 200, signed-in `500 {"error":"Failed to load the journal"}`, 1 Error line; local POST save route 404 (both runs).
 
 ## Summary
