@@ -119,7 +119,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none) — none needed
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -392,7 +392,137 @@ None needed: Fable APPROVE_WITH_CHANGES and Astra APPROVE, both 0 MUST-FIX; arch
 
 ## Steps
 
+Order D2 → audit S3 → D13 → audit S8 (Architecture, Order of work). `S/` = `/srv/critter-ai/agent-state/missions/server-cleanup/`. **DEV** = the brief's dev-copy subshell (source the dev-copy file, guard `current_database() = phaser_june_dev`, `CHROME_PATH=S/chrome-nosandbox.sh`); E2E command in full under Verification. Line numbers are on `2aa3bd2c`: re-find each line by its text. No new text may hold a grep-trap string (Architecture, "Grep traps").
+
+Every step ends: `npm run typecheck` 0, `npm run lint` 0, `npm test` passes, the step's own checks, then check it off, one Log line, commit `server-cleanup: …` (why, not what), push (pre-push hook = typecheck + lint).
+
+- [ ] S1. **D2: delete the save route and its code.**
+  - `git rm src/app/api/clue-game/solves/route.ts src/lib/player.ts src/clueGame/solveReport.ts tests/clueGame/solveReport.test.ts`, then at once `npm run clean` (no `e2e:fresh` or dev server from this worktree running).
+  - Every F1 "Lines to correct" edit, as written: `src/proxy.ts:3-4`, `animalBoard.ts:28`, `questionMatch.ts:70`, `db/schema.sql:91`, `:100-102`, `:119`, `AGENTS.md:55`, `:57` (the route only), `:59`, `README.md:25`, playtest `SKILL.md:16`, `ci.yml:42-43`, `docs/CLUE_MATCH.md:10`, `:24`, `:45`, `:52`, `:74` (with "~90 s" → "90 s to 2.5 min"), `:101`, `ANIMAL_BOARD_PAPER.md:247`, `DATABASE_ACCESS.md:177`.
+  - Fable MISSED 1: `src/game/constants.ts:4` drop " (saved with each solve)". Under **Decisions**: outside the Scope list, comment only, made because Goal 1 covers every line that says rounds are saved.
+  - Handoff item (next free number; H13 today) in `/srv/critter-ai/handoff/critter-connect.md`: owner drops "Game tests play real rounds, so they add rows to `clue_match_solves`" from `~/AGENTS.md` (Critter Connect section). Blocks: nothing.
+  - Check: `npm test` 61/61 (66 − 5). `git grep -n -E "clue-game/solves|solveReport|lib/player" -- . ':!plans' ':!package-lock.json' ':!db/analysis'` prints nothing. `git grep -n -i -E "saved with (each|every)|add rounds|first solve" -- src docs AGENTS.md README.md .claude .github db/schema.sql` prints nothing. No E2E: no game code calls the route (Baseline greps); S2 runs it.
+
+- [ ] S2. **Audit S3, code: drop the models and Drizzle's CLI** (one commit; `drizzle.config.ts` imports the CLI's types).
+  - `git rm -r src/db/schema drizzle.config.ts`; `npm uninstall drizzle-kit --no-audit --no-fund --prefer-offline`; `npm pkg delete "scripts.db:introspect"`.
+  - `src/db/index.ts`: delete `import * as schema …` and `export * from './schema'`; end as Target design (the "No models" comment + `export const db = drizzle(client);`).
+  - Lock check **L** (Verification) against `HEAD`: `removed 37, added 0, changed 0, root ok true` (Fable SC1). Anything else: stop, `git checkout package.json package-lock.json`, `npm explain gel`, record under Decisions. No `overrides`.
+  - `npm ls --omit=dev --package-lock-only gel shell-quote @esbuild-kit/esm-loader` prints `(empty)`, exit 1 (the pass). `npm audit --omit=dev > S/s2-npm-audit.txt`; expect 3 (next critical, sharp high, source-map-js high); count in Log.
+  - E2E: DEV `npm run e2e:fresh` → `S/e2e-s2/`. All checks pass.
+  - Signed-in journal check **J** (Verification), with its control run, and the local POST → 404. Results in Log.
+
+- [ ] S3. **Audit S3, docs.**
+  - `AGENTS.md:48`: delete. `AGENTS.md:57` models sentence → "One client, `src/db/index.ts` (Drizzle over postgres.js, no models); every query is raw SQL (`docs/DRIZZLE_ORM_GUIDE.md`); the old expedition tables still exist in Postgres." Keeps that clause, drops only "unmodelled" (Fable SC4). Under **Decisions**: replaces F2's "drop the clause" (Q18's call, and the decision rule).
+  - `README.md:26` as F2.
+  - Rewrite `docs/DRIZZLE_ORM_GUIDE.md` per Target design §1–5 (its `:3` route fix is F4's). Check its list of 9 queries against `git grep -n "execute<" src`.
+  - Check: the full DoD grep prints only D13's hits (`src/clueGame/places.ts`, `PlaceCard.tsx`). Read the guide once for claims the code doesn't back.
+
+- [ ] S4. **D13: continents only.**
+  - Every F3 edit: `src/lib/places.ts:1`, `:15`; `src/app/api/places/route.ts:6`; `src/clueGame/places.ts:1-3` and delete `:38-74`; `PlaceCard.tsx:2`, `:25`; `scripts/e2e.mjs:14`; playtest `SKILL.md:36`.
+  - Astra SC2, in `docs/CLUE_MATCH.md`'s journal sentence (`:10`, as S1 left it), add: "Only continents become sightings: on a fresh device an old solve's country or area adds none (sightings already on a device stay)." Same note in the Summary.
+  - E2E: DEV `npm run e2e:fresh` → `S/e2e-s4/`; delete `S/e2e-s2/`. All checks pass, incl. the globe-list check.
+  - Check: the full DoD grep prints nothing.
+
+- [ ] S5. **Audit S8, docs and comments (no behavior).**
+  - App's route: `DATABASE_ACCESS.md:4-5`, the map block, port table `:31`/`:32`, route table `:47`; `AGENTS.md:19` (guide `:3` done in S3; confirm).
+  - `--production`/`CLUE_USE_TUNNEL`: `scripts/db:2`, `:6`, the new comment above `:38`; `DATABASE_ACCESS.md:70-75`, `:77-80`, after `:128`; `SHAPEFILE_BEST_PRACTICES.md:21`.
+  - Dev copy: `DATABASE_ACCESS.md:192`; `deploy/db/dev-role.sql:1-3` and after `:33` (never run the file); `docker-compose.yml:35-36`.
+  - Refresh times: `DATABASE_ACCESS.md:171`, `db/schema.sql:208` → "90 s to 2.5 min(utes)".
+  - `db/schema.sql` `:1-2`, `:13`, `:68`, `:123`. Keep `043-0` (Fable SC2): planner read 2026-11-14, DEV, `SELECT rules_version, count(*) FROM clue_match_solves GROUP BY 1` (188 rows, the live count): 041-1 29, 041-2 20, 041-3 10, 041-4 12, 041-5 50, 043-0 19, NULL 48.
+  - Check: `git diff -U0 scripts/db deploy/db/dev-role.sql docker-compose.yml db/schema.sql | grep -E '^[+-][^+-]' | grep -v -E '^[+-]\s*(//|--|#)'` prints nothing (comments only); `node --check scripts/db` 0.
+
+- [ ] S6. **Audit S8: the runbook check and the page files.**
+  - Replace `DATABASE_ACCESS.md:249-252` with the Architecture's block (keep the `curl` line).
+  - **Before committing it** (Fable SC3), from the repo root, outside any DEV subshell: run the block verbatim. Expect the species count, then `OK`. Then once with the file path misspelled: error, exit 1, no DB contact. If the first run prints `FAIL: <text>` on a real refusal: wait 20 s (PgBouncer `server_login_retry`) and run once more; if it still fails, set the `case` pattern to that exact refusal text and run again. Never loosen it to "any error". Log: `OK`, the count, the refusal text matched.
+  - `src/pages/_app.tsx:9` comment; `src/pages/_document.tsx:6` → `<Html lang="en">`.
+  - E2E: DEV `npm run e2e:fresh` → `S/e2e-s6/`; delete `S/e2e-s4/`. Compare the screenshots listed in V1.4 with `S/baseline-e2e/` by eye; they must look the same.
+
+- [ ] S7. **Final Verification.** Run V1 and V2 in full on the final commit; artifacts `S/final-e2e/plain/` and `S/final-e2e/africa/`; then delete `S/e2e-s6/`. Record every result in Log; draft the Summary (V4). After this, the Astra code review runs (CLAUDE.md, mission step 6). Fix steps it adds go after S7, followed by a new "Re-run S7" step. With no fix steps, the closing session re-runs V2 only and keeps S7's E2E artifacts.
+
 ## Verification
+
+E2E first. Run everything from the worktree root, one heavy job at a time. Never print a connection string, a key or a token.
+
+**E2E command** (DEV; `<dir>` per step):
+```
+( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+  [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+  set -o pipefail
+  CHROME_PATH=/srv/critter-ai/agent-state/missions/server-cleanup/chrome-nosandbox.sh npm run e2e:fresh 2>&1 | tee /tmp/server-cleanup-e2e.log )
+run=$(ls -t e2e-artifacts | head -1); mv "e2e-artifacts/$run" S/<dir>; mv /tmp/server-cleanup-e2e.log S/<dir>/run.log
+```
+If the guard fails: stop, add a handoff item. Pass: exit 0, last line `N/N checks passed`, `jq '.consoleErrors, .failedRequests | length' report.json` = 0, 0.
+
+**V1 · E2E** (S7 runs all; earlier steps the parts they name)
+1. `npm run e2e:fresh` as above (seed 7, 4 rounds) → `S/final-e2e/plain/`.
+2. Same with `E2E_PLACE=continent:africa` before `npm run` → `S/final-e2e/africa/`; `jq .place report.json` names Africa.
+3. `npm run site:build && npm run e2e:site` → exit 0 (site untouched; DoD).
+4. `_document.tsx` guard: `S/final-e2e/plain/` vs `S/baseline-e2e/`, by eye (the globe spins): `01-globe.png`, `02d-field-guide-{light,dark}.png`, `02e-field-guide-rows-{light,dark}.png`, `10-sources-{closed,open}-{light,dark}.png`. Same look.
+5. **J · signed-in journal** (Astra SC1). The scrubbed copy has 0 `profiles` (planner read 2026-11-14), so the right signed-in answer is `{"entries":[]}`, the same as signed out. The control run shows that the signed-in 200 came through the query.
+   - Helper `S/journal-signed-in.mjs`, outside the repo, never committed; write it in S2 after reading Failure modes. Base URL as its argument. It reads `CLERK_SECRET_KEY` from the env and exits 1 unless it starts with `sk_test_`. Clerk Backend API (`https://api.clerk.com/v1`, as `create-test-player.mjs`): find `playtest+clerk_test@example.com` (create it the way that script does if missing); `POST /sessions {"user_id"}`; `POST /sessions/<id>/tokens` → `jwt`. Then `GET <base>/api/clue-game/journal/` without and with `Authorization: Bearer <jwt>`. Prints only `signed-out <status> <body>` and `signed-in <status> <body>`. Always `POST /sessions/<id>/revoke` at the end.
+   - Run: in DEV, `ss -ltn | grep ':3102 '` prints nothing; `NEXT_DIST_DIR=.next-e2e node_modules/.bin/next dev -p 3102 > S/journal-server.log 2>&1 &`; poll until `curl -sf http://localhost:3102/api/clue-game/journal/` answers (first compile, ≤ 3 min); `node S/journal-signed-in.mjs http://localhost:3102`. Then `curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{}' http://localhost:3102/api/clue-game/solves/` → 404 (or 405). Stop the server (`pkill -f '[n]ext dev -p 3102'`) before any `e2e:fresh` (same `.next-e2e`).
+   - Pass: both lines `200 {"entries":[]}`; `S/journal-server.log` has no `[API /clue-game/journal] Error`.
+   - **Control, once (S2):** the same run, but export `DATABASE_URL=postgresql://nobody@127.0.0.1:9/none` after the guard (closed port; the Clerk keys stay). Pass: `signed-out 200 {"entries":[]}`, `signed-in 500 {"error":"Failed to load the journal"}`, and the log has the journal Error line. That proves the token reaches `auth()`, the signed-in path runs the query, and the exported URL beats `.env.local`.
+   - **Honest fallback:** if Clerk refuses (no session endpoint, can't create the user) or the control doesn't give 500, record the exact reason in Log and the Summary ("signed-in journal not exercised: …"). Don't change code or data to force it. What still covers the route: its file is unchanged, typecheck holds `db.execute` on the schema-less client, and `e2e:fresh` runs `db.execute` through pool, places and ranges. Live can't be checked signed in: production Clerk has no backend sessions.
+
+**V2 · Static and DoD** (on the final commit)
+- `npm run typecheck` 0, `npm run lint` 0, `npm test` 61/61.
+- `git grep -n -E "clue-game/solves|solveReport|lib/player|db:introspect|drizzle-kit|db/schema/|PLACE_KIND_LABELS|groupPlaces|groupLabel" -- . ':!plans' ':!package-lock.json' ':!db/analysis'` prints nothing.
+- `npm ls --omit=dev --package-lock-only gel shell-quote @esbuild-kit/esm-loader` → `(empty)`, exit 1 (the pass).
+- `npm audit --omit=dev > S/final-npm-audit.txt`; record it (baseline 4: 2 critical, 2 high; expected 3: next critical, sharp high, source-map-js high).
+- **L · lock check** (`<ref>` = `HEAD` in S2, `origin/main` in S7) → `removed 37, added 0, changed 0, root ok true`:
+  ```
+  node -e 'const ref=process.argv[1]; const o=JSON.parse(require("child_process").execSync(`git show ${ref}:package-lock.json`,{maxBuffer:1e8})).packages, n=require("./package-lock.json").packages; const {"drizzle-kit":_,...dev}=o[""].devDependencies; const r=Object.keys(o).filter(k=>!(k in n)), a=Object.keys(n).filter(k=>!(k in o)), c=Object.keys(n).filter(k=>k in o&&k!==""&&JSON.stringify(o[k])!==JSON.stringify(n[k])); console.log(`removed ${r.length}, added ${a.length}, changed ${c.length}, root ok ${JSON.stringify({...o[""],devDependencies:dev})===JSON.stringify(n[""])}`)' <ref>
+  ```
+- `git status` clean; `git diff --stat origin/main` touches only Scope files, plus `src/game/constants.ts` (Decisions) and the plan.
+
+**V3 · Release smoke** (the Release unit, after `deploy critter-connect`)
+- `bash deploy/check.sh` passes; `curl -s https://play.critterconnect.org/version.txt` shows the merge commit.
+- `diff <(jq -S '.places |= map(select(.kind == "continent"))' S/places-before.json) <(curl -s https://play.critterconnect.org/api/places/ | tee S/places-after.json | jq -S .)` prints nothing: the 5 continents, same fields, no other kind, `animals` unchanged. A difference that is only content (an owner content build since the baseline) is recorded and judged; a non-continent kind or a missing field is a failed release.
+- `curl -s -o /dev/null -w '%{http_code}'` on `https://play.critterconnect.org/api/clue-game/pool/` and `…/api/clue-game/journal/` → 200 each.
+- `curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{}' https://play.critterconnect.org/api/clue-game/solves/` → 404 or 405.
+- Browsers may hold the old 156-place response for up to 1 h (`swr=3600`); it's a superset, so harmless.
+
+**V4 · PR body and Summary must say**
+- Deleted: the 4 D2 files, `src/db/schema/` (4 files), `drizzle.config.ts`, the `db:introspect` script, `drizzle-kit`, and the 4 place helpers. `npm audit` before and after. Every E2E run with its counts and folder, J's result (or its fallback reason), the smoke results.
+- No production content build is needed.
+- Run `npm run clean` once after pulling, in every checkout with a `.next*` folder (Fable SC5): the owner's WSL, `/srv/critter-ai/critter-connect`, and the ones `ls -d /srv/critter-ai/worktrees/*/.next* ~/orca/workspaces/*/.next* 2>/dev/null` lists. List them; don't clean other checkouts.
+- Continent-only places: a fresh device no longer rebuilds an old solve's country or area sightings (Astra SC2).
+- The handoff item from S1; the Notes (dead code left for later missions).
+
+**Disk** (88% used, 5.6 GB free): `S/baseline-e2e/` stays (brief-named). Keep only the latest `S/e2e-s*` and, at the end, `S/final-e2e/`. `mv` the artifacts, don't copy them; `e2e-artifacts/` prunes itself to 10 runs.
+
+### Failure modes
+
+Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Their failure modes are listed here before either is written or run.
+
+**Runbook check:**
+1. Dev-copy file missing or unreadable: the `.` fails, exit 1, no DB contact (the S6 negative run).
+2. The file loads but has no `DATABASE_URL`: the `:?` stops it.
+3. A live URL inherited from the shell, or the `.env.local` fallback: the identity line isn't `critter_dev/phaser_june_dev`, so FAIL, exit 1. Never exercised on purpose (it would touch live).
+4. The copy is unreachable (network, PgBouncer down): the identity line is empty, so FAIL.
+5. `critter_dev` can reach prod (a grant regression): `select 1` succeeds, so FAIL.
+6. The prod probe fails for another reason (network, a cached `server_login_retry`): the text doesn't match, so FAIL with its first line.
+7. PgBouncer words the refusal differently: FAIL with its text. Match exactly that text (S6).
+8. A secret leaks: psql's errors name host and port only, and the block never echoes the URL.
+
+**J helper:**
+1. Not a dev key: it refuses.
+2. The playtest user is missing: create it, or fall back.
+3. Clerk refuses session creation (dev-only endpoint, an API change): fall back and record.
+4. The token (60 s) expires before the GET: warm the route first and mint the token right before the request. The control shows it as 200 instead of 500.
+5. The middleware ignores the Bearer token: signed in looks like signed out. The control catches it (200, not 500).
+6. Next loads `.env.local`'s live URL over the exported one: the control catches it (200, not 500). The DEV guard runs before the server starts.
+7. Port 3102 is busy, or the route is still compiling: the `ss` check and the warm loop.
+8. A secret is printed: it prints only statuses and bodies, never the key, the jwt or the env.
+9. A session is left open: it always revokes, in `finally`.
+10. A leftover server clashes with `e2e:fresh` over `.next-e2e`: stop it before any E2E.
+
+### Risks / open questions
+
+- J can't show non-empty entries: the scrubbed copy has no profiles, and adding rows is out of scope. The control is the proof that the query path runs, and live can't be checked signed in.
+- The dev copy may lag live content. Local checks compare shape; V3 compares values.
+- The PgBouncer refusal wording is unknown until S6 runs it.
 
 ## Code review (Astra)
 
@@ -407,5 +537,6 @@ None needed: Fable APPROVE_WITH_CHANGES and Astra APPROVE, both 0 MUST-FIX; arch
 - 2026-11-14 06:26 UTC · Fable review: APPROVE_WITH_CHANGES, 0 MUST-FIX; 1 missed comment (`src/game/constants.ts:4`), 5 SHOULD-CONSIDER. Plan-only.
 - 2026-11-14 06:28 UTC · Astra review: APPROVE, 0 must-fix, 2 should-consider (signed-in journal check; continent-only places vs fresh-device sightings).
 - 2026-11-14 06:33 UTC · Revision: none needed (0 MUST-FIX in both reviews); review follow-ups listed under Revision notes for the Steps stage. Plan-only.
+- 2026-11-14 06:50 UTC · Steps: planner wrote S1–S7 (D2→S3 code→S3 docs→D13→S8 docs→S8 runbook/pages→final), V1–V4 + failure modes; folded in all review follow-ups; `043-0` confirmed by one dev-copy read (19 rows). Plan-only.
 
 ## Summary
