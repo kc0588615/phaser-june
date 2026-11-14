@@ -46,8 +46,6 @@ CLAUDE.md
 
 # Generated tool output
 /.playwright-mcp/
-/.understand-anything/*
-!/.understand-anything/.understandignore
 
 # Temporary test artifacts
 /phaser-svg-query-test.png

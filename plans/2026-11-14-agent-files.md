@@ -366,7 +366,7 @@ Rules for every step:
   - Then the Target design's `python3 -I` lock filter on `skills-lock.json`. No `npx skills`.
   - Check: V2, then V3 (writes `$ST/lock-after.txt`; numstat `0 204`), then V9's `.agents/skills` lines (93 `D`, 34 folders, no kept folder).
   - V6 grep 1 now hits only `docs/agents/domain.md` and `docs/agents/issue-tracker.md` (S6 fixes those).
-- [ ] S4. **D17.** `git rm -r -q -- .codex .kiro .understand-anything`, then Edit tool on `.gitignore`: delete `:49-50`. `:47` (the comment) and `:48` stay.
+- [x] S4. **D17.** `git rm -r -q -- .codex .kiro .understand-anything`, then Edit tool on `.gitignore`: delete `:49-50`. `:47` (the comment) and `:48` stay.
   - Check: V7's `.gitignore` hunk (`-49,2 +48,0`). V6 grep 2 prints nothing. `ls -d .codex .kiro .understand-anything` finds none of them. `git status --short` shows no new untracked file.
 - [ ] S5. **Link.** `ln -s ../../.agents/skills/writing-for-agents .claude/skills/writing-for-agents && git add .claude/skills/writing-for-agents`.
   - Check: V8 (writes `$ST/link.txt`).
@@ -540,5 +540,6 @@ The hook and CI's guard are tested in isolation. These tests existed before the 
 - 2026-11-14 11:09 UTC · S1 hook: header + `*.env` / `*.prisma` arms via Edit, pattern typo via sed (count 1). bash -n + exec ok, no mode change; hunks `-3,2 +3,2`, `-8 +8,2`, `-11 +12`; control run (`$ST/guard-after.txt`): exactly cases 5, 6, 10, 11 go 0 → 2, other 17 unchanged; live Write probes `app.env` and `x.prisma` both refused with the hook's messages, probe dir empty. typecheck 0, lint 0.
 - 2026-11-14 11:10 UTC · S2 CI step: 4 lines inserted before the site-links comment via Edit (anchor `:25` only); hunk `-24,0 +25,4`; yaml step order ok; V5 dry run (`$ST/ci-guard.txt`): new step 0 clean, existing 0, staged `prisma/*.prisma` listed + exit 1; temp worktree removed. typecheck 0, lint 0.
 - 2026-11-14 11:16 UTC · S3 skills: `git rm` 34 folders + JSON lock filter. V2 11 folders, retro ok; V3 (`$ST/lock-after.txt`) folders 11 | locked 6 | v1 matches 6, no-folder [], 5 not-in-lock as expected, version 1, numstat 0/204; V9 93 D, 0 other, 34 folders, no kept touched; V6 grep 1 hits only docs/agents/domain.md (2) + issue-tracker.md (4). typecheck 0, lint 0.
+- 2026-11-14 11:12 UTC · S4 D17: `git rm` .codex, .kiro, .understand-anything; .gitignore `:49-50` dropped via Edit (hunk `-49,2 +48,0`); grep 2 no hits (exit 1); dirs gone; status shows only the 3 D + .gitignore, no untracked. typecheck 0, lint 0.
 
 ## Summary
