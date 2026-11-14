@@ -411,7 +411,7 @@ Every step ends: `npm run typecheck` 0, `npm run lint` 0, `npm test` passes, the
   - E2E: DEV `npm run e2e:fresh` → `S/e2e-s2/`. All checks pass.
   - Signed-in journal check **J** (Verification), with its control run, and the local POST → 404. Results in Log.
 
-- [ ] S3. **Audit S3, docs.**
+- [x] S3. **Audit S3, docs.**
   - `AGENTS.md:48`: delete. `AGENTS.md:57` models sentence → "One client, `src/db/index.ts` (Drizzle over postgres.js, no models); every query is raw SQL (`docs/DRIZZLE_ORM_GUIDE.md`); the old expedition tables still exist in Postgres." Keeps that clause, drops only "unmodelled" (Fable SC4). Under **Decisions**: replaces F2's "drop the clause" (Q18's call, and the decision rule).
   - `README.md:26` as F2.
   - Rewrite `docs/DRIZZLE_ORM_GUIDE.md` per Target design §1–5 (its `:3` route fix is F4's). Check its list of 9 queries against `git grep -n "execute<" src`.
@@ -532,6 +532,8 @@ Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Th
 
 - S1 · `src/game/constants.ts:4` (outside Scope list): dropped " (saved with each solve)" from a comment. Goal 1 covers every line that says rounds are saved (Fable MISSED 1).
 - S1 · `src/db/schema/player.ts:3` still names the player helper; left for S2, which deletes the file.
+- S3 · `AGENTS.md:57`: kept "the old expedition tables still exist in Postgres", dropped only "unmodelled" (Fable SC4); replaces F2's "drop the clause".
+- S3 · Guide's route line (F4's `:3` fix) written correctly in the rewrite: live app `critter_app` → `db:5432`, everything else PgBouncer 6432. S5 only confirms it.
 
 ## Log
 
@@ -543,5 +545,6 @@ Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Th
 - 2026-11-14 06:50 UTC · Steps: planner wrote S1–S7 (D2→S3 code→S3 docs→D13→S8 docs→S8 runbook/pages→final), V1–V4 + failure modes; folded in all review follow-ups; `043-0` confirmed by one dev-copy read (19 rows). Plan-only.
 - 2026-11-14 06:40 UTC · S1: deleted save route, `player.ts`, `solveReport.ts` + test; `npm run clean`; all F1 line fixes + `constants.ts:4`; handoff H13 (owner: `~/AGENTS.md` sentence). typecheck 0, lint 0, test 61/61; D2 grep: only `src/db/schema/player.ts:3` (S2 deletes it); saved-rounds grep empty. No E2E (S2 runs it).
 - 2026-11-14 06:56 UTC · S2: deleted `src/db/schema/` (4), `drizzle.config.ts`, the introspect script, Drizzle's CLI; `db` schema-less. Lock check L: removed 37, added 0, changed 0, root ok true; `npm ls` gel/shell-quote/@esbuild-kit (empty), exit 1; `npm audit --omit=dev` 3 (next critical, sharp high, source-map-js high) → `s2-npm-audit.txt`. typecheck 0, lint 0, test 61/61. E2E 1575/1575, 0 console errors, 0 failed requests → `e2e-s2/`. J: signed-out/signed-in both `200 {"entries":[]}`, no journal Error; control: signed-out 200, signed-in `500 {"error":"Failed to load the journal"}`, 1 Error line; local POST save route 404 (both runs).
+- 2026-11-14 06:58 UTC · S3: `AGENTS.md` introspect line deleted, `:57` models sentence → one client/raw SQL; `README.md:26`; guide rewritten (§1–5; 9 queries checked against `git grep "execute<" src`). typecheck 0, lint 0, test 61/61; DoD grep: only D13 hits (`src/clueGame/places.ts`, `PlaceCard.tsx`). No E2E (docs only).
 
 ## Summary
