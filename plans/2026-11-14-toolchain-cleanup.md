@@ -147,6 +147,8 @@ Branch `agent/toolchain-cleanup` at `1c40db06` = `origin/main` `af4b0453` (PR #7
 
 **E2E** (dev copy, guard ok): run 3 `npm run e2e:fresh` exit 0, **1575/1575**, seed 7, 4 rounds (Hairy Frog +310, Hirola lost, Golden-rumped Sengi +50, African Forest Elephant +110); artifact `S/baseline-e2e/` (`report.json`, screenshots, `run.log`, `COMMAND.txt`). Runs 1 and 2, started at load ≈2 on 2 cores right after lint/test, each failed one different timing check, 1574/1575 ("the sort: … rows held paused", then "field guide: signs in pages turn on their own"); reports + logs in `S/baseline-flaky/`. So: start every E2E here at load < 0.6 (`until awk '{exit !($1<0.6)}' /proc/loadavg; do sleep 15; done`).
 
+**Before-run (S1, unedited branch `5b848b7d`):** Build exit 0, `site:build` exit 0, `e2e:site` exit 0 (**444/444**, 0 failed in `report.json`; shell rc lost to the self-matching `pkill`, see Decisions); artifact `S/baseline-site/` (`build.log`, `report.json`, `tc-site-e2e.log`, `tc-site-build.log`). Every later Site E2E must show 444/444.
+
 ## Architecture
 
 Read at `7f91ecd1` (= `origin/main` `af4b0453` + plan; `git fetch` 2026-11-14, no code diff vs `origin/main`). Every quoted text is where the brief says; nothing has moved or gone. Dry run in a throwaway copy (`/tmp`, no `.git`, no `.env.local`; deleted after, worktree untouched, `git status` clean): all deletions + headers block removed + S15 `package.json` edits + `npm install` → `npm ci` 0 `EBADENGINE`, `npm ls @types/node` 24.19.2, `tsc --noEmit` 0, `npm run lint` 0, `npm test` 61/61, config keys `distDir outputFileTracingRoot trailingSlash poweredByHeader allowedDevOrigins redirects`. No `next build` in that dry run: group 0 gives the build a before-run. Revised at `80a7e76d` for Fable's items (see Revision notes); the `.env.example` check and lock rule below were re-tried on the unedited worktree.
@@ -279,14 +281,14 @@ Follows the architecture's change groups 0-6 (S1 = group 0 … S7 = group 6). Li
   npm run site:serve >/tmp/tc-site-serve.log 2>&1 &
   for i in $(seq 30); do curl -sf -o /dev/null http://localhost:3101/ && break; sleep 1; done
   CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:site 2>&1 | tee /tmp/tc-site-e2e.log; rc=${PIPESTATUS[0]}
-  pkill -f 'http.server 3101'; echo "e2e:site exit $rc"
+  pkill -f '[h]ttp.server 3101'; echo "e2e:site exit $rc"
   ```
   Pass: exit 0, last line `N/N checks passed` with N = S1's count. Copy `e2e-artifacts/<run>-site/report.json` and `/tmp/tc-site-e2e.log` to the step's folder in `$S` (S7 copies the whole run folder), then `rm -rf e2e-artifacts/<run>-site`.
 - **Dev-copy E2E:** the brief's block (Definition of done), wrapped as `( … ) 2>&1 | tee /tmp/tc-e2e.log`. If the `phaser_june_dev` guard fails, stop and add a handoff item. Pass: exit 0, `1575/1575 checks passed` (seed 7, as in `baseline-e2e/`). If only a timing check fails (as in `baseline-flaky/`), gate and rerun once, keep both logs and record it in the Log. A second failure, or any other failure, is real: fix it before going on.
 - **Disk:** when a step writes a new intermediate folder (`e2e-s*`), delete the older one. Never delete `baseline-*` or `final-*`.
 - **End:** check the step off, add one Log line (UTC, what, results), commit code and plan together (`toolchain-cleanup: S<n> …`), push (the pre-push hook runs typecheck and lint).
 
-- [ ] S1. **Before-run, no edits (group 0).** On the unedited branch: `mkdir -p $S/baseline-site`; Gate, Build (`2>&1 | tee $S/baseline-site/build.log`); Gate, Site E2E → `$S/baseline-site/` (`report.json` and log, no screenshots). Record one line under **Baseline**: the Build exit code, the `site:build` and `e2e:site` exit codes, and the `N/N` count (every later Site E2E must match this N). If any of them fails, the failure was already there: record it under **Decisions** and add a step before S2 to fix it (the final check needs all three at 0). Files: the plan only.
+- [x] S1. **Before-run, no edits (group 0).** On the unedited branch: `mkdir -p $S/baseline-site`; Gate, Build (`2>&1 | tee $S/baseline-site/build.log`); Gate, Site E2E → `$S/baseline-site/` (`report.json` and log, no screenshots). Record one line under **Baseline**: the Build exit code, the `site:build` and `e2e:site` exit codes, and the `N/N` count (every later Site E2E must match this N). If any of them fails, the failure was already there: record it under **Decisions** and add a step before S2 to fix it (the final check needs all three at 0). Files: the plan only.
 - [ ] S2. **D18 + D19: three scripts and the docs viewer.** `package.json`: delete the lines `"docs": "python3 -m http.server 3000 -d docs",`, `"typecheck:watch": "tsc --noEmit --watch",` and `"clean": "rm -rf .next .next-e2e .test-dist",` (each ends in a comma and none is last; `serve`, `start`, `site:shots` and `clue:world-map` stay). `git rm docs/index.html docs/_sidebar.md`. Run `git grep -n 'npm run clean' -- . ':!plans'`: it found nothing at baseline. If it shows a line now, change that command to `rm -rf .next .next-e2e .test-dist` (that line only). Checks: Quick checks. `node -p "Object.keys(require('./package.json').scripts).join(' ')"` → `dev build serve site:build site:serve site:shots start typecheck lint test prepare content iucn e2e e2e:fresh e2e:site deploy clue:world-map`. `git ls-files docs/index.html docs/_sidebar.md` → nothing. `git grep -n -E 'typecheck:watch|npm run (clean|docs)\b|-d docs\b|docsify|_sidebar' -- . ':!plans' ':!package-lock.json'` → nothing. `git status --short package-lock.json` → nothing. No E2E: nothing the app runs changes.
 - [ ] S3. **D10: `check-game-css`.** `git rm scripts/check-game-css.mjs`. In `docs/DEPLOY.md`, in the bullet "**The game's styles stay the game's.**", cut from the space before `` `node scripts/check-game-css.mjs [base] [outDir]` (commit first) `` through `Not in CI: it fails by design on a PR that changes the game's styles.`. The line then ends `` …darkened `--color-1`, 2026-11-01). `` and the bullet's first two sentences are unchanged. Checks: Quick checks. `git grep -n check-game-css -- . ':!plans' ':!package-lock.json'` → nothing. `git ls-files scripts/check-game-css.mjs` → nothing. `git diff --numstat -- docs/DEPLOY.md` → `1	1`. Gate, then Site E2E (count = S1's) → `$S/e2e-s3-site/`.
 - [ ] S4. **D5 + D11: env examples and the unused sign-in name.**
@@ -373,6 +375,8 @@ E2E first, one heavy job at a time, each started after the Gate (load < 0.6). Us
 
 ## Decisions
 
+- S1: the Site E2E block's `pkill -f 'http.server 3101'` matched the shell running it (its command line holds that text), killing it with exit 144 before `echo` ran. Changed to `pkill -f '[h]ttp.server 3101'` (the bracket keeps the pattern from matching itself). S1's pass taken from `report.json` (444 checks, 0 failed → `process.exitCode = 0`).
+
 ## Log
 
 - 2026-11-14 16:46 UTC · Baseline: fresh greps as audit (nothing kept, no `npm run clean` outside plans), packages (EBADENGINE 22.x, @types/node 20.17.57), eol counts, live headers 3×6 + codes, typecheck/lint/test 61/61, E2E 1575/1575 → `baseline-e2e/` (2 earlier runs at load 2: 1574/1575, different timing checks).
@@ -381,5 +385,6 @@ E2E first, one heavy job at a time, each started after the Gate (load < 0.6). Us
 - 2026-11-14 17:25 UTC · Astra review: APPROVE, no MUST-FIX, no SHOULD-CONSIDER. Fable's MUST-FIX goes to Revision.
 - 2026-11-14 17:35 UTC · Revision: architect adopted all Fable items (origin/main `cmp` check fails loud, group 0 before-run of build/site:build/e2e:site, lock rule by entry, dummy-DATABASE_URL build, no local serve+curl, app.env.example last-line delete); none rejected. Plan-only change.
 - 2026-11-14 17:13 UTC · Steps: planner wrote S1–S7 (S1 before-run of build/site E2E, S2 D18+D19, S3 D10, S4 D5+D11, S5 D24, S6 S15, S7 final Verification) and Verification (E2E first, DoD greps, 14-file scope check). Plan-only change.
+- 2026-11-14 17:17 UTC · S1: before-run on unedited branch: Build 0, site:build 0, e2e:site 444/444 → `baseline-site/`. Fixed self-matching `pkill` in the Site E2E block.
 
 ## Summary
