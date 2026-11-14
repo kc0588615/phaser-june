@@ -115,7 +115,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -145,6 +145,220 @@ Recorded 2026-11-14 ~05:50 UTC on `447c8151` (= `origin/main` `2aa3bd2c` + this 
 
 ## Architecture
 
+Read on `origin/main` `2aa3bd2c` (fetched 2026-11-14; worktree `6f14c9fd` = it + this plan). Every `file:line` below is on that commit. All four findings hold as the audit states them; the line numbers the brief gives are still right.
+
+**Grep traps for the implementer.** The DoD grep runs over every file except `plans/`, the lock and `db/analysis/`. So no new text (docs, comments, the rewritten guide) may contain `clue-game/solves`, `solveReport`, `lib/player`, `db:introspect`, `drizzle-kit`, `db/schema/`, `PLACE_KIND_LABELS`, `groupPlaces` or `groupLabel`. Write "the save route", "Drizzle's CLI" and so on instead. Don't name the old ORM's npm scope either, because `.claude/hooks/guard-edits.sh` blocks it.
+
+### Findings (ranked by impact)
+
+**F1 · D2: a public write route into the live database (security).** `src/app/api/clue-game/solves/route.ts:12-53`: `POST` parses any JSON body and runs `db.insert(clueMatchSolves)`. It needs no sign-in and has no rate or size limit. For a signed-in caller, `src/lib/player.ts:10-24` also inserts a `profiles` row. It breaks least privilege, and the code contradicts the Privacy page. Fix: delete the 4 files.
+- **The delete list is complete.** `git grep -E "solves/route|solveReport|SolveReport|lib/player|currentPlayerId|clueMatchSolves|@/db/schema"` outside the deleted files finds only doc and comment lines (listed below) and `src/db/index.ts:3,32` (handled by S3). Nothing in `*.mjs`, `.github`, `Dockerfile`, `deploy`, `.githooks`, `.claude` or `.agents` names them. The only test is `tests/clueGame/solveReport.test.ts` (5 tests), so `npm test` goes from 66 to 61.
+- **One thing loses its last user:** `CLUE_GAME_GEM_TYPES` (`src/clueGame/categories.ts:35`) is imported only by `solveReport.ts:4`. It stays (decision rule); see Notes.
+- **Lines to correct** (before → after; keep the rest of each line):
+  - `src/proxy.ts:3-4` "(POST … reads it to save a solve under the player's profile)" → `// Makes the Clerk session available to routes (GET /api/clue-game/journal reads it with auth()).`
+  - `src/clueGame/animalBoard.ts:28` `/** Saved with every round (clue_match_solves.rules_version). */` → `/** Names the rule set; a game saved in the tab under another version isn't resumed (useAnimalSession). */`
+  - `src/clueGame/questionMatch.ts:70`, same comment → `/** Names the rule set (clue_match_solves.rules_version, rounds saved before 2026-10-01). */`
+  - `db/schema.sql:91` "created on their first solve" → `-- One row per signed-in player (a Clerk user) who saved a round before 2026-10-01; nothing adds rows now (the journal route reads them).`
+  - `db/schema.sql:100-102` → `-- One row per round finished before 2026-10-01, solved or lost; nothing writes here now. For analysis with SQL` / `-- (db/analysis/clue-match/07_solve_stats.sql) and the journal route. Anonymous play has no player_id.` (the `:102` bounds sentence goes).
+  - `db/schema.sql:119` → `-- From plan 041 until 2026-10-01 every finished round was saved. Discoveries (the journal) count only 'solved'.`
+  - `AGENTS.md:55`: drop `solveReport, `. `AGENTS.md:57`: drop `` `POST /api/clue-game/solves`, `` (S3 rewrites the rest of the line). `AGENTS.md:59` → `- Auth: Clerk (`src/pages/_app.tsx`, `src/proxy.ts`). Nothing creates `profiles` rows now; the journal route reads the ones saved before 2026-10-01.`
+  - `README.md:25`: drop `` , `clue-game/solves` `` (six routes left).
+  - `.claude/skills/playtest/SKILL.md:16` "(rounds then save with the player's profile)" → "Signing in is optional and saves nothing (the journal only merges an account's solves from before 2026-10-01)."
+  - `.github/workflows/ci.yml:42-43` → `# Plays the game in headless Chrome against the scrubbed copy phaser_june_dev, so CI holds no live database` / `# credentials (docs/DATABASE_ACCESS.md). Next dev needs both keys of Clerk's dev instance.`
+  - `docs/CLUE_MATCH.md:10` → "No sign-in needed, and no round is saved: the game only reads from the server. The Field Journal lives on the device; when signed in, it also pulls the player's solves saved before 2026-10-01. `?seed=N` replays …" (rest unchanged).
+  - `docs/CLUE_MATCH.md:24`: drop `` `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`), ``.
+  - `docs/CLUE_MATCH.md:45`: delete the mermaid line `H -- every round end --> SV[…]`.
+  - `docs/CLUE_MATCH.md:52` "is saved with every round as `rules_version`;" → "The rules version is `ANIMAL_RULES.version` (bumping it drops a game saved in the tab);".
+  - `docs/CLUE_MATCH.md:74` "`clue_match_solves` has a row per finished round:" → "… a row per round finished before 2026-10-01 (nothing writes it now):". Also "~90 s" → "90 s to 2.5 min" (S8, the same line).
+  - `docs/CLUE_MATCH.md:101` "solve-report and localStorage parsing" → "localStorage parsing".
+  - `docs/ANIMAL_BOARD_PAPER.md:247` → "*Update (2026-11-14):* still true. A 2026-10-29 note here said rounds were saved, but the 044 board never sent one. The owner chose not to save rounds (2026-11-06), and the unused save route is deleted."
+  - `docs/DATABASE_ACCESS.md:177` "Writes reach real players, and e2e runs add rounds to `clue_match_solves`." → "Writes reach real players. (The game itself writes nothing, so an e2e run only reads.)"
+  - **Outside the repo:** `~/AGENTS.md`, Critter Connect section, says "Game tests play real rounds, so they add rows to `clue_match_solves`". Agents may not edit that file, so add a handoff item asking the owner to drop the sentence (Blocks: nothing).
+
+**F2 · S3: models that misdescribe the tables, plus a dev tool that puts a critical advisory into production.** `src/db/schema/species.ts:1-3` claims to model "the columns the app reads", but `cluePool.ts:14-22` reads `redlist_url`, the four `photo_*` columns and the `source_*` columns, and none of those are modelled. After D2 nothing uses a model: the two `db.insert` calls are the only query-builder calls (`solves/route.ts:24`, `player.ts:15`). `drizzle.config.ts` only serves `db:introspect` (`package.json:44`). `drizzle-kit` (`:72`) is what puts `gel` and `shell-quote` 1.10.0 (critical, GHSA-pqg4-j6r4-53mv) into the production tree. This breaks KISS and single source of truth (`db/schema.sql`). Fix: delete `src/db/schema/{game,index,player,species}.ts` and `drizzle.config.ts`, then make the following changes:
+- `src/db/index.ts`: delete `:3` and `:31-32`, and change `:30` (target below).
+- Remove the script with `npm pkg delete "scripts.db:introspect"`.
+- `npm uninstall drizzle-kit --no-audit --no-fund`.
+- `AGENTS.md:48`: delete the line.
+- `AGENTS.md:57`: the models sentence ("Drizzle `src/db/schema/*` models … unmodelled.") → "One client, `src/db/index.ts` (Drizzle over postgres.js, no models); every query is raw SQL (`docs/DRIZZLE_ORM_GUIDE.md`)." This also drops the "old expedition tables still exist" clause the sentence hangs on (S1 and D4 call it unverifiable). Record that under Decisions.
+- `README.md:26` → "- `src/db/index.ts`: the database client (Drizzle over postgres.js; queries are raw SQL)."
+- Rewrite the guide (outline below).
+
+**The lock, predicted and verified.** I ran `npm uninstall drizzle-kit --package-lock-only --offline` on a scratch copy in `/tmp`, now deleted. It changed only the root entry (devDependencies) and removed 37 entries: `drizzle-kit`, `@drizzle-team/brocli`, `@esbuild-kit/esm-loader`, `@esbuild-kit/core-utils` with its private `esbuild@0.18.20` and 23 `@esbuild/*` platform packages, `esbuild-register`, `gel` (with its private `isexe`, `which`), `shell-quote`, `@petamoriken/float16`, `env-paths`, `buffer-from`, `source-map` and `source-map-support`. Nothing was added. After that, `npm ls --omit=dev --package-lock-only gel shell-quote @esbuild-kit/esm-loader` prints `(empty)` and exits 1, which is the pass.
+- **Why `gel` goes:** `npm explain gel` shows only `drizzle-kit` (hard dependency) and `drizzle-orm` (`peerOptional`). npm doesn't install an optional peer that nothing else requires, so no override is needed.
+- **Predicted audit:** `npm audit --omit=dev` should drop from 4 to 3 (next critical, sharp high, source-map-js high; `source-map-js` is a different package from the `source-map` that goes).
+- **What stays:** `dotenv` (`scripts/connect.ts:4`) and the root `esbuild@0.19.12` (`scripts/run-tests.mjs`).
+- **On the real run:** if `git diff package-lock.json` shows anything other than these removals, stop and record it.
+
+**F3 · D13: every visitor downloads 151 places no screen shows.** `src/lib/places.ts:13-15` has no `WHERE`. The globe filters to continents in the browser (`GlobeScreen.tsx:43`). `src/clueGame/places.ts:39-74` (`PLACE_KIND_LABELS`, `REALM_NAMES`, `groupLabel`, `groupPlaces`) only serves that old list, and `groupLabel`'s one remaining caller, `PlaceCard.tsx:25`, is on a branch that never runs. The header (`places.ts:3`) names a test that was deleted in d24d95a1. This is dead code and wasted payload (KISS). Fix:
+- `src/lib/places.ts:1` → `// The globe's continents and any place's outline, from the clue_match_places view (db/schema.sql).`
+- `src/lib/places.ts:15` → `FROM clue_match_places WHERE kind = 'continent' ORDER BY name`. Keep `kind` in the SELECT so the response shape is unchanged.
+- `src/app/api/places/route.ts:6` → ` * Continents with at least two playable animals (clue_match_places view),`. `:7` stays.
+- `src/clueGame/places.ts:1-3` → `// Places to explore from the home globe (GET /api/places: the continents of the` / `// clue_match_places view in db/schema.sql), plus small pure helpers for the globe and the journal.`
+- `src/clueGame/places.ts`: delete `:38-74` (from the blank line after `MIN_PLACE_ANIMALS` through `groupPlaces`). Keep `PlaceKind`, `Place`, `PlaceAnimal`, `PlacesResponse`, `MIN_PLACE_ANIMALS`, `classColor` and `sightingPoint`; they all have importers.
+- `src/components/globe/PlaceCard.tsx:2` → `import type { Place, PlaceAnimal } from '@/clueGame/places';`. `:25` → `<p className="m-0 text-xs text-neutral-7">Continent</p>`.
+- `scripts/e2e.mjs:14` "E2E_PLACE (a place key)" → "E2E_PLACE (a continent key, e.g. continent:africa)".
+- `.claude/skills/playtest/SKILL.md:36` "they come from the journal's sightings in localStorage" → "Found animals' ranges light up the globe (green amphibians/reptiles, amber mammals): the animals come from the journal's finds in localStorage (`clue-match:journal:v1`), their ranges from `GET /api/clue-game/ranges`."
+
+The same data, checked against `S/places-before.json`:
+- The 5 continents' `speciesIds` already cover all 76 animals, so `animals` stays the same.
+- `ORDER BY name` gives the same order as today (africa, asia, north-america, oceania, south-america).
+
+**F4 · S8: database docs agents act on are wrong.** Each line below is checked against the code or the other doc it contradicts. The `:36` port 8000 line is excluded (S7).
+- **The app's route.** `docs/DATABASE_ACCESS.md:4-5`, `:47`, `AGENTS.md:19` and `docs/DRIZZLE_ORM_GUIDE.md:3` send the app through PgBouncer. `deploy/app.env.example:4-6` and `DATABASE_ACCESS.md:206-208` say the live app connects as `critter_app` to `db:5432`. The map and port table (`:17-36`) don't show that route at all. Changes:
+  - `:4-5` → "… Agents, scripts and dev servers use the public PgBouncer endpoint in `DATABASE_URL`; the live app connects as `critter_app` straight to the db container."
+  - Map: retitle the first block "Dev servers, scripts, agents / compatible psql", and add a block: `Live app container (critter_app, deploy/app.env)` / `└─ db:5432 on the Docker network ─► PostgreSQL (no PgBouncer, no TLS)`.
+  - Port table: `:31` → "PgBouncer with TLS; dev servers, scripts, agents, CI". `:32` → "Raw PostgreSQL; the live app connects here; not internet-accessible".
+  - Route table: `:47` becomes two rows, `| Live app (container) | critter_app → db:5432 (deploy/app.env) | No |` and `| Dev server, e2e, npm run content/iucn | DATABASE_URL → port 6432 | No |`.
+  - `AGENTS.md:19` → "- `DATABASE_URL` (agents, scripts, dev servers) goes through TLS PgBouncer on port 6432; the live app connects as `critter_app` straight to the db container (`deploy/app.env.example`)."
+- **`--production` and `CLUE_USE_TUNNEL`.** Every form of these reaches the database `DATABASE_URL` names (the live `phaser_june` on WSL and the Oracle VPS); the flags change only the route. Comments only in `scripts/db`:
+  - `:2` → `// psql to the database DATABASE_URL names (the environment's, else .env.local's: the live phaser_june on WSL and the Oracle VPS), without credentials in argv.`
+  - `:6` → `//   ./scripts/db --production -1 -f change.sql   same database, raw Postgres through the WSL SSH tunnel (127.0.0.1:55432)`
+  - One new comment line above `:38`: `// --production changes only the route (the WSL tunnel), not the database.`
+
+  Docs:
+  - `DATABASE_ACCESS.md:70-75`: add `./scripts/db --production -1 -f change.sql   # WSL: same database, through the 55432 tunnel`.
+  - `:77-80`: append "Every form reaches the database `DATABASE_URL` names, which on WSL and the Oracle VPS is the live `phaser_june`."
+  - After `:128`: "From the repo, `./scripts/db --production …` and `CLUE_USE_TUNNEL=1 npm run content|iucn …` (`scripts/connect.ts`) take the same tunnel to the same database."
+  - `docs/SHAPEFILE_BEST_PRACTICES.md:21` "goes through the agent tunnel instead" → "takes the WSL agent tunnel to the same database instead (docs/DATABASE_ACCESS.md#wsl-agentraw-tunnel)".
+- **The dev-copy section.**
+  - `DATABASE_ACCESS.md:192` "`.env.local` there holds only:" → "Its settings (the Oracle box's `.env.local` before 2026-11-01, now the dev-copy file below):". The key list stays.
+  - `deploy/db/dev-role.sql:1-3` (comments only) → `-- critter_dev: owns phaser_june_dev, the scrubbed copy of phaser_june that CI's e2e job` / `-- (E2E_DATABASE_URL) and mission E2E runs on the Oracle VPS use` / `-- (docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps). No access to prod.` `:3`'s "Run as postgres …" sentence stays.
+  - After `:33`, add: `-- Its 60 s statement_timeout (above) stops a clue_match_places refresh (90 s to 2.5 min):` / `-- run that refresh with SET LOCAL statement_timeout = 0 in its transaction.`
+  - `docker-compose.yml:35-36` (comment) → `# One [databases] entry per URL: prod, and the scrubbed copy phaser_june_dev` / `# (CI's e2e database; docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps). Other roles log in via` (`:37` continues as today).
+- **Refresh times disagree.** `DATABASE_ACCESS.md:171` says "about 2.5 minutes"; `db/schema.sql:208` and `CLUE_MATCH.md:74` say "~90 s". All three become "90 s to 2.5 min(utes)". Both figures are observations, and neither can be re-measured without a database write.
+- **`db/schema.sql` (comments only).**
+  - `:1-2` → `-- Critter Connect: the Postgres objects the app uses. A baseline taken on 2026-09-25` / `-- and edited to match each change since, not a migration history: migrations 001-044`, with `:3` unchanged.
+  - `:13` → `-- Extensions: postgis. init/01-extensions.sql also installs pgcrypto, which no SQL in the repo calls.`
+  - `:68` → `-- Fun facts: field notes in the field guide, after the hand-written clues (src/clueGame/questionMatchContent.ts).`
+  - `:123` → `-- Rules.version of the rules played, from the 041 and 043 games' Rules (src/clueGame/questionMatch.ts; the 044 board never saved): 041-1 charges; 041-5 charges with toys and 12 look-alikes; 043-0 gems ask questions; 041-2 to 041-4 were removed experiments (plans/041); NULL before plan 041.` The saving game used `DEFAULT_RULES`, which has been `043-0` since d496643a (2026-09-30).
+- **The page files.**
+  - `src/pages/_app.tsx:9` → `// cc fonts (Nunito, Open Runde, Patrick Hand) are declared in globals.css; their files and OFL licences are in public/fonts/.`
+  - `src/pages/_document.tsx:6` → `<Html lang="en">`. Nothing reads the `dark` class: dark mode is `[data-theme="dark"]` (`globals.css:238`, set by `THEME_SCRIPT`), no stylesheet has a `.dark` selector, and the E2E switches themes through `data-theme` (`e2e.mjs:397-405`).
+- **The runbook check (`DATABASE_ACCESS.md:249-252`).** Today it runs `./scripts/db` with `.env.local`, which on this VPS is the live database as `postgres`. Its `sed` then finds no `phaser_june_dev` and leaves `DATABASE_URL` empty, so the check can never give its expected answer. Replace those 4 lines and keep the `curl` line:
+  ```bash
+  # On the Oracle box, from the repo, with the copy's settings (never .env.local: that is the
+  # live database as postgres). Prints OK, or FAIL and exits 1.
+  ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy || exit 1; set +a
+    : "${DATABASE_URL:?dev-copy settings not loaded}"
+    # critter_dev reaches the copy...
+    [ "$(./scripts/db -tA -F/ -c 'select current_user, current_database()')" = critter_dev/phaser_june_dev ] \
+      || { echo 'FAIL: not critter_dev on phaser_june_dev'; exit 1; }
+    ./scripts/db -tA -c 'select count(*) from species'
+    # ...but not prod
+    out=$(DATABASE_URL=${DATABASE_URL/\/phaser_june_dev//phaser_june} ./scripts/db -tA -c 'select 1' 2>&1) \
+      && { echo 'FAIL: critter_dev reached phaser_june'; exit 1; }
+    case $out in *'permission denied for database "phaser_june"'*) echo OK ;; *) echo "FAIL: ${out%%$'\n'*}"; exit 1 ;; esac )
+  ```
+  - **The identity check comes first and gates everything else.** A missing file, an inherited live URL or a `.env.local` fallback all fail at the `current_user` line, before any URL is derived. The prod check passes only on that exact error, so a network failure can't pass as success.
+  - **Nothing secret is printed:** psql's errors name the host and port, never the password.
+  - **Run it once** in the S8 step and record the output (`OK`, plus the species count) under Log.
+
+**Already fine (verified):**
+- `scripts/content.ts:106` passes a schema-less `drizzle(sql)` into `buildCluePool` (typed `PostgresJsDatabase<Record<string, unknown>>`, `cluePool.ts:9`), so the app's schema-less `db` fits the same type.
+- `useJournal.ts:50` with `journal.ts:85-87` skips place keys it doesn't know.
+- `Dockerfile:42`, `deploy/check.sh:107,118` and `e2e-fresh.mjs:61` read only the status.
+- The journal route answers `{entries: []}` signed out (`journal/route.ts:20`).
+- `.claude/skills/playtest/SKILL.md:34` ("The list shows the continents") stays true.
+- `ci.yml:21` ("Drizzle only") stays true.
+
+### Target design
+
+- **Server data layer after M6.** `src/db/index.ts` holds one postgres.js client, wrapped by Drizzle without models. Six routes (`places`, `places/outline`, `clue-game/{pool,range,ranges,journal}`) make 9 reads, all `db.execute<Row>(sql\`…\`)`: 3 in `lib/places.ts`, 3 in `lib/cluePool.ts`, and one each in the range, ranges and journal routes. No code in `src/` writes to the database. Data flow is unchanged, except that `/api/places/` returns 5 rows instead of 156 in the same shape.
+- **`src/db/index.ts`** keeps `:1-2` and `:5-28` as they are (the pgbouncer strip, the client, and the dev global). Its end becomes:
+  ```ts
+  // No models: every query is raw SQL (db.execute(sql`…`); docs/DRIZZLE_ORM_GUIDE.md).
+  export const db = drizzle(client);
+  ```
+  Its type becomes `PostgresJsDatabase<Record<string, never>> & { $client: Sql }`. That's the type `content.ts` already passes to `buildCluePool`, and `execute<T>` doesn't depend on a schema. So `journal`, `pool` (via `buildCluePool(db)`), `range`, `ranges`, `lib/places.ts` and `scripts/content.ts` type-check unchanged; the audit's 2026-11-10 dry run agrees. None of them imports anything but `db`.
+- **D13 and `?place=`.** `useAnimalSession.ts:60` reduces `?place=` to a continent before any lookup: `continentOf` (`regions.ts:310-319`) maps `country:KEN` to `africa`, and `area:…` or an unknown key to `null`. `loadPlace` (`:34-42`) then only ever looks up `continent:<key>`, and isn't called when the result is `null`. So after D13:
+  - `?place=country:KEN` still plays Africa, with Africa's place for sightings.
+  - `?place=area:…` still plays every animal.
+  - `?place=continent:europe` (not in the list before or after) still falls back to every animal.
+
+  There's no error and no blank board. The behavior is identical, so no edit is needed.
+- **Other places assumptions.**
+  - `GlobeScreen.tsx:43`'s filter and `e2e.mjs:433,2310` become no-ops (Notes).
+  - `e2e.mjs:434-435` with a non-continent `E2E_PLACE` now throws `No place …`, which is the intended loud failure.
+  - `PlaceCard` only ever gets continents (`GlobeScreen.tsx:41,73,92`).
+  - `loadPlaceOutline` and `/api/places/outline` stay as they are. The globe asks only for the picked continent (`Globe.tsx:199`); the route still accepts country and area keys and serves them from the view (D13: "can stay").
+- **`docs/DRIZZLE_ORM_GUIDE.md`**, rewritten. Short; none of the grep-trap strings.
+  1. **What it is.** `src/db/index.ts` exports `db`: one postgres.js client per server process (one connection, kept across dev hot reloads), wrapped by Drizzle with no models. Routes: the live app connects as `critter_app` to `db:5432`; dev servers, e2e, scripts and agents go through PgBouncer 6432 in transaction mode, so no session `SET`, `LISTEN`, advisory locks or temp tables, and `SET LOCAL` only inside a transaction (link `DATABASE_ACCESS.md`). The app only reads.
+  2. **Queries.** All raw SQL with `db.execute<Row>(sql\`…\`)`; list the 9 and where they live.
+     - `${value}` is sent as a bind parameter; lists use `sql.join(ids.map(id => sql\`${id}\`), sql\`, \`)`. Never put input into `sql.raw`.
+     - Say plainly that postgres.js's own `sql` tag binds values the same way: Drizzle stays because the code already uses it and it keeps typed inserts available (owner, 2026-11-13), not because it's safer.
+     - `Row` is a cast, not a check, so keep it in step with `db/schema.sql`. postgres.js returns `count`, `bigint` and `numeric` as strings: cast in SQL (`count(*)::int`, journal route) or type them `string | number` and convert (range route).
+     - Routes wrap queries in try/catch, log `[API /path] Error:` and answer 500 JSON.
+     - Scripts get their own client from `scripts/connect.ts`; `scripts/content.ts` wraps it with `drizzle(sql)` to reuse `buildCluePool`.
+  3. **Schema changes.** There are no migrations.
+     - On live, take a fresh dump first (`deploy/backup/pg-backup.sh`), then apply with `./scripts/db -1 -f change.sql`.
+     - Edit `db/schema.sql` to match, then update the query and its `Row` type.
+     - If the app reads the change, apply it to `phaser_june_dev` too (CI's e2e).
+  4. **Adding a model, only for a future table the code writes** (for example a device-sync table):
+     - Declare it in `src/db/tables.ts` with `pgTable('name', {…})`, with every column exactly as `db/schema.sql` has it (type, `NOT NULL`, default, FK). A model that leaves out or mistypes columns is the bug the deleted models had.
+     - Write with `db.insert(table).values(row)` (`.returning()` if needed). No `drizzle(client, { schema })`: that is only for the `db.query` API.
+     - Reads stay raw SQL.
+     - Grant the write in `deploy/db/app-role.sql`, and change `db/schema.sql`, the model and the grant in one commit.
+     - Drizzle's CLI isn't installed (removed 2026-11-14 with its advisory), so check a model by hand against `./scripts/db '\d name'`.
+  5. **Conventions:** keep today's `:41` as it is.
+- **`npm run clean` after the route goes.** `tsconfig.json:37-38` includes `.next-e2e/types` and `.next-e2e/dev/types`. The baseline E2E left `.next-e2e/dev/types/validator.ts` and `routes.d.ts`, and both reference the solves route, so after `git rm` the typecheck and the pre-push hook fail with "cannot find module". Run `npm run clean` (removes `.next`, `.next-e2e`, `.test-dist`) right after the deletion, in the same step, and never while an `e2e:fresh` or dev server is running. The next `e2e:fresh` regenerates the types. Say in the PR that other checkouts (the owner's WSL) need `npm run clean` once after pulling.
+
+### Order of work
+
+Each chunk keeps `npm run typecheck`, `npm run lint` and `npm test` green and is committed on its own.
+
+1. **D2.** `git rm` the 4 files, then `npm run clean`, then the F1 line edits. Expect 61/61 tests. The models still exist at this point, and `index.ts` still compiles against them.
+2. **S3.** Delete `src/db/schema/` and `drizzle.config.ts` **in the same commit as** `npm uninstall drizzle-kit`: `drizzle.config.ts:2` imports `drizzle-kit` types and `tsconfig` includes `**/*.ts`, so leaving the file would break typecheck. Then:
+   - edit `index.ts`, run `npm pkg delete`, and check that the lock diff is exactly the 37 removals;
+   - `npm ls …`: expect exit 1. Record `npm audit --omit=dev`;
+   - edit AGENTS `:48`/`:57` and README `:26`, and rewrite the guide;
+   - run `e2e:fresh` once with the dev-copy block, because the client every route uses has changed.
+3. **D13.** The F3 edits, then `e2e:fresh` once.
+4. **S8.** The F4 edits, then run the runbook check once and record `OK`. Typecheck and lint still matter here, because the `.tsx`, `scripts/db` and SQL edits are comments plus one JSX attribute.
+5. **Final.** The brief's Definition of done: the DoD grep, `site:build`, `e2e:site`, `e2e:fresh` twice (plain and `E2E_PLACE=continent:africa`), screenshots compared with `baseline-e2e/`, `npm ls`, `npm audit`. Add the handoff item for `~/AGENTS.md`.
+
+Keep at most two E2E artifact folders (disk rule).
+
+### Risks
+
+- **`src/db/index.ts` is every route's client.** A slip there takes down every route. The typecheck, `e2e:fresh` (pool, places, ranges, journal) and `deploy/check.sh` catch it.
+- **A wrong `WHERE` would empty the globe.** E2E: `listed === continents.length` is 0 = 0, but `place` is then undefined and the run throws `No place with animals`, so it fails loudly. The smoke compares the live response with `places-before.json`. Browsers may keep the old 156-row response for up to 1 h (`max-age=300, swr=3600`), which is harmless because it's a superset.
+- **Removing a public URL.** Only a pre-2026-10-01 tab would still call it, and that call was best-effort (D2 Users). After the deploy it answers 404: there's no route, and `trailingSlash: true`.
+- **The lock change.** It's removals only, as the scratch run showed. If the real run differs, stop.
+- **The `_document` attribute ships to players.** Nothing reads it (above). The screenshot comparison is the guard.
+- **The runbook check touches the shared PgBouncer.** It's two reads and one refused login, as `critter_dev`, never on the live database.
+
+### Rejected alternatives
+
+- **Drop Drizzle and use postgres.js's `sql` directly:** the owner kept `drizzle-orm` (2026-11-13), and it would mean rewriting 9 working queries for no gain.
+- **Keep or fix the models for future inserts:** they model the wrong columns. A future table writes its own model (guide §4).
+- **Filter continents in the route or the client instead of SQL:** it moves the same rows and wastes the query.
+- **A `?kind=` parameter on `/api/places/`:** no caller wants the other kinds (YAGNI).
+- **A 410 stub for the save route:** more code, and a 404 already satisfies the smoke test.
+- **`overrides` for `gel`/`shell-quote`:** forbidden by the brief, and unneeded because the uninstall removes them.
+- **Removing the client-side continent filters (`GlobeScreen.tsx:43`, `e2e.mjs:433,2310`):** the Goal doesn't name them, so they stay as notes.
+- **Renaming `scripts/db --production`:** a behavior change; the brief allows comments only.
+- **Revoking `critter_app`'s write grants now:** a database change; that's S13 in M13.
+- **Running the runbook check through WSL's `psql-tunnel.mjs`:** the dev-copy settings and the check belong to the Oracle box.
+
+### Notes (looks dead or stale after M6; not edited, per the decision rule)
+
+- **Dead code:**
+  - `CLUE_GAME_GEM_TYPES` (`src/clueGame/categories.ts:35`) has no importer after D2 (M7 territory).
+  - The `kind === 'continent'` filters at `GlobeScreen.tsx:42-43` and `scripts/e2e.mjs:433,2310` do nothing after D13.
+  - `/api/places/outline` (`route.ts:7`) and `loadPlaceOutline` still serve country and area outlines (S17 removes the rows).
+  - `Place.key` and `Place.group` comments (`clueGame/places.ts:9,12`) still describe all three kinds, which is fine while `PlaceKind` stays.
+- **Stale comments and grants:**
+  - `deploy/db/app-role.sql:23-26`: the write grants and the comment "a player's profile on first solve" are left for S13.
+  - `src/proxy.ts`'s middleware now serves only the journal route (M11).
+  - `AGENTS.md:79` "input/storage parsing": the only input-parser test is gone; storage parsing (`journal.test.ts`) remains.
+  - `AGENTS.md:23` and `DATABASE_ACCESS.md:84-86`: their "introspection" wording referred to the removed CLI.
+  - `init/01-extensions.sql` installs `pgcrypto` and `uuid-ossp`, which nothing calls.
+- **Small duplication (DRY):**
+  - The `sql.join(ids.map(id => sql\`${id}\`), sql\`, \`)` pattern is repeated in `lib/places.ts:23` and `ranges/route.ts:22` (`= ANY(${ids})` would do).
+  - The pgbouncer-param strip is repeated in `src/db/index.ts:10-14` and `scripts/connect.ts:11`.
+  - `dotenv` now serves only `scripts/connect.ts`; `scripts/db` already uses Node's `process.loadEnvFile`.
+
 ## Architecture review (Fable)
 
 ## Architecture review (Astra)
@@ -164,5 +378,6 @@ Recorded 2026-11-14 ~05:50 UTC on `447c8151` (= `origin/main` `2aa3bd2c` + this 
 ## Log
 
 - 2026-11-14 05:52 UTC · Baseline: fresh greps (no new callers), packages, live places, saved rounds (max 2026-10-01), typecheck/lint/test 66/66, E2E 1575/1575 → `baseline-e2e/`.
+- 2026-11-14 06:10 UTC · Architecture: architect wrote findings + target design (D2→S3→D13→S8 order; lock dry run drops gel/shell-quote/@esbuild-kit; D13 no behaviour change). Plan-only, no code.
 
 ## Summary
