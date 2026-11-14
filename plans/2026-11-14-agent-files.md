@@ -361,7 +361,7 @@ Rules for every step:
 - [x] S2. **CI step (A15)**, `.github/workflows/ci.yml`. Edit tool: the old text is the `:25` comment line only, and the new text is the 4 target lines plus `:25`. Never include `:24`.
   - Check: V7's ci.yml hunk (`-24,0 +25,4`, adds only). `python3 -I -c "import yaml;s=yaml.safe_load(open('.github/workflows/ci.yml'))['jobs']['check']['steps'];print([x.get('name') for x in s][4:7])"` prints `['No Supabase/Prisma', 'No Prisma schema files', 'No game links to site pages']`.
   - V5 writes `$ST/ci-guard.txt`. It reads the step from `$R`'s working tree, so it works before the commit.
-- [ ] S3. **D1: 34 skill folders and the lock.**
+- [x] S3. **D1: 34 skill folders and the lock.**
   - `git rm -r -q -- $(printf '.agents/skills/%s ' ask-matt claude-handoff codebase-design domain-modeling git-guardrails-claude-code grill-me grill-with-docs grilling handoff implement implement-spec improve-codebase-architecture loop-me migrate-to-shoehorn pr prototype research resolving-merge-conflicts scaffold-exercises setup-matt-pocock-skills setup-pre-commit setup-ts-deep-modules tdd teach to-questionnaire to-spec to-tickets triage wait-what wayfinder wizard writing-beats writing-fragments writing-shape)`
   - Then the Target design's `python3 -I` lock filter on `skills-lock.json`. No `npx skills`.
   - Check: V2, then V3 (writes `$ST/lock-after.txt`; numstat `0 204`), then V9's `.agents/skills` lines (93 `D`, 34 folders, no kept folder).
@@ -539,5 +539,6 @@ The hook and CI's guard are tested in isolation. These tests existed before the 
 - 2026-11-14 11:12 UTC · Steps: planner wrote S1-S8 (hook, CI step, 34 skills + lock, D17, link, docs/agents, AGENTS.md, CODING_STANDARDS + playtest), Verification V1-V9 + Failure modes; target design dry-run in /tmp matched. Plan-only; no checks needed.
 - 2026-11-14 11:09 UTC · S1 hook: header + `*.env` / `*.prisma` arms via Edit, pattern typo via sed (count 1). bash -n + exec ok, no mode change; hunks `-3,2 +3,2`, `-8 +8,2`, `-11 +12`; control run (`$ST/guard-after.txt`): exactly cases 5, 6, 10, 11 go 0 → 2, other 17 unchanged; live Write probes `app.env` and `x.prisma` both refused with the hook's messages, probe dir empty. typecheck 0, lint 0.
 - 2026-11-14 11:10 UTC · S2 CI step: 4 lines inserted before the site-links comment via Edit (anchor `:25` only); hunk `-24,0 +25,4`; yaml step order ok; V5 dry run (`$ST/ci-guard.txt`): new step 0 clean, existing 0, staged `prisma/*.prisma` listed + exit 1; temp worktree removed. typecheck 0, lint 0.
+- 2026-11-14 11:16 UTC · S3 skills: `git rm` 34 folders + JSON lock filter. V2 11 folders, retro ok; V3 (`$ST/lock-after.txt`) folders 11 | locked 6 | v1 matches 6, no-folder [], 5 not-in-lock as expected, version 1, numstat 0/204; V9 93 D, 0 other, 34 folders, no kept touched; V6 grep 1 hits only docs/agents/domain.md (2) + issue-tracker.md (4). typecheck 0, lint 0.
 
 ## Summary
