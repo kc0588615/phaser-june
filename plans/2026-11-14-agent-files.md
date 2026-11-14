@@ -152,7 +152,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: none needed (Fable APPROVE, Astra APPROVE, 0 MUST-FIX)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -342,6 +342,8 @@ SHOULD-CONSIDER: none
 
 ## Revision notes
 
+None needed: both reviews APPROVE, 0 MUST-FIX. Architecture unchanged. Fable's MISSED 1-3 and SHOULD-CONSIDER 1-4 go to the planner for Steps, Verification and Summary (not design changes): three scripts use `scripts/connect.ts`, not four; review text that the hook refuses goes in from the shell word for word; Steps/Verification/Log lines use `*.prisma` and name no package; live Write probes required.
+
 ## Steps
 
 ## Verification
@@ -360,5 +362,6 @@ SHOULD-CONSIDER: none
 - 2026-11-14 10:52 UTC · Architecture: architect wrote findings + target design (AGENTS.md:19, playtest:36 already true; hook = Edit + one sed; lock JSON filter dry-run 0 added/204 deleted; CI step dry-run exits 1 with staged *.prisma, 0 clean). Plan-only change; no checks needed.
 - 2026-11-14 11:00 UTC · Fable review: APPROVE, 0 MUST-FIX; 3 MISSED items (shots/run.mjs not a DB script; review text vs hook; Steps lines use *.prisma) + 4 SHOULD-CONSIDER for planner. Plan-only; no checks needed.
 - 2026-11-14 10:57 UTC · Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only; no checks needed.
+- 2026-11-14 10:58 UTC · Revision: none needed (0 MUST-FIX in either review); Fable notes routed to Steps. Plan-only; no checks needed.
 
 ## Summary
