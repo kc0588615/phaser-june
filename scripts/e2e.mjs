@@ -11,7 +11,7 @@
 // Sources list; an AmphibiaWeb-sourced animal (found by probing seeds) shows its full CC BY-NC citation.
 //
 //   npm run e2e:fresh  starts its own dev server (scripts/e2e-fresh.mjs)
-//   npm run e2e        against a running `npm run dev`. env: E2E_BASE_URL, E2E_SEED (7), E2E_RESUME_SEED (7), E2E_ROUNDS (4), E2E_PLACE (a place key), E2E_CPU_THROTTLE (slow Chrome down N times, like a CI runner), CHROME_PATH
+//   npm run e2e        against a running `npm run dev`. env: E2E_BASE_URL, E2E_SEED (7), E2E_RESUME_SEED (7), E2E_ROUNDS (4), E2E_PLACE (a continent key, e.g. continent:africa), E2E_CPU_THROTTLE (slow Chrome down N times, like a CI runner), CHROME_PATH
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';

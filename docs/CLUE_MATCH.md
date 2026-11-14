@@ -7,7 +7,7 @@ The app has two screens. (The game was called Clue Match until plan 041; code an
 - **Globe (`/`).** A globe beside the list of continents. Pick one, or tap its dot: the globe flies there and outlines it, and a card shows how many animals live there (named once you've found them). **Explore** (by the name on phones) opens the game with that continent's animals. A continent opens once it has 12 animals; smaller ones show "coming soon". **Anywhere** plays animals from the whole world. Animals you've found glow on the globe where you found them: green for amphibians and reptiles, amber for mammals.
 - **The game (`/explore`, optional `?place=continent:africa` and `?seed=N`).** Five look-alike suspects sit pinned on a 7×7 board, and one is the mystery. Matching gems fills clue orders that answer yes/no questions; the player rules suspects out in the evidence grid and releases them from the board. Old `/clue-match` links redirect here with their query.
 
-No sign-in needed, and no round is saved: the game only reads from the server. The Field Journal lives on the device; when signed in, it also pulls the player's solves saved before 2026-10-01. `?seed=N` replays a session exactly (same mysteries, same boards).
+No sign-in needed, and no round is saved: the game only reads from the server. The Field Journal lives on the device; when signed in, it also pulls the player's solves saved before 2026-10-01. Only continents become sightings: on a fresh device an old solve's country or area adds none (sightings already on a device stay). `?seed=N` replays a session exactly (same mysteries, same boards).
 
 ## Where the code lives
 

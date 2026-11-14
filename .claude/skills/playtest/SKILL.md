@@ -33,7 +33,7 @@ Drive the dev build through the chrome-devtools MCP like a player. React UI (glo
 
 - The list shows the continents from `GET /api/places`; one with fewer than 12 animals says "coming soon". Tap a row (or a dot on the globe): the globe flies there and outlines it, and the card shows the animal count, found animals by name, `?` for the rest, and a habitat picture (TiTiler, 1–5 s; hidden if it fails).
 - **Explore** opens `/explore/?place=continent:<name>`; **Anywhere** opens `/explore/`.
-- Found animals glow on the globe (green amphibians/reptiles, amber mammals); they come from the journal's sightings in localStorage (`clue-match:journal:v1`).
+- Found animals' ranges light up the globe (green amphibians/reptiles, amber mammals): the animals come from the journal's finds in localStorage (`clue-match:journal:v1`), their ranges from `GET /api/clue-game/ranges`.
 
 ## 3. The game (`/explore`)
 

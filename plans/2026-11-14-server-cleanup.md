@@ -417,7 +417,7 @@ Every step ends: `npm run typecheck` 0, `npm run lint` 0, `npm test` passes, the
   - Rewrite `docs/DRIZZLE_ORM_GUIDE.md` per Target design §1–5 (its `:3` route fix is F4's). Check its list of 9 queries against `git grep -n "execute<" src`.
   - Check: the full DoD grep prints only D13's hits (`src/clueGame/places.ts`, `PlaceCard.tsx`). Read the guide once for claims the code doesn't back.
 
-- [ ] S4. **D13: continents only.**
+- [x] S4. **D13: continents only.**
   - Every F3 edit: `src/lib/places.ts:1`, `:15`; `src/app/api/places/route.ts:6`; `src/clueGame/places.ts:1-3` and delete `:38-74`; `PlaceCard.tsx:2`, `:25`; `scripts/e2e.mjs:14`; playtest `SKILL.md:36`.
   - Astra SC2, in `docs/CLUE_MATCH.md`'s journal sentence (`:10`, as S1 left it), add: "Only continents become sightings: on a fresh device an old solve's country or area adds none (sightings already on a device stay)." Same note in the Summary.
   - E2E: DEV `npm run e2e:fresh` → `S/e2e-s4/`; delete `S/e2e-s2/`. All checks pass, incl. the globe-list check.
@@ -546,5 +546,8 @@ Only two pieces run in isolation: the runbook check (S6) and J's helper (S2). Th
 - 2026-11-14 06:40 UTC · S1: deleted save route, `player.ts`, `solveReport.ts` + test; `npm run clean`; all F1 line fixes + `constants.ts:4`; handoff H13 (owner: `~/AGENTS.md` sentence). typecheck 0, lint 0, test 61/61; D2 grep: only `src/db/schema/player.ts:3` (S2 deletes it); saved-rounds grep empty. No E2E (S2 runs it).
 - 2026-11-14 06:56 UTC · S2: deleted `src/db/schema/` (4), `drizzle.config.ts`, the introspect script, Drizzle's CLI; `db` schema-less. Lock check L: removed 37, added 0, changed 0, root ok true; `npm ls` gel/shell-quote/@esbuild-kit (empty), exit 1; `npm audit --omit=dev` 3 (next critical, sharp high, source-map-js high) → `s2-npm-audit.txt`. typecheck 0, lint 0, test 61/61. E2E 1575/1575, 0 console errors, 0 failed requests → `e2e-s2/`. J: signed-out/signed-in both `200 {"entries":[]}`, no journal Error; control: signed-out 200, signed-in `500 {"error":"Failed to load the journal"}`, 1 Error line; local POST save route 404 (both runs).
 - 2026-11-14 06:58 UTC · S3: `AGENTS.md` introspect line deleted, `:57` models sentence → one client/raw SQL; `README.md:26`; guide rewritten (§1–5; 9 queries checked against `git grep "execute<" src`). typecheck 0, lint 0, test 61/61; DoD grep: only D13 hits (`src/clueGame/places.ts`, `PlaceCard.tsx`). No E2E (docs only).
+- 2026-11-14 07:12 UTC · S4: `/api/places` continents only (`WHERE kind = 'continent' ORDER BY name`); dropped the four old place-list helpers + `PlaceCard` branch; e2e.mjs, playtest skill, CLUE_MATCH journal note (Astra SC2). Picked up H13 (closed). typecheck 0, lint 0, test 61/61; DoD grep empty. E2E 1575/1575 (incl. globe lists the continents), 0 console errors, 0 failed requests → `e2e-s4/`; `e2e-s2/` deleted.
 
 ## Summary
+
+- (S4, for the owner) Only continents become journal sightings now: on a fresh device, a signed-in player's pre-2026-10-01 solve in a country or wildlife area adds no sighting; sightings already on a device stay.

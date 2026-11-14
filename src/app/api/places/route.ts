@@ -3,8 +3,8 @@ import { loadPlaces } from '@/lib/places';
 
 /**
  * GET /api/places
- * Continents, countries and wildlife areas with at least two playable animals
- * (clue_match_places view), plus those animals' names for the place card.
+ * Continents with at least two playable animals (clue_match_places view),
+ * plus those animals' names for the place card.
  */
 export async function GET() {
   try {
