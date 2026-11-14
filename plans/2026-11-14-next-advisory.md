@@ -396,7 +396,7 @@ SHOULD-CONSIDER:
      - Any other tracked change: stop and find out why.
   5. Commit, then push.
 
-- [ ] **S3. Production probe under `next start`** (Astra SC1 and the proxy change).
+- [x] **S3. Production probe under `next start`** (Astra SC1 and the proxy change).
   - Changes no code.
   1. Run `npm run build`, so that `.next` comes from this commit.
   2. Run block D. It must print `probe ok`.
@@ -460,6 +460,7 @@ Run this once, on the final commit, after `## Code review (Astra)` and any fix s
 - **D2 (S1) · New build notice, not fixed:** `⚠ React 18 support is deprecated in Next.js 16 and will be removed in Next.js 17. Please upgrade to React 19.` New in 16.4.x (`next/dist/server/config.js`); the app is on `react@18.3.1` (`^18.2.0`). React 19 is a major upgrade, out of scope. The build exits 0; Verification step 5's grep excludes this one line. For the owner's Summary: React 19 is needed before Next 17.
 - **D3 (S1) · Code changes for the upgrade: none.** typecheck, lint (react-hooks 7.1.x stack), `npm test` 61/61 and the build passed unchanged.
 - **D4 (S2) · `AGENTS.md` changed, outside the brief's Scope.** `next dev` 16.4.6 rewrote its generated block heading `# This is NOT the Next.js you know` → `## …` (one line, Finding 4). Written by `next dev`, never edited by hand; committed so the tree stays clean.
+- **D5 (S3) · `next start` log, nothing to fix.** Two non-Ready lines: Clerk's dev-instance telemetry notice (dev-copy keys) and `⨯ … "/favicon.svg" has type "image/svg+xml" but dangerouslyAllowSVG is disabled`, which is the probe's own `_next/image` SVG request being refused (the expected 400). No other error or warning.
 
 ## Log
 
@@ -472,5 +473,6 @@ Run this once, on the final commit, after `## Code review (Astra)` and any fix s
 
 - 2026-11-14 09:44 UTC · S1: `npm install next@16.4.6 eslint-config-next@16.4.6` + `npm update source-map-js`. `npm ls`: next 16.4.6 (deduped under @clerk/nextjs), sharp 0.35.5, source-map-js 1.2.2 (postcss + @tailwindcss/node), shell-quote empty; `npm audit --omit=dev`: found 0 vulnerabilities. Block A: 4 / config ok / 3 files / tree ok / lock ok. typecheck, lint, test 61/61, build exit 0 (one new React 18 deprecation notice, D2); site:build + e2e:site 444/444 (artifact `e2e-s1/site/`). Block C/D trap fixed (D1). No code change.
 - 2026-11-14 09:52 UTC · S2: e2e:fresh on dev copy (guard ok) exit 0, 1575/1575, seed 7, same 4 round lines as baseline; artifact `e2e-s2/` (e2e-s1 removed). Block E: same 45-shot set; 14 differ byte-wise: 5 globe (spin), 9 game shots. Viewed the in-group ones plus 08: 02c-notes (clue toast scroll frame), 06-end-after-reload and 08-pencil-bonus-end (card entrance: star/photo scale, points fade-in, earlier frame on either side), same layout and content. Not viewed (not in E's groups, mid-animation captures): 03-called-it, 04-round-1/3/4-landed, 06-before/after-reload. Board, sheets, settled round-end shots (04-round-*-end, 03-round-3-out-of-moves) byte-identical. AGENTS.md rewritten by next dev (D4). No code change.
+- 2026-11-14 10:01 UTC · S3: `npm run build` exit 0 (only the React 18 notice, D2); block D on the dev copy (guard ok, port 3100 free before/after): `probe ok` (route handler gzip under next start, --compressed JSON parses, journal `{"entries":[]}`, SVG image 400). Logs copied to `e2e-s2/`; start log notes D5. No code change.
 
 ## Summary
