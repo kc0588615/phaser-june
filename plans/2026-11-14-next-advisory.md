@@ -463,6 +463,13 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- Branch already on fresh `origin/main` (`8b645766`, merge-base = tip): rebase no-op. Tree identical to Verification commit `4ba385b8` except this plan, so that Verification stands (D7); block A re-run: 4 / config ok / tree ok / lock ok.
+- PR #73; CI `check` pass (2m52s), `e2e` pass (10m7s). Merged: `e91ad1fae6cd2e4051558ed05720bc1fb4a4c764`.
+- Deploy: `deploy critter-connect: live at https://critterconnect.org` (exit 0). Log `/srv/critter-ai/agent-state/missions/next-advisory/deploy.log`.
+- Smoke (`/srv/critter-ai/agent-state/missions/next-advisory/smoke.log`): `version.txt` = `e91ad1fa…`; `deploy/check.sh` exit 0 (38 OK); `/explore/`, `/api/clue-game/pool/`, `/api/places/` 200; `/_next/image/` SVG 400; `/api/places/` `content-encoding: gzip`; `--compressed` body JSON, 5 places; journal `{"entries":[]}`.
+- Handoff H14 added (signed-in Field Journal check, Blocks: nothing).
+Result: done
+
 ## Decisions
 
 - **D1 (S1) · `/bin/kill` in blocks C and D.** As written, `trap 'kill -- -$pid' EXIT` killed the block's own subshell (exit 143) and left the server running. Bash's builtin `kill` maps `-PID` of a known job to the group bash recorded for that job, which is the subshell's group, since job control is off in subshells. `/bin/kill` signals the real `setsid` group. Fixed in both blocks; reproduced and checked with a `setsid sleep` test. No other change to the blocks.
@@ -471,6 +478,8 @@ SHOULD-CONSIDER:
 - **D4 (S2) · `AGENTS.md` changed, outside the brief's Scope.** `next dev` 16.4.6 rewrote its generated block heading `# This is NOT the Next.js you know` → `## …` (one line, Finding 4). Written by `next dev`, never edited by hand; committed so the tree stays clean.
 - **D5 (S3) · `next start` log, nothing to fix.** Two non-Ready lines: Clerk's dev-instance telemetry notice (dev-copy keys) and `⨯ … "/favicon.svg" has type "image/svg+xml" but dangerouslyAllowSVG is disabled`, which is the probe's own `_next/image` SVG request being refused (the expected 400). No other error or warning.
 - **D6 (code review) · Astra SC1 taken, SC2 already planned.** SC1: block D and the Release smoke now use `curl -sf` and check `places` is a non-empty array, since a 500 `{"error":…}` body also parses as JSON. Plan-only change (the probe is in the plan, not the repo). SC2 (final verification, fresh audit) is the Verification section, run next.
+
+- **D7 (release) · Verification not re-run.** Rebase was a no-op and only this plan changed since `4ba385b8`; re-running would test identical code. CI re-ran check + e2e on the PR (both pass).
 
 ## Log
 
@@ -486,6 +495,7 @@ SHOULD-CONSIDER:
 - 2026-11-14 10:01 UTC · S3: `npm run build` exit 0 (only the React 18 notice, D2); block D on the dev copy (guard ok, port 3100 free before/after): `probe ok` (route handler gzip under next start, --compressed JSON parses, journal `{"entries":[]}`, SVG image 400). Logs copied to `e2e-s2/`; start log notes D5. No code change.
 - 2026-11-14 10:03 UTC · Code review (Astra): APPROVE, no MUST-FIX; SC1 (curl -f + shape check) applied to block D and Release smoke (D6); SC2 = Verification. No code change.
 - 2026-11-14 10:20 UTC · Verification on 4ba385b8: `npm ci`; ls/audit as S1 (`--omit=dev` 0; full audit 9 dev-only, Finding 6); block A 4 / config ok / 4 files / tree ok / lock ok; e2e:fresh 1575/1575 seed 7, same rounds + shot set as baseline, 18 differ byte-wise (5 globe spin; board/sheet shots ~0.1% px in the board = gem idle frames; 02c-notes toast scroll + header fade, 06-end-after-reload / 08 card entrance frames; viewed 02-board-320x720, 02c-notes, 06-end-after-reload pairs: same layout and content); typecheck, lint, test 61/61, build 0 (only D2 notice); e2e:site 444/444; probe ok (start log as D5); tree clean, ports free; artifact `final-e2e/` + COMMAND.txt. No code change.
+- 2026-11-14 10:35 UTC · Release: PR #73 CI check+e2e pass, merged `e91ad1fa`, deployed; smoke all pass (version, check.sh, 200s, SVG 400, gzip, JSON, journal). H14 added.
 
 ## Summary
 
@@ -499,4 +509,4 @@ Next.js upgraded past the locked advisories (audit M1, finding A3). Branch `agen
 - **Security note:** A3's "out of path" conclusion (default `dangerouslyAllowSVG: false`) is no longer proven: GHSA-7qx7 (next ≤16.4.4) can get past that setting, though it needs an attacker-supplied SVG, which nothing here takes (Finding 1, Fable). 16.4.6 closes it.
 - **Reviews:** architecture Fable APPROVE_WITH_CHANGES (2 MUST-FIX, resolved), Astra APPROVE; code review Astra APPROVE (SC1 applied, D6).
 - **No production content build needed.**
-- Release (deploy + smoke on play.critterconnect.org, plus a handoff item for the owner's signed-in Field Journal check) follows below.
+- **Released:** PR #73 merged (`e91ad1fa`), deployed; CI check + e2e pass; live smoke all pass (`/explore/`, pool, places 200; SVG image 400; gzip; journal). Owner: H14, signed-in Field Journal check (Blocks: nothing).
