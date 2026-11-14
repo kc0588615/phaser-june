@@ -119,7 +119,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -127,6 +127,25 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+Branch `agent/toolchain-cleanup` at `1c40db06` = `origin/main` `af4b0453` (PR #74) + plan. Live `version.txt` `af4b0453`. Files: `S=/srv/critter-ai/agent-state/missions/toolchain-cleanup/` (full grep output `S/greps-before.txt`).
+
+**Packages.** `node -v` v24.21.0. `npm ci` exit 0, one `EBADENGINE` (`critter-connect@1.2.0` requires `node: '22.x'`, current v24.21.0). `npm ls @types/node` → `@types/node@20.17.57`. `git ls-files --eol | awk '{print $1" "$2}' | sort | uniq -c`: `3 i/ w/` (3 skill symlinks/dirs), `37 i/-text w/-text`, `3 i/crlf w/crlf`, `369 i/lf w/lf`, `9 i/none w/none` (`S/eol-before.txt`). Note (not this mission's): npm 11.19 skips install scripts of `@tailwindcss/oxide`, `esbuild`, `unrs-resolver` ("not yet covered by allowScripts"); every check below still passes.
+
+**Fresh greps (all as the audit predicted; nothing kept):**
+- D5: each of `CASE_COMPILER_SECRET`, `CRON_SECRET`, `ANALYZE` → `.env.example` only (+ this plan). TiTiler names and `NEXT_PUBLIC_MAP_STYLE_URL` → `.env.example`, `.env.local.example` (+ `plans/040…:85` for the base URL). `NODE_ENV` readers outside the example: `Dockerfile:31`, `next.config.mjs:22` (goes with D24), `src/components/globe/Globe.tsx:114,130`, `src/db/index.ts:25`, `src/game/debugBridge.ts:51` (all stay). `node_modules`: 0 files for the five long names; `process.env.ANALYZE` only in `next/dist/docs/…/package-bundling.md`. Example-file mentions outside plans: only `deploy/app.env.example` (4 places) and the vendored audit-playbook skill; `.dockerignore:10` `.env.*`.
+- D10: `check-game-css` outside plans → `docs/DEPLOY.md:63` + the script; 0 in `package.json`, `.github`, `.githooks`, `.claude`.
+- D11: `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` → `.env.example:23`, `Dockerfile:16`, `deploy/app.env.example:12`, `docs/DATABASE_ACCESS.md:209` (M6 kept the block). `grep -rl AFTER_SIGN node_modules | wc -l` → **0**. Redirect props in `src`: 0. `.github`: 0. Compose build args: only `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `GIT_COMMIT`.
+- D18: `npm (run )?start` 0; `typecheck:watch` only `package.json:41`; `npm run clean` only in `plans/` (next-advisory, server-cleanup), so **no line outside `plans/` to rewrite**; `npm run docs` only 2 plans; 0 in CI/hooks/Dockerfile/deploy.
+- D19: `-d docs` only `package.json:33`; `docs/index.html`, `_sidebar` 0 outside this plan; `docsify` only `docs/index.html`.
+- D24: header names → `deploy/Caddyfile:4-6`, `next.config.mjs:21,27,28`, `docs/DEPLOY.md:138` (record). Config keys: `distDir outputFileTracingRoot trailingSlash poweredByHeader allowedDevOrigins redirects headers`.
+- S15: no `.npmrc/.nvmrc/.node-version/.tool-versions`; Node versions: `ci.yml:17,55` (24), esbuild `node20` in `run-tests.mjs:40`, `run-typescript.mjs:33`, `site.mjs:67` (out of scope).
+
+**Live headers** (`S/headers-before/`, one file per URL): play. `/` 200, `/explore/` 200, `/api/places/` 200, `/no-such-page/` 404, apex `/` 200, apex `/explore/` 308; each has exactly 3: `strict-transport-security: max-age=31536000`, `x-content-type-options: nosniff`, `referrer-policy: strict-origin-when-cross-origin`. `/login/` → 200. `/explore/`, `/api/places/`, `/api/clue-game/pool/` → 200 (`codes.txt`).
+
+**Checks:** `npm run typecheck` 0, `npm run lint` 0, `npm test` 61/61.
+
+**E2E** (dev copy, guard ok): run 3 `npm run e2e:fresh` exit 0, **1575/1575**, seed 7, 4 rounds (Hairy Frog +310, Hirola lost, Golden-rumped Sengi +50, African Forest Elephant +110); artifact `S/baseline-e2e/` (`report.json`, screenshots, `run.log`, `COMMAND.txt`). Runs 1 and 2, started at load ≈2 on 2 cores right after lint/test, each failed one different timing check, 1574/1575 ("the sort: … rows held paused", then "field guide: signs in pages turn on their own"); reports + logs in `S/baseline-flaky/`. So: start every E2E here at load < 0.6 (`until awk '{exit !($1<0.6)}' /proc/loadavg; do sleep 15; done`).
 
 ## Architecture
 
@@ -147,5 +166,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-14 16:46 UTC · Baseline: fresh greps as audit (nothing kept, no `npm run clean` outside plans), packages (EBADENGINE 22.x, @types/node 20.17.57), eol counts, live headers 3×6 + codes, typecheck/lint/test 61/61, E2E 1575/1575 → `baseline-e2e/` (2 earlier runs at load 2: 1574/1575, different timing checks).
 
 ## Summary
