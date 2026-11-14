@@ -118,7 +118,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none) — none needed
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -388,6 +388,8 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+None needed: Fable APPROVE_WITH_CHANGES and Astra APPROVE, both 0 MUST-FIX; architect not re-run. For the Steps stage (planner): fold in Fable MISSED 1 (drop "(saved with each solve)" at `src/game/constants.ts:4` in the D2 step, record under Decisions), Fable SHOULD-CONSIDER 1–5 (lock check "37 removed, 0 added, no other entry changed"; confirm `043-0` by a dev-copy read or leave it out; run the runbook check before committing and match exact refusal text; keep "old expedition tables still exist", drop only "unmodelled"; `npm run clean` in VPS main checkout/worktrees in PR + Summary) and Astra SHOULD-CONSIDER 1–2 (signed-in journal check in Verification; note continent-only places vs fresh-device sightings in docs/Summary).
+
 ## Steps
 
 ## Verification
@@ -404,5 +406,6 @@ SHOULD-CONSIDER:
 - 2026-11-14 06:10 UTC · Architecture: architect wrote findings + target design (D2→S3→D13→S8 order; lock dry run drops gel/shell-quote/@esbuild-kit; D13 no behaviour change). Plan-only, no code.
 - 2026-11-14 06:26 UTC · Fable review: APPROVE_WITH_CHANGES, 0 MUST-FIX; 1 missed comment (`src/game/constants.ts:4`), 5 SHOULD-CONSIDER. Plan-only.
 - 2026-11-14 06:28 UTC · Astra review: APPROVE, 0 must-fix, 2 should-consider (signed-in journal check; continent-only places vs fresh-device sightings).
+- 2026-11-14 06:33 UTC · Revision: none needed (0 MUST-FIX in both reviews); review follow-ups listed under Revision notes for the Steps stage. Plan-only.
 
 ## Summary
