@@ -117,7 +117,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -377,6 +377,15 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. Verify the retained journal through a signed-in request. A signed-out 200 bypasses its database query.
+2. Document that continent-only places stop reconstructing historical country/area sightings on fresh devices. Existing local sightings remain; current UI does not display them.
+
 ## Revision notes
 
 ## Steps
@@ -394,5 +403,6 @@ SHOULD-CONSIDER:
 - 2026-11-14 05:52 UTC · Baseline: fresh greps (no new callers), packages, live places, saved rounds (max 2026-10-01), typecheck/lint/test 66/66, E2E 1575/1575 → `baseline-e2e/`.
 - 2026-11-14 06:10 UTC · Architecture: architect wrote findings + target design (D2→S3→D13→S8 order; lock dry run drops gel/shell-quote/@esbuild-kit; D13 no behaviour change). Plan-only, no code.
 - 2026-11-14 06:26 UTC · Fable review: APPROVE_WITH_CHANGES, 0 MUST-FIX; 1 missed comment (`src/game/constants.ts:4`), 5 SHOULD-CONSIDER. Plan-only.
+- 2026-11-14 06:28 UTC · Astra review: APPROVE, 0 must-fix, 2 should-consider (signed-in journal check; continent-only places vs fresh-device sightings).
 
 ## Summary
