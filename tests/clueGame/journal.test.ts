@@ -18,11 +18,6 @@ test('stored journals round-trip; malformed storage is dropped', () => {
   assert.deepEqual(parseJournal(JSON.stringify({ [frog.scientificName]: { ...frog, timesSolved: 0 } })), {});
 });
 
-test('a malformed sighting drops the entry', () => {
-  const bad = { [frog.scientificName]: { ...frog, timesSolved: 1, bestMoves: 1, firstSolvedAt: 'a', lastSolvedAt: 'a', sightings: [{ placeKey: 'x' }] } };
-  assert.deepEqual(parseJournal(JSON.stringify(bad)), {});
-});
-
 // tests/clueGame/old-journal.json was written by the journal code from before 2026-11, which saved sightings (and has
 // one malformed sighting and one unknown field, added by hand). Every find in it must survive the parser.
 test('a journal saved with sightings (before 2026-11) keeps every find; old and unknown fields are left out', () => {

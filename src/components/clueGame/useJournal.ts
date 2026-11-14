@@ -2,9 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
   JOURNAL_STORAGE_KEY, NO_RECORDS, RECORDS_STORAGE_KEY, mergeServerJournal, parseJournal, parseRecords, recordSolve, updateRecords,
-  type Journal, type Records, type ServerJournalEntry, type Sighting,
+  type Journal, type Records, type ServerJournalEntry,
 } from '@/clueGame/journal';
-import type { Place } from '@/clueGame/places';
 import { getJson } from '@/lib/getJson';
 
 function save(key: string, value: unknown): void {
@@ -17,11 +16,10 @@ function save(key: string, value: unknown): void {
 
 /**
  * The Field Journal and personal bests in localStorage. Storage can be
- * unavailable (private mode); play still works. A signed-in player's saved
- * solves are merged in, so the journal follows them between devices; pass the
- * globe's places to turn their solves there into sightings.
+ * unavailable (private mode); play still works. A signed-in player's solves
+ * saved before 2026-10-01 are merged in.
  */
-export function useJournal(places?: readonly Place[]) {
+export function useJournal() {
   const [journal, setJournal] = useState<Journal>({});
   const [records, setRecords] = useState<Records>(NO_RECORDS);
   const [saved, setSaved] = useState<ServerJournalEntry[]>([]);
@@ -47,23 +45,21 @@ export function useJournal(places?: readonly Place[]) {
 
   useEffect(() => {
     if (saved.length === 0) return;
-    const byKey = new Map((places ?? []).map(place => [place.key, place]));
     setJournal(previous => {
-      const next = mergeServerJournal(previous, saved, key => byKey.get(key));
+      const next = mergeServerJournal(previous, saved);
       save(JOURNAL_STORAGE_KEY, next);
       return next;
     });
-  }, [saved, places]);
+  }, [saved]);
 
   const record = useCallback((
     species: { scientificName: string; commonName: string; className?: string | null },
     moves: number,
     session: { score: number; streak: number },
-    sighting?: Sighting,
     sharp = false,
   ) => {
     setJournal(previous => {
-      const next = recordSolve(previous, species, moves, new Date().toISOString(), sighting, sharp);
+      const next = recordSolve(previous, species, moves, new Date().toISOString(), sharp);
       save(JOURNAL_STORAGE_KEY, next);
       return next;
     });

@@ -49,24 +49,3 @@ export function classColor(className: string | null | undefined): string {
       return '#6fa8bc';
   }
 }
-
-/**
- * Where a discovery marker goes: inside the place's box, spread by species so
- * several animals from one place don't sit on one point. Deterministic.
- */
-export function sightingPoint(place: Pick<Place, 'bbox' | 'center'>, speciesId: number): [number, number] {
-  const [west, south, east, north] = place.bbox;
-  const angle = ((speciesId * 137.508) % 360) * (Math.PI / 180); // golden-angle spread
-  const radius = 0.15 + ((speciesId * 7919) % 100) / 400; // 0.15-0.4 of the half-box
-  const lon = place.center[0] + Math.cos(angle) * radius * (east - west) / 2;
-  const lat = place.center[1] + Math.sin(angle) * radius * (north - south) / 2;
-  return [round(clamp(lon, west, east)), round(clamp(lat, south, north))];
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-function round(value: number): number {
-  return Math.round(value * 1000) / 1000;
-}

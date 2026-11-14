@@ -12,7 +12,6 @@ import { Heart, Menu, NotebookPen, Pause } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { sharpEye, type AnimalLogEntry } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
-import { sightingPoint } from '@/clueGame/places';
 import { CONTINENT_NAMES } from '@/clueGame/regions';
 import { EventBus, type BoardKey } from '@/game/EventBus';
 import { reducedMotion } from '@/game/motion';
@@ -195,7 +194,7 @@ function StatusTicker({ now, nowKey, nowKind, facts, idle, keys = false }: { now
 }
 
 export function AnimalGame() {
-  const { session, loadError, seed, rules, recordedRound, pool, place, continent, markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut, rowOrder, setRowOrder } = useAnimalSession();
+  const { session, loadError, seed, rules, recordedRound, pool, continent, markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut, rowOrder, setRowOrder } = useAnimalSession();
   const { journal, records, record } = useJournal();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -297,10 +296,8 @@ export function AnimalGame() {
     if (end.outcome !== 'found') return;
     const species = speciesById.get(done.mysteryId);
     if (!species) return;
-    const point = place ? sightingPoint(place, species.id) : null;
-    const sighting = place && point ? { placeKey: place.key, placeName: place.name, lon: point[0], lat: point[1] } : undefined;
-    record(species, done.movesUsed, { score: session.score, streak: session.bestStreak }, sighting, sharpEye(done));
-  }, [session, end, speciesById, place, record, recordedRound]);
+    record(species, done.movesUsed, { score: session.score, streak: session.bestStreak }, sharpEye(done));
+  }, [session, end, speciesById, record, recordedRound]);
 
   // Which answers the grid shows: an order's answer stamps once its gems have landed.
   const size = rules.orderSize;

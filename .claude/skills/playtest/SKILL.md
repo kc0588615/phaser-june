@@ -47,7 +47,7 @@ Invariants to check each move (`npm run e2e` checks these too, except the last o
 - Ruling out the mystery doesn't release it by itself; tapping a gem outlines the marked animals its swap would release.
 - Out of moves: the name sheet shows; a right name is a find, a wrong name or Skip loses the round (`nameIt`).
 - The round-end card names the mystery, replays the grid (no ✓/✗: answered columns green where a cell matches the camera, red and striped where not, unanswered ones grey; the Camera row's YES green, NO red) and shows the family tree; the trail moves on (a find, or one heart less).
-- With `?place=`, a find adds a sighting for that continent to the journal.
+- With `?place=continent:<name>`, every suspect lives on that continent (one with fewer than 12 animals plays everyone) and Range questions name only its regions; a find goes in the journal as it does from Anywhere.
 - No page scroll: `document.documentElement.scrollHeight === innerHeight`; every button at least 44px; on a 375×548 phone the board keeps at least 210 px.
 
 Content problems (a field note that still names its animal, a trait with no record) come from the profiles in `db/content/`: `npm run content -- preview <name>`, then `npm run content -- check` on the live pool.

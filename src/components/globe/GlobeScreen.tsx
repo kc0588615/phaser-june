@@ -19,7 +19,7 @@ import { PlaceList } from './PlaceList';
 export function GlobeScreen() {
   const router = useRouter();
   const [data, setData] = useState<PlacesResponse | null>(null);
-  const { journal } = useJournal(data?.places);
+  const { journal } = useJournal();
   const [error, setError] = useState<string | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   // Play from here always starts a new game; only coming back to /explore resumes one.
