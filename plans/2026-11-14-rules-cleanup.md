@@ -448,7 +448,7 @@ Each step is one session and one commit, `rules-cleanup: S<n> · <title>`, toget
     - Copy the run to `$S/e2e-s2-red/` and record the red results in the Log.
     - This commit leaves the fixture case red on purpose; S3 turns it green.
 
-- [ ] S3 · D14: stop building sightings, keep every find, and drop /explore's place request (E2E green)
+- [x] S3 · D14: stop building sightings, keep every find, and drop /explore's place request (E2E green)
   - `src/clueGame/journal.ts`, as in the Target design:
     - Delete `import { sightingPoint, type Place } from '@/clueGame/places';`, the `sightings?: Sighting[];` field with its doc, the `Sighting` interface and `isSighting`.
     - `recordSolve(journal, species, moves, at, sharp = false)`: drop the `const sightings = …` line and `...(sightings.length ? { sightings } : {}),`.
@@ -662,6 +662,8 @@ The journal parser can lose player data. It, `mergeServerJournal` and the conten
 
 - S2: the fixture check reloads `fresh` after reading the Field Journal, before the find, instead of clicking "Close journal": nothing else in the E2E closes the journal and plays on, and a `?seed=` load deals the same round with storage untouched. One more page load, no extra `check()`.
 - S2: the new E2E block sits in its own `{ }` scope: `fresh` and `listed` already name other things in `main`.
+- S3 (F1): deleted `docs/CLUE_MATCH.md`'s "Only continents become sightings: …" sentence, beyond Goal's list: it describes the removed feature.
+- S3: `parseJournal`'s `flatMap` returns `[[key, entry] as const]` so `Object.fromEntries` infers `Journal` without a cast.
 
 ## Log
 
@@ -673,5 +675,6 @@ The journal parser can lose player data. It, `mergeServerJournal` and the conten
 - 2026-11-14 20:24 UTC · Steps: `planner` wrote S1–S7 (tests first; S2 red on purpose: 1 unit + 3 E2E), Verification (64 unit, 1578 E2E), Release smoke, Failure modes. Plan-only.
 - 2026-11-14 20:27 UTC · S1: validatePool.test.ts +2 cases (two-value size error; 15-warning pin by animal/group/kind), journal.test.ts +1 (mergeServerJournal rule, idempotent), all green on today's code. `npm test` 64/64, typecheck 0, lint 0. `$S/categories-before.json` saved (8 rows, 4 fields).
 - 2026-11-14 20:44 UTC · S2: fixture `tests/clueGame/old-journal.json` (today's `recordSolve` via `$S/make-old-journal.cjs`: Okapi 2 solves/2 sightings, Hairy Frog, Ethiopian Wolf; Addax by hand with `[{ "placeKey": "x" }]` + `legacy`), its unit case, 2 E2E checks = **3 `check()` calls** (network 1, fixture 2): later E2E expects **1578**. Red on today's code as planned: `npm test` 64 pass / 1 fail (the fixture case: `deepStrictEqual`, actual lacks `Addax nasomaculatus` and keeps `sightings`; `$S/test-s2-red.txt`). E2E (dev copy) **1575/1578**, only the 3 new fail: network `["/api/clue-game/pool/","/api/places/"]`; journal `"3 of 76 animals identified"` (4 names, notInPool []); after the find (Hairy Frog) `changed: ["Addax nasomaculatus: missing"]`. Artifact `$S/e2e-s2-red/`, log `$S/e2e-s2.log`. typecheck 0, lint 0.
+- 2026-11-14 20:58 UTC · S3 (`b897c4d5`): journal drops `Sighting`/`sightings`/`isSighting`, `recordSolve`'s sighting slot and `mergeServerJournal`'s `placeFor`; `parseJournal` builds via `toEntry`; `sightingPoint`/`clamp`/`round` gone; `/explore` drops `loadPlace` + `place`; `useJournal()` takes no places. typecheck 0, orphan check 0, lint 0, `npm test` 64/64 (journal.test.ts diff vs S2: only the deleted sighting case), savedGame.ts diff empty, S3 grep empty. E2E (dev copy) **1578/1578**: network `["/api/clue-game/pool/"]`; journal `"4 of 76 animals identified"`; after the find (Hairy Frog) `changed: []`. Artifact `$S/e2e-s3/`, log `$S/e2e-s3.log`; `$S/e2e-s2-red/` deleted, its report kept as `$S/e2e-s2-red-report.json`.
 
 ## Summary
