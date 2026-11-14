@@ -116,7 +116,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -361,6 +361,20 @@ Keep at most two E2E artifact folders (disk rule).
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX: none
+
+MISSED:
+1. `src/game/constants.ts:4` says "Gem color keys (saved with each solve)". Goal 1 covers every line that says rounds are saved; this one is in no list (brief, D2, F1) and the DoD grep can't see it. The file is outside the Scope list, so either fix the comment in the D2 step (drop the parenthetical) and record it under Decisions, or add it to Notes. Fixing is the better call: the Goal is explicit and it is a comment only.
+
+SHOULD-CONSIDER:
+1. Lock tally: the uninstall removes 22 `@esbuild/*` platform packages, not 23 (the total of 37 is right). Reproduced on a scratch copy with npm 11.19.0: 37 entries removed, none added, only the root entry changed, `npm ls --omit=dev --package-lock-only …` prints `(empty)` and exits 1. Have the step check "37 removed, 0 added, no other entry changed" rather than the per-package list.
+2. `db/schema.sql:123`: adding `043-0` to the versions that were saved rests on code history (`questionMatch.ts:131`, d496643a), not on the rows. Confirm with one read in the dev-copy subshell (`SELECT rules_version, count(*) FROM clue_match_solves GROUP BY 1`) before writing it, or leave `043-0` out.
+3. Runbook check (`DATABASE_ACCESS.md:249-252`): it is the only new code that hasn't run. PgBouncer may word the refusal differently, for example a cached `server_login_retry` error on a rerun within seconds. If the one run prints FAIL on a refusal, record the exact text and match that; don't loosen it to "any error". Run it before the doc is committed.
+4. `AGENTS.md:57`: keep "the old expedition tables still exist in Postgres" and drop only "unmodelled". Whether they exist is Q18's (S1, D4), and the decision rule says delete only what the Goal names.
+5. `npm run clean` after the merge is also needed in this VPS's main checkout (`/srv/critter-ai/critter-connect`) and any other worktree that holds a `.next*` folder, not only in WSL: say so in the PR and the Summary. (After the clean, the ignored `next-env.d.ts` still imports `.next-e2e/dev/types/routes.d.ts`; tsc 5.8.3 doesn't check unresolved side-effect imports, so typecheck passes.)
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -379,5 +393,6 @@ Keep at most two E2E artifact folders (disk rule).
 
 - 2026-11-14 05:52 UTC · Baseline: fresh greps (no new callers), packages, live places, saved rounds (max 2026-10-01), typecheck/lint/test 66/66, E2E 1575/1575 → `baseline-e2e/`.
 - 2026-11-14 06:10 UTC · Architecture: architect wrote findings + target design (D2→S3→D13→S8 order; lock dry run drops gel/shell-quote/@esbuild-kit; D13 no behaviour change). Plan-only, no code.
+- 2026-11-14 06:26 UTC · Fable review: APPROVE_WITH_CHANGES, 0 MUST-FIX; 1 missed comment (`src/game/constants.ts:4`), 5 SHOULD-CONSIDER. Plan-only.
 
 ## Summary
