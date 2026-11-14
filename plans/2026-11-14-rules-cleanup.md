@@ -656,6 +656,15 @@ The journal parser can lose player data. It, `mergeServerJournal` and the conten
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. Record final-commit E2E results before PR; existing 1,578-check report predates S4/S5 deletions. Current typecheck, lint and 64 tests pass.
+2. Refresh `origin/main` when writable; fetch failed here, so remote freshness remains unverified.
+
 ## Release
 
 ## Decisions
@@ -681,5 +690,6 @@ The journal parser can lose player data. It, `mergeServerJournal` and the conten
 - 2026-11-14 21:08 UTC · S5: S16 cut. `validatePool` drops the "does not fit its own species" rule (import now `isDeductive` only), both warnings reworded (conditions unchanged); `deduction.ts` drops `ClueFit`/`fitClue` (`tagOutcome` stays: `signs.ts` reads it); `GemCategory` = `label`/`clueCategories`/`factCategories`/`deduces`, `CLUE_GAME_GEM_TYPES` + `GemType` import gone. typecheck 0, orphan check 0, lint 0, `npm test` 64/64, `git diff b15df0fc -- tests/clueGame/validatePool.test.ts` empty, `categories-after.json` = before, content check (dev copy) `diff` empty (76/76, 2478 clues, 0/0). Brief's final grep prints nothing; no `notes at all`/`so that color` left.
 - 2026-11-14 21:20 UTC · S6 (`55abe87e`, subject "rules-cleanup: S6 · S10 comment-only"; find it by subject after the release rebase): 8 files, comments only (animalBoard, questionMatchContent header + door doc, places ×2, profiles, categories header + 3 field docs, journal, questionMatch short texts, bot usage `--order 20`/`--stars 8,14`). Claims read against code first (`guide`/`signs`, `animalsFromProfiles` callers = bot + `animalBoard.test.ts`, witness notes need tags, `keyFacts`, `labels` → `clue-board-announce`). Comment-only grep on the commit: empty. typecheck 0, lint 0, final forbidden grep empty.
 - 2026-11-14 21:14 UTC · S7: docs only. Paper +1 note line (`numstat` 2 0); `CLUE_MATCH.md` :3, :51, `AGENTS.md` :51, playtest `SKILL.md` :40 point to CLUE_MATCH Rules + `CONTEXT.md`, the paper named the frozen 044-0 paper; `CONTEXT.md` pencil/name/journal/source lines → Architecture texts. Read against code first: `nameIt` scores pencils on a right name only, `starsFor` 2 with `sharpEye`, `AnimalSession.pencil` doc, the journal route (reads `clue_match_solves`, nothing in `src` writes it), `FactsWithSources` (round-end card + Field Journal). CLUE_MATCH Rules summary already true (Sharp eye's second star). Seen, not edited: `CONTEXT.md:134` Star line (no contradiction). typecheck 0, lint 0, paper grep: only frozen-044-0 lines.
+- 2026-11-14 21:45 UTC · Astra code review (`--code origin/main`, exit 0): APPROVE, MUST-FIX none. SHOULD-CONSIDER 1 (final-commit E2E) = Verification 1, next unit; 2 (fetch) done this session, `origin/main` = `3436aac5`. Plan-only.
 
 ## Summary
