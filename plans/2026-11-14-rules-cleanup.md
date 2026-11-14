@@ -2,7 +2,7 @@
 mission: rules-cleanup
 project: critter-connect
 branch: agent/rules-cleanup
-status: active
+status: done
 started: 2026-11-14 19:32 UTC
 ---
 
@@ -692,4 +692,18 @@ SHOULD-CONSIDER:
 - 2026-11-14 21:14 UTC · S7: docs only. Paper +1 note line (`numstat` 2 0); `CLUE_MATCH.md` :3, :51, `AGENTS.md` :51, playtest `SKILL.md` :40 point to CLUE_MATCH Rules + `CONTEXT.md`, the paper named the frozen 044-0 paper; `CONTEXT.md` pencil/name/journal/source lines → Architecture texts. Read against code first: `nameIt` scores pencils on a right name only, `starsFor` 2 with `sharpEye`, `AnimalSession.pencil` doc, the journal route (reads `clue_match_solves`, nothing in `src` writes it), `FactsWithSources` (round-end card + Field Journal). CLUE_MATCH Rules summary already true (Sharp eye's second star). Seen, not edited: `CONTEXT.md:134` Star line (no contradiction). typecheck 0, lint 0, paper grep: only frozen-044-0 lines.
 - 2026-11-14 21:45 UTC · Astra code review (`--code origin/main`, exit 0): APPROVE, MUST-FIX none. SHOULD-CONSIDER 1 (final-commit E2E) = Verification 1, next unit; 2 (fetch) done this session, `origin/main` = `3436aac5`. Plan-only.
 
+- 2026-11-14 21:40 UTC · Final Verification on `dd1302f9` (= `origin/main` `3436aac5` + mission): (1) E2E (dev copy, guard passed) exit 0, **1578/1578**: network `["/api/clue-game/pool/","/api/clue-game/pool/"]`, journal `"4 of 76 animals identified"`, after the find (Hairy Frog) `changed: []`; artifact `$S/final-e2e/`, log `$S/e2e-final.log`; `$S/e2e-s3/` deleted. (2) typecheck 0, orphan check 0, lint 0. (3) `npm test` 64/64 (`$S/test-after.txt`). (4) bot `diff` empty. (5) content check `diff` empty (76/76, 2478 clues, 0/0). (6) S6 comment-only grep empty. (7) version `055-0` ×1, `savedGame.ts` diff empty. (8) forbidden grep empty. (9) scope: 26 Scope files + plan, `gems.ts` deleted; tree clean, `AGENTS.md` block untouched.
+
 ## Summary
+
+Audit M7 done: the unreachable 041/043 rules, the content check's dead fit rule and gem fields, the stale "the rules" pointers to the 044-0 paper, and journal sightings are gone. No gameplay, content or API change.
+
+- **Deleted:** `src/clueGame/gems.ts` (`GEM_OF`). From `questionMatch.ts`: the whole Rounds section (`pickRound`, `newRound`, `chargesEarned`, `applyMatches`, `familyTreeQuote`, `buyFamilyTreeStep`, `questionsFor`, `splitOf`, `canAsk`, `scoreSolve`, `RoundState`, `RoundStatus`, `LogEntry`, `MatchedGroup`, `FamilyTreeQuote`, `ScorePart`, `GEM_KINDS`, `PREFIX_ORDER`); `Animal`'s `redList`/`redListUrl`/`traitSources`. `deduction.ts`: `evaluateClue`, `usefulCategories`, `fitClue`, `ClueFit`. `categories.ts`: `CLUE_GAME_GEM_TYPES`, `BY_GEM`, `gemCategory` and the gem fields. `animalSession.ts`: `startTrail`; `animalBoard.ts`: exported `pencilBonus()`. Journal: `Sighting`, `sightings`, `isSighting`, `placeFor`; `places.ts`: `sightingPoint`; `/explore`: `loadPlace` (no `/api/places/` request now). Content check: the "does not fit its own species" rule (tautological, F2).
+- **Journal (D14, the data-safety change):** `parseJournal` rebuilds each entry from its kept fields (`toEntry`), so an old entry with a malformed `sightings` is now kept instead of dropped, and old sightings and unknown fields are no longer saved again. Proved by a real old-journal fixture (unit + 2 E2E checks), all red on the old code first (S2), green after.
+- **Comparisons:** bot (100 rounds, seed 44) `diff` empty vs baseline; content check `diff` empty (76/76 species, 2478 clues, 491 facts, 0 errors, 0 warnings); categories table before/after identical.
+- **Tests:** `npm test` 61 → **64/64** (+two-value size, +warnings pin, +`mergeServerJournal`, +old-journal fixture, −the deleted malformed-sighting case). typecheck, orphan check, lint all 0.
+- **E2E:** baseline 1575/1575 → final **1578/1578** (+3 new `check()` calls: no `/api/places/` on a continent game; old journal counted in full; every old entry kept after a find). Artifact `/srv/critter-ai/agent-state/missions/rules-cleanup/final-e2e/` (`report.json` + screenshots); reproduce with Verification 1's block (seed 7, same run). Red run: `$S/e2e-s2-red-report.json`.
+- **`ANIMAL_RULES.version` stays `055-0`:** the saved game holds `Omit<AnimalSession, 'book'>` and none of its types changed (`savedGame.ts` diff empty); the journal is a separate key whose old values the new parser accepts.
+- **Reviews:** Fable APPROVE_WITH_CHANGES (0 MUST-FIX), Astra architecture APPROVE, Astra code review APPROVE (0 MUST-FIX; its SHOULD-CONSIDER 1 = this final E2E, 2 = fetch, both done).
+- **No production content build needed:** no `db/content/` and no `/api/*` change.
+- **Release smoke:** pending (next unit).
