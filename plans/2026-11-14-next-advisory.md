@@ -81,7 +81,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -230,6 +230,16 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. Verify compressed API responses through Caddy under `next start`. Existing E2E uses `next dev`; deployment probes omit compression, leaving the changed production path untested. [Release notes](https://github.com/vercel/next.js/releases/tag/v16.4.6).
+2. Verify signed-in journal access and session handling. Clerk peer compatibility and anonymous gameplay tests do not establish authenticated behavior after the proxy runtime change.
+3. Prefer a 16.4.5 minimum fallback. Below that, assess each remaining advisory’s prerequisites against this app; neither a clean audit nor self-hosting alone establishes exposure or safety. [Security fixes](https://github.com/vercel/next.js/releases/tag/v16.4.5).
+
 ## Revision notes
 
 ## Steps
@@ -247,5 +257,6 @@ SHOULD-CONSIDER:
 - 2026-11-14 08:58 UTC · Baseline: audit 3 (1 critical, 2 high), shell-quote already gone; live image probe 400; typecheck/lint/test/build pass; e2e:fresh 1575/1575, artifact `baseline-e2e/`.
 - 2026-11-14 09:17 UTC · Architecture: architect wrote findings + target design (16.4.6 in range; sharp/source-map-js reachable; dry-run lock audit --omit=dev 0; new GHSA-7qx7 bypasses dangerouslyAllowSVG on <=16.4.4, so 400 probe isn't proof; no src change expected). No code change, no checks needed.
 - 2026-11-14 09:24 UTC · Fable review: APPROVE_WITH_CHANGES, 2 MUST-FIX (both fallbacks: eslint-config-next step-down can't fix react-hooks risk; next retry must also pass eslint-config-next@16.4.6). Main path reproduced (^16.4.6, lock ok, audit --omit=dev 0). No code change.
+- 2026-11-14 09:27 UTC · Astra review: APPROVE, no MUST-FIX; 3 SHOULD-CONSIDER (verify compressed API via Caddy under next start, signed-in journal/Clerk after proxy change, 16.4.5 fallback floor). No code change.
 
 ## Summary
