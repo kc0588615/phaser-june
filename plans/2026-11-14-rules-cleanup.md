@@ -133,7 +133,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
+- [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -333,6 +333,25 @@ None.
 
 ## Architecture review (Fable)
 
+Advisor (Fable 5.2), 2026-11-14, on the Architecture section and the files it cites (`journal.ts`, `useJournal.ts`, `deduction.ts`, `categories.ts`, `validatePool.ts`, `traits.ts`, `AnimalGame.tsx`, `useAnimalSession.ts`, `scripts/e2e.mjs`, `journal.test.ts`). Each point checked against the code:
+- F1 real (`journal.ts:114` drops the animal on one bad sighting). F2 real: `buildSpeciesRecords` adds `normalizeTag(tag)` and `clueTags` uses the same `normalizeTag`, so `fitClue(clue, clue.speciesId)` is `'fits'` whenever the species exists. `toEntry` keeps today's required-field rules; `className` is only ever written truthy and has no reader (`rg` over `src`). A journal the new code saves (no `sightings`) still loads in the old code, so a revert after a failed deploy is safe.
+- Final Definition-of-done grep, dry-run on the unchanged tree: every hit is on a line the design deletes or rewrites (`docs/CLUE_MATCH.md:21`, `AnimalGame.tsx:15,300`, `useAnimalSession.ts:34,104`, `useJournal.ts:5,62`, plus the in-scope `src/clueGame/` files). No hit in `docs/ANIMAL_BOARD_PAPER.md`, `CONTEXT.md`, `.agents/` or `scripts/e2e.mjs`.
+- Old message texts (`does not fit its own species`, `never narrows`, `notes at all`): only `validatePool.ts:75,96,97`; no test or script pins them, so the 64-test count holds.
+- `/api/places` callers in `src`: `useAnimalSession.ts:36` (goes), `GlobeScreen.tsx:30` and `Globe.tsx:199` (globe only, not on `/explore`).
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX: none
+
+MISSED: none
+
+SHOULD-CONSIDER:
+1. **Commit order and `GemType`:** D8 before S16 (`evaluateClue` calls `fitClue`). F3 lists `categories.ts`'s `GemType` import as a D8 removal, but `GemCategory.gem` and `CLUE_GAME_GEM_TYPES` use it until S16; follow the Target design (S16 removes it), not F3.
+2. **Network check:** assert only after the first round is dealt (on old code `loadPlace` runs after the pool fetch, so an early assert passes for nothing). The `/api/places` prefix also matches `/api/places/outline`; fine, nothing on `/explore` calls it.
+3. **Fixture check resume:** the fixture load must deal a new round, not resume the tab's saved game, or the `recordedRound` guard (`AnimalGame.tsx:294`) skips the find and the check fails for the wrong reason. Pick the fixture animals from the dev copy's `/api/clue-game/pool/` (CI's data), and from the run's continent pool if the journal counts only that.
+4. **Fixture unit case pins "left out":** also assert each parsed entry's key set (no `sightings`, no unknown field). It still fails first on today's code.
+5. **Doc claims and extras:** read "fewer than 12" against `MIN_PLACE_ANIMALS` (12, holds), "no screen reads" `className` (holds), and the "source number that opens the full citation" wording against `AnimalSheets.tsx`/`JournalSheet.tsx` when writing. The `docs/CLUE_MATCH.md:10` deletion and the `questionMatchContent.ts:172`, `places.ts:2` comment fixes go beyond Goal's list: record them under **Decisions** when made.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -351,5 +370,6 @@ None.
 
 - 2026-11-14 19:47 UTC · Baseline: greps clean (no new readers), typecheck/lint 0, test 61/61, bot + content check saved, E2E 1575/1575 (dev copy).
 - 2026-11-14 20:12 UTC · Architecture: `architect` wrote findings + target design (D14 > S16 > D8 > S10; delete-only except journal `toEntry`; extra stale comments + `docs/CLUE_MATCH.md:10` added; open questions none). Plan-only; typecheck 0.
+- 2026-11-14 20:06 UTC · Fable review: APPROVE_WITH_CHANGES, MUST-FIX none, MISSED none, 5 SHOULD-CONSIDER (for Steps). Final grep dry-run: all hits on lines the design changes; old messages pinned by no test. Plan-only.
 
 ## Summary
