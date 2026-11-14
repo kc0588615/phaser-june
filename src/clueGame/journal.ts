@@ -1,6 +1,6 @@
 // The Field Journal: animals this player has identified, kept on their device.
-// Keyed by scientific name so it survives database id changes. A signed-in
-// player's solves are also on the server; mergeServerJournal folds them in.
+// Keyed by scientific name so it survives database id changes. Nothing is saved to the
+// server now; mergeServerJournal folds in the solves an account saved before 2026-10-01.
 
 export const JOURNAL_STORAGE_KEY = 'clue-match:journal:v1';
 

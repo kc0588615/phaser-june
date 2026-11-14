@@ -1,9 +1,9 @@
-// Content -> the data the Question Match rules play with (plan 041): the traits
-// questions can ask about, regions and continents, family tree names, field notes
-// (with blanks where a word would name the animal), and the source of every fact.
-// Two front doors, one builder: animalsFromPool for the app (database rows from
-// GET /api/clue-game/pool) and animalsFromProfiles for the prototype and the
-// balance bot (db/content/animals/*.json). Pure.
+// Content -> the Animal records the animal board plays with (questionMatch.ts): the traits
+// questions can ask about, regions and continents, family tree names, field guide lines,
+// signs, and field notes (with blanks where a word would name the animal) with their sources.
+// Two front doors, one builder: animalsFromPool for the game (database rows from
+// GET /api/clue-game/pool) and animalsFromProfiles for the balance bot and the unit tests
+// (db/content/animals/*.json). Pure.
 import { isHandWrittenClue, profileClues, type AnimalProfile, type ContentSource } from '@/clueGame/profiles';
 import type { CluePool } from '@/clueGame/pool';
 import { signsOf } from '@/clueGame/signs';
@@ -161,7 +161,7 @@ export function animalsFromPool(pool: CluePool, warn: (text: string) => void = (
   });
 }
 
-/** The prototype's and the bot's door: the animal files, with the source registry for source names. */
+/** The bot's and the unit tests' door: the animal files, with the source registry for source names. */
 export function animalsFromProfiles(profiles: readonly AnimalProfile[], registry: readonly Pick<ContentSource, 'key' | 'name'>[], warn: (text: string) => void = () => {}): Animal[] {
   const sourceNames = new Map(registry.map(source => [source.key, source.name]));
   return profiles.map(profile => {

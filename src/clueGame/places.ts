@@ -1,5 +1,5 @@
 // Places to explore from the home globe (GET /api/places: the continents of the
-// clue_match_places view in db/schema.sql), plus small pure helpers for the globe and the journal.
+// clue_match_places view in db/schema.sql), plus small pure helpers for the globe.
 
 export type PlaceKind = 'country' | 'wildlife_area' | 'continent';
 
@@ -32,7 +32,7 @@ export interface PlacesResponse {
   animals: PlaceAnimal[];
 }
 
-/** A continent opens once it has this many animals (plan 041); a round shows 8 of them. */
+/** A continent opens once it has this many animals (plan 041); a round's suspects (5) are drawn from them. */
 export const MIN_PLACE_ANIMALS = 12;
 
 /** Discovery marker color by animal group: green for amphibians and reptiles, amber for mammals. */

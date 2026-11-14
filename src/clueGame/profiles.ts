@@ -57,7 +57,7 @@ export interface AnimalProfile {
   range?: { realms: string[]; countries: Array<{ code: string; name: string }> };
   /** Clues only this animal has (tags make them deductive). */
   clues: Array<{ category: SpeciesClueCategory; text: string; tags?: string[]; source: string; url?: string }>;
-  /** Fun notes, shown once a color's clues run out and on the reveal card. */
+  /** Fun facts. They become field notes after the hand-written clues: listed with sources on the round-end card, the key_fact ones in the Field Journal; never witness notes (no tags). */
   facts: Array<{ category: FactCategory; text: string; source: string; url?: string }>;
   /** Source key (content_sources.key) -> the page used for this animal. */
   sources: Record<string, string>;

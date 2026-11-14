@@ -1,16 +1,17 @@
-// Clue-category game: each gem color outputs clues from one category of the
-// mystery species (the classic clue-board mapping).
+// The content check's groups (validatePool.ts warns when a playable animal has no clue or fact in a
+// group, or no tagged clue in a group that `deduces`). The eight rows began as the first clue game's
+// gem colors; no screen reads them now.
 
 /** `species_deduction_clues.category` values (the table's CHECK constraint). */
 export type SpeciesClueCategory = 'habitat' | 'morphology' | 'diet' | 'behavior' | 'reproduction' | 'taxonomy' | 'key_fact' | 'geography' | 'conservation';
 
 export interface GemCategory {
   label: string;
-  /** `species_deduction_clues.category` values this gem draws from, merged by reveal order. */
+  /** `species_deduction_clues.category` values in this group. */
   clueCategories: readonly SpeciesClueCategory[];
-  /** `species_facts.category` values used once the clues run out (never deductive). */
+  /** `species_facts.category` values in this group (never deductive). */
   factCategories: readonly string[];
-  /** Whether this color's clues narrow the candidates (false: notes to learn from). */
+  /** Whether the group needs a tagged clue (false: notes to learn from). */
   deduces: boolean;
 }
 

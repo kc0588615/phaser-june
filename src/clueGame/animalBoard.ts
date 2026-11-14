@@ -9,8 +9,8 @@
 // they travel and leave off it; the round is decided once the whole move settles.
 // Release every look-alike and the last one is found; release the mystery and it
 // escapes. Plan 053: the player may name the mystery once a round, any time (even out
-// of moves): right is a find (one star), wrong loses the round. Plan 054: a right name also scores the player's pencil marks (a bonus, once an animal is ruled out). Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
-// by the balance bot (scripts/balance-044.ts) and, later, the game.
+// of moves): right is a find (one star), wrong loses the round. Plan 054: a right name also scores the player's pencil marks (a bonus, once an animal is ruled out). Pure: no DOM, no Phaser, no randomness except the rng passed in. The game
+// (useAnimalSession.ts) and the balance bot (scripts/balance-044.ts) both play it.
 import type { Cell, ExplodePhase, Special } from '@/game/BoardModel';
 import type { GemType } from '@/game/constants';
 import {

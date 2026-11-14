@@ -148,7 +148,7 @@ const QUESTION_TEXT: Record<string, string> = {
   'habitat:caves': 'Does it live in caves?', 'habitat:desert': 'Does it live in desert?', 'habitat:marine': 'Does it live along coasts or in the sea?',
 };
 
-/** Two-line versions for the gem legend (rules 043). */
+/** Short versions: what the board calls each clue gem (screen readers), and columnLabel's fallback. */
 const SHORT_TEXT: Record<string, string> = {
   'size:tiny': 'Tiny (under 100 g)?', 'size:small': 'Small (100 g to 2 kg)?', 'size:medium': 'Medium (2 to 30 kg)?',
   'size:large': 'Large (30 to 300 kg)?', 'size:huge': 'Huge (over 300 kg)?',
