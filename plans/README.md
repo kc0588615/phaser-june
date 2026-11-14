@@ -2,22 +2,7 @@
 
 Plans 006–039 covered the expedition game and were deleted with it on 2026-09-24. They are in git history (`git log --all -- plans/`). New plans continue at 040.
 
-## Execution order & status
+## How plans are named
 
-| Plan | Title | Priority | Effort | Depends on | Status |
-|---|---|---|---|---|---|
-| 040 | More animals per place (+ habitat legend) | High | M per animal | IUCN shapefiles (`~/data/iucn/shp`) | Batches 1 and 2 done (76 animals); legend blocked |
-| 041 | Make Critter Connect tactical (charges, questions, toys, family tree, field notes) | High | L | IUCN countries of occurrence (owner download); plan 042 for more continents | Built 2026-09-28: charges loop with toys and 12 look-alikes (rules 041-5, part 13); one-question-a-move versions tried and removed (parts 8–12); not committed or deployed. Later: a family tree challenge side mode (041, Later) |
-| 043 | Literal gems, 7×7 board, obstacles (variant on branch `variant/043-literal-gems`) | High | L | 041 built; owner picks family tree + icon source | Part 0 built 2026-09-30 (rules 043-0: gem legend, 2 charges a question, 7×7, 5 moves, new gem art); Part 1 next; `main` keeps 041-5 |
-| 044 | The animal board: 5 suspects on the board, clue orders, mark and release the look-alikes, trail with hearts | High | L | 043 art and board (branch `variant/043-literal-gems`) | Planned 2026-09-30; revised after Codex and Fable reviews and owner decisions (5 suspects, mark to release, witness notes, long rounds with clue orders, no net); Part 1 built 2026-09-30 on `variant/044-animal-board` (careful 95-97%, guesser 20%, random 0%; reader gap 15-27 points); Part 2 graybox built 2026-10-01 (`/explore` on the branch; e2e 427/427); owner playtest next |
-| 045 | Scout the suspects: hidden answers, shown by your clears next to unmarked tiles | High | M | 044 live | Built 2026-10-11 as rules 045-0 (moves-only scouting, orders of 20, pencil marks; payback dropped): careful 92/86%, novice 88/82%, expert 98/96%, reader 67/61%, guesser 20%, random 0%; e2e 514/514; committed (guess feedback af710655) |
-| 046 | Board feel: animals as pinned cards, nudge, exits by how they travel, answers acted out with emoji | High | M | 045 | All 4 steps built 2026-10-15 (0c141511, 0169af87, 7d494419); live |
-| 047 | Ruled-out animals wander off: step toward the edge each move by how they travel; own-move release leaves a toy; unmark calls one back | High | M | 045, 046 live | Planned 2026-10-17 with owner decisions; revised after Codex review; steps 0–1 built (flags off in the game, uncommitted): careful 95/91%, reader 84/78% (gap halves), guesser 18%; owner go 2026-10-17; steps 0–3 built, live in dev as rules 047-0 (uncommitted); e2e 717/717; playtested, Codex review 2 fixed, docs done; ready to commit |
-| 048 | The lineup: swipe the field guide (drag-follow, peek, number tiles); sort by range size / north; rank witness notes | Medium | M | 047 | Planned 2026-10-18; step 0 (swipe, peek, number tiles) built 2026-10-25, uncommitted; owner go before rank notes |
-| 049 | critwire: open curated species data at critwire.com (Parquet/CSV/JSON, IUCN id crosswalk only), dogfooded by CC's content build | Medium | L | new repo `kc0588615/critwire`, Oracle VPS PostGIS | Planned 2026-10-18 from owner grilling; moved to `kc0588615/critwire` `plans/001-mvp.md`; scaffold pushed (d747e08); CC side is step 4 |
-| 050 | Ah-ha: explain wrong guesses and the camera's answers at round end, kid-word family tree, journal family patterns + exceptions, "met before" mark | High | M | 047-1 | Planned 2026-10-27; not started; owner go per step |
-| 051 | Website at critterconnect.org: front page + /teachers in the cc theme, a static build (src/site) served by the Hetzner Caddy | High | M | owner answers (H2, done) | Planned 2026-10-28 (agent/cc-landing-plan, #34): plan + build brief, PR for review |
-| 052 | Round end on the board: the card covers the gem board only, the live grid turns into the replay, no tabs, field notes as the card body | Med | S | none | Built 2026-10-31 (agent/round-end-on-board), PR for review |
-| 053 | Name it: one name a round, any time (out of moves too); right is a find worth ★, wrong loses the round | High | S | none | Owner decision 2026-10-31; built (rules 053-0), uncommitted |
-
-## Dependency notes
+- `NNN-<slug>.md`: a numbered design plan. Its first lines say its state.
+- `YYYY-MM-DD-<slug>.md`: a mission's record, written by the mission runner on the Oracle VPS. The `status:` in its front matter says its state.
