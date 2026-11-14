@@ -470,12 +470,8 @@ export function sharpEye(state: AnimalRound): boolean {
  * pencilled (spread raises the stake both ways) and by the fewest animals still in this round, the named one too (owner:
  * naming with more left is a bigger gamble, so it pays more; 054-1: the fewest, so taking marks back can't raise it). It may go below 0, down to -cap; capped so a lucky name can't out-pay
  * board play (plan 053). A floor at 0, or multiplying gains only, made random pencilling pay (balance bot).
+ * Returns the bonus with how many pencils counted and how many were wrong (Sharp eye: enough, none wrong).
  */
-export function pencilBonus(state: AnimalRound, pencil: Pencil): number | null {
-  return scorePencils(state, pencil)?.bonus ?? null;
-}
-
-/** `pencilBonus`, with how many pencils counted and how many were wrong (Sharp eye: enough, none wrong). */
 function scorePencils(state: AnimalRound, pencil: Pencil): { bonus: number; counted: number; wrong: number } | null {
   // 054-1: the fewest still in this round, not now (Codex: rule out four, take three back, and it paid x4).
   const stillIn = state.fewestIn ?? state.suspects.length;

@@ -2,7 +2,7 @@
 // streak. A pure reducer over the round rules in animalBoard.ts; the page owns the
 // RNG (it deals each round) and the board (it reports clears and releases).
 import {
-  applyPhase, endOfMove, mark, nameIt, newTrail, scoreRound, starsFor, stillPossible, trailAfter, walkOff,
+  applyPhase, endOfMove, mark, nameIt, scoreRound, starsFor, stillPossible, trailAfter, walkOff,
   type AnimalRound, type Heading, type PhaseReport, type Trail,
 } from '@/clueGame/animalBoard';
 import type { GemType } from '@/game/constants';
@@ -118,8 +118,6 @@ export function animalSessionReducer(session: AnimalSession | null, action: Anim
     }
   }
 }
-
-export const startTrail = newTrail;
 
 /** Whether a highlight still means something: a cell until its animal is ruled out or its answer scouted; a question gem until the mystery's answer lands. */
 function live(round: AnimalRound, key: string): boolean {

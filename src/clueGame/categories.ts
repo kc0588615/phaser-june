@@ -33,11 +33,3 @@ export const GEM_CATEGORIES: readonly GemCategory[] = [
 ];
 
 export const CLUE_GAME_GEM_TYPES: readonly GemType[] = GEM_CATEGORIES.map(category => category.gem);
-
-const BY_GEM = new Map(GEM_CATEGORIES.map(category => [category.gem, category]));
-
-export function gemCategory(gem: GemType): GemCategory {
-  const category = BY_GEM.get(gem);
-  if (!category) throw new Error(`No clue category for gem ${gem}`);
-  return category;
-}

@@ -1,6 +1,5 @@
 // How a clue about the mystery species compares with each candidate's record
 // (traits.ts says what a record holds and when records truly disagree).
-import type { SpeciesClueCategory } from '@/clueGame/categories';
 import type { PoolClue } from '@/clueGame/pool';
 import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, allTraits, clueTags, prefixOf, type SpeciesRecords } from '@/clueGame/traits';
 
@@ -40,22 +39,4 @@ export function fitClue(clue: PoolClue, candidateId: number, records: SpeciesRec
   // lives in) partly fits a candidate that shares some of them.
   if (matches > 0) return 'partial';
   return outcomes.includes('complete-conflict') ? 'contradicts' : 'unknown';
-}
-
-export function evaluateClue(clue: PoolClue, candidateIds: readonly number[], records: SpeciesRecords): Record<number, ClueFit> {
-  return Object.fromEntries(candidateIds.map(id => [id, fitClue(clue, id, records)]));
-}
-
-/**
- * Categories where the live candidates' records differ, so a clue there may
- * still separate them. Uses only the candidates' records, never the answer.
- */
-export function usefulCategories(liveIds: readonly number[], records: SpeciesRecords, categories: readonly SpeciesClueCategory[]): Set<SpeciesClueCategory> {
-  const useful = new Set<SpeciesClueCategory>();
-  if (liveIds.length < 2) return useful;
-  for (const category of categories) {
-    const signatures = new Set(liveIds.map(id => [...(records.get(id)?.traits.get(category) ?? [])].sort().join('|')));
-    if (signatures.size > 1) useful.add(category);
-  }
-  return useful;
 }
