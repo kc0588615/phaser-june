@@ -373,7 +373,7 @@ Each step is one session and one commit, `rules-cleanup: S<n> · <title>`, toget
 - Never print a connection string or `cat` the secrets file. If the guard fails, stop and add a handoff item.
 - Every scratch file goes in `/tmp/rules-cleanup-scratch/`, never in the repo (`tsconfig.json` includes `**/*.ts`, and lint covers `scripts/`).
 
-- [ ] S1 · Unit cases first: the content check's one-value rule and warnings, and mergeServerJournal's rule (green on today's code)
+- [x] S1 · Unit cases first: the content check's one-value rule and warnings, and mergeServerJournal's rule (green on today's code)
   - `tests/clueGame/validatePool.test.ts` (also import `species` from `./testPool` and `type CluePool` from `@/clueGame/pool`):
     - `test('two values of a one-value trait are an error', …)`: `validatePool(pool).errors` has nothing containing `takes one value`. With `clue(7, 'morphology', 'It is large.', ['size:large'])` and `clue(7, 'morphology', 'It is small.', ['size:small'], 2)` added, `errors` includes `'Species 7: holds size:large and size:small, but size takes one value'`.
     - `test('the content check warns about each gap, by animal, group and kind', …)` uses its own pool (not testPool's `pool`). Species 101 `AMPHIBIA`, 102 `MAMMALIA`, 103 `REPTILIA`, each with a class.
@@ -668,5 +668,6 @@ The journal parser can lose player data. It, `mergeServerJournal` and the conten
 - 2026-11-14 20:30 UTC · Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only.
 - 2026-11-14 20:35 UTC · Revision: none needed (no MUST-FIX, no REJECT). Plan-only.
 - 2026-11-14 20:24 UTC · Steps: `planner` wrote S1–S7 (tests first; S2 red on purpose: 1 unit + 3 E2E), Verification (64 unit, 1578 E2E), Release smoke, Failure modes. Plan-only.
+- 2026-11-14 20:27 UTC · S1: validatePool.test.ts +2 cases (two-value size error; 15-warning pin by animal/group/kind), journal.test.ts +1 (mergeServerJournal rule, idempotent), all green on today's code. `npm test` 64/64, typecheck 0, lint 0. `$S/categories-before.json` saved (8 rows, 4 fields).
 
 ## Summary
