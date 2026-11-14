@@ -368,7 +368,7 @@ Rules for every step:
   - V6 grep 1 now hits only `docs/agents/domain.md` and `docs/agents/issue-tracker.md` (S6 fixes those).
 - [x] S4. **D17.** `git rm -r -q -- .codex .kiro .understand-anything`, then Edit tool on `.gitignore`: delete `:49-50`. `:47` (the comment) and `:48` stay.
   - Check: V7's `.gitignore` hunk (`-49,2 +48,0`). V6 grep 2 prints nothing. `ls -d .codex .kiro .understand-anything` finds none of them. `git status --short` shows no new untracked file.
-- [ ] S5. **Link.** `ln -s ../../.agents/skills/writing-for-agents .claude/skills/writing-for-agents && git add .claude/skills/writing-for-agents`.
+- [x] S5. **Link.** `ln -s ../../.agents/skills/writing-for-agents .claude/skills/writing-for-agents && git add .claude/skills/writing-for-agents`.
   - Check: V8 (writes `$ST/link.txt`).
 - [ ] S6. **`docs/agents/` (D1 and S1 `domain.md:5`).** Edit tool.
   - `issue-tracker.md`: delete `:16-25` (from the PR-triage heading to the blank line before the bare `#42` sentence) and `:35-45` (Wayfinding, to the end of the file). `:26` then closes Conventions, which is the same file as the Target design's "delete `:16-27`, re-add `:26` after `:14`" (simulated).
@@ -541,5 +541,6 @@ The hook and CI's guard are tested in isolation. These tests existed before the 
 - 2026-11-14 11:10 UTC · S2 CI step: 4 lines inserted before the site-links comment via Edit (anchor `:25` only); hunk `-24,0 +25,4`; yaml step order ok; V5 dry run (`$ST/ci-guard.txt`): new step 0 clean, existing 0, staged `prisma/*.prisma` listed + exit 1; temp worktree removed. typecheck 0, lint 0.
 - 2026-11-14 11:16 UTC · S3 skills: `git rm` 34 folders + JSON lock filter. V2 11 folders, retro ok; V3 (`$ST/lock-after.txt`) folders 11 | locked 6 | v1 matches 6, no-folder [], 5 not-in-lock as expected, version 1, numstat 0/204; V9 93 D, 0 other, 34 folders, no kept touched; V6 grep 1 hits only docs/agents/domain.md (2) + issue-tracker.md (4). typecheck 0, lint 0.
 - 2026-11-14 11:12 UTC · S4 D17: `git rm` .codex, .kiro, .understand-anything; .gitignore `:49-50` dropped via Edit (hunk `-49,2 +48,0`); grep 2 no hits (exit 1); dirs gone; status shows only the 3 D + .gitignore, no untracked. typecheck 0, lint 0.
+- 2026-11-14 11:13 UTC · S5 link: `.claude/skills/writing-for-agents` -> `../../.agents/skills/writing-for-agents`; V8 (`$ST/link.txt`) readlink + resolved path ok, 120000 twice, SKILL.md ok. typecheck 0, lint 0.
 
 ## Summary
