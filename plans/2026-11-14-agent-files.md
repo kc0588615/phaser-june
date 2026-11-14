@@ -533,6 +533,14 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- Base fresh: branch on `origin/main` `e91ad1fa`, no rebase needed. Full Verification V1-V9 re-run on `140a3e0d`: all pass (same results as the final run; live Write probes refused again).
+- PR #74. CI run 43589899638: `check` pass (ran the new "No Prisma schema files" step), `e2e` pass.
+- `live-release-before.txt`: version `e91ad1fa`, 5 URLs 200, places sha256 `1472dfe4…`.
+- Merge commit: `af4b0453e55418abddab153a9a2eba58369afbe4`.
+- Deploy (`deploy critter-connect`, log `$ST/deploy.log`), last line: `deploy critter-connect: live at https://critterconnect.org`.
+- Smoke: `bash deploy/check.sh` exit 0 (`$ST/check-after.txt`); `live-after.txt` version.txt = `af4b0453`, same 5 status codes (200), same places sha256 (diff empty).
+- Result: done
+
 ## Decisions
 
 - Baseline: no E2E run (stage template says E2E; brief says none, as no shipped file changes).
@@ -556,6 +564,7 @@ SHOULD-CONSIDER:
 - 2026-11-14 11:21 UTC · Astra code review (`--code origin/main`): APPROVE, MUST-FIX none; 1 SHOULD-CONSIDER (fetch before PR; release rebases on fresh origin/main) for the Summary. Plan-only; no checks needed.
 
 - 2026-11-14 11:24 UTC · Final Verification V1-V9 on e5b517db: all pass (typecheck/lint 0, 61/61 tests; 11 folders; lock 11/6/6; hook cases 5, 6, 10, 11 0 → 2, 17 unchanged, live Write probes refused; CI step 0 clean / 1 staged; greps 0 hits; hunks as V7; link ok; diff scope 93 D, 34 folders, none out of scope). Artifacts in `/srv/critter-ai/agent-state/missions/agent-files/`. No E2E per brief.
+- 2026-11-14 11:37 UTC · Release: V1-V9 re-run pass; PR #74 CI check + e2e pass; merged `af4b0453`; deployed; check.sh 0, version.txt `af4b0453`, 5 URLs 200, places sha256 unchanged.
 
 ## Summary
 
@@ -570,4 +579,4 @@ Audit M3 done (D1, D17, A15, S1). Final Verification passes; artifacts in `/srv/
 - **Reviews:** Fable APPROVE, Astra architecture APPROVE, Astra code review APPROVE (0 MUST-FIX; SHOULD-CONSIDER "fetch before PR" handled: the session fetch works, release rebases on fresh `origin/main`).
 - **Notes for the owner (not edited, per decision rules):** `src/game/EventBus.ts:2` "Neither side imports the other" is false like the old `AGENTS.md:55`; `docs/agents/domain.md:11,49-53` still describe ADRs (template text); `.agents/skills/smux/references/tmux.md:10` links a missing `../tmux-bridge/SKILL.md`; in your WSL clone, any `.understand-anything/` output now shows untracked, delete by hand; 3 scripts use `scripts/connect.ts`, not 4; an `edits[]` payload still passes the hook.
 - **No production content build needed:** no content or game file changes.
-- Release (deploy + smoke): see `## Release`.
+- **Released:** PR #74 merged (`af4b0453`), CI `check` + `e2e` pass, deployed; check.sh ok, live version `af4b0453`, 5 URLs 200, places body unchanged. See `## Release`.
