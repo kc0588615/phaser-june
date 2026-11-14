@@ -2,7 +2,7 @@
 mission: toolchain-cleanup
 project: critter-connect
 branch: agent/toolchain-cleanup
-status: active
+status: done
 started: 2026-11-14 16:05 UTC
 ---
 
@@ -399,5 +399,19 @@ SHOULD-CONSIDER: Refresh `origin/main` before the PR. Fetch was blocked by the r
 - 2026-11-14 17:42 UTC · S6: engines.node 24.x, @types/node ^24 → 24.19.2 (undici-types 7.24.6); lock entry check = `(root) @types/node undici-types`, root hunks only the 2 fields; 0 type fixes. origin/main still af4b0453. npm ci 0, EBADENGINE 0; build 0 (`s6-build.log`); run-tests.mjs comment + .editorconfig (numstat 2/2, 2/2, 3/2; eol lf, no final newline kept); typecheck 0, lint 0, test 61/61.
 - 2026-11-14 18:20 UTC · S7: final Verification at 95128856 (origin/main still af4b0453). 1: npm ci 0, EBADENGINE 0, @types/node 24.19.2 only. 2: dev-copy E2E run 1 1573/1575 (timing only: the sort's "rows sliding" rise samples, same family as `baseline-flaky/`; log in `final-e2e-flaky/`), gated rerun 1575/1575 → `final-e2e/`. 3: site:build 0, e2e:site 444/444 → `final-site/`. 4: typecheck 0, lint 0, test 61/61, build 0 (`*-after.log`). 5a–k all as expected (eol 369→365 only, lock 3 entries, 14 paths). 6: tree clean. Deleted `e2e-s5/`.
 - 2026-11-14 18:40 UTC · Code review (Astra): APPROVE, 0 MUST-FIX; SHOULD-CONSIDER (refresh origin/main before PR; its sandbox couldn't fetch) goes to Summary, and the Release rebases on a fresh origin/main anyway. Fetched here: origin/main still af4b0453.
+- 2026-11-14 18:52 UTC · Rule 7 final Verification at ab4d4da3 (code = 95128856; origin/main still af4b0453): 1 npm ci 0, EBADENGINE 0, @types/node 24.19.2 only. 2 dev-copy E2E run 1 1574/1575 (timing only: field guide auto-turn `turned:false`, same check failed in `baseline-flaky/`; → `final-e2e-flaky/`), gated rerun 1575/1575 → `final-e2e/`. 3 site:build 0, e2e:site 444/444 → `final-site/`. 4 typecheck 0, lint 0, test 61/61, build 0. 5a–k as expected. 6 clean. Summary written, status done.
 
 ## Summary
+
+Removed dead toolchain bits (audit M4). Branch `agent/toolchain-cleanup`, 14 files outside `plans/`.
+
+- **Deleted files:** `.env.local.example` (9 lines), `docs/index.html` (82, the docsify viewer), `docs/_sidebar.md` (8), `scripts/check-game-css.mjs` (89).
+- **Deleted lines:** `.env.example` 18 (the unread TiTiler/COG/map-style, `CASE_COMPILER_SECRET`, `CRON_SECRET`, `ANALYZE`, after-sign-in names; 4 kept names unchanged); `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` one line each in `Dockerfile`, `deploy/app.env.example`, `docs/DATABASE_ACCESS.md`; `next.config.mjs` `headers()` (14; Caddy sets the 3 headers in prod, dev returned `[]`); `docs/DEPLOY.md` the check-game-css sentences; `package.json` scripts `docs`, `typecheck:watch`, `clean`.
+- **Kept (owner Q5):** `serve`, `start`, `clue:world-map`, `site:shots`, `scripts/import-natural-earth.mjs`.
+- **Node:** `engines.node` 22.x → 24.x, `@types/node` ^20 → ^24. `npm ci` before: 1 EBADENGINE (`node: '22.x'`), `@types/node` 20.17.57; after: 0 EBADENGINE, 24.19.2 (lock: root, `@types/node`, `undici-types` only; 0 type fixes). Also `scripts/run-tests.mjs` comment, `.editorconfig` lf/2 for new edits (no reindent).
+- **Headers:** before (live `af4b0453`): all six URLs have `Strict-Transport-Security`, `X-Content-Type-Options`, `Referrer-Policy` once each (`headers-before/`); `/login/` 200, `/explore/`, `/api/places/`, `/api/clue-game/pool/` 200. After: recorded by the Release smoke (`headers-after/`).
+- **E2E** (state folder `/srv/critter-ai/agent-state/missions/toolchain-cleanup/`): baseline 1575/1575 (`baseline-e2e/`); final 1575/1575 on the gated rerun after a timing-only flake (`final-e2e/`, `final-e2e-flaky/`; the same auto-turn check also flaked at baseline); site 444/444 before and after (`baseline-site/`, `final-site/`). Repro: `final-e2e/COMMAND.txt`, seed 7.
+- **Reviews:** Fable APPROVE_WITH_CHANGES (all adopted), Astra architecture APPROVE, Astra code APPROVE 0 MUST-FIX. Its SHOULD-CONSIDER (refresh `origin/main` before the PR; its sandbox couldn't fetch): fetched here, still `af4b0453`, and the Release rebases on a fresh `origin/main`.
+- **No production content build needed** (no content changed).
+- **For the owner:** sign in once on the live site next time you play (D11 removed an unused Clerk name; this mission can't sign in). The `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` line in Hetzner's `deploy/app.env` can go next time you edit that file (nothing reads it). Move your WSL Node to 24 if it isn't already (`engines.node` is now `24.x`, so `npm ci` warns on other majors).
+
