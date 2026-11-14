@@ -121,7 +121,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -216,6 +216,24 @@ After the change: env examples = one file, `.env.example`, holding exactly the f
 
 ## Architecture review (Fable)
 
+Read at `d61b40bd` (= `origin/main` `af4b0453` + plan). Every cited site re-opened; lock diff and the `.env.example` pass re-run in `/tmp` copies (deleted).
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. **The `.env.example` check can't fail as written** (finding 4, this plan `:176`; group 3, `:196`). `git show HEAD:.env.example | sed -n '1,4p;7p;17,22p' | cmp -s - .env.example` "(prints nothing)": `cmp -s` prints nothing on a mismatch too (tried on a wrong file: exit 1, no output), and `HEAD:` is the new file once group 3 is committed, so the check can't be re-run at the final Verification or after a rebase. It is the only check that pins which headings stay (`.env.example:1-3,17-19` kept; `:8-10,25-27` gone): numstat `0 18`, `grep -c` = 4 and the final greps all pass if "TiTiler Configuration (Required)" is kept in place of "Clerk Auth (Required)", and the file may not be printed to look. Fix: compare with `origin/main:` and test the exit code, e.g. `git show origin/main:.env.example | sed -n '1,4p;7p;17,22p' | cmp -s - .env.example && echo same || { echo DIFFERENT; exit 1; }`; pass = `same`. Use it in group 3 and in the final Verification.
+
+MISSED:
+1. **No before-run of three of the six final commands.** Baseline (`:146`) has typecheck, lint, test and E2E only; the dry run (`:152`) has no `next build`. `npm run build`, `npm run site:build` and `npm run e2e:site` first run after edits (groups 2 and 4), so a failure there can't be told from one that was already present, and `next build` with `@types/node` 24 and no `headers()` is unproven. Run all three once before the first edit and record them under Baseline.
+
+SHOULD-CONSIDER:
+1. Lock stop rule (`:198`): state it by entry, not by version. Only root `devDependencies["@types/node"]`, root `engines.node`, `node_modules/@types/node` and `node_modules/undici-types` may change; a newer 24.x patch is fine. Reproduced today with `npm install --package-lock-only`: exactly those 9 lines, 24.19.2 / 7.24.6.
+2. Local `npm run build` (groups 4, 5, final): run it as CI and the Dockerfile do, with the dummy `DATABASE_URL` (`.github/workflows/ci.yml:41-44`, `Dockerfile:18`). The worktree's `.env.local` is the live database; no page has `getStaticProps`, so the build needs none.
+3. Drop the optional `npm run serve` + curl (`:197`): a production server on `.env.local` (live DB, Clerk keys) that shows only an absence the config-keys check already shows. Say in Verification that `e2e:fresh` can't see D24 (dev server, the block returned `[]`), so its proof is config keys + build + the live header smoke.
+4. `deploy/app.env.example:12` is the file's last line: delete it with its newline so `:11` keeps its own (the `0 1` numstat catches a slip).
+
+Confirmed, no change needed: all hits of the brief's two final greps are in files this plan edits or deletes; Clerk 7.7.8 has 0 `AFTER_SIGN` hits and `src` passes no redirect prop; compose forwards only two build args (`deploy/docker-compose.app.yml:13-14`); `deploy/deploy.sh:34-35` builds before `up -d`; nothing (`deploy/check.sh`, the three E2E scripts, CI) reads the two headers or any deleted file; HSTS on play. in `headers-before/` shows Caddy's block applies to proxied answers; the four deleted files are all `i/lf w/lf`, so 365 is right; scope matches the brief, nothing over-engineered.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -234,5 +252,6 @@ After the change: env examples = one file, `.env.example`, holding exactly the f
 
 - 2026-11-14 16:46 UTC · Baseline: fresh greps as audit (nothing kept, no `npm run clean` outside plans), packages (EBADENGINE 22.x, @types/node 20.17.57), eol counts, live headers 3×6 + codes, typecheck/lint/test 61/61, E2E 1575/1575 → `baseline-e2e/` (2 earlier runs at load 2: 1574/1575, different timing checks).
 - 2026-11-14 16:55 UTC · Architecture: architect verified every site at 7f91ecd1 (nothing moved), dry run in /tmp: @types/node 24.19.2 typechecks with 0 fixes, npm ci 0 EBADENGINE, lint 0, test 61/61, lock diff 9 lines; 5 change groups + final Verification.
+- 2026-11-14 17:10 UTC · Fable review: APPROVE WITH CHANGES, 1 MUST-FIX (.env.example `cmp -s` check silent on mismatch and pinned to HEAD), 1 missed (no before-run of build/site:build/e2e:site), 4 should-consider. Closed handoff H14 (owner verified).
 
 ## Summary
