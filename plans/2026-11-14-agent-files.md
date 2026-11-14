@@ -370,7 +370,7 @@ Rules for every step:
   - Check: V7's `.gitignore` hunk (`-49,2 +48,0`). V6 grep 2 prints nothing. `ls -d .codex .kiro .understand-anything` finds none of them. `git status --short` shows no new untracked file.
 - [x] S5. **Link.** `ln -s ../../.agents/skills/writing-for-agents .claude/skills/writing-for-agents && git add .claude/skills/writing-for-agents`.
   - Check: V8 (writes `$ST/link.txt`).
-- [ ] S6. **`docs/agents/` (D1 and S1 `domain.md:5`).** Edit tool.
+- [x] S6. **`docs/agents/` (D1 and S1 `domain.md:5`).** Edit tool.
   - `issue-tracker.md`: delete `:16-25` (from the PR-triage heading to the blank line before the bare `#42` sentence) and `:35-45` (Wayfinding, to the end of the file). `:26` then closes Conventions, which is the same file as the Target design's "delete `:16-27`, re-add `:26` after `:14`" (simulated).
   - `domain.md`: `:5`, `:13` and `:47` as in the Target design. `:11` and `:49-53` (ADR template text) stay.
   - Check: V7's hunks for both files. `issue-tracker.md` has 24 lines (`wc -l`), its `tail -n1` is ``Run `gh issue view <number> --comments`.``, `tail -c1` is LF, and `grep -c '#42'` gives 1. V6 grep 1 now prints nothing.
@@ -544,3 +544,4 @@ The hook and CI's guard are tested in isolation. These tests existed before the 
 - 2026-11-14 11:13 UTC · S5 link: `.claude/skills/writing-for-agents` -> `../../.agents/skills/writing-for-agents`; V8 (`$ST/link.txt`) readlink + resolved path ok, 120000 twice, SKILL.md ok. typecheck 0, lint 0.
 
 ## Summary
+- 2026-11-14 11:15 UTC · S6 docs/agents: issue-tracker.md drops PR-triage + Wayfinding sections (24 lines, ends fetch section + LF, one `#42`); domain.md :5/:13/:47 per Target design. V7 hunks match (-5/-13/-47; -16,10 +15,0; -35,11 +24,0); V6 grep 1 empty. typecheck 0, lint 0.
