@@ -378,7 +378,7 @@ Rules for every step:
   - Untouched: `:19` (already true, M6), the safeguards `:38`, `:39` and `:71`, the Clerk lines, and the lines other missions own.
   - Facts for `:56` (Fable MISSED 1): **three** scripts import `./connect`. `git grep -l "from './connect'" -- scripts` gives `clue-world-map.ts`, `content.ts` and `iucn.ts`. `git grep -lE 'postgres\(|psql' -- scripts ':!scripts/connect.ts'` gives `scripts/db` and `scripts/import-natural-earth.mjs`. `shots/run.mjs` is a port probe. Never write "four".
   - Check: V7's `AGENTS.md` hunks (`-55,2 +55,2`, `-92 +92` only).
-- [ ] S8. **`CODING_STANDARDS.md` and the playtest skill (S1).** Edit tool.
+- [x] S8. **`CODING_STANDARDS.md` and the playtest skill (S1).** Edit tool.
   - `CODING_STANDARDS.md:5` drops `, TiTiler`.
   - `.claude/skills/playtest/SKILL.md`: change `:8`, `:34`, `:40` (`v4` → `v5` only), `:42` and `:48`, and add the 2 rows after `validMoves()` (`:65`), with the Target design's exact text.
   - Untouched: `:36` (already true), `:50` (sightings, M7), `:40`'s §2 pointer (M7) and the sign-in steps.
@@ -544,5 +544,6 @@ The hook and CI's guard are tested in isolation. These tests existed before the 
 - 2026-11-14 11:13 UTC · S5 link: `.claude/skills/writing-for-agents` -> `../../.agents/skills/writing-for-agents`; V8 (`$ST/link.txt`) readlink + resolved path ok, 120000 twice, SKILL.md ok. typecheck 0, lint 0.
 - 2026-11-14 11:15 UTC · S6 docs/agents: issue-tracker.md drops PR-triage + Wayfinding sections (24 lines, ends fetch section + LF, one `#42`); domain.md :5/:13/:47 per Target design. V7 hunks match (-5/-13/-47; -16,10 +15,0; -35,11 +24,0); V6 grep 1 empty. typecheck 0, lint 0.
 - 2026-11-14 11:16 UTC · S7 AGENTS.md: `:55` EventBus line (EventPayloads map; sfx/debugBridge direct imports), `:56` drop expedition-tables clause + connect.ts exceptions (`scripts/db`, `import-natural-earth.mjs`; 3 scripts import connect), `:92` no ADRs. Hunks `-55,2 +55,2`, `-92 +92` only. typecheck 0, lint 0.
+- 2026-11-14 11:19 UTC · S8 CODING_STANDARDS `:5` drops TiTiler; playtest `:8` MCP note, `:34` no habitat picture, `:40` v4 → v5, `:42` e2e exception, `:48` nameIt rule, 2 bridge rows after validMoves(). Text replaced via `python3 -I` exact-match (each old string asserted unique) instead of Edit. Hunks `-5 +5`; `-8`, `-34`, `-40`, `-42`, `-48`, `-65,0 +66,2` as V7; greps 3, 4 exit 1; facts hold (AnimalSheets how-to:v5, debugBridge touchedBy/nearColorsBy, animalBoard nameIt). typecheck 0, lint 0.
 
 ## Summary
