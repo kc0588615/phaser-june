@@ -256,10 +256,18 @@ step 2 from WSL through the tunnel. To refresh the copy later, repeat 1–2.
    ```bash
    # live game: 200, and the round loads at https://play.critterconnect.org/explore
    curl -s -o /dev/null -w '%{http_code}\n' https://play.critterconnect.org/api/clue-game/pool/
-   # on the Oracle box, from the repo: critter_dev reaches the copy...
-   ./scripts/db "select current_database(), current_user, count(*) from species;"
-   # ...but not prod (expect: permission denied for database "phaser_june")
-   DATABASE_URL=$(sed -n 's#^DATABASE_URL=\(.*\)/phaser_june_dev#\1/phaser_june#p' .env.local) ./scripts/db "select 1;"
+   # On the Oracle box, from the repo, with the copy's settings (never .env.local: that is the
+   # live database as postgres). Prints OK, or FAIL and exits 1.
+   ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy || exit 1; set +a
+     : "${DATABASE_URL:?dev-copy settings not loaded}"
+     # critter_dev reaches the copy...
+     [ "$(./scripts/db -tA -F/ -c 'select current_user, current_database()')" = critter_dev/phaser_june_dev ] \
+       || { echo 'FAIL: not critter_dev on phaser_june_dev'; exit 1; }
+     ./scripts/db -tA -c 'select count(*) from species'
+     # ...but not prod
+     out=$(DATABASE_URL=${DATABASE_URL/\/phaser_june_dev//phaser_june} ./scripts/db -tA -c 'select 1' 2>&1) \
+       && { echo 'FAIL: critter_dev reached phaser_june'; exit 1; }
+     case $out in *'permission denied for database "phaser_june"'*) echo OK ;; *) echo "FAIL: ${out%%$'\n'*}"; exit 1 ;; esac )
    ```
 
 ## Windows/QGIS

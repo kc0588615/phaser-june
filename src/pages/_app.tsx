@@ -6,7 +6,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { MotionConfig } from 'motion/react';
 import { THEME_COLORS } from '@/lib/theme';
 
-// cc fonts (GT Maru, Open Runde) are named in globals.css; their files are licensed and added separately.
+// cc fonts (Nunito, Open Runde, Patrick Hand) are declared in globals.css; their files and OFL licences are in public/fonts/.
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ClerkProvider>

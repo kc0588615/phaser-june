@@ -3,7 +3,7 @@ import { THEME_SCRIPT } from "@/lib/theme";
 
 export default function Document() {
     return (
-        <Html lang="en" className="dark">
+        <Html lang="en">
             <Head>
                 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
                 {/* Light/dark before first paint (src/lib/theme.ts). */}
