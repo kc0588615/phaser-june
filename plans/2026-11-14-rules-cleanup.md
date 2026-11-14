@@ -132,7 +132,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -160,6 +160,177 @@ On `fb6864d0` (= `origin/main` `3436aac5` + mission start), 2026-11-14. State fo
 
 ## Architecture
 
+Read on `agent/rules-cleanup` = `origin/main` `3436aac5` + this plan (fetched 2026-11-14). Line numbers are current. Every Goal site was re-read; every name the Goal deletes has no reader outside its own file (baseline greps hold). `npx tsc --noEmit --noUnusedLocals --noUnusedParameters -p .` exits 0 on this base (run 2026-11-14), so it can serve as the orphan check after the cut.
+
+### Findings (ranked by impact)
+
+**F1 · D14: a field nothing reads can drop a find, and the game waits on a request it doesn't need.** Data-loss bug + fail-fast misapplied (a bad *optional, unread* field rejects the whole entry) + separation of concerns (the game page fetches the globe's place list only to build a write nothing shows).
+- `src/clueGame/journal.ts:114` `&& (entry.sightings === undefined || (Array.isArray(entry.sightings) && entry.sightings.every(isSighting)))`: one malformed sighting drops the animal; `tests/clueGame/journal.test.ts:19-22` pins it.
+- Written: `journal.ts:18-19` (`sightings?: Sighting[]`), `:24-30` (`Sighting`), `:39`/`:44`/`:55` (`recordSolve`'s `sighting`), `:80`/`:84-90`/`:100` (`mergeServerJournal`'s `placeFor` and sightings), `:117-121` (`isSighting`), `:4` (`import { sightingPoint, type Place }`). Point: `src/clueGame/places.ts:53-72` (`sightingPoint`, `clamp`, `round`; nothing else uses the two helpers).
+- Built and fetched: `src/components/animalBoard/AnimalGame.tsx:15` (import), `:198` (`place` from the hook), `:300-303`; `src/components/animalBoard/useAnimalSession.ts:13` (`type Place, type PlacesResponse`), `:34-42` (`loadPlace`, the only `/api/places/` call on `/explore`), `:48`, `:104` (`await loadPlace(requested)` before the first deal), `:119`, `:291`. `src/components/clueGame/useJournal.ts:5,7,18-24,48-56,62,66`; `src/components/globe/GlobeScreen.tsx:22` (`useJournal(data?.places)`).
+- Shown nowhere: the globe marks by `journal[animal.scientificName]` (`GlobeScreen.tsx:40`) and draws ranges (`Globe.tsx:155-183`). `JournalEntry` has only ever had `className`, `sightings`, `sharpEyes` as optional fields (`git log` of `journal.ts`), and `className` was only ever written when truthy (a string), so "keep only `JournalEntry`'s fields" loses nothing but `sightings`.
+- `/api/clue-game/journal` (`src/app/api/clue-game/journal/route.ts`) imports only the `ServerJournalEntry` type and fills `speciesId` and `placeKeys` itself. After the cut the device reads neither (`speciesId` was read only for `sightingPoint`); both stay in the type so the route doesn't change.
+- Docs: `.claude/skills/playtest/SKILL.md:50` ("With `?place=`, a find adds a sighting …"; line 36 is already right, M3/M6). **Missed by the Goal:** `docs/CLUE_MATCH.md:10` "Only continents become sightings: on a fresh device an old solve's country or area adds none (sightings already on a device stay)." becomes false with D14; the audit's M9 entry counts on M7 settling the D14 line of that file. **Decision: delete that sentence in D14.** Also made false by D14: `places.ts:2` "helpers for the globe and the journal" (fixed in the S10 commit).
+
+**F2 · S16: a gate rule that can't fail, and a table that describes a dead game.** Fail fast (a check that reads like protection and gives none), KISS.
+- `src/clueGame/validatePool.ts:72-77`: `fitClue(clue, clue.speciesId, records) !== 'fits'` → "does not fit its own species". Verified tautological: `buildSpeciesRecords` (`src/clueGame/traits.ts:74-77`) adds every `normalizeTag(tag)` of each clue to its own species' record, `fitClue` (`src/clueGame/deduction.ts:30-43`) compares `clueTags` (the same `normalizeTag`), and `isDeductive` guarantees ≥1 tag, so it returns `'fits'` unless the species is missing, which `validatePool.ts:24` already reports. Only behavior change: that duplicate error goes.
+- `src/clueGame/categories.ts:8-22`: `gem`, `shortLabel`, `question`, `color` have no reader (`.(shortLabel|deduces|clueCategories|factCategories)` hit only `validatePool.ts:93-96`); `:35` `CLUE_GAME_GEM_TYPES` has none (M6 deleted `solveReport.ts`); `:37-43` `BY_GEM`/`gemCategory` none (D8). The kept fields' comments also speak of gems ("this gem draws from, merged by reveal order", "used once the clues run out", "this color's clues narrow the candidates"): rewritten with the header.
+- `validatePool.ts:96-97`: "so that color never narrows its rounds", "notes at all". No doc quotes them (0 hits).
+- Fine: the one-value rule (`:79-86`), the realm rule, the completeness loop's conditions, `tagOutcome` (read by `signs.ts:281`) and `isDeductive`.
+
+**F3 · D8: more than half of `questionMatch.ts` is an unreachable game.** Dead code (KISS, SRP: the file mixes the live question vocabulary with two dead rule engines).
+- `src/clueGame/questionMatch.ts:252-589` (`// ---- Rounds ----`): besides the Goal's list it holds `standing`, `Removal`, `Question`, `ask`, `guess`, `revealStep`, `settleFamilyTree`; all go with the section (common words, so not in the final grep; typecheck and the orphan check prove them). `likeness` (`:312-321`) stays: `animalBoard.ts:151` reads it. Helpers: `animal` (`:241-245`), `PREFIX_ORDER` (`:30`), `canTellApart`, `isOver`, `shuffle`; imports `hash32` (`:9`), `neverAsked` (`:10`). `GEM_KINDS` (`:16`). `REGIONS`/`ContinentKey` stay (question text, `Animal`, `poolFor`).
+- `Animal.redList`/`redListUrl` (`:47-48`), `traitSources` (`:52-53`); builder `src/clueGame/questionMatchContent.ts:67` (`AnimalInput.redList`), `:78`, `:80`, `:88`, `:101`, `:141`, fills `:159`, `:188`. Only readers were `ask`/`revealStep`. `unsourced` (`:150`, from `species.redlistUrl`) and `sourceOf` (`:176-179`, `profile.redList.url`) are other things and stay.
+- `src/clueGame/gems.ts` (6 lines, no importer). `deduction.ts:45-61` (`evaluateClue`, `usefulCategories`). `categories.ts:37-43`. `tests/clueGame/testPool.ts:58-65` (`records`, `find`, `OTHERS`, `matched`; importers take `clue`, `pool` only). `src/clueGame/animalSession.ts:122` `export const startTrail = newTrail;`. `src/clueGame/animalBoard.ts:474-476` `pencilBonus()` (comment `:465-473`).
+- **Consequential import removals the Goal doesn't list** (each becomes unused): `animalSession.ts:5` `newTrail`; `deduction.ts:3` `SpeciesClueCategory`, then (S16) `allTraits` and `type SpeciesRecords` from `:5`; `categories.ts:3` `GemType`; `testPool.ts:2` `buildSpeciesRecords`, `:4` `GemType`.
+- Docs: `AGENTS.md:54` "`regions`, `gems`;", `docs/CLUE_MATCH.md:21` ", `gems.ts` (gem color ↔ category)".
+
+**F4 · S10: the docs send readers to a paper frozen at 044-0, and nine comments describe things that are gone.** Docs truth; no code effect.
+- Pointers: `docs/CLUE_MATCH.md:3`, `:51`, `AGENTS.md:51`, `.claude/skills/playtest/SKILL.md:40`. Paper top: `docs/ANIMAL_BOARD_PAPER.md:1-3`.
+- Glossary: `CONTEXT.md:97` (pencil), `:124` (name it), `:140` (journal), `:144` (source). Sources today (read from code): the round-end card's "Field notes" list, all of the mystery's notes with sources (`AnimalSheets.tsx:711-721`, `FactsWithSources`), and the Field Journal's key facts with sources plus a Red List link (`JournalSheet.tsx:71-75`, `pool.ts:124 keyFacts`); no screen shows a trait's source.
+- Comments: `animalBoard.ts:12-13`; `questionMatchContent.ts:1-6`; `places.ts:35`; `profiles.ts:60`; `categories.ts:1-2`; `journal.ts:1-3`; `questionMatch.ts:160` (`shortQuestionText` now names each clue gem for screen readers, `useAnimalSession.ts:205` → `ClueBoardScene.ts:123`, and is `columnLabel`'s fallback); `scripts/balance-044.ts:9` (a `//` comment, so the comment-only check holds; defaults at `:239,241` are `ANIMAL_RULES`' 20 and 8,14). `places.ts:3` is already fixed (M6). **Missed by the Goal, same stale fact:** `questionMatchContent.ts:172` "The prototype's and the bot's door" (the doors are the bot's and `tests/clueGame/animalBoard.test.ts:23`'s); fixed in the S10 commit.
+
+**Goal 5 holds.** `savedGame.ts:18` stores `Omit<AnimalSession, 'book'>`; `AnimalSession`, `AnimalRound`, `Trail`, `WitnessNote`, `FieldNote`, `Source`, `SavedBoard` are untouched (`AnimalRound.pencilBonus` stays; `roundStillFits` compares notes, which the `Animal` cut doesn't touch). `ANIMAL_RULES.version` stays `'055-0'`.
+
+**Seen, not edited (Decision rule 1; notes for later missions):** `questionMatch.ts:14` `GemKind`'s comment ("What a gem color gives: charges …") and `CATEGORY_LABELS.notes` (every reader indexes by `ChargeCategory`); `Rules`' comments "see autoAsk" / "see leadQuestions" and `RULES_041`'s "Kept for the balance bot." (kept with the rule sets; M8); `docs/CLUE_MATCH.md:7` "glow on the globe where you found them" (the globe draws ranges) and `:55` "deleted from the code" (S11, M9); `CONTEXT.md:134` Star line doesn't mention a Sharp eye's second star; `ServerJournalEntry.speciesId` unread on the device (M11 removes the route).
+
+### Target design
+
+No new modules or abstractions. Delete-only except `parseJournal`'s entry builder and the rewritten comments and doc lines. The unit cases and E2E checks the Brief requires come first (Steps).
+
+**D8 (code commit; docs with it)**
+- `questionMatch.ts`: delete `:9-10`, `:16`, `:30`, `:47-48`, `:52-53`, `:241-245`, and `:252-589` except `likeness`, which moves up under `// ---- Looking animals up ----` after `poolFor`. Keep `:12-15`, `:18-29`, `:32-46`, `:49-51`, `:54-224`, `Book`, `makeBook`, `poolFor`. Header `:1-6` becomes:
+  ```text
+  // The questions the animal board (animalBoard.ts) asks, from plan 041's Question Match: the five question
+  // categories and the trait prefixes each asks about, each question's full, short and column text, the Animal
+  // type the content builds (questionMatchContent.ts), the book that looks animals up, poolFor and likeness.
+  // Rules, RULES_041 and DEFAULT_RULES are the 041 and 043 rule sets, read now only by the board's "+N charges"
+  // labels (ClueBoardScene.ts). Pure: no DOM, no Phaser.
+  ```
+- `questionMatchContent.ts`: delete `:67`, `:78`, `:80`, `:101`, `:159`, `:188`; `:86-89` becomes `for (const tag of askable) (traits[prefixOf(tag)] ??= []).push(tag);`; `:141` becomes `continents, traits, familyTree, notes, revealNotes, guide,` after `photo: input.photo,`.
+- Delete `gems.ts`; then `rm -rf .next .next-e2e .test-dist` before typecheck (Brief).
+- `deduction.ts`: delete `:45-61` and the `SpeciesClueCategory` import.
+- `categories.ts`: delete `:37-43`.
+- `testPool.ts`: delete `:58-65` and the `buildSpeciesRecords`, `GemType` imports.
+- `animalSession.ts`: delete `:122` and `newTrail` from `:5`.
+- `animalBoard.ts`: delete `pencilBonus` (`:474-476`) and its one-line pointer doc on `scorePencils` (`:478`); the long comment (`:465-473`, unchanged) sits on `scorePencils`, ending with one added line: ` * Returns the bonus with how many pencils counted and how many were wrong (Sharp eye: enough, none wrong).` `scorePencils` stays private.
+- `AGENTS.md:54` → "… `signs` sign vocabulary + checks, `regions`; plus glossary, …". `docs/CLUE_MATCH.md:21` drops ", `gems.ts` (gem color ↔ category)".
+
+**S16 (code commit)**
+- `validatePool.ts`: delete `:72-77`; `:5` becomes `import { isDeductive } from '@/clueGame/deduction';`. `:96-97` become (conditions unchanged):
+  ```ts
+  if (category.deduces && !deducesHere) warnings.push(`${name(id)}: no tagged ${category.label} clue (every profile needs one)`);
+  if (!hasClues && !hasFacts) warnings.push(`${name(id)}: no ${category.label} clue or fact (every profile needs one)`);
+  ```
+- `deduction.ts`: delete `ClueFit` with its doc (`:7-13`) and `fitClue` (`:30-43`); `:5` becomes `import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, clueTags, prefixOf } from '@/clueGame/traits';`. Left: header, `TagOutcome`, `tagOutcome`, `isDeductive`.
+- `categories.ts`: `GemCategory` = `label`, `clueCategories`, `factCategories`, `deduces` (the deleted fields' comments go with them); delete `:35` and the `GemType` import. Rows, values copied exactly:
+  ```ts
+  { label: 'Family tree', clueCategories: ['taxonomy'], factCategories: [], deduces: true },
+  { label: 'Body', clueCategories: ['morphology'], factCategories: [], deduces: true },
+  { label: 'Behavior & diet', clueCategories: ['behavior', 'diet'], factCategories: ['behavior', 'diet_prey', 'diet_flora'], deduces: true },
+  { label: 'Habitat', clueCategories: ['habitat'], factCategories: [], deduces: true },
+  { label: 'Range', clueCategories: ['geography'], factCategories: [], deduces: true },
+  { label: 'Life cycle', clueCategories: ['reproduction'], factCategories: ['life_description'], deduces: true },
+  { label: 'Conservation', clueCategories: ['conservation'], factCategories: ['threat'], deduces: false },
+  { label: 'Key facts', clueCategories: ['key_fact'], factCategories: ['key_fact'], deduces: false },
+  ```
+
+**D14 (code commit; docs with it)**
+- `journal.ts`: delete `:4`, `:18-19`, `:24-30`, `:117-121`; `recordSolve(journal, species, moves, at, sharp = false)` without `:44`/`:55`; `mergeServerJournal(journal, entries)` without `:84-90`/`:100`, the rule otherwise byte-for-byte. `isEntry` and the `.map` in `parseJournal` become one query that builds the entry from `JournalEntry`'s fields, with the same required-field rules and the `key === scientificName` rule:
+  ```ts
+  /** A stored entry with only JournalEntry's fields, or null when one it needs is missing or wrong. Old and unknown fields (sightings, before 2026-11) are left out; a bad badge count or class drops that field, not the animal. */
+  function toEntry(value: unknown): JournalEntry | null {
+    if (!value || typeof value !== 'object') return null;
+    const { scientificName, commonName, timesSolved, bestMoves, firstSolvedAt, lastSolvedAt, className, sharpEyes } = value as Record<string, unknown>;
+    if (typeof scientificName !== 'string' || typeof commonName !== 'string' || !Number.isInteger(timesSolved) || (timesSolved as number) <= 0
+      || typeof bestMoves !== 'number' || !Number.isFinite(bestMoves) || typeof firstSolvedAt !== 'string' || typeof lastSolvedAt !== 'string') return null;
+    return {
+      scientificName, commonName, timesSolved: timesSolved as number, bestMoves, firstSolvedAt, lastSolvedAt,
+      ...(typeof className === 'string' ? { className } : {}),
+      ...(Number.isInteger(sharpEyes) && (sharpEyes as number) > 0 ? { sharpEyes: sharpEyes as number } : {}),
+    };
+  }
+  // parseJournal: Object.fromEntries(Object.entries(parsed).flatMap(([key, value]) => { const entry = toEntry(value); return entry && entry.scientificName === key ? [[key, entry]] : []; }))
+  ```
+  **Decision:** a non-string `className` drops the class, not the animal (no version ever wrote one; copying any value would put junk into a typed field).
+  Comments: `:16` → `/** e.g. 'MAMMALIA'. Kept with each find; no screen reads it. */`; `:71` → `/** Globe places it was solved in. The route still sends them; the device has ignored them since sightings went (2026-11). */`; `:75-79` loses "Places become sightings when `placeFor` knows them." (keeps "… the earliest and latest dates. Safe to repeat.").
+- `places.ts`: delete `:53-72`.
+- `useAnimalSession.ts`: delete `loadPlace` (`:34-42`), `Content.place` (`:48`), `:104`, `place: continent ? place : null,` from `:119`, `:291`; `:13` becomes `import { MIN_PLACE_ANIMALS } from '@/clueGame/places';`. `getJson` stays (pool).
+- `AnimalGame.tsx`: delete `:15`, `place` from `:198`, `:300-301`; `:302` → `record(species, done.movesUsed, { score: session.score, streak: session.bestStreak }, sharpEye(done));`; deps `[session, end, speciesById, record, recordedRound]`.
+- `useJournal.ts`: `useJournal()`; `record(species, moves, session, sharp = false)`; merge effect `mergeServerJournal(previous, saved)` with deps `[saved]`; drop the `Sighting` and `Place` imports. Doc `:18-23` → "The Field Journal and personal bests in localStorage. Storage can be unavailable (private mode); play still works. A signed-in player's solves saved before 2026-10-01 are merged in."
+- `GlobeScreen.tsx:22` → `const { journal } = useJournal();`.
+- `tests/clueGame/journal.test.ts`: delete `:19-22`. The fixture case reads `tests/clueGame/old-journal.json` as a string (`readFileSync(path.join(process.cwd(), …), 'utf8')`, as `contentPool.ts` does) and passes it straight to `parseJournal`, exactly what `useJournal` gets from localStorage. The `mergeServerJournal` case calls it with two arguments (valid before and after) and gives an entry a `placeKeys` value.
+- `scripts/e2e.mjs` (the Brief's two checks): one more branch in the existing `browser.on` listener (`:115-127`), `Network.requestWillBeSent` → push `params.request.url`. The check takes the array's length just before its `goto` and filters what came after by `new URL(url).pathname.startsWith('/api/places')`. `requestWillBeSent` also fires for HTTP-cache hits. The E2E's own in-page `fetch('/api/places/')` calls (`:432`, `:2308`) fall outside that window. The fixture check reads the same JSON file (one source, DRY). Neither check names `sightings`/`Sighting` in code: the final grep doesn't exclude `e2e.mjs`. Compare the kept fields by name.
+- Docs: `SKILL.md:50` → "- With `?place=continent:<name>`, every suspect lives on that continent (one with fewer than 12 animals plays everyone) and Range questions name only its regions; a find goes in the journal as it does from Anywhere." (`useAnimalSession.ts:106-108`, `animalBoard.ts:93`). `docs/CLUE_MATCH.md:10`: delete the "Only continents become sightings: …" sentence.
+
+**S10 (one comment-only commit in `src`/`scripts`, after the three above; docs in the same or their own commit)**
+- `animalBoard.ts:12-13` "… Shared\n// by the balance bot (scripts/balance-044.ts) and, later, the game." → "… The game\n// (useAnimalSession.ts) and the balance bot (scripts/balance-044.ts) both play it."
+- `questionMatchContent.ts:1-6`:
+  ```text
+  // Content -> the Animal records the animal board plays with (questionMatch.ts): the traits
+  // questions can ask about, regions and continents, family tree names, field guide lines,
+  // signs, and field notes (with blanks where a word would name the animal) with their sources.
+  // Two front doors, one builder: animalsFromPool for the game (database rows from
+  // GET /api/clue-game/pool) and animalsFromProfiles for the balance bot and the unit tests
+  // (db/content/animals/*.json). Pure.
+  ```
+  `:172` → `/** The bot's and the unit tests' door: the animal files, with the source registry for source names. */`
+- `places.ts:2` "… plus small pure helpers for the globe and the journal." → "… plus small pure helpers for the globe."; `:35` → `/** A continent opens once it has this many animals (plan 041); a round's suspects (5) are drawn from them. */`
+- `profiles.ts:60` → `/** Fun facts. They become field notes after the hand-written clues: listed with sources on the round-end card, the key_fact ones in the Field Journal; never witness notes (no tags). */`
+- `categories.ts:1-2` →
+  ```text
+  // The content check's groups (validatePool.ts warns when a playable animal has no clue or fact in a
+  // group, or no tagged clue in a group that `deduces`). The eight rows began as the first clue game's
+  // gem colors; no screen reads them now.
+  ```
+  Field comments: `clueCategories` "`species_deduction_clues.category` values in this group."; `factCategories` "`species_facts.category` values in this group (never deductive)."; `deduces` "Whether the group needs a tagged clue (false: notes to learn from)."
+- `journal.ts:1-3` →
+  ```text
+  // The Field Journal: animals this player has identified, kept on their device.
+  // Keyed by scientific name so it survives database id changes. Nothing is saved to the
+  // server now; mergeServerJournal folds in the solves an account saved before 2026-10-01.
+  ```
+- `questionMatch.ts:160` → `/** Short versions: what the board calls each clue gem (screen readers), and columnLabel's fallback. */`
+- `balance-044.ts:9`: `[--order 24]` → `[--order 20]`, `[--stars 6,13]` → `[--stars 8,14]`.
+- This commit adds and removes no blank lines and no line with code: an empty `+` line fails the Brief's grep.
+- `docs/ANIMAL_BOARD_PAPER.md`: one line after the title (line 2 blank, then this, then a blank line, then the byline):
+  ```text
+  > **A dated paper, not kept current.** This is the 2026-10-01 paper for rules 044-0, with the notes below for later rules up to 053-1. The current rules are summarised in `docs/CLUE_MATCH.md` (Rules) and `CONTEXT.md`; the numbers are in `ANIMAL_RULES` (`src/clueGame/animalBoard.ts`).
+  ```
+- `docs/CLUE_MATCH.md:3` → "> `/explore` plays the plan 044 animal board (five suspects pinned on the board, clue orders, Rule out and release; rules under Rules below and in `CONTEXT.md`; design `plans/044-animal-board.md` and the frozen 044-0 paper `docs/ANIMAL_BOARD_PAPER.md`). `npm run e2e` checks that game."
+- `docs/CLUE_MATCH.md:51` → "The rules version is `ANIMAL_RULES.version` (bumping it drops a game saved in the tab); the numbers are in `ANIMAL_RULES`, `src/clueGame/animalBoard.ts`. The current rules are summarised below; terms: `CONTEXT.md`. A worked example and why random play fails: `docs/ANIMAL_BOARD_PAPER.md` §2–3, the 044-0 design paper (frozen at 044-0, with notes up to 053-1). Design and decisions: `plans/044-animal-board.md`, `plans/045-scout-the-suspects.md`."
+- `AGENTS.md:51` "Guide: `docs/CLUE_MATCH.md`; rules: `docs/ANIMAL_BOARD_PAPER.md`; design and decisions: `plans/044-animal-board.md`; terms: `CONTEXT.md`." → "Guide: `docs/CLUE_MATCH.md` (its Rules section: the current rules in short); terms: `CONTEXT.md`; design and decisions: `plans/044-animal-board.md` and the frozen 044-0 paper `docs/ANIMAL_BOARD_PAPER.md`."
+- `SKILL.md:40` "Rules: `docs/CLUE_MATCH.md` (Rules), in full `docs/ANIMAL_BOARD_PAPER.md` §2." → "Rules: `docs/CLUE_MATCH.md` (Rules) and `CONTEXT.md` (terms); `docs/ANIMAL_BOARD_PAPER.md` §2 is the frozen 044-0 design paper." (the rest of the line unchanged).
+- `CONTEXT.md:97` → "The player's own guess written in a hidden answer (yes or no). Once that answer is scouted, the grid shows the guess right or wrong; a right name scores the pencil marks (the pencil bonus)."
+- `CONTEXT.md:124` → "… Right is a find worth one star, two with a Sharp eye (a big pencil bonus with no pencil wrong); wrong loses the round."
+- `CONTEXT.md:140` → "The player's record of the animals they've found or named, kept on the device. Signing in only merges in the finds an account saved before October 2026; nothing new is saved there."
+- `CONTEXT.md:144` → "Where a trait's or witness note's fact comes from, such as the IUCN Red List or Animal Diversity Web. Players see sources after a round: the round-end card's field notes and the Field Journal's facts each end in a source number that opens the full citation under Sources. No screen shows a trait's source."
+
+### Rejected alternatives
+
+- Strip only `sightings` (`const { sightings, ...rest } = entry`): keeps unknown junk fields; the Brief asks for `JournalEntry`'s fields only.
+- Keep `isEntry` and add a pick step in `.map`: two passes over one entry, with a cast; `toEntry` does both in one query.
+- Copy `className` unchecked: puts non-strings into a typed field. Treating it like `sharpEyes` (drop the field, keep the animal) matches the rule the Brief keeps.
+- Validate and keep well-formed sightings: keeps a field nothing reads; the owner chose to drop it.
+- Remove `placeKeys`/`speciesId` from `ServerJournalEntry`: changes the route's contract; the route is M11's.
+- Bump `ANIMAL_RULES.version`: nothing a saved game holds changes (Goal 5).
+- Rename `GEM_CATEGORIES` or move `likeness` into `animalBoard.ts`: churn outside the Brief, which keeps both.
+- A separate script or env switch for the two new E2E checks: the Brief puts them in `e2e.mjs`, and a one-off run proves they fail first.
+
+### Risks and checks
+
+- **Orphans:** after each code commit (and after `rm -rf .next .next-e2e .test-dist`), `npm run typecheck` and `npx tsc --noEmit --noUnusedLocals --noUnusedParameters -p .` exit 0 (0 at baseline). The second catches every private helper and import the cut leaves behind (`animal`, `shuffle`, `PREFIX_ORDER`, `clamp`, `round`, `newTrail`, `GemType`, `allTraits`, `SpeciesRecords`, `SpeciesClueCategory`, `buildSpeciesRecords`, `Place`, `PlacesResponse`, `Sighting`). Lint exits 0.
+- **D8:** the bot run with the same arguments prints exactly `bot-before.txt`. It runs `animalsFromProfiles`, `makeBook`, `poolFor`, `likeness` and the 044 rules, so it would show any slip. The E2E plays rounds through everything that stays. The final grep prints nothing.
+- **S16 (risk: a dropped row or category quietly weakens the warnings):** (a) the Brief's warnings-pin unit case, written first, passes unchanged; (b) exhaustive proof: a scratch script (relative imports, not committed) prints `JSON.stringify(GEM_CATEGORIES.map(({ label, clueCategories, factCategories, deduces }) => ({ label, clueCategories, factCategories, deduces })))` before the change to `$S/categories-before.json` and after it, and `diff` is empty; (c) the content check on the dev copy prints the same summary and counts (`content-check-before.txt`); (d) the one-value unit case passes before and after.
+- **D14 (risk: lost finds):** the fixture case fails on today's code (malformed entry dropped) and passes after. The `mergeServerJournal` case passes before and after. Both E2E checks fail on unchanged code, then pass. `git diff origin/main -- src/components/animalBoard/savedGame.ts` is empty. Intended behavior changes: entries with a malformed sighting now load; at the next journal save, every stored entry loses `sightings` (and any unknown field); a non-string `className` is dropped; `/explore/?place=` deals without waiting on `/api/places/` and can no longer log that request's error.
+- **S10:** the Brief's comment-only grep on that commit prints nothing. Read the three glossary lines against `starsFor` (`animalBoard.ts:528-533`), `PENCIL_POINTS`, `animalSession.ts:33` and the journal route.
+- **Tests:** `npm test` = 61 + 4 (one-value, warnings pin, merge, fixture) − 1 (malformed sighting) = **64**, if each is one `test()`.
+- **Content build and live data:** nothing the content build or `/api/*` runs changes (`validatePool` writes nothing; `signs.ts`' use of `deduction.ts`/`questionMatch.ts` names stays). No production content build needed. No DB change.
+
+### Open questions
+
+None.
+
 ## Architecture review (Fable)
 
 ## Architecture review (Astra)
@@ -179,5 +350,6 @@ On `fb6864d0` (= `origin/main` `3436aac5` + mission start), 2026-11-14. State fo
 ## Log
 
 - 2026-11-14 19:47 UTC · Baseline: greps clean (no new readers), typecheck/lint 0, test 61/61, bot + content check saved, E2E 1575/1575 (dev copy).
+- 2026-11-14 20:12 UTC · Architecture: `architect` wrote findings + target design (D14 > S16 > D8 > S10; delete-only except journal `toEntry`; extra stale comments + `docs/CLUE_MATCH.md:10` added; open questions none). Plan-only; typecheck 0.
 
 ## Summary
