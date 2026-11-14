@@ -371,6 +371,12 @@ E2E first, one heavy job at a time, each started after the Gate (load < 0.6). Us
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER: Refresh `origin/main` before the PR. Fetch was blocked by the read-only filesystem; remote freshness remains unverified.
+
 ## Release
 
 ## Decisions
@@ -392,5 +398,6 @@ E2E first, one heavy job at a time, each started after the Gate (load < 0.6). Us
 - 2026-11-14 17:37 UTC · S5: deleted `headers()` from next.config.mjs (numstat 0/14; keys = `distDir outputFileTracingRoot trailingSlash poweredByHeader allowedDevOrigins redirects`). origin/main still af4b0453. Grep empty; typecheck 0, lint 0, test 61/61; build 0 (`s5-build.log`); dev-copy E2E 1575/1575 → `e2e-s5/`; deleted `e2e-s3-site/`.
 - 2026-11-14 17:42 UTC · S6: engines.node 24.x, @types/node ^24 → 24.19.2 (undici-types 7.24.6); lock entry check = `(root) @types/node undici-types`, root hunks only the 2 fields; 0 type fixes. origin/main still af4b0453. npm ci 0, EBADENGINE 0; build 0 (`s6-build.log`); run-tests.mjs comment + .editorconfig (numstat 2/2, 2/2, 3/2; eol lf, no final newline kept); typecheck 0, lint 0, test 61/61.
 - 2026-11-14 18:20 UTC · S7: final Verification at 95128856 (origin/main still af4b0453). 1: npm ci 0, EBADENGINE 0, @types/node 24.19.2 only. 2: dev-copy E2E run 1 1573/1575 (timing only: the sort's "rows sliding" rise samples, same family as `baseline-flaky/`; log in `final-e2e-flaky/`), gated rerun 1575/1575 → `final-e2e/`. 3: site:build 0, e2e:site 444/444 → `final-site/`. 4: typecheck 0, lint 0, test 61/61, build 0 (`*-after.log`). 5a–k all as expected (eol 369→365 only, lock 3 entries, 14 paths). 6: tree clean. Deleted `e2e-s5/`.
+- 2026-11-14 18:40 UTC · Code review (Astra): APPROVE, 0 MUST-FIX; SHOULD-CONSIDER (refresh origin/main before PR; its sandbox couldn't fetch) goes to Summary, and the Release rebases on a fresh origin/main anyway. Fetched here: origin/main still af4b0453.
 
 ## Summary
