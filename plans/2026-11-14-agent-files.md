@@ -542,6 +542,6 @@ The hook and CI's guard are tested in isolation. These tests existed before the 
 - 2026-11-14 11:16 UTC · S3 skills: `git rm` 34 folders + JSON lock filter. V2 11 folders, retro ok; V3 (`$ST/lock-after.txt`) folders 11 | locked 6 | v1 matches 6, no-folder [], 5 not-in-lock as expected, version 1, numstat 0/204; V9 93 D, 0 other, 34 folders, no kept touched; V6 grep 1 hits only docs/agents/domain.md (2) + issue-tracker.md (4). typecheck 0, lint 0.
 - 2026-11-14 11:12 UTC · S4 D17: `git rm` .codex, .kiro, .understand-anything; .gitignore `:49-50` dropped via Edit (hunk `-49,2 +48,0`); grep 2 no hits (exit 1); dirs gone; status shows only the 3 D + .gitignore, no untracked. typecheck 0, lint 0.
 - 2026-11-14 11:13 UTC · S5 link: `.claude/skills/writing-for-agents` -> `../../.agents/skills/writing-for-agents`; V8 (`$ST/link.txt`) readlink + resolved path ok, 120000 twice, SKILL.md ok. typecheck 0, lint 0.
+- 2026-11-14 11:15 UTC · S6 docs/agents: issue-tracker.md drops PR-triage + Wayfinding sections (24 lines, ends fetch section + LF, one `#42`); domain.md :5/:13/:47 per Target design. V7 hunks match (-5/-13/-47; -16,10 +15,0; -35,11 +24,0); V6 grep 1 empty. typecheck 0, lint 0.
 
 ## Summary
-- 2026-11-14 11:15 UTC · S6 docs/agents: issue-tracker.md drops PR-triage + Wayfinding sections (24 lines, ends fetch section + LF, one `#42`); domain.md :5/:13/:47 per Target design. V7 hunks match (-5/-13/-47; -16,10 +15,0; -35,11 +24,0); V6 grep 1 empty. typecheck 0, lint 0.
