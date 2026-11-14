@@ -120,7 +120,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -149,6 +149,71 @@ Branch `agent/toolchain-cleanup` at `1c40db06` = `origin/main` `af4b0453` (PR #7
 
 ## Architecture
 
+Read at `7f91ecd1` (= `origin/main` `af4b0453` + plan; `git fetch` 2026-11-14, no code diff vs `origin/main`). Every quoted text is where the brief says; nothing has moved or gone. Dry run in a throwaway copy (`/tmp`, no `.git`, no `.env.local`; deleted after, worktree untouched, `git status` clean): all deletions + headers block removed + S15 `package.json` edits + `npm install` → `npm ci` 0 `EBADENGINE`, `npm ls @types/node` 24.19.2, `tsc --noEmit` 0, `npm run lint` 0, `npm test` 61/61, config keys `distDir outputFileTracingRoot trailingSlash poweredByHeader allowedDevOrigins redirects`.
+
+### Findings (verified sites, ranked by impact)
+
+1. **D24 · `next.config.mjs:19-32`** (deploy path). Lines 19 (blank) to 32: `async headers() {` (20), the comment `// Dev only: Turbopack serves /_next/static/development/_clientMiddlewareManifest.js as JSON, which nosniff blocks.` (21), `if (process.env.NODE_ENV !== 'production') return [];` (22, the file's only `NODE_ENV`), the `/:path*` rule with `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin` (23-31), `},` (32). Breaks DRY: Caddy sets the same two values. **Fix:** delete lines 19-32 (14 lines; line 18 `},` of `redirects()` then meets `};`). Nothing else changes: `path`, `fileURLToPath` (lines 1-2) stay used by `outputFileTracingRoot`, `process.env` stays used by `distDir`; no import goes unused. `npm run lint` covers only `src tests scripts`, so the config-keys `import()` is the check that counts, plus `npm run build`. Dev is unchanged (the block returned `[]` there already). **Caddy covers every host:** `deploy/Caddyfile:1-9` `(common)` sets `Strict-Transport-Security "max-age=31536000"`, `X-Content-Type-Options nosniff`, `Referrer-Policy strict-origin-when-cross-origin`, `-Server`; imported by play. (`:12`, before `reverse_proxy app:8080`), apex (`:17`, and again in `handle_errors 404` `:25`), www (`:31`). Baseline confirms 3 headers once each on all six URLs, including Next's own 404 and the apex 308.
+2. **D11 · four lines** (two on the deploy path). Breaks "fail fast/established interfaces": a setting that looks live but nothing reads (0 hits under `node_modules`). **Fix:** delete exactly these, each the line right under the kept `NEXT_PUBLIC_CLERK_SIGN_IN_URL`:
+   - `.env.example:23` `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/` (shell only, see 4)
+   - `deploy/app.env.example:12` `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/` (last line; Edit tool is fine, basename `app.env.example` matches none of the hook's `.env|.env.*|*.env`)
+   - `Dockerfile:16` `ARG NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/` (build stage; line 15 `ARG NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login` and line 17's comment stay)
+   - `docs/DATABASE_ACCESS.md:209` `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=...`, inside the ` ```text ` block of the dev-copy settings (M6 kept the block; the fence stays well formed).
+3. **S15 · `package.json`** (copied into the image, drives `npm ci`). `:26` `"node": "22.x"` → `"24.x"`; `:66` `"@types/node": "^20"` → `"^24"`. Then plain `npm install`. **Predicted lock diff, 9 lines in 4 hunks, nothing else:** root `devDependencies["@types/node"]` `^24`, root `engines.node` `24.x`, `node_modules/@types/node` 20.17.57 → 24.19.2 (resolved, integrity, `undici-types` range `>=7.24.0 <7.24.7`), `node_modules/undici-types` 6.19.8 → 7.24.6. Both are `dev: true`, so the `run` stage's `npm ci --omit=dev` installs the same packages. npm keeps `package.json`'s 4-space indent. **Typecheck passes with 24.19.2 unchanged: no type-only fixes needed, 0 files** (`skipLibCheck: true`; 66 `@types/node` files load). The decision rule's `^20` fallback is not expected.
+4. **D5 · `.env.example`** (29 lines, LF, final newline). Breaks KISS/fail fast: asks for seven names nothing reads, one block "(Required)". Delete lines 5-6 (`CASE_COMPILER_SECRET=…`, `CRON_SECRET=…`), 8-16 (the `# ===` / `# TiTiler Configuration (Required)` / `# ===` heading, `NEXT_PUBLIC_TITILER_BASE_URL=…`, `NEXT_PUBLIC_COG_URL=…`, blank, `# Optional MapLibre style URL. App GeoJSON provides the offline fallback.`, `NEXT_PUBLIC_MAP_STYLE_URL=`, blank) and 23-29 (D11's line, blank, the `# Development Only` heading's three lines, `NODE_ENV=development`, `ANALYZE=false`). **Target, 11 lines, = original lines 1-4, 7, 17-22 verbatim:**
+   1. `# =================================`
+   2. `# Database (Hetzner VPS PostgreSQL)`
+   3. `# =================================`
+   4. `DATABASE_URL=…` (original value, untouched; it is the PgBouncer `:6432` TLS route)
+   5. (blank)
+   6. `# =================================`
+   7. `# Clerk Auth (Required)`
+   8. `# =================================`
+   9. `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...`
+   10. `CLERK_SECRET_KEY=sk_test_...`
+   11. `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login` (then the final newline; no trailing blank line)
+
+   **From a shell only** (the edit hook blocks `.env.*`): one pass, guarded, e.g. check `sed -n '5p;6p;9p;15p;23p;26p;28p;29p' .env.example | cut -d= -f1` gives the expected names/headings, then `sed -i -e '5,6d;8,16d;23,29d' .env.example` (sed numbers input lines, so one call is correct), then `git show HEAD:.env.example | sed -n '1,4p;7p;17,22p' | cmp -s - .env.example` (prints nothing; never `cat`/`diff` the file into a log, line 4 is a connection string). `.env.local.example` (9 lines: `DATABASE_URL`, the two TiTiler names, `NEXT_PUBLIC_MAP_STYLE_URL`) goes with `git rm .env.local.example`. Nothing else names either example (`.gitignore` `.env*.local` doesn't match it; `.dockerignore:10` `.env.*` already kept both out of the image). `.env.vps.example` holds only `POSTGRES_*`, `PGDATA_PATH`, `DB_DOMAIN`, so the final grep doesn't hit it.
+5. **D10 · `scripts/check-game-css.mjs`** (89 lines, fails on every branch) and **`docs/DEPLOY.md:63`**. Cut from ` `node scripts/check-game-css.mjs [base] [outDir]` (commit first)` through `Not in CI: it fails by design on a PR that changes the game's styles.`, including the space before it. The line then ends: `…darkened `--color-1`, 2026-11-01).` (the bullet's first two sentences, unchanged). No other reader (`package.json`, `.github`, `.githooks`, `.claude`: 0). Its imports `postcss`, `@tailwindcss/postcss` stay used by `scripts/site.mjs`.
+6. **D18 + D19 · `package.json:33,41,42`** `"docs": "python3 -m http.server 3000 -d docs",`, `"typecheck:watch": "tsc --noEmit --watch",`, `"clean": "rm -rf .next .next-e2e .test-dist",`; and `docs/index.html` (82 lines, the only `docsify` hits), `docs/_sidebar.md` (8). All three lines end in commas and none is last, so JSON stays valid. No lock change (scripts aren't in the lock). `serve` (32), `start` (37), `site:shots` (36), `clue:world-map` (50) stay. **No `npm run clean` line outside `plans/`** (re-grepped), so the "say `rm -rf .next .next-e2e .test-dist` instead" item has nothing to edit.
+7. **S15 · text only.** `scripts/run-tests.mjs:3-4` now: `// This repo can't install test frameworks (network-restricted), so we lean on` / `// two things that are already here:`. Replace those two lines with:
+   ```
+   // The network limit is the agent's, not the repo's: an agent's sandbox may
+   // have no network, so this runner adds no test framework and leans on two
+   // things that are already installed:
+   ```
+   (75/74/37 chars.) Line 1 `// Offline test runner.`, 2, and 5-10 (1. esbuild, a devDependency, bundles `tests/**/*.test.ts`; 2. Node's built-in `node --test`; Usage) stay. `.editorconfig` (12 lines, LF, **no final newline**): `:8` `indent_size = 4` → `indent_size = 2`, `:9` `end_of_line = crlf` → `end_of_line = lf`; lines 1-7 and 10-12 (`charset = utf-8`, `trim_trailing_whitespace = false`, `insert_final_newline = false`, no trailing newline) stay. Nothing in the repo reads either file.
+
+Fine as is (checked, nothing to do): Caddy coverage; `NODE_ENV` readers outside the config (`Dockerfile:31`, `Globe.tsx`, `src/db/index.ts`, `debugBridge.ts`); `.gitignore`; `deploy/check.sh` (reads no security header); `docs/DEPLOY.md:138` (dated record, still true via Caddy); no `.npmrc` or `engine-strict`, so `engines` stays a warning.
+
+### Target design
+
+After the change: env examples = one file, `.env.example`, holding exactly the four names the app reads; deploy files differ by one deleted line each; security headers live only in Caddy's `(common)` snippet beside HSTS, and `next.config.mjs` has no environment branch (dev and prod configs equal); `package.json` states the Node that runs everywhere (image, CI, VPS: 24) and types to match; scripts list = today's minus `docs`, `typecheck:watch`, `clean`. No runtime code changes; the only bundle-affecting inputs are `next.config.mjs` (headers manifest) and the lock (dev-only packages).
+
+**Change groups, in order** (each a step, its own commit, app working after each; verify typecheck + lint + test each time, plus what is listed):
+1. **D18 + D19**: three script lines; `git rm docs/index.html docs/_sidebar.md`. Verify: scripts `node -p` check, `git ls-files`, the D18/D19 greps.
+2. **D10**: `git rm scripts/check-game-css.mjs`; DEPLOY.md:63 cut. Verify: `npm run site:build`, `npm run e2e:site`, `check-game-css` grep.
+3. **D5 + D11**: `.env.example` in the one guarded shell pass above (covers D11's line too, so the file is edited once, not twice by shifting line numbers); `git rm .env.local.example`; then the three other D11 lines. Verify: `cmp` check, `grep -c` = 4, `git grep -n NEXT_PUBLIC_CLERK_SIGN_IN_URL` one per file, `git diff --numstat` `0 1` for `Dockerfile` and `deploy/app.env.example`, `0 18` for `.env.example`, `0 1` for `docs/DATABASE_ACCESS.md`.
+4. **D24**: delete `next.config.mjs:19-32`. Verify: config-keys `import()`, `npm run build`, `git grep -n -E 'async headers|NODE_ENV' -- next.config.mjs` empty. Optional local proof: `npm run serve` + `curl -sI localhost:8080/` shows no `x-content-type-options` (expected now; Caddy adds it live).
+5. **S15**: `package.json` two values by hand, `npm install`; lock diff must be the 9 lines above (any other hunk = stop and investigate, don't commit drift); `rm -rf node_modules && npm ci` 0 `EBADENGINE`; `npm ls @types/node` 24.x; `npm run build`. Then the `run-tests.mjs` comment and `.editorconfig` lines (text only; `npm test`).
+6. Final Verification per the brief (full DoD list, `e2e:fresh` against the dev copy at load < 0.6, eol counts = baseline minus 4 LF files: expect `365 i/lf w/lf`, others unchanged).
+
+**Risks**
+- **Deploy path (D11, D24, S15).** CI's `docker build --target caddy` builds `deps` (so it does run `npm ci` on the new lock in `node:24`) and `site`, never `build` or `run`; Hetzner's deploy is the first Docker build of those two. Their diff is one deleted `ARG` (no `ENV` copies it, compose never passed it, no code or SDK reads it) plus the changed lock/config, which CI's native `npm ci` + `npm run build` on Node 24 cover. A build failure stops `deploy.sh` before the container is replaced; a bad deploy is reverted per the release rules. The header smoke (3 per URL, values equal to `headers-before/`) is the live check for D24; `/login/` code for D11.
+- **Lock.** Only `npm install` writes it. On a rebase conflict take `origin/main`'s lock, re-apply the two `package.json` values, rerun `npm install`, re-check the diff is limited to the 4 hunks (plus whatever `origin/main` legitimately moved). npm 11.19's `allowScripts` warnings (`@tailwindcss/oxide`, `esbuild`, `unrs-resolver`) appear before and after; not this mission's.
+- **CRLF/indent.** New `.editorconfig` values change no file. `[*] indent_size = 2` will tell editors 2 spaces in the 4-space files (`package.json`, `next.config.mjs`, …); this mission only deletes lines or changes values there, so no new indented line is written. Don't touch the 3 CRLF files; the eol count check catches any conversion.
+- **`.env*` handling.** Hook blocks Edit/Write on `.env.example`; shell only, never `cat`/print it, never open `.env.local`.
+
+**Looks dead, out of scope (notes, not edits):** the dev-copy secrets file may still hold an `AFTER_SIGN` line (harmless; the doc no longer lists it); Hetzner's `deploy/app.env` line (Summary, owner); `.editorconfig` has no per-file override for the 4-space files and its `insert_final_newline = false` doesn't match most files; esbuild `node20` targets (3 scripts) and `package.json` description; `npm install` reports 9 audit advisories (8 moderate, 1 high) left after M1; `AGENTS.md:72` and the `start`/`serve` quick-start line stay.
+
+### Rejected alternatives
+- Repair `check-game-css.mjs` (`tree(base, [...deleted, 'src/site'])`): owner chose delete (Q5).
+- `npm install -D @types/node@^24`: saves `^24.19.2`, not `^24` (brief).
+- Keep `headers()` and drop Caddy's copies: Caddy also covers the static apex and adds HSTS, which Next can't; one place is Caddy.
+- Delete `.editorconfig` instead of fixing it: Goal says fix two lines; `indent_style`/`charset` are right.
+- Edit `.env.example` in two passes (D5 then D11): line numbers shift between them; one guarded pass with a `cmp` against the original's kept lines is simpler and checkable.
+- Separate commits for the lock and `engines`: one `npm install` writes both; splitting adds a second lock refresh for nothing.
+
 ## Architecture review (Fable)
 
 ## Architecture review (Astra)
@@ -168,5 +233,6 @@ Branch `agent/toolchain-cleanup` at `1c40db06` = `origin/main` `af4b0453` (PR #7
 ## Log
 
 - 2026-11-14 16:46 UTC · Baseline: fresh greps as audit (nothing kept, no `npm run clean` outside plans), packages (EBADENGINE 22.x, @types/node 20.17.57), eol counts, live headers 3×6 + codes, typecheck/lint/test 61/61, E2E 1575/1575 → `baseline-e2e/` (2 earlier runs at load 2: 1574/1575, different timing checks).
+- 2026-11-14 16:55 UTC · Architecture: architect verified every site at 7f91ecd1 (nothing moved), dry run in /tmp: @types/node 24.19.2 typechecks with 0 fixes, npm ci 0 EBADENGINE, lint 0, test 61/61, lock diff 9 lines; 5 change groups + final Verification.
 
 ## Summary
