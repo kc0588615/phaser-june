@@ -94,7 +94,7 @@ Showing a suspect's own answer to a question by clearing that question's clue ge
 _Avoid_: reveal, inspect
 
 **Pencil mark**:
-The player's own guess written in a hidden answer (yes or no). The game never checks it during play.
+The player's own guess written in a hidden answer (yes or no). Once that answer is scouted, the grid shows the guess right or wrong; a right name scores the pencil marks (the pencil bonus).
 _Avoid_: note, call
 
 **Witness note**:
@@ -121,7 +121,7 @@ Releasing every look-alike, so the last suspect left is the mystery animal, or n
 _Avoid_: solve, catch, guess
 
 **Name it**:
-The player's one try per round to say which suspect is the mystery animal ("It's this one!" in its field guide), any time, even out of moves. Right is a find worth one star; wrong loses the round.
+The player's one try per round to say which suspect is the mystery animal ("It's this one!" in its field guide), any time, even out of moves. Right is a find worth one star, two with a Sharp eye (a big pencil bonus with no pencil wrong); wrong loses the round.
 _Avoid_: guess (that's a pencil mark), call, accuse
 
 **Out of moves**:
@@ -137,9 +137,9 @@ A round's rating: one for a find, more for finding with moves to spare.
 Finds in a row; a lost round ends it.
 
 **Journal**:
-The player's record of the animals they've found or named, kept on the device (and synced when signed in).
+The player's record of the animals they've found or named, kept on the device. Signing in only merges in the finds an account saved before October 2026; nothing new is saved there.
 _Avoid_: collection, log, album
 
 **Source**:
-Where a trait's or witness note's fact comes from, such as the IUCN Red List or Animal Diversity Web. Players can open it to check and read more once the round is over.
+Where a trait's or witness note's fact comes from, such as the IUCN Red List or Animal Diversity Web. Players see sources after a round: the round-end card's field notes and the Field Journal's facts each end in a source number that opens the full citation under Sources. No screen shows a trait's source.
 _Avoid_: citation, reference

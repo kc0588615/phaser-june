@@ -1,9 +1,9 @@
-// Content -> the data the Question Match rules play with (plan 041): the traits
-// questions can ask about, regions and continents, family tree names, field notes
-// (with blanks where a word would name the animal), and the source of every fact.
-// Two front doors, one builder: animalsFromPool for the app (database rows from
-// GET /api/clue-game/pool) and animalsFromProfiles for the prototype and the
-// balance bot (db/content/animals/*.json). Pure.
+// Content -> the Animal records the animal board plays with (questionMatch.ts): the traits
+// questions can ask about, regions and continents, family tree names, field guide lines,
+// signs, and field notes (with blanks where a word would name the animal) with their sources.
+// Two front doors, one builder: animalsFromPool for the game (database rows from
+// GET /api/clue-game/pool) and animalsFromProfiles for the balance bot and the unit tests
+// (db/content/animals/*.json). Pure.
 import { isHandWrittenClue, profileClues, type AnimalProfile, type ContentSource } from '@/clueGame/profiles';
 import type { CluePool } from '@/clueGame/pool';
 import { signsOf } from '@/clueGame/signs';
@@ -64,7 +64,6 @@ interface AnimalInput {
   commonName: string;
   scientificName: string;
   taxonomy: { class: string; order: string; family: string; genus: string };
-  redList: { category: string; url: string };
   photo: string | null;
   /** Generated trait clues and hand-written clues, in the profile's order; hand-written ones become field notes. */
   clues: Array<{ category: string; text: string; tags: readonly string[]; source: Source; handWritten: boolean }>;
@@ -75,18 +74,13 @@ interface AnimalInput {
 
 function buildAnimal(input: AnimalInput, warn: (text: string) => void): Animal {
   const traits: Record<string, string[]> = {};
-  const traitSources: Record<string, Source> = {};
   const guide: Animal['guide'] = { family: [], body: [], habits: [], habitat: [], range: [], life: [] };
-  const redListSource: Source = { name: 'IUCN Red List', url: input.redList.url || null };
 
   for (const clue of input.clues) {
     if (clue.handWritten) continue;
     const section = GUIDE_CATEGORY[clue.category];
     const askable = clue.tags.filter(tag => PREFIX_CATEGORY[prefixOf(tag)]);
-    for (const tag of askable) {
-      (traits[prefixOf(tag)] ??= []).push(tag);
-      traitSources[tag] = clue.source;
-    }
+    for (const tag of askable) (traits[prefixOf(tag)] ??= []).push(tag);
     // The field guide: family tree lines (never the genus), and every line a question can check.
     if (section === 'family' && !clue.tags.some(tag => tag.startsWith('genus:'))) guide.family.push({ text: clue.text, tags: [] });
     else if (section && section !== 'family' && askable.length > 0) guide[section].push({ text: clue.text, tags: askable });
@@ -98,7 +92,6 @@ function buildAnimal(input: AnimalInput, warn: (text: string) => void): Animal {
   const regions = [...new Set(countries.map(country => regionOfCountry(country.code)).filter((region): region is string => region !== null))];
   if (regions.length > 0) {
     traits.region = regions.map(region => `region:${region}`);
-    for (const tag of traits.region) traitSources[tag] = redListSource;
     guide.range.push({ text: `It lives in ${regions.map(region => REGIONS[region].name).join(', ')}.`, tags: traits.region });
   }
   const continents = [...new Set(regions.map(region => REGIONS[region].continent))] as ContinentKey[];
@@ -138,7 +131,7 @@ function buildAnimal(input: AnimalInput, warn: (text: string) => void): Animal {
   const allTags = [...new Set(input.clues.flatMap(clue => clue.tags))];
   return {
     id: input.id, name: input.commonName, scientificName: input.scientificName, photo: input.photo,
-    redList: input.redList.category, redListUrl: input.redList.url, continents, traits, traitSources, familyTree, notes, revealNotes, guide,
+    continents, traits, familyTree, notes, revealNotes, guide,
     // An unknown sign throws here, at load (plan 055), never in a render.
     signs: signsOf(allTags), tags: allTags,
   };
@@ -156,7 +149,6 @@ export function animalsFromPool(pool: CluePool, warn: (text: string) => void = (
       commonName: species.commonName,
       scientificName: species.scientificName,
       taxonomy: { class: species.className ?? '', order: species.taxonOrder ?? '', family: species.family ?? '', genus: species.genus ?? '' },
-      redList: { category: species.conservationCode ?? '', url: species.redlistUrl ?? '' },
       photo: species.photo?.url ?? null,
       clues: clues.map(clue => ({
         category: clue.category, text: clue.label, tags: clue.compareTags, source: clue.source ?? unsourced,
@@ -169,7 +161,7 @@ export function animalsFromPool(pool: CluePool, warn: (text: string) => void = (
   });
 }
 
-/** The prototype's and the bot's door: the animal files, with the source registry for source names. */
+/** The bot's and the unit tests' door: the animal files, with the source registry for source names. */
 export function animalsFromProfiles(profiles: readonly AnimalProfile[], registry: readonly Pick<ContentSource, 'key' | 'name'>[], warn: (text: string) => void = () => {}): Animal[] {
   const sourceNames = new Map(registry.map(source => [source.key, source.name]));
   return profiles.map(profile => {
@@ -185,7 +177,6 @@ export function animalsFromProfiles(profiles: readonly AnimalProfile[], registry
       commonName: profile.commonName,
       scientificName: profile.scientificName,
       taxonomy: profile.taxonomy,
-      redList: { category: profile.redList.category, url: profile.redList.url },
       photo: profile.photo?.url ?? null,
       clues: drafts.map((draft, index) => ({ category: draft.category, text: draft.text, tags: draft.tags, source: sourceOf(draft.source, draft.url), handWritten: index >= firstOwn })),
       facts: profile.facts.map(fact => ({ text: fact.text, source: sourceOf(fact.source, fact.url) })),

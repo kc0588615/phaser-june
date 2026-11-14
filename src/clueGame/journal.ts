@@ -1,7 +1,6 @@
 // The Field Journal: animals this player has identified, kept on their device.
-// Keyed by scientific name so it survives database id changes. A signed-in
-// player's solves are also on the server; mergeServerJournal folds them in.
-import { sightingPoint, type Place } from '@/clueGame/places';
+// Keyed by scientific name so it survives database id changes. Nothing is saved to the
+// server now; mergeServerJournal folds in the solves an account saved before 2026-10-01.
 
 export const JOURNAL_STORAGE_KEY = 'clue-match:journal:v1';
 
@@ -13,20 +12,10 @@ export interface JournalEntry {
   bestMoves: number;
   firstSolvedAt: string;
   lastSolvedAt: string;
-  /** e.g. 'MAMMALIA'; colors the animal's markers on the globe. */
+  /** e.g. 'MAMMALIA'. Kept with each find; no screen reads it. */
   className?: string | null;
-  /** Places it was found in from the globe, one per place. */
-  sightings?: Sighting[];
   /** Plan 054: Sharp eye badges, finds by name with a big pencil bonus. On this device only (the server keeps no badges). */
   sharpEyes?: number;
-}
-
-/** Where on the globe an animal was found. */
-export interface Sighting {
-  placeKey: string;
-  placeName: string;
-  lon: number;
-  lat: number;
 }
 
 export type Journal = Record<string, JournalEntry>;
@@ -36,12 +25,10 @@ export function recordSolve(
   species: { scientificName: string; commonName: string; className?: string | null },
   moves: number,
   at: string,
-  sighting?: Sighting,
   sharp = false,
 ): Journal {
   const previous = journal[species.scientificName];
   const sharpEyes = (previous?.sharpEyes ?? 0) + (sharp ? 1 : 0);
-  const sightings = [...(previous?.sightings ?? []).filter(old => old.placeKey !== sighting?.placeKey), ...(sighting ? [sighting] : [])];
   return {
     ...journal,
     [species.scientificName]: {
@@ -52,7 +39,6 @@ export function recordSolve(
       firstSolvedAt: previous?.firstSolvedAt ?? at,
       lastSolvedAt: at,
       ...(species.className ?? previous?.className ? { className: species.className ?? previous?.className } : {}),
-      ...(sightings.length ? { sightings } : {}),
       ...(sharpEyes ? { sharpEyes } : {}),
     },
   };
@@ -68,26 +54,18 @@ export interface ServerJournalEntry {
   bestMoves: number;
   firstSolvedAt: string;
   lastSolvedAt: string;
-  /** Globe places it was solved in. */
+  /** Globe places it was solved in. The route still sends them; the device has ignored them since sightings went (2026-11). */
   placeKeys: string[];
 }
 
 /**
  * The device's journal plus what the player solved while signed in elsewhere:
- * the larger count, the lower best, the earliest and latest dates. Places become
- * sightings when `placeFor` knows them. Safe to repeat.
+ * the larger count, the lower best, the earliest and latest dates. Safe to repeat.
  */
-export function mergeServerJournal(journal: Journal, entries: readonly ServerJournalEntry[], placeFor: (key: string) => Place | undefined = () => undefined): Journal {
+export function mergeServerJournal(journal: Journal, entries: readonly ServerJournalEntry[]): Journal {
   const merged: Journal = { ...journal };
   for (const entry of entries) {
     const local = merged[entry.scientificName];
-    const sightings = [...(local?.sightings ?? [])];
-    for (const key of entry.placeKeys) {
-      const place = placeFor(key);
-      if (!place || sightings.some(sighting => sighting.placeKey === key)) continue;
-      const [lon, lat] = sightingPoint(place, entry.speciesId);
-      sightings.push({ placeKey: key, placeName: place.name, lon, lat });
-    }
     const className = local?.className ?? entry.className;
     merged[entry.scientificName] = {
       scientificName: entry.scientificName,
@@ -97,27 +75,23 @@ export function mergeServerJournal(journal: Journal, entries: readonly ServerJou
       firstSolvedAt: local && local.firstSolvedAt < entry.firstSolvedAt ? local.firstSolvedAt : entry.firstSolvedAt,
       lastSolvedAt: local && local.lastSolvedAt > entry.lastSolvedAt ? local.lastSolvedAt : entry.lastSolvedAt,
       ...(className ? { className } : {}),
-      ...(sightings.length ? { sightings } : {}),
       ...(local?.sharpEyes ? { sharpEyes: local.sharpEyes } : {}),
     };
   }
   return merged;
 }
 
-function isEntry(value: unknown): value is JournalEntry {
-  if (!value || typeof value !== 'object') return false;
-  const entry = value as Record<string, unknown>;
-  return typeof entry.scientificName === 'string' && typeof entry.commonName === 'string'
-    && Number.isInteger(entry.timesSolved) && (entry.timesSolved as number) > 0
-    && typeof entry.bestMoves === 'number' && Number.isFinite(entry.bestMoves)
-    && typeof entry.firstSolvedAt === 'string' && typeof entry.lastSolvedAt === 'string'
-    && (entry.sightings === undefined || (Array.isArray(entry.sightings) && entry.sightings.every(isSighting)));
-}
-
-function isSighting(value: unknown): value is Sighting {
-  const sighting = value as Partial<Sighting> | null;
-  return !!sighting && typeof sighting.placeKey === 'string' && typeof sighting.placeName === 'string'
-    && Number.isFinite(sighting.lon) && Number.isFinite(sighting.lat);
+/** A stored entry with only JournalEntry's fields, or null when one it needs is missing or wrong. Old and unknown fields (sightings, before 2026-11) are left out; a bad badge count or class drops that field, not the animal. */
+function toEntry(value: unknown): JournalEntry | null {
+  if (!value || typeof value !== 'object') return null;
+  const { scientificName, commonName, timesSolved, bestMoves, firstSolvedAt, lastSolvedAt, className, sharpEyes } = value as Record<string, unknown>;
+  if (typeof scientificName !== 'string' || typeof commonName !== 'string' || !Number.isInteger(timesSolved) || (timesSolved as number) <= 0
+    || typeof bestMoves !== 'number' || !Number.isFinite(bestMoves) || typeof firstSolvedAt !== 'string' || typeof lastSolvedAt !== 'string') return null;
+  return {
+    scientificName, commonName, timesSolved: timesSolved as number, bestMoves, firstSolvedAt, lastSolvedAt,
+    ...(typeof className === 'string' ? { className } : {}),
+    ...(Number.isInteger(sharpEyes) && (sharpEyes as number) > 0 ? { sharpEyes: sharpEyes as number } : {}),
+  };
 }
 
 /** Stored JSON back to a journal; anything malformed is dropped rather than trusted. */
@@ -126,13 +100,10 @@ export function parseJournal(raw: string | null): Journal {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-    return Object.fromEntries(Object.entries(parsed).filter(([key, entry]) => isEntry(entry) && entry.scientificName === key)
-      // A bad badge count drops the count, not the animal.
-      .map(([key, entry]: [string, JournalEntry]) => {
-        if (entry.sharpEyes === undefined || (Number.isInteger(entry.sharpEyes) && entry.sharpEyes > 0)) return [key, entry];
-        const { sharpEyes: _bad, ...rest } = entry;
-        return [key, rest];
-      })) as Journal;
+    return Object.fromEntries(Object.entries(parsed).flatMap(([key, value]) => {
+      const entry = toEntry(value);
+      return entry && entry.scientificName === key ? [[key, entry] as const] : [];
+    }));
   } catch {
     return {};
   }

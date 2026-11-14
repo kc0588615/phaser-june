@@ -10,7 +10,7 @@ import {
 } from '@/clueGame/animalBoard';
 import { animalDebugSummary, animalSessionReducer, liveHighlights } from '@/clueGame/animalSession';
 import { clueFace } from '@/clueGame/clueFaces';
-import { MIN_PLACE_ANIMALS, type Place, type PlacesResponse } from '@/clueGame/places';
+import { MIN_PLACE_ANIMALS } from '@/clueGame/places';
 import type { CluePool, PoolSpecies } from '@/clueGame/pool';
 import { makeBook, poolFor, type Animal, type Book } from '@/clueGame/questionMatch';
 import { animalsFromPool } from '@/clueGame/questionMatchContent';
@@ -31,21 +31,10 @@ function urlSeed(): number | null {
   return Number.isInteger(fromUrl) && fromUrl > 0 && fromUrl <= 0xffff_ffff ? fromUrl : null;
 }
 
-async function loadPlace(continent: ContinentKey): Promise<Place | null> {
-  try {
-    const { places } = await getJson<PlacesResponse>('/api/places/');
-    return places.find(place => place.key === `continent:${continent}`) ?? null;
-  } catch (error) {
-    console.error('[AnimalBoard] Failed to load the place list; sightings stay off this session:', error);
-    return null;
-  }
-}
-
 interface Content {
   pool: CluePool;
   animals: Animal[];
   book: Book;
-  place: Place | null;
   continent: ContinentKey | null;
   /** Each seed animal's suspect set (seeds that can't make one are left out). */
   sets: Map<number, number[]>;
@@ -101,7 +90,6 @@ export function useAnimalSession() {
         const fetched = await getJson<Omit<CluePool, 'citations'> & Partial<Pick<CluePool, 'citations'>>>('/api/clue-game/pool/');
         const pool: CluePool = { ...fetched, citations: fetched.citations ?? {} };
         const animals = animalsFromPool(pool);
-        const place = requested ? await loadPlace(requested) : null;
         if (cancelled) return;
         const onContinent = requested ? poolFor(animals, requested) : [];
         const continent = onContinent.length >= MIN_PLACE_ANIMALS ? requested : null;
@@ -116,7 +104,7 @@ export function useAnimalSession() {
           setLoadError('Not enough animals that can be told apart yet.');
           return;
         }
-        const data: Content = { pool, animals, book, place: continent ? place : null, continent, sets };
+        const data: Content = { pool, animals, book, continent, sets };
         setContent(data);
         const resume = saved && saved.requested === requested && saved.session.round.rules.version === ANIMAL_RULES.version
           && roundStillFits(book, saved.session.round) ? saved : null;
@@ -288,7 +276,6 @@ export function useAnimalSession() {
   return {
     session, loadError, seed, rules: ANIMAL_RULES, recordedRound,
     pool: content?.pool ?? null,
-    place: content?.place ?? null,
     continent: content?.continent ?? null,
     markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut, rowOrder, setRowOrder,
   };

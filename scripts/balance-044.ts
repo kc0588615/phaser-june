@@ -6,7 +6,7 @@
 // refills or answers not yet earned, except the oracle, a diagnostic that knows the
 // mystery from the start. Plan 054: locker, autoguess and scribbler name early (scribbler pencils at random).
 //   node scripts/run-typescript.mjs scripts/balance-044.ts [--rounds 400] [--seed 44] [--places africa,asia]
-//     [--moves 30] [--order 24] [--board 7] [--witness 0.03] [--stars 6,13] [--players careful,novice,expert,reader,guesser,random,oracle,locker,autoguess,scribbler,dabbler] [--dab 1]
+//     [--moves 30] [--order 20] [--board 7] [--witness 0.03] [--stars 8,14] [--players careful,novice,expert,reader,guesser,random,oracle,locker,autoguess,scribbler,dabbler] [--dab 1]
 //     [--explain N]   (print round N's suspects, clue table and notes instead)
 //     [--scout on|off] [--knows size,covering]   (plan 045 scouting, on in the rules: suspects' answers start hidden
 //     and a move's clear next to an unmarked tile shows them; careful and reader know the --knows traits on sight,

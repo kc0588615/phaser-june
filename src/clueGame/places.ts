@@ -1,5 +1,5 @@
 // Places to explore from the home globe (GET /api/places: the continents of the
-// clue_match_places view in db/schema.sql), plus small pure helpers for the globe and the journal.
+// clue_match_places view in db/schema.sql), plus small pure helpers for the globe.
 
 export type PlaceKind = 'country' | 'wildlife_area' | 'continent';
 
@@ -32,7 +32,7 @@ export interface PlacesResponse {
   animals: PlaceAnimal[];
 }
 
-/** A continent opens once it has this many animals (plan 041); a round shows 8 of them. */
+/** A continent opens once it has this many animals (plan 041); a round's suspects (5) are drawn from them. */
 export const MIN_PLACE_ANIMALS = 12;
 
 /** Discovery marker color by animal group: green for amphibians and reptiles, amber for mammals. */
@@ -48,25 +48,4 @@ export function classColor(className: string | null | undefined): string {
     default:
       return '#6fa8bc';
   }
-}
-
-/**
- * Where a discovery marker goes: inside the place's box, spread by species so
- * several animals from one place don't sit on one point. Deterministic.
- */
-export function sightingPoint(place: Pick<Place, 'bbox' | 'center'>, speciesId: number): [number, number] {
-  const [west, south, east, north] = place.bbox;
-  const angle = ((speciesId * 137.508) % 360) * (Math.PI / 180); // golden-angle spread
-  const radius = 0.15 + ((speciesId * 7919) % 100) / 400; // 0.15-0.4 of the half-box
-  const lon = place.center[0] + Math.cos(angle) * radius * (east - west) / 2;
-  const lat = place.center[1] + Math.sin(angle) * radius * (north - south) / 2;
-  return [round(clamp(lon, west, east)), round(clamp(lat, south, north))];
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-function round(value: number): number {
-  return Math.round(value * 1000) / 1000;
 }

@@ -9,8 +9,8 @@
 // they travel and leave off it; the round is decided once the whole move settles.
 // Release every look-alike and the last one is found; release the mystery and it
 // escapes. Plan 053: the player may name the mystery once a round, any time (even out
-// of moves): right is a find (one star), wrong loses the round. Plan 054: a right name also scores the player's pencil marks (a bonus, once an animal is ruled out). Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
-// by the balance bot (scripts/balance-044.ts) and, later, the game.
+// of moves): right is a find (one star), wrong loses the round. Plan 054: a right name also scores the player's pencil marks (a bonus, once an animal is ruled out). Pure: no DOM, no Phaser, no randomness except the rng passed in. The game
+// (useAnimalSession.ts) and the balance bot (scripts/balance-044.ts) both play it.
 import type { Cell, ExplodePhase, Special } from '@/game/BoardModel';
 import type { GemType } from '@/game/constants';
 import {
@@ -470,12 +470,8 @@ export function sharpEye(state: AnimalRound): boolean {
  * pencilled (spread raises the stake both ways) and by the fewest animals still in this round, the named one too (owner:
  * naming with more left is a bigger gamble, so it pays more; 054-1: the fewest, so taking marks back can't raise it). It may go below 0, down to -cap; capped so a lucky name can't out-pay
  * board play (plan 053). A floor at 0, or multiplying gains only, made random pencilling pay (balance bot).
+ * Returns the bonus with how many pencils counted and how many were wrong (Sharp eye: enough, none wrong).
  */
-export function pencilBonus(state: AnimalRound, pencil: Pencil): number | null {
-  return scorePencils(state, pencil)?.bonus ?? null;
-}
-
-/** `pencilBonus`, with how many pencils counted and how many were wrong (Sharp eye: enough, none wrong). */
 function scorePencils(state: AnimalRound, pencil: Pencil): { bonus: number; counted: number; wrong: number } | null {
   // 054-1: the fewest still in this round, not now (Codex: rule out four, take three back, and it paid x4).
   const stillIn = state.fewestIn ?? state.suspects.length;

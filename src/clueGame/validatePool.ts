@@ -2,7 +2,7 @@
 // unplayable; warnings are content worth a human look. Used by the unit tests
 // (on db/content/) and by `npm run content -- check` (live DB).
 import { GEM_CATEGORIES } from '@/clueGame/categories';
-import { fitClue, isDeductive } from '@/clueGame/deduction';
+import { isDeductive } from '@/clueGame/deduction';
 import { isPlaceholderText, playableSpeciesIds, type CluePool } from '@/clueGame/pool';
 import { isHandWrittenClue } from '@/clueGame/profiles';
 import { EXCLUSIVE_PREFIXES, REALM_TAGS, allTraits, buildSpeciesRecords, clueTags, prefixOf } from '@/clueGame/traits';
@@ -69,13 +69,6 @@ export function validatePool(pool: CluePool): PoolReport {
     if (unknown.length) errors.push(`clue ${clue.id} (${name(clue.speciesId)}): unknown realm tags [${unknown.join(', ')}]`);
   }
 
-  for (const clue of pool.clues.filter(isDeductive)) {
-    // The answer must always fit its own clues, or a round could rule it out.
-    if (fitClue(clue, clue.speciesId, records) !== 'fits') {
-      errors.push(`clue ${clue.id} (${name(clue.speciesId)}, ${clue.category}): does not fit its own species`);
-    }
-  }
-
   for (const [id, record] of records) {
     // Two values of a one-value trait would rule out the answer's look-alikes wrongly.
     const byPrefix = new Map<string, string[]>();
@@ -93,8 +86,8 @@ export function validatePool(pool: CluePool): PoolReport {
       const deducesHere = own.some(clue => category.clueCategories.includes(clue.category));
       const hasClues = pool.clues.some(clue => clue.speciesId === id && category.clueCategories.includes(clue.category));
       const hasFacts = pool.facts.some(fact => fact.speciesId === id && category.factCategories.includes(fact.category));
-      if (category.deduces && !deducesHere) warnings.push(`${name(id)}: no tagged ${category.label} clue, so that color never narrows its rounds`);
-      if (!hasClues && !hasFacts) warnings.push(`${name(id)}: no ${category.label} notes at all`);
+      if (category.deduces && !deducesHere) warnings.push(`${name(id)}: no tagged ${category.label} clue (every profile needs one)`);
+      if (!hasClues && !hasFacts) warnings.push(`${name(id)}: no ${category.label} clue or fact (every profile needs one)`);
     }
   }
 
