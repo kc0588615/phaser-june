@@ -131,7 +131,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -139,6 +139,24 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+On `fb6864d0` (= `origin/main` `3436aac5` + mission start), 2026-11-14. State folder `S=/srv/critter-ai/agent-state/missions/rules-cleanup`.
+
+- **M6 merged:** `src/clueGame/solveReport.ts` absent on `origin/main`. OK.
+- **Install:** `npm ls --depth=0` clean (deps already installed). No migrations (schema baseline only; no DB change in scope).
+- **typecheck / lint:** exit 0 / exit 0.
+- **`npm test`:** 61/61 pass (`$S/test-before.txt`).
+- **Bot:** `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 100 --seed 44` -> `$S/bot-before.txt` (28 lines, rules 055-0, exit 0, ~56 s).
+- **Content check (dev copy, guard passed):** `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.` / `0 errors, 0 warnings.` -> `$S/content-check-before.txt`.
+- **Baseline E2E (dev copy):** `npm run e2e:fresh` **1575/1575 checks**, seed 7, place `continent:africa` (27 animals), 4 rounds. Artifact `$S/baseline-e2e/` (log `$S/e2e-baseline.log`).
+- **Fresh greps** (all on `origin/main`, full output `$S/baseline-greps.txt`): the D8, D14, S10 and S16 "Roots checked" / "Prove it's safe first" greps plus a `-w` grep per deleted name (`. ':!plans' ':!docs' ':!src/clueGame/questionMatch.ts'`). **No new reader of any name this mission deletes.**
+  - `clueGame/questionMatch'` importers: 13 files (balance-044, animalBoard, animalSession, gems, questionMatchContent, signs, AnimalSheets, CategoryMark, EvidenceGrid, useAnimalSession, FactsWithSources, ClueBoardScene (`DEFAULT_RULES` only), animalBoard.test (`makeBook`, `poolFor`)); none takes a name that goes.
+  - Non-TS reach (`*.mjs *.cjs *.js *.json *.yml *.sh Dockerfile .github .githooks deploy .claude .agents .kiro`): 0 hits.
+  - 0 outside hits: pickRound, newRound, chargesEarned, familyTreeQuote, buyFamilyTreeStep, questionsFor, splitOf, canAsk, scoreSolve, RoundState, RoundStatus, LogEntry, MatchedGroup, FamilyTreeQuote, ScorePart, GEM_KINDS, autoAsk, leadQuestions, revealStep, canTellApart, isOver, PREFIX_ORDER.
+  - Only own-file hits: `applyMatches` (ClueBoardScene.ts:284 comment, M8's), `GEM_OF` (gems.ts:6), `pencilBonus(` (animalBoard.ts:474), `evaluateClue`/`usefulCategories` (deduction.ts:45,53), `gemCategory`/`BY_GEM` (categories.ts:37-40), `CLUE_GAME_GEM_TYPES` (categories.ts:35), `startTrail` (animalSession.ts:122), `OTHERS` (testPool.ts:61), `redListUrl`/`traitSources`/`redListSource` (questionMatchContent.ts:78-141). `testPool.ts` is imported only by `citations.test.ts` and `validatePool.test.ts`, both for `clue` and `pool`. `hash32`/`neverAsked` have other importers (animalBoard.ts, seededRng, useAnimalSession, bot): only questionMatch.ts's imports go.
+  - `fitClue|ClueFit`: deduction.ts:13,30,45,46, validatePool.ts:5,74. `GEM_CATEGORIES`: categories.ts:24,35,37, validatePool.ts:4,92. `.(shortLabel|deduces|clueCategories|factCategories)`: validatePool.ts:93-96 only. `never narrows|notes at all` in docs/AGENTS.md: 0.
+  - Sightings in code: journal.ts (4,19,25,39,44,55,78,84-89,100,114-118), places.ts:57 `sightingPoint`, AnimalGame.tsx:15,300-303, useAnimalSession.ts:39, useJournal.ts:5,22,62, journal.test.ts:20. Non-TS: 0. Docs: `.claude/skills/playtest/SKILL.md:50` ("With `?place=`, a find adds a sighting …") and `docs/CLUE_MATCH.md:10` ("Only continents become sightings: …", **not named in Goal**; for the architect). M6/M3 already removed the skill's "journal's sightings in localStorage" line.
+  - `ANIMAL_BOARD_PAPER` pointers: `AGENTS.md:51`, `docs/CLUE_MATCH.md:3`, `docs/CLUE_MATCH.md:51`, `.claude/skills/playtest/SKILL.md:40` (line numbers shifted from the audit's).
 
 ## Architecture
 
@@ -159,5 +177,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-14 19:47 UTC · Baseline: greps clean (no new readers), typecheck/lint 0, test 61/61, bot + content check saved, E2E 1575/1575 (dev copy).
 
 ## Summary
