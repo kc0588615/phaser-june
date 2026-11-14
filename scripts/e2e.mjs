@@ -12,7 +12,7 @@
 //
 //   npm run e2e:fresh  starts its own dev server (scripts/e2e-fresh.mjs)
 //   npm run e2e        against a running `npm run dev`. env: E2E_BASE_URL, E2E_SEED (7), E2E_RESUME_SEED (7), E2E_ROUNDS (4), E2E_PLACE (a continent key, e.g. continent:africa), E2E_CPU_THROTTLE (slow Chrome down N times, like a CI runner), CHROME_PATH
-import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { openPage, startBrowser } from './cdp.mjs';
@@ -112,6 +112,8 @@ async function main() {
     const { sessionId, page, evaluate, waitFor } = await openPage(browser);
     if (CPU_THROTTLE > 1) await page('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE });
 
+    // Every request the page makes to the app, in order (the network check slices it per load).
+    const requests = [];
     browser.on(message => {
       if (message.sessionId !== sessionId) return;
       const { method, params } = message;
@@ -123,6 +125,8 @@ async function main() {
         report.failedRequests.push(`${params.response.status} ${params.response.url}`);
       } else if (method === 'Network.loadingFailed' && !params.canceled) {
         report.failedRequests.push(`${params.errorText} (${params.type})`);
+      } else if (method === 'Network.requestWillBeSent' && params.request.url.startsWith(BASE)) {
+        requests.push(params.request.url);
       }
     });
     await page('Page.enable');
@@ -2002,13 +2006,15 @@ async function main() {
     check('the sort: a run freezes a sorted order at a round\'s end', sortSaw.frozenOutOfOrder, JSON.stringify(sortSaw));
 
     // 3. The Field Journal lists the finds (and right names at the end of moves).
-    const journal = await evaluate(async () => {
+    // Opens it from the menu and reads its "N of M animals identified" line.
+    const fieldJournalText = () => evaluate(async () => {
       document.querySelector('button[aria-label="Menu"]')?.click();
       await new Promise(resolve => setTimeout(resolve, 250));
       [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Field journal')?.click();
       await new Promise(resolve => setTimeout(resolve, 1200));
       return document.querySelector('[role=dialog] #journal-title')?.nextElementSibling?.textContent ?? '';
     });
+    const journal = await fieldJournalText();
     check('the journal counts the animals found (by release or by name)', journal.startsWith(`${journalFinds.size} of`), `${journal} (expected ${journalFinds.size})`);
     await screenshot('05-journal.png');
     let journalSources = await checkSources('journal', JOURNAL, false);
@@ -2355,6 +2361,51 @@ async function main() {
           }
         });
       }
+    }
+
+    // Plan 2026-11-14-rules-cleanup (D14). Last, on their own loads, so the checks above keep their counts.
+    // A ?seed= game is never resumed, so its find is always recorded.
+    {
+      const fresh = `${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(report.place.key)}`;
+      // A game on a continent needs the pool, not the place list (once only used for sightings on the globe).
+      const from = requests.length;
+      await goto(fresh);
+      await waitFor(boardReady, 'a dealt round', 60_000);
+      await sleep(1500);
+      const paths = requests.slice(from).map(url => new URL(url).pathname);
+      check('a game on a continent asks nothing of /api/places/', paths.some(p => p.startsWith('/api/clue-game/pool')) && !paths.some(p => p.startsWith('/api/places')), JSON.stringify(paths.filter(p => p.startsWith('/api/'))));
+
+      // A journal saved before 2026-11 (with sightings, one malformed, and an unknown field) keeps every find.
+      const oldJournalRaw = readFileSync(path.join(process.cwd(), 'tests/clueGame/old-journal.json'), 'utf8');
+      const oldJournal = JSON.parse(oldJournalRaw);
+      const oldNames = Object.keys(oldJournal);
+      const poolNames = new Set([...poolSpecies.values()].map(species => species.scientificName));
+      const notInPool = oldNames.filter(name => !poolNames.has(name));
+      await evaluate(raw => { sessionStorage.removeItem('cc:explore:game'); localStorage.clear(); localStorage.setItem('clue-match:journal:v1', raw); }, oldJournalRaw);
+      await goto(fresh);
+      await waitFor(boardReady, 'a dealt round', 60_000);
+      await sleep(1500);
+      const listed = await fieldJournalText();
+      check('an old journal (saved before 2026-11) loads every find: the Field Journal counts all of them', oldNames.length >= 3 && notInPool.length === 0 && listed.startsWith(`${oldNames.length} of`), JSON.stringify({ listed, names: oldNames, notInPool }));
+      // Same seed, same deal: a fresh load closes the journal without touching storage.
+      await goto(fresh);
+      await waitFor(boardReady, 'a dealt round', 60_000);
+      await sleep(1500);
+      const { mysteryId: oldJournalMystery } = await evaluate(() => window.__cc.clue());
+      await evaluate(id => window.__nameIt(id), oldJournalMystery);
+      await waitFor(selector => document.querySelector(selector) && true, 'the round-end card', 10_000, CARD);
+      await sleep(1000);
+      const afterFind = JSON.parse(await evaluate(() => localStorage.getItem('clue-match:journal:v1')) ?? '{}');
+      const foundName = poolSpecies.get(oldJournalMystery).scientificName;
+      const FIELDS = ['timesSolved', 'bestMoves', 'firstSolvedAt', 'lastSolvedAt', 'className', 'sharpEyes'];
+      const changed = oldNames.flatMap(name => {
+        const before = oldJournal[name], after = afterFind[name];
+        if (!after) return [`${name}: missing`];
+        const fields = name === foundName ? ['firstSolvedAt'] : FIELDS;
+        return fields.filter(field => before[field] !== after[field]).map(field => `${name}: ${field} ${before[field]} -> ${after[field]}`);
+      });
+      if ((afterFind[foundName]?.timesSolved ?? 0) !== (oldJournal[foundName]?.timesSolved ?? 0) + 1) changed.push(`${foundName} (found): timesSolved ${oldJournal[foundName]?.timesSolved ?? 0} -> ${afterFind[foundName]?.timesSolved}`);
+      check('after a find, every old journal entry is kept unchanged (the find counted once)', changed.length === 0, JSON.stringify({ found: foundName, changed }));
     }
 
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));

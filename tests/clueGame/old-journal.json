@@ -1,0 +1,78 @@
+{
+  "Okapia johnstoni": {
+    "scientificName": "Okapia johnstoni",
+    "commonName": "Okapi",
+    "timesSolved": 2,
+    "bestMoves": 12,
+    "firstSolvedAt": "2026-09-20T10:00:00.000Z",
+    "lastSolvedAt": "2026-10-05T09:30:00.000Z",
+    "className": "MAMMALIA",
+    "sightings": [
+      {
+        "placeKey": "continent:africa",
+        "placeName": "Africa",
+        "lon": 20.5,
+        "lat": 4.25
+      },
+      {
+        "placeKey": "country:COD",
+        "placeName": "Dem. Rep. Congo",
+        "lon": 23.5,
+        "lat": -2.75
+      }
+    ],
+    "sharpEyes": 1
+  },
+  "Trichobatrachus robustus": {
+    "scientificName": "Trichobatrachus robustus",
+    "commonName": "Hairy Frog",
+    "timesSolved": 1,
+    "bestMoves": 14,
+    "firstSolvedAt": "2026-10-12T16:45:00.000Z",
+    "lastSolvedAt": "2026-10-12T16:45:00.000Z",
+    "className": "AMPHIBIA",
+    "sightings": [
+      {
+        "placeKey": "continent:africa",
+        "placeName": "Africa",
+        "lon": 10.25,
+        "lat": 5.5
+      }
+    ],
+    "sharpEyes": 1
+  },
+  "Canis simensis": {
+    "scientificName": "Canis simensis",
+    "commonName": "Ethiopian Wolf",
+    "timesSolved": 1,
+    "bestMoves": 9,
+    "firstSolvedAt": "2026-10-20T08:15:00.000Z",
+    "lastSolvedAt": "2026-10-20T08:15:00.000Z",
+    "className": "MAMMALIA",
+    "sightings": [
+      {
+        "placeKey": "continent:africa",
+        "placeName": "Africa",
+        "lon": 39.5,
+        "lat": 7.75
+      }
+    ],
+    "sharpEyes": 1
+  },
+  "Addax nasomaculatus": {
+    "scientificName": "Addax nasomaculatus",
+    "commonName": "Addax",
+    "timesSolved": 3,
+    "bestMoves": 15,
+    "firstSolvedAt": "2026-09-12T12:00:00.000Z",
+    "lastSolvedAt": "2026-10-28T18:20:00.000Z",
+    "className": "MAMMALIA",
+    "sightings": [
+      {
+        "placeKey": "x"
+      }
+    ],
+    "sharpEyes": 2,
+    "legacy": true
+  }
+}

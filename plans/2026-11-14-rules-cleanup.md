@@ -403,7 +403,7 @@ Each step is one session and one commit, `rules-cleanup: S<n> · <title>`, toget
     - then `node -e 'const { GEM_CATEGORIES } = require("/tmp/rules-cleanup-scratch/categories.cjs"); console.log(JSON.stringify(GEM_CATEGORIES.map(({ label, clueCategories, factCategories, deduces }) => ({ label, clueCategories, factCategories, deduces }))))' > $S/categories-before.json` (8 rows).
   - **Check:** typecheck and lint pass; `npm test` is **64/64** (61 + 3). Each new case passes on today's code. If one fails, the test is wrong: fix the test.
 
-- [ ] S2 · D14 tests first: the old-journal fixture, its unit case and the two E2E checks, all seen to FAIL on today's code
+- [x] S2 · D14 tests first: the old-journal fixture, its unit case and the two E2E checks, all seen to FAIL on today's code
   - **Fixture** `tests/clueGame/old-journal.json`, written by today's `recordSolve`:
     - Run `git fetch origin --prune`. Then `git diff origin/main -- src/clueGame/journal.ts src/clueGame/places.ts` must print nothing.
     - Bundle: `node_modules/.bin/esbuild src/clueGame/journal.ts --bundle --platform=node --format=cjs --outfile=/tmp/rules-cleanup-scratch/journal.cjs`.
@@ -660,6 +660,9 @@ The journal parser can lose player data. It, `mergeServerJournal` and the conten
 
 ## Decisions
 
+- S2: the fixture check reloads `fresh` after reading the Field Journal, before the find, instead of clicking "Close journal": nothing else in the E2E closes the journal and plays on, and a `?seed=` load deals the same round with storage untouched. One more page load, no extra `check()`.
+- S2: the new E2E block sits in its own `{ }` scope: `fresh` and `listed` already name other things in `main`.
+
 ## Log
 
 - 2026-11-14 19:47 UTC · Baseline: greps clean (no new readers), typecheck/lint 0, test 61/61, bot + content check saved, E2E 1575/1575 (dev copy).
@@ -669,5 +672,6 @@ The journal parser can lose player data. It, `mergeServerJournal` and the conten
 - 2026-11-14 20:35 UTC · Revision: none needed (no MUST-FIX, no REJECT). Plan-only.
 - 2026-11-14 20:24 UTC · Steps: `planner` wrote S1–S7 (tests first; S2 red on purpose: 1 unit + 3 E2E), Verification (64 unit, 1578 E2E), Release smoke, Failure modes. Plan-only.
 - 2026-11-14 20:27 UTC · S1: validatePool.test.ts +2 cases (two-value size error; 15-warning pin by animal/group/kind), journal.test.ts +1 (mergeServerJournal rule, idempotent), all green on today's code. `npm test` 64/64, typecheck 0, lint 0. `$S/categories-before.json` saved (8 rows, 4 fields).
+- 2026-11-14 20:44 UTC · S2: fixture `tests/clueGame/old-journal.json` (today's `recordSolve` via `$S/make-old-journal.cjs`: Okapi 2 solves/2 sightings, Hairy Frog, Ethiopian Wolf; Addax by hand with `[{ "placeKey": "x" }]` + `legacy`), its unit case, 2 E2E checks = **3 `check()` calls** (network 1, fixture 2): later E2E expects **1578**. Red on today's code as planned: `npm test` 64 pass / 1 fail (the fixture case: `deepStrictEqual`, actual lacks `Addax nasomaculatus` and keeps `sightings`; `$S/test-s2-red.txt`). E2E (dev copy) **1575/1578**, only the 3 new fail: network `["/api/clue-game/pool/","/api/places/"]`; journal `"3 of 76 animals identified"` (4 names, notInPool []); after the find (Hairy Frog) `changed: ["Addax nasomaculatus: missing"]`. Artifact `$S/e2e-s2-red/`, log `$S/e2e-s2.log`. typecheck 0, lint 0.
 
 ## Summary
