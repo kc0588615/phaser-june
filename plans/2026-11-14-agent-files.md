@@ -2,7 +2,7 @@
 mission: agent-files
 project: critter-connect
 branch: agent/agent-files
-status: active
+status: done
 started: 2026-11-14 10:39 UTC
 ---
 
@@ -555,4 +555,19 @@ SHOULD-CONSIDER:
 - 2026-11-14 11:19 UTC · S8 CODING_STANDARDS `:5` drops TiTiler; playtest `:8` MCP note, `:34` no habitat picture, `:40` v4 → v5, `:42` e2e exception, `:48` nameIt rule, 2 bridge rows after validMoves(). Text replaced via `python3 -I` exact-match (each old string asserted unique) instead of Edit. Hunks `-5 +5`; `-8`, `-34`, `-40`, `-42`, `-48`, `-65,0 +66,2` as V7; greps 3, 4 exit 1; facts hold (AnimalSheets how-to:v5, debugBridge touchedBy/nearColorsBy, animalBoard nameIt). typecheck 0, lint 0.
 - 2026-11-14 11:21 UTC · Astra code review (`--code origin/main`): APPROVE, MUST-FIX none; 1 SHOULD-CONSIDER (fetch before PR; release rebases on fresh origin/main) for the Summary. Plan-only; no checks needed.
 
+- 2026-11-14 11:24 UTC · Final Verification V1-V9 on e5b517db: all pass (typecheck/lint 0, 61/61 tests; 11 folders; lock 11/6/6; hook cases 5, 6, 10, 11 0 → 2, 17 unchanged, live Write probes refused; CI step 0 clean / 1 staged; greps 0 hits; hunks as V7; link ok; diff scope 93 D, 34 folders, none out of scope). Artifacts in `/srv/critter-ai/agent-state/missions/agent-files/`. No E2E per brief.
+
 ## Summary
+
+Audit M3 done (D1, D17, A15, S1). Final Verification passes; artifacts in `/srv/critter-ai/agent-state/missions/agent-files/` (`*-after.log`, `lock-after.txt`, `guard-after.txt`, `ci-guard.txt`, `greps-after.txt`, `hunks.txt`, `link.txt`, `diff-scope.txt`). No E2E (brief: nothing shipped changes); CI's `e2e` runs on the PR.
+
+- **Deleted:** 34 skill folders in `.agents/skills/` (93 files: ask-matt, claude-handoff, codebase-design, domain-modeling, git-guardrails-claude-code, grill-me, grill-with-docs, grilling, handoff, implement, implement-spec, improve-codebase-architecture, loop-me, migrate-to-shoehorn, pr, prototype, research, resolving-merge-conflicts, scaffold-exercises, setup-matt-pocock-skills, setup-pre-commit, setup-ts-deep-modules, tdd, teach, to-questionnaire, to-spec, to-tickets, triage, wait-what, wayfinder, wizard, writing-beats, writing-fragments, writing-shape); `.codex`, `.kiro/`, `.understand-anything/`; `.gitignore:49-50`.
+- **Kept (untouched):** graphical-ui, graphical-convert, graphical-audit, smux, react-doctor, improve, frontend-design, code-review, diagnosing-bugs, writing-for-agents, retro. `skills-lock.json`: version 1, 6 entries (code-review, diagnosing-bugs, frontend-design, retro, smux, writing-for-agents); 204 lines removed, 0 added. `lock-hash.py`: `folders 11 | locked 6 | v1 matches 6`, no orphan entries; not in lock: the 3 graphical-*, improve, react-doctor.
+- **References corrected:** `docs/agents/issue-tracker.md` (PR-triage + Wayfinding sections dropped), `docs/agents/domain.md:5,13,47` (no ADRs, deleted skills), `AGENTS.md:55` (EventBus `EventPayloads`; screens import `sfx.ts`/`debugBridge.ts` directly), `:56` (connect.ts exceptions `scripts/db`, `import-natural-earth.mjs`), `:92` (no ADRs), `CODING_STANDARDS.md:5` (no TiTiler), playtest skill `:8,34,40,42,48` + 2 bridge rows (how-to v5, `nameIt`, `touchedBy`/`nearColorsBy`). Vendored note only: `.agents/skills/code-review/SKILL.md:13` still names the deleted setup skill (reinstalled from the lock).
+- **Hook** (`.claude/hooks/guard-edits.sh`): before → after, only `deploy/app.env`, root `app.env`, content naming the schema file, and a `*.prisma` file with a plain body go 0 → 2; the other 17 cases unchanged (`.env*` 2, client imports 2, `deploy/app.env.example` 0, Supabase prose 0, normal `src/` edit 0, `edits[]` 0). Live Write probes of `app.env` and `x.prisma` refused with the hook's messages.
+- **CI:** new step "No Prisma schema files" in `ci.yml`, tried in a throwaway worktree: 0 on the clean tree, 1 with a staged `prisma/*.prisma` (path printed); existing Supabase/Prisma step 0.
+- **Link:** `.claude/skills/writing-for-agents` → `../../.agents/skills/writing-for-agents` (resolves to the existing folder; mode 120000, like `retro`).
+- **Reviews:** Fable APPROVE, Astra architecture APPROVE, Astra code review APPROVE (0 MUST-FIX; SHOULD-CONSIDER "fetch before PR" handled: the session fetch works, release rebases on fresh `origin/main`).
+- **Notes for the owner (not edited, per decision rules):** `src/game/EventBus.ts:2` "Neither side imports the other" is false like the old `AGENTS.md:55`; `docs/agents/domain.md:11,49-53` still describe ADRs (template text); `.agents/skills/smux/references/tmux.md:10` links a missing `../tmux-bridge/SKILL.md`; in your WSL clone, any `.understand-anything/` output now shows untracked, delete by hand; 3 scripts use `scripts/connect.ts`, not 4; an `edits[]` payload still passes the hook.
+- **No production content build needed:** no content or game file changes.
+- Release (deploy + smoke): see `## Release`.
