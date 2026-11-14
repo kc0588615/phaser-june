@@ -83,7 +83,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -311,7 +311,144 @@ SHOULD-CONSIDER:
 
 ## Steps
 
+**Every step and the Verification start like this.** Sessions are fresh, so set these again each time:
+- Run from `/srv/critter-ai/worktrees/next-advisory`. `git status` must be clean (finish or revert an interrupted step first).
+- Run `git fetch origin --prune`, then set `M=/srv/critter-ai/agent-state/missions/next-advisory` and `BASE=$(git merge-base origin/main HEAD)`.
+  - `$BASE` is `origin/main` as long as the branch is current. Where Target design says `origin/main`, use `$BASE`. That keeps the guards correct if `main` moves before the release rebase.
+- Run heavy jobs (install, build, any E2E, the probe) one at a time, with nothing else heavy running on the server. Give any E2E a Bash timeout of 1800000 ms.
+- Reach the dev copy only through block B below. Never print a connection string or `cat` the dev-copy file.
+- When a check fails, follow Target design, Risks and fallbacks, and record it under Decisions. Never change `next.config.mjs` or `eslint.config.mjs`.
+- When the step is done: check it off, add one Log line, commit, push.
+
+**Blocks used below.** Each is written once here.
+- **A · Guards** (Target design step 6, with `$BASE`). Each must print what its comment says:
+  ```
+  git diff -U0 $BASE -- package.json | grep -c '^[-+] '        # 4
+  git diff --quiet $BASE -- next.config.mjs && echo config ok    # config ok
+  git diff --name-only $BASE    # only package.json, package-lock.json, this plan, AGENTS.md (if rewritten), code fixes listed under Decisions
+  npm ls --depth=0 >/dev/null && echo tree ok                    # tree ok
+  git show $BASE:package-lock.json > /tmp/lock.base.json         # then run Target design step 6's node lock check: prints `lock ok`
+  ```
+- **B · Game E2E on the dev copy.** This is the brief's block, with its output sent to a log:
+  ```
+  ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+    [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+    CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh ) > /tmp/na-e2e.log 2>&1; echo "e2e:fresh exit $?"
+  ```
+  - It passes only if it exits 0 and `tail -2 /tmp/na-e2e.log` ends with `N/N checks passed`.
+  - If the log has no `> critter-connect@… e2e:fresh` line, the guard failed. Stop, add a handoff item (`Blocks:` this step), and don't paste psql's error anywhere.
+- **C · Site E2E.** First check `ss -ltn | grep -q ':3101 ' && echo busy`. It must print nothing. If it prints `busy`, set `P` to a free port of 3105 or higher (check it with `ss -ltn`).
+  ```
+  P=3101
+  ( setsid python3 -m http.server $P -b 127.0.0.1 -d out/site >/tmp/na-site.log 2>&1 & pid=$!; trap 'kill -- -$pid' EXIT
+    curl -sf --retry 30 --retry-connrefused --retry-delay 1 -o /dev/null http://127.0.0.1:$P/ || exit 1
+    E2E_SITE_URL=http://localhost:$P CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:site ) > /tmp/na-e2e-site.log 2>&1; echo "e2e:site exit $?"
+  ```
+  - It must exit 0, with all checks passed (`tail -3 /tmp/na-e2e-site.log`). The artifact is `e2e-artifacts/<run>-site/`.
+- **D · Production probe.** This is Target design step 8's block, unchanged. Run it as `( … ) > /tmp/na-probe.log 2>&1; echo "probe exit $?"`.
+  - It passes only if it exits 0 and `/tmp/na-probe.log` is exactly `probe ok`.
+  - Port 3100 must be free beforehand (`ss -ltn`), and free again afterwards.
+  - If another mission holds 3100, replace `3100` in both places (`-p` and `B=`) with a free port of 3105 or higher.
+  - Read `/tmp/na-start.log` and record any error or warning under Decisions.
+- **E · Screenshot compare** against the baseline, for a run folder `D`:
+  ```
+  diff <(cd $M/baseline-e2e && ls *.png) <(cd $D && ls *.png)    # nothing: same screenshot set
+  diff <(grep -oE '^  round.*|[0-9]+/[0-9]+ checks passed' $M/baseline-e2e/run.log) <(grep -oE '^  round.*|[0-9]+/[0-9]+ checks passed' $D/run.log)    # nothing: seed 7 plays the same run
+  for f in $M/baseline-e2e/*.png; do cmp -s "$f" "$D/${f##*/}" || echo "${f##*/}"; done    # files that differ byte for byte
+  ```
+  - Open each pair from that last list with Read, in these groups:
+    - Board: `02-board.png`, `02-board-320x720.png`, `02-board-375x548.png`.
+    - Sheets: `02a-picked`, `02c-notes`, `02d-field-guide`, `02f-signs-page-1-light`, `05-journal`.
+    - Round-end card: `04-round-1-end`, `03-round-3-out-of-moves`, `06-end-after-reload`.
+  - These must look the same. The globe shots (`01*`, `07-globe-found`) may differ, because the globe spins.
+  - Record in the Log how many files differ and what the differences were.
+  - If the round lines or the check count differ, explain why from `report.json` before you check the step off.
+
+- [ ] **S1. Upgrade, the static checks and the site E2E.**
+  - Changes `package.json` and `package-lock.json`, plus any code fix from Target design, Expected code changes.
+  1. Run Target design steps 2-4: `npm install next@16.4.6 eslint-config-next@16.4.6`, then `npm update source-map-js`, then `npm run clean`.
+  2. Record `npm ls next sharp shell-quote source-map-js` and `npm audit --omit=dev` in this step's Log line. Expect:
+     - `next@16.4.6`, also deduped under `@clerk/nextjs`.
+     - `sharp@0.35.5`.
+     - `source-map-js@1.2.2` under both `postcss` and `@tailwindcss/node`.
+     - `shell-quote` empty.
+     - `found 0 vulnerabilities`.
+     - A high or critical advisory left: see Risks and fallbacks.
+  3. Run block A.
+  4. Run `npm run typecheck && npm run lint && npm test`, then `npm run build > /tmp/na-build.log 2>&1`.
+     - The build must exit 0, and `grep -niE 'warn|deprecat' /tmp/na-build.log` must print nothing (Baseline had no warnings). Record anything new under Decisions.
+     - Lint or type findings: follow Expected code changes and list each fix under Decisions. If that isn't a small change, follow Risks and fallbacks.
+  5. Run `npm run site:build`, then block C. Move the artifact to the intermediate folder: `mkdir -p $M/e2e-s1 && mv e2e-artifacts/*-site $M/e2e-s1/site`.
+  6. If you fixed code, run block A again. Commit `package.json`, `package-lock.json`, this plan and any code fix, then push.
+
+- [ ] **S2. Game E2E on the dev copy, compared with the baseline.**
+  - Changes only `AGENTS.md`, and only if `next dev` rewrites it.
+  1. Run block B. It must pass.
+  2. Save the run as the one intermediate folder:
+     ```
+     R=$(ls -td e2e-artifacts/*-seed7 | head -1); rm -rf $M/e2e-s1; mkdir -p $M/e2e-s2
+     cp -r "$R"/. $M/e2e-s2/; cp /tmp/na-e2e.log $M/e2e-s2/run.log; rm -rf e2e-artifacts/*
+     ```
+  3. Run block E with `D=$M/e2e-s2`.
+  4. Run `git status --porcelain`. Only `AGENTS.md` may show up, and `git diff -U0 AGENTS.md` must be exactly one line changing from `# This is NOT the Next.js you know` to `## This is NOT the Next.js you know` (Finding 4).
+     - If it was rewritten: commit it with the plan. Add a Decision saying it is the one file outside the brief's Scope, written by `next dev` and never edited by hand.
+     - If it wasn't rewritten: say so in the Log.
+     - Any other tracked change: stop and find out why.
+  5. Commit, then push.
+
+- [ ] **S3. Production probe under `next start`** (Astra SC1 and the proxy change).
+  - Changes no code.
+  1. Run `npm run build`, so that `.next` comes from this commit.
+  2. Run block D. It must print `probe ok`.
+  3. Run `cp /tmp/na-probe.log /tmp/na-start.log $M/e2e-s2/`.
+  4. If a check fails, record which one and its output under Decisions.
+     - JSON, journal or image failures are a Next regression. Follow Risks and fallbacks (16.4.5), then uncheck S1-S3 and redo them.
+     - Below 16.4.6, drop the `content-encoding` line from the probe and record that. Route-handler compression is new in 16.4.6 (Finding 4).
+  5. Add a Log line, commit the plan, then push.
+
 ## Verification
+
+Run this once, on the final commit, after `## Code review (Astra)` and any fix steps it added. Use the shared preamble above Steps, in the order below.
+- E2E goes first wherever the order is free. `e2e:site` needs `site:build`, and the probe needs `build`.
+- No part needs an isolated test, so there is no Failure modes section. The fallbacks are in Target design, Risks and fallbacks.
+
+1. **Clean install, as CI and the Dockerfile do it:** run `npm ci && npm run clean`, then `mkdir -p $M/final-e2e`.
+2. **Record the dependency state:**
+   ```
+   npm ls next sharp shell-quote source-map-js > $M/final-e2e/ls.txt
+   npm audit --omit=dev > $M/final-e2e/audit.txt
+   npm audit > $M/final-e2e/audit-all.txt
+   ```
+   - Expect the same results as S1, and `found 0 vulnerabilities` from `--omit=dev`. The full audit should show only Finding 6's dev-only leftovers.
+3. **Guards:** run block A. Every guard must hold.
+4. **Game E2E:** run block B. Then copy the run into the final folder:
+   ```
+   R=$(ls -td e2e-artifacts/*-seed7 | head -1)
+   cp -r "$R"/. $M/final-e2e/; cp /tmp/na-e2e.log $M/final-e2e/run.log
+   ```
+   Then run block E with `D=$M/final-e2e`.
+5. **The brief's checks:** run `npm run typecheck`, `npm run lint`, `npm test` and `npm run build > $M/final-e2e/build.log 2>&1`.
+   - Each must exit 0. `grep -niE 'warn|deprecat' $M/final-e2e/build.log` must print nothing.
+6. **Site E2E:** run `npm run site:build`, then block C. Then run `mv e2e-artifacts/*-site $M/final-e2e/site`.
+7. **Production probe:** run block D. It must print `probe ok`. Then run `cp /tmp/na-probe.log /tmp/na-start.log $M/final-e2e/`.
+8. **Clean state afterwards:**
+   - `git status --porcelain` is empty: no run rewrote a tracked file.
+   - `ss -ltn` shows that the probe's port and the site's port are free.
+   - Run `rm -rf $M/e2e-s* e2e-artifacts/*`. After that, `ls $M` lists only `baseline-e2e` and `final-e2e`.
+9. **Write `$M/final-e2e/COMMAND.txt`** so the run can be repeated. It holds:
+   - the commit (`git rev-parse HEAD`), `node -v`, and the `next` version;
+   - blocks B, C and D, and the four check commands.
+10. **Summary**, per the brief:
+    - Baseline and final `npm audit --omit=dev` and `npm ls`, plus the full audit's dev-only leftovers (Finding 6; no action taken).
+    - Every code change, or `none`, plus the `AGENTS.md` block if it was rewritten.
+    - The E2E result and how its screenshots compared with the baseline's, the `e2e:site` result and `probe ok`, with the artifact path `$M/final-e2e/`.
+    - That A3's "out of path" conclusion is no longer proven (GHSA-7qx7, Finding 1). Don't say the live server was exploitable.
+    - That no production content build is needed.
+    - The Release unit adds the smoke results.
+
+**Release (not a step).** The mission's Release unit does it, under `## Release`.
+- It runs the brief's smoke tests plus Target design, Release smoke: the `content-encoding: gzip` header, a `--compressed` body that parses as JSON, and the journal answering `{"entries":[]}`, all on `https://play.critterconnect.org`.
+- It then adds the handoff item for the owner's signed-in Field Journal check, with `Blocks: nothing`.
 
 ## Code review (Astra)
 
@@ -326,5 +463,6 @@ SHOULD-CONSIDER:
 - 2026-11-14 09:24 UTC · Fable review: APPROVE_WITH_CHANGES, 2 MUST-FIX (both fallbacks: eslint-config-next step-down can't fix react-hooks risk; next retry must also pass eslint-config-next@16.4.6). Main path reproduced (^16.4.6, lock ok, audit --omit=dev 0). No code change.
 - 2026-11-14 09:27 UTC · Astra review: APPROVE, no MUST-FIX; 3 SHOULD-CONSIDER (verify compressed API via Caddy under next start, signed-in journal/Clerk after proxy change, 16.4.5 fallback floor). No code change.
 - 2026-11-14 09:32 UTC · Revision: architect resolved Fable's 2 MUST-FIX (dropped eslint-config-next step-down; retry = next@16.4.x + eslint-config-next@16.4.6) and took most SHOULD-CONSIDERs (16.4.5 floor, origin/main guards, next start gzip/journal probe, Caddy smoke). No code change.
+- 2026-11-14 09:38 UTC · Steps: planner wrote S1 (upgrade + static checks + e2e:site), S2 (e2e:fresh vs baseline), S3 (next start probe) and Verification (final-e2e/ artifact). No code change.
 
 ## Summary
