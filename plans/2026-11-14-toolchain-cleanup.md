@@ -124,7 +124,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -265,7 +265,107 @@ One round, Fable's items (Astra had none). All adopted, none rejected.
 
 ## Steps
 
+Follows the architecture's change groups 0-6 (S1 = group 0 … S7 = group 6). Line numbers are at `af4b0453`; find every site by its quoted text.
+
+**Every step:**
+- **Start:** `git fetch origin --prune`; `git status` clean. `S=/srv/critter-ai/agent-state/missions/toolchain-cleanup`; `BASE=origin/main; git merge-base --is-ancestor origin/main HEAD || BASE=$(git merge-base HEAD origin/main)`. If `origin/main` moved past `af4b0453`: say so in the Log, re-find sites by text (Decision rule "Shifted lines"), and use `$BASE` wherever a check reads `origin/main`. The Release's rebase makes `$BASE` = `origin/main`, so its re-run is the brief's commands verbatim.
+- **`.env*`:** `.env.example` from a shell only, never printed. `cat`, `git diff`, `git show` and `git log -p` on it print line 4 (a connection string), even as context, so check it only with `cmp`, `grep -c`, `wc -l` and `--numstat`. Never open `.env.local`; never print the dev-copy secrets file.
+- **Quick checks:** `npm run typecheck`, `npm run lint`, `npm test` (61/61), each exit 0.
+- **Gate** before every heavy job (Build, `npm ci`, Site E2E, Dev-copy E2E), one at a time: `until awk '{exit !($1<0.6)}' /proc/loadavg; do sleep 15; done`.
+- **Build:** `DATABASE_URL=postgres://build@127.0.0.1:1/build NEXT_TELEMETRY_DISABLED=1 npm run build` (CI's and the Dockerfile's form; never on `.env.local`). Exit 0.
+- **Site E2E** (port 3101 must be free; nothing else may be on it):
+  ```
+  npm run site:build && ! ss -ltn | grep -q ':3101 ' || { echo 'site:build failed or :3101 busy'; exit 1; }
+  npm run site:serve >/tmp/tc-site-serve.log 2>&1 &
+  for i in $(seq 30); do curl -sf -o /dev/null http://localhost:3101/ && break; sleep 1; done
+  CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:site 2>&1 | tee /tmp/tc-site-e2e.log; rc=${PIPESTATUS[0]}
+  pkill -f 'http.server 3101'; echo "e2e:site exit $rc"
+  ```
+  Pass: exit 0, last line `N/N checks passed` with N = S1's count. Copy `e2e-artifacts/<run>-site/report.json` and `/tmp/tc-site-e2e.log` to the step's folder in `$S` (S7 copies the whole run folder), then `rm -rf e2e-artifacts/<run>-site`.
+- **Dev-copy E2E:** the brief's block (Definition of done), wrapped as `( … ) 2>&1 | tee /tmp/tc-e2e.log`. If the `phaser_june_dev` guard fails, stop and add a handoff item. Pass: exit 0, `1575/1575 checks passed` (seed 7, as in `baseline-e2e/`). If only a timing check fails (as in `baseline-flaky/`), gate and rerun once, keep both logs and record it in the Log. A second failure, or any other failure, is real: fix it before going on.
+- **Disk:** when a step writes a new intermediate folder (`e2e-s*`), delete the older one. Never delete `baseline-*` or `final-*`.
+- **End:** check the step off, add one Log line (UTC, what, results), commit code and plan together (`toolchain-cleanup: S<n> …`), push (the pre-push hook runs typecheck and lint).
+
+- [ ] S1. **Before-run, no edits (group 0).** On the unedited branch: `mkdir -p $S/baseline-site`; Gate, Build (`2>&1 | tee $S/baseline-site/build.log`); Gate, Site E2E → `$S/baseline-site/` (`report.json` and log, no screenshots). Record one line under **Baseline**: the Build exit code, the `site:build` and `e2e:site` exit codes, and the `N/N` count (every later Site E2E must match this N). If any of them fails, the failure was already there: record it under **Decisions** and add a step before S2 to fix it (the final check needs all three at 0). Files: the plan only.
+- [ ] S2. **D18 + D19: three scripts and the docs viewer.** `package.json`: delete the lines `"docs": "python3 -m http.server 3000 -d docs",`, `"typecheck:watch": "tsc --noEmit --watch",` and `"clean": "rm -rf .next .next-e2e .test-dist",` (each ends in a comma and none is last; `serve`, `start`, `site:shots` and `clue:world-map` stay). `git rm docs/index.html docs/_sidebar.md`. Run `git grep -n 'npm run clean' -- . ':!plans'`: it found nothing at baseline. If it shows a line now, change that command to `rm -rf .next .next-e2e .test-dist` (that line only). Checks: Quick checks. `node -p "Object.keys(require('./package.json').scripts).join(' ')"` → `dev build serve site:build site:serve site:shots start typecheck lint test prepare content iucn e2e e2e:fresh e2e:site deploy clue:world-map`. `git ls-files docs/index.html docs/_sidebar.md` → nothing. `git grep -n -E 'typecheck:watch|npm run (clean|docs)\b|-d docs\b|docsify|_sidebar' -- . ':!plans' ':!package-lock.json'` → nothing. `git status --short package-lock.json` → nothing. No E2E: nothing the app runs changes.
+- [ ] S3. **D10: `check-game-css`.** `git rm scripts/check-game-css.mjs`. In `docs/DEPLOY.md`, in the bullet "**The game's styles stay the game's.**", cut from the space before `` `node scripts/check-game-css.mjs [base] [outDir]` (commit first) `` through `Not in CI: it fails by design on a PR that changes the game's styles.`. The line then ends `` …darkened `--color-1`, 2026-11-01). `` and the bullet's first two sentences are unchanged. Checks: Quick checks. `git grep -n check-game-css -- . ':!plans' ':!package-lock.json'` → nothing. `git ls-files scripts/check-game-css.mjs` → nothing. `git diff --numstat -- docs/DEPLOY.md` → `1	1`. Gate, then Site E2E (count = S1's) → `$S/e2e-s3-site/`.
+- [ ] S4. **D5 + D11: env examples and the unused sign-in name.**
+  1. `.env.example`: one guarded shell pass, which also removes D11's line:
+     ```
+     [ "$(wc -l < .env.example)" = 29 ] &&
+     [ "$(sed -n '5p;6p;9p;15p;23p;26p;28p;29p' .env.example | cut -d= -f1 | paste -sd'|')" = 'CASE_COMPILER_SECRET|CRON_SECRET|# TiTiler Configuration (Required)|NEXT_PUBLIC_MAP_STYLE_URL|NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL|# Development Only|NODE_ENV|ANALYZE' ] &&
+     sed -i -e '5,6d;8,16d;23,29d' .env.example && echo edited || echo 'GUARD FAILED'
+     ```
+     The guard was tested on the unedited file and passes. If it prints `GUARD FAILED`, the file has moved: re-derive the line numbers from the quoted texts, never from a near match.
+  2. `git rm .env.local.example`.
+  3. `Dockerfile`: delete the line `ARG NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/`. The line above it (`ARG NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login`) and the comment below it stay.
+  4. `deploy/app.env.example`: `[ "$(sed -n 12p deploy/app.env.example)" = 'NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/' ] && sed -i 12d deploy/app.env.example`.
+  5. `docs/DATABASE_ACCESS.md`: delete the line `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=...`. It is in the ` ```text ` block of dev-copy settings, and the closing fence after it stays.
+
+  Checks: Quick checks. `git show $BASE:.env.example | sed -n '1,4p;7p;17,22p' | cmp -s - .env.example && echo same || { echo DIFFERENT; exit 1; }` → `same`. `wc -l < .env.example` → `11`. `grep -c -E '^(DATABASE_URL|NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY|CLERK_SECRET_KEY|NEXT_PUBLIC_CLERK_SIGN_IN_URL)=' .env.example` → `4`. `git grep -n NEXT_PUBLIC_CLERK_SIGN_IN_URL -- .env.example deploy/app.env.example Dockerfile docs/DATABASE_ACCESS.md | cut -d: -f1 | uniq -c` → 4 lines, each `1`. `git diff --numstat $BASE -- .env.example Dockerfile deploy/app.env.example docs/DATABASE_ACCESS.md` → `0	18`, `0	1`, `0	1`, `0	1`. `tail -c1 deploy/app.env.example | od -An -c` → `\n`. `git ls-files .env.local.example` → nothing. `git grep -n -E 'CASE_COMPILER_SECRET|CRON_SECRET|NEXT_PUBLIC_TITILER_BASE_URL|NEXT_PUBLIC_COG_URL|NEXT_PUBLIC_MAP_STYLE_URL|NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL|ANALYZE=|\.env\.local\.example' -- . ':!plans' ':!package-lock.json'` → nothing. `git grep -n NODE_ENV -- .env.example` → nothing. No Build and no E2E: nothing the app or a local build reads changes here. Nothing loads `.env.example`, and the Dockerfile's `build` stage first runs on Hetzner, where the Release smoke checks it.
+- [ ] S5. **D24: remove `headers()` from `next.config.mjs`.** Delete from the blank line after `redirects()`'s closing `},` through `headers()`'s closing `},` (lines 19-32, 14 lines: `async headers() {`, the "Dev only: Turbopack serves …" comment, the `NODE_ENV` line, the `/:path*` rule). `redirects()`'s `},` is then followed by `};`, and the imports stay. Checks: Quick checks. `node -e "import('./next.config.mjs').then(m => console.log(Object.keys(m.default).join(' ')))"` → `distDir outputFileTracingRoot trailingSlash poweredByHeader allowedDevOrigins redirects`. `git grep -n -E 'async headers|NODE_ENV' -- next.config.mjs .env.example` → nothing. `git diff --numstat -- next.config.mjs` → `0	14`. Gate, then Build (`$S/s5-build.log`). Gate, then Dev-copy E2E (1575/1575) → `$S/e2e-s5/` (`report.json`, the log and `COMMAND.txt`, no screenshots), and delete `$S/e2e-s3-site/`. This run shows that the dev server, which loads this file, is unchanged; it can't see D24 itself.
+- [ ] S6. **S15: Node 24, `@types/node` 24, two text fixes.**
+  1. `package.json`, by hand: `"node": "22.x"` → `"node": "24.x"` (under `engines`), `"@types/node": "^20"` → `"@types/node": "^24"`. Then plain `npm install 2>&1 | tee $S/npm-install-s6.log`.
+  2. Lock check, by entry. `node -e 'const r=f=>JSON.parse(require("fs").readFileSync(f)).packages,a=r(process.argv[1]),b=r("package-lock.json");console.log("changed: ["+[...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k])).map(k=>k||"(root)").join(" ")+"]")' <(git show $BASE:package-lock.json)` → `changed: [(root) node_modules/@types/node node_modules/undici-types]`. In `git diff -U0 -- package-lock.json`, the root entry's hunks change only `devDependencies["@types/node"]` (`^24`) and `engines.node` (`24.x`); a newer 24.x or `undici-types` patch is fine. Anything else: don't commit. Restore the lock (`git checkout -- package-lock.json`), investigate, and record it under **Decisions**.
+  3. `npm run typecheck`. If it fails, apply the decision rule: type-only fixes in at most 3 files, each listed under **Decisions**. If more are needed, set `@types/node` back to `^20` (keep `engines.node` at `24.x`), run `npm install` again, and record the errors under **Decisions**. The architecture expects 0 fixes.
+  4. Gate. `rm -rf node_modules && npm ci 2>&1 | tee $S/npm-ci-s6.log`: exit 0, and `grep -c EBADENGINE $S/npm-ci-s6.log` → `0`. `npm ls @types/node | grep -o '@types/node@[0-9.]*' | sort -u` → one line, `@types/node@24.<x>.<y>`. Gate, then Build.
+  5. `scripts/run-tests.mjs`: replace the two lines `// This repo can't install test frameworks (network-restricted), so we lean on` / `// two things that are already here:` with the architecture's three lines (finding 7). Lines 1-2 and the numbered list and Usage after them stay.
+  6. `.editorconfig`: `indent_size = 4` → `indent_size = 2`, `end_of_line = crlf` → `end_of_line = lf`. The other lines stay, and so does the missing final newline (`tail -c1 .editorconfig | od -An -c` → `e`).
+
+  Checks: Quick checks (lint covers `scripts/`, `npm test` 61/61). `git diff --numstat -- .editorconfig package.json scripts/run-tests.mjs` → `2	2	.editorconfig`, `2	2	package.json`, `3	2	scripts/run-tests.mjs`. `git ls-files --eol .editorconfig scripts/run-tests.mjs` → both still `i/lf w/lf`. No E2E: the only packages that change are dev-only type packages (`@types/node`, `undici-types`), so nothing the app runs changes. S7 runs the E2E on the clean install.
+- [ ] S7. **Final Verification (group 6).** Run the whole **Verification** below, items 1-6 in order, and save the artifacts to `$S/final-e2e/` and `$S/final-site/`. Record each result in the Log (one line, details in the logs in `$S`). If a check fails, fix it in a new step placed before S7 and re-run S7. Don't write the Summary or set `status: done` here: mission rule 7 does both after the Astra code review, and it re-runs this Verification, replacing the `final-*` folders. Fix steps from the code review go after S7; rule 7's run covers them.
+
 ## Verification
+
+E2E first, one heavy job at a time, each started after the Gate (load < 0.6). Use `S` and `BASE` as defined under Steps → "Every step". No unit tests are written: there is no new code, and `npm test` is the existing suite.
+
+1. **Clean install.** `rm -rf node_modules && npm ci 2>&1 | tee $S/npm-ci-after.log` exits 0. `grep -c EBADENGINE $S/npm-ci-after.log` → `0` (baseline: 1, `node: '22.x'`). `npm ls @types/node > $S/types-node-after.txt`: every `@types/node@` in it is 24.x (baseline 20.17.57), unless the decision rule kept `^20` (then the Decisions say so).
+2. **Game E2E (dev copy):** the brief's block:
+   ```
+   ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+     [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+     CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh ) 2>&1 | tee /tmp/tc-e2e.log
+   ```
+   It must show exit 0 and `1575/1575 checks passed` (same count and seed 7 as `baseline-e2e/`; the rerun rule under Steps applies). **Artifact:** copy `e2e-artifacts/<run>/` (`report.json` and screenshots) to `$S/final-e2e/`, along with `run.log` (the tee) and `COMMAND.txt` (the block, the branch and commit, the load at start). Then `rm -rf e2e-artifacts/<run>`. Anyone can reproduce it with the same command on the same commit: same seed, same run. It can't see D24, because the dev server already returned `[]` there. D24's proof is item 5a plus Build before the deploy, and the header smoke after it.
+3. **Site E2E** (the procedure under Steps): `site:build` exit 0 and `e2e:site` exit 0, with `N/N checks passed` and N = S1's count. Artifact: the whole `e2e-artifacts/<run>-site/` (`report.json` and screenshots) and the log go to `$S/final-site/`.
+4. **Checks:** `npm run typecheck`, `npm run lint`, `npm test` (61/61) and Build each exit 0. Logs: `$S/{typecheck,lint,test,build}-after.log`.
+5. **Static checks.** Each must print exactly what is shown:
+   - a. `node -e "import('./next.config.mjs').then(m => console.log(Object.keys(m.default).join(' ')))"` → `distDir outputFileTracingRoot trailingSlash poweredByHeader allowedDevOrigins redirects`
+   - b. `git diff --numstat $BASE -- Dockerfile deploy/app.env.example` → `0	1	Dockerfile` and `0	1	deploy/app.env.example`; `tail -c1 deploy/app.env.example | od -An -c` → `\n`
+   - c. `grep -c -E '^(DATABASE_URL|NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY|CLERK_SECRET_KEY|NEXT_PUBLIC_CLERK_SIGN_IN_URL)=' .env.example` → `4`
+   - d. `git show $BASE:.env.example | sed -n '1,4p;7p;17,22p' | cmp -s - .env.example && echo same || { echo DIFFERENT; exit 1; }` → `same`
+   - e. `node -p "Object.keys(require('./package.json').scripts).join(' ')"` → `dev build serve site:build site:serve site:shots start typecheck lint test prepare content iucn e2e e2e:fresh e2e:site deploy clue:world-map` (it has `serve`, `start`, `clue:world-map` and `site:shots`, and none of `docs`, `typecheck:watch`, `clean`)
+   - f. `git grep -n NEXT_PUBLIC_CLERK_SIGN_IN_URL -- .env.example deploy/app.env.example Dockerfile docs/DATABASE_ACCESS.md | cut -d: -f1 | uniq -c` → 4 lines, each `1`
+   - g. `git ls-files .env.local.example docs/index.html docs/_sidebar.md scripts/check-game-css.mjs` → nothing
+   - h. The brief's two greps → nothing:
+     ```
+     git grep -n -E 'CASE_COMPILER_SECRET|CRON_SECRET|NEXT_PUBLIC_TITILER_BASE_URL|NEXT_PUBLIC_COG_URL|NEXT_PUBLIC_MAP_STYLE_URL|NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL|ANALYZE=|\.env\.local\.example|typecheck:watch|npm run (clean|docs)\b|-d docs\b|check-game-css|docsify|_sidebar' -- . ':!plans' ':!package-lock.json'
+     git grep -n -E 'async headers|NODE_ENV' -- next.config.mjs .env.example
+     ```
+   - i. `git ls-files --eol | awk '{print $1" "$2}' | sort | uniq -c > $S/eol-after.txt; diff $S/eol-before.txt $S/eol-after.txt` → the only change is `369 i/lf w/lf` → `365 i/lf w/lf`. After a rebase onto a moved `origin/main`, any other difference must come from files it added or deleted (`git diff --name-status af4b0453 origin/main`); say so in the Log.
+   - j. The lock entry check from S6.2 → `changed: [(root) node_modules/@types/node node_modules/undici-types]`
+   - k. Scope: `git diff --name-status $BASE -- . ':!plans'` lists exactly these 14 paths. Deleted (`D`): `.env.local.example`, `docs/_sidebar.md`, `docs/index.html`, `scripts/check-game-css.mjs`. Modified (`M`): `.editorconfig`, `.env.example`, `Dockerfile`, `deploy/app.env.example`, `docs/DATABASE_ACCESS.md`, `docs/DEPLOY.md`, `next.config.mjs`, `package-lock.json`, `package.json`, `scripts/run-tests.mjs`. No `deploy/Caddyfile`, compose file, `check.sh` or `deploy.sh`, so Caddy still sets both headers.
+6. `git status --short` is clean after the commit.
+
+**Release smoke** (the Release unit, after `deploy critter-connect`; each result is compared with the baseline in `$S/headers-before/`):
+- `bash deploy/check.sh` exits 0. `curl -s https://play.critterconnect.org/version.txt` shows the merge commit.
+- Headers, 3 per URL with values equal to the baseline. Retry a failed curl up to 3 times, 10 s apart. Any `FAIL` is a failed smoke test:
+  ```
+  mkdir -p $S/headers-after
+  pick() { tr -d '\r' < "$1" | grep -i -E '^(x-content-type-options|referrer-policy|strict-transport-security):' | sed -E 's/^([^:]+):/\L\1:/' | sort; }
+  for p in play_:https://play.critterconnect.org/ play_explore_:https://play.critterconnect.org/explore/ play_api_places_:https://play.critterconnect.org/api/places/ play_no-such-page_:https://play.critterconnect.org/no-such-page/ apex_:https://critterconnect.org/ apex_explore_:https://critterconnect.org/explore/; do
+    n=${p%%:*}; u=${p#*:}; f=$S/headers-after/$n.txt
+    for i in 1 2 3 4; do curl -sI --max-time 20 "$u" > "$f" && break; [ $i = 4 ] || sleep 10; done
+    [ "$(pick "$f" | wc -l)" = 3 ] && [ "$(pick "$f")" = "$(pick $S/headers-before/$n.txt)" ] && echo "ok $n" || echo "FAIL $n"
+  done | tee $S/headers-after/result.txt
+  ```
+  Pass: six `ok` lines. `pick` was tested on `headers-before/` and gives 3 for all six. Don't follow the apex `/explore/` 308.
+- Codes: `for p in /login/ /explore/ /api/places/ /api/clue-game/pool/; do echo "$p $(curl -s -o /dev/null -w '%{http_code}' --max-time 30 https://play.critterconnect.org$p)"; done | tee $S/headers-after/codes.txt` → all `200` (`/login/` baseline: 200).
+
+**Step risks** (in addition to the architecture's Risks):
+- E2E timing checks fail under load (`baseline-flaky/`): the Gate before every heavy job, and the single-rerun rule.
+- `origin/main` moving mid-mission: the `$BASE` rule keeps the checks against `origin/main` honest until the Release rebases; on a lock conflict, apply the brief's rule and re-run S6.2.
+- The expected outputs of 5e and 5k are as of `af4b0453`. If a rebase brings in upstream changes to `package.json` scripts or more files, re-derive them from `git diff af4b0453 origin/main` and note it in the Log.
 
 ## Code review (Astra)
 
@@ -280,5 +380,6 @@ One round, Fable's items (Astra had none). All adopted, none rejected.
 - 2026-11-14 17:10 UTC · Fable review: APPROVE WITH CHANGES, 1 MUST-FIX (.env.example `cmp -s` check silent on mismatch and pinned to HEAD), 1 missed (no before-run of build/site:build/e2e:site), 4 should-consider. Closed handoff H14 (owner verified).
 - 2026-11-14 17:25 UTC · Astra review: APPROVE, no MUST-FIX, no SHOULD-CONSIDER. Fable's MUST-FIX goes to Revision.
 - 2026-11-14 17:35 UTC · Revision: architect adopted all Fable items (origin/main `cmp` check fails loud, group 0 before-run of build/site:build/e2e:site, lock rule by entry, dummy-DATABASE_URL build, no local serve+curl, app.env.example last-line delete); none rejected. Plan-only change.
+- 2026-11-14 17:13 UTC · Steps: planner wrote S1–S7 (S1 before-run of build/site E2E, S2 D18+D19, S3 D10, S4 D5+D11, S5 D24, S6 S15, S7 final Verification) and Verification (E2E first, DoD greps, 14-file scope check). Plan-only change.
 
 ## Summary
