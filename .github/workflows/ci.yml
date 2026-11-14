@@ -22,6 +22,10 @@ jobs:
       - name: No Supabase/Prisma
         run: |
           ! git grep -nIE '@supabase|supabase\.co|@prisma|schema\.prisma' -- src scripts tests db package.json
+      # A Prisma schema names no package, so check file names too. Own step: `bash -e` doesn't stop on a `!` command.
+      - name: No Prisma schema files
+        run: |
+          ! git ls-files '*.prisma' | grep .
       # The legal and teacher pages live only on the website (plan 051, owner 2026-10-29): no play.-relative links to them
       # from the game. Matches a quoted or bracketed path or a play. URL, not the bare words.
       - name: No game links to site pages

@@ -5,7 +5,7 @@ description: Play Critter Connect (the globe and the game at /explore) in the re
 
 # Playtest
 
-Drive the dev build through the chrome-devtools MCP like a player. React UI (globe list and cards, the game's evidence grid, status line and sheets) shows up in `take_snapshot`; the Phaser board is a canvas, so read and act on it through `window.__cc` (dev-only bridge, `src/game/debugBridge.ts`, reference at the end). Judge what a player sees: pair bridge state with screenshots. Mobile first: `emulate` viewport `390x844x3,mobile,touch`, then check `844x390x3,mobile,touch,landscape` and `1280x800x1`.
+Drive the dev build like a player through the chrome-devtools MCP (set up per machine: the repo's `.mcp.json` starts only `context7` and `playwright`). React UI (globe list and cards, the game's evidence grid, status line and sheets) shows up in `take_snapshot`; the Phaser board is a canvas, so read and act on it through `window.__cc` (dev-only bridge, `src/game/debugBridge.ts`, reference at the end). Judge what a player sees: pair bridge state with screenshots. Mobile first: `emulate` viewport `390x844x3,mobile,touch`, then check `844x390x3,mobile,touch,landscape` and `1280x800x1`.
 
 ## 1. Preflight
 
@@ -31,21 +31,21 @@ Drive the dev build through the chrome-devtools MCP like a player. React UI (glo
 
 ## 2. Globe (`/`)
 
-- The list shows the continents from `GET /api/places`; one with fewer than 12 animals says "coming soon". Tap a row (or a dot on the globe): the globe flies there and outlines it, and the card shows the animal count, found animals by name, `?` for the rest, and a habitat picture (TiTiler, 1–5 s; hidden if it fails).
+- The list shows the continents from `GET /api/places`; one with fewer than 12 animals says "coming soon". Tap a row (or a dot on the globe): the globe flies there and outlines it, and the card shows the animal count, found animals by name and `?` for the rest.
 - **Explore** opens `/explore/?place=continent:<name>`; **Anywhere** opens `/explore/`.
 - Found animals' ranges light up the globe (green amphibians/reptiles, amber mammals): the animals come from the journal's finds in localStorage (`clue-match:journal:v1`), their ranges from `GET /api/clue-game/ranges`.
 
 ## 3. The game (`/explore`)
 
-Rules: `docs/CLUE_MATCH.md` (Rules), in full `docs/ANIMAL_BOARD_PAPER.md` §2. `?seed=N` replays the same trails and boards; `?place=continent:<name>` plays that continent (old `/clue-match` links redirect here). Returning players skip how-to-play: `initScript` `localStorage.setItem('critter-connect:animal-board-how-to:v4', '1')` (and `critter-connect:slide-hint:v1` to skip the one-time slide hint). A move swaps two neighboring gems: `drag(move, { input: 'touch' })` (a swipe), or `tap(from)` then `tap(to)`. Each suspect's name pill in the evidence grid (`tr[data-suspect] button[data-pill]`): tap picks it (its tile pulses), a long press (450 ms) opens its field guide, dragging its photo right (start the pointer on the 30 px photo; half the way across the name) rules it out and again brings it back; a drag that starts on the name does nothing; the right and left arrow keys do the same, Shift+Enter opens the guide. A long press on a board tile (`tap(cell, { holdMs: 700 })`) opens the guide too. Hidden answers (`td[data-hidden]`) pencil on tap. The witness notes open from the Camera saw row's cell (`tr[data-mystery] button[data-flight-target="notes"]`, `data-notes` = the count). The menu is `button[aria-label="Menu"]`; a field guide's `button[data-name-it]` names that animal (asks first: `[data-name-confirm]`, Back / Yes); at 0 moves the `Out of moves` sheet asks for a last name (right is a find). The round-end card waits for its next button.
+Rules: `docs/CLUE_MATCH.md` (Rules), in full `docs/ANIMAL_BOARD_PAPER.md` §2. `?seed=N` replays the same trails and boards; `?place=continent:<name>` plays that continent (old `/clue-match` links redirect here). Returning players skip how-to-play: `initScript` `localStorage.setItem('critter-connect:animal-board-how-to:v5', '1')` (and `critter-connect:slide-hint:v1` to skip the one-time slide hint). A move swaps two neighboring gems: `drag(move, { input: 'touch' })` (a swipe), or `tap(from)` then `tap(to)`. Each suspect's name pill in the evidence grid (`tr[data-suspect] button[data-pill]`): tap picks it (its tile pulses), a long press (450 ms) opens its field guide, dragging its photo right (start the pointer on the 30 px photo; half the way across the name) rules it out and again brings it back; a drag that starts on the name does nothing; the right and left arrow keys do the same, Shift+Enter opens the guide. A long press on a board tile (`tap(cell, { holdMs: 700 })`) opens the guide too. Hidden answers (`td[data-hidden]`) pencil on tap. The witness notes open from the Camera saw row's cell (`tr[data-mystery] button[data-flight-target="notes"]`, `data-notes` = the count). The menu is `button[aria-label="Menu"]`; a field guide's `button[data-name-it]` names that animal (asks first: `[data-name-confirm]`, Back / Yes); at 0 moves the `Out of moves` sheet asks for a last name (right is a find). The round-end card waits for its next button.
 
-Invariants to check each move (`npm run e2e` checks these too):
+Invariants to check each move (`npm run e2e` checks these too, except the last one's no page scroll and 44 px buttons):
 
 - A counted swap uses exactly one move (`clue().movesLeft`); a swap with no match slides back and doesn't count; the board settles.
 - Unmarked tiles never move; a `marked` one steps one cell its way each move (`clue().headings`; it waits behind another card) and leaves off the edge. A tile shows on each pinned cell (`state().pins`); only `marked` suspects leave (`released`). `mysteryId` leaves only by escaping, which loses the round (`lostBy`).
 - During play the grid never names the mystery or points at a mismatch; its Camera saw row (`tr[data-mystery]`) shows only earned answers (`orders[].answer`). At round end that row slides onto the mystery's own row (`tr[data-match]`) before the card opens.
 - Ruling out the mystery doesn't release it by itself; tapping a gem outlines the marked animals its swap would release.
-- Out of moves: the name sheet shows and the round is lost even when named right (a right name still goes in the journal).
+- Out of moves: the name sheet shows; a right name is a find, a wrong name or Skip loses the round (`nameIt`).
 - The round-end card names the mystery, replays the grid (no ✓/✗: answered columns green where a cell matches the camera, red and striped where not, unanswered ones grey; the Camera row's YES green, NO red) and shows the family tree; the trail moves on (a find, or one heart less).
 - With `?place=`, a find adds a sighting for that continent to the journal.
 - No page scroll: `document.documentElement.scrollHeight === innerHeight`; every button at least 44px; on a 375×548 phone the board keeps at least 210 px.
@@ -63,6 +63,8 @@ Write `docs/playtests/YYYY-MM-DD-<topic>.md`: what you played (seed, place), the
 | `state()` | board: `ready`, `canMove`, `locked`, `isResolvingMove`, `isDragging`, `boardSeed`, `movesUsed`, `hasAnyValidMove`, `grid` (`grid[x][y]` is a color name), `toys` (`toys[x][y]`: `row`, `column`, `bomb`, `color` or null), `view` (the texture each sprite shows; must match `grid` and `toys`), `gemSize`, `boardOffset` |
 | `clue()` | session: `seed`, `rulesVersion`, `trailNo`, `roundNo`, `status`, `lostBy`, `mysteryId`, `suspects`, `marked`, `released`, `movesLeft`, `movesUsed`, `moves`, `orders` (`tag`, `gem`, `have`, `answer`), `notes`, `possible`, `score`, `streak`, `trail`, `end`, `logTail` |
 | `validMoves()` | `[{ from, to, matches, largest, colors, trigger }]`: every move (`[x, y]` cells); `largest` is the biggest group; `colors` the gem colors it matches; `trigger` true for a swap that only sets toys off (a color gem, or two toys) |
+| `touchedBy(move)` | ids of the pinned animals the move's first clear would touch (the release preview) |
+| `nearColorsBy(move)` | the same as `[id, colors]`: the gem colors cleared next to each tile (what the move would scout) |
 | `drag(move, { input, timeoutMs })` | swipes `from` toward `to`; `{ counted, movesUsed, timedOut, blocked, after }` once the board settles; `input: 'touch'` swipes with a finger |
 | `tap([x, y], { input, timeoutMs })` | taps one cell; `{ blocked, timedOut, after }` |
 | `waitIdle(ms)` | snapshot once input returns or the board is locked |
