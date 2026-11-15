@@ -170,7 +170,7 @@ Out:
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -480,7 +480,86 @@ SHOULD-CONSIDER:
 
 ## Steps
 
+Shorthand, used below and in Verification:
+- `S` = `/srv/critter-ai/agent-state/missions/content-pipeline`.
+- **dev(cmd)**: the Brief's dev-copy block (DoD) with `cmd` as its last command. The guard must pass; never `.env.local` (live).
+- **dead(cmd)**: `cmd` with `DATABASE_URL=postgres://build@127.0.0.1:1/build` (CI's dead URL), only through `$S/refusal-check.sh`, which exports and checks it first: without it, dotenv loads `.env.local` and `build` becomes a live content build.
+- **CI idle**: `gh run list -R kc0588615/phaser-june --workflow ci.yml --status in_progress` prints nothing. Required before every run below.
+- **Run n/8**: every full `ranges` run and the rule check (Load). 2 used by Baseline. One at a time, never beside an E2E (local or CI's). After each, crashed ones too: judge with `git diff --exit-code HEAD -- db/content/animals`, then `git checkout -- db/content/animals`. Log its number and wall time.
+- **Base checks**: `rm -rf .next .next-e2e .test-dist && npm run typecheck && npm run lint && npm test` (64/64).
+- Stage files by name, never `git add -A`. No untracked file under `scripts/` at commit or push (pre-push typechecks it).
+
+- [ ] S1 · Profiles first: `assertProfilesReady` (`scripts/content.ts`; no DB)
+  - **First, before code:** write `$S/refusal-check.sh` from Target design "Refusal check" and Failure modes F1. It exports and asserts the dead URL; per case writes `db/content/animals/zz-scratch.json` (a copy of `01-blandings-turtle.json` with `commonName` "Scratch copy", so the lines read clearly); cases 1-3 with `ranges`, case 1 with `build`; checks exit 1, `Fix the profiles first:` and the expected lines on stderr, no `ECONNREFUSED`, `git status --porcelain db/content/animals` = only the scratch file; deletes it. Two controls with no scratch file: `ranges` and `build` each end in `ECONNREFUSED` (no false refusal over the 76 profiles; `build` prints its warnings line first). Run it on today's code: the cases fail (red); save to `$S/refusal-check-before.txt`.
+  - **Code:** Target design "Profiles first": `assertProfilesReady` replaces `content.ts:129-132`; build's warnings line counts `checkCitations(…).warnings` itself; the `ranges` branch reads profiles once and calls it before the query (the query itself stays today's in this step).
+  - **Verify:** Base checks. `bash $S/refusal-check.sh > $S/refusal-check.txt 2>&1` passes every case and both controls. The build control's warnings count = `npm run content -- preview | grep -c 'cite warn'` (preview has no DB). DB runs: 0.
+
+- [ ] S2 · S12 query from the profiles (`scripts/content.ts`, `db/schema.sql`, `src/clueGame/profiles.ts`; no DB)
+  - **First, before the SQL:** write the rule harness `scripts/check-country-rules.ts` as Target design "The four rules no profile reaches" says (cases A-M and the Harness row; reads `RANGES_SQL` from the file's text, throws if absent; prints one line per case; exit 1 on any failure). Plain `sql.begin`, not `'read only'`: Postgres refuses `CREATE`, temp tables included, in a read-only transaction. Copy it to `$S/check-country-rules.ts`, then delete it from `scripts/`.
+  - **Code:** Target design "S12": the `ranges` branch (`[{ id, iucn_id }]` as one `tx.json` param, `sql.begin('read only', …)`, `SET LOCAL statement_timeout = '15min'`, a named row type); the new `RANGES_SQL` from the SQL block, verbatim; the comment over it ("Comments" bullet: no view name, no `$1` in SQL comments); the build message → `docs/SHAPEFILE_BEST_PRACTICES.md#adding-or-changing-an-animal` (the anchor lands in S6); the one `--` line in `db/schema.sql` after :195; `profiles.ts:56` comment.
+  - **Verify:** Base checks. `bash $S/refusal-check.sh` still passes (its `ranges` control now sends the new query to the dead port). `git grep -n -E "clue_match_places|(FROM|JOIN) species( |$)" -- scripts/content.ts` prints nothing. The DoD comment-only grep over `src/clueGame/profiles.ts db/schema.sql` prints nothing. `git status --porcelain scripts` empty. DB runs: 0.
+
+- [ ] S3 · S12 proof on the dev copy (no code unless it fails)
+  - Write `$S/empty-ranges.mjs`: sets every profile's `range` to `{ "realms": [], "countries": [] }`, written as `writeProfile` writes (`JSON.stringify(p, null, 2)` + `\n`, key order kept).
+  - **Run 3/8, rule check:** CI idle; `cp $S/check-country-rules.ts scripts/`; dev(`time node scripts/run-typescript.mjs scripts/check-country-rules.ts`) → `$S/check-country-rules.txt`; `rm scripts/check-country-rules.ts`. Exit 0, every case passing.
+  - **Run 4/8, full proof:** `git diff --exit-code origin/main -- db/content/animals`; `node $S/empty-ranges.mjs`; `git diff --stat db/content/animals` lists 76 files (else the proof is vacuous); CI idle; dev(`time npm run content -- ranges`) → `$S/ranges-s3.txt`; `git diff --exit-code HEAD -- db/content/animals` exits 0; restore. Log the wall time (S6 quotes it), that all 76 profiles printed a line, and the "no range map" count (expect 0; Goal 5's note).
+  - A run past 5 min: one plain `EXPLAIN` in dev (country CTEs show `CTE Scan`) before another run. Not counted.
+  - **Fails:** Decision rules. Save the diff stat to `$S/ranges-s3-diff.txt`, restore, compare dev and live tables once (live: `./scripts/db`, reads only, outside the block; dev: the same queries with `psql "$DATABASE_URL"` in the block). Differ: stop S12, handoff item. Same: fix the query; rerun the rule check only if the country CTEs changed, then the proof. Base checks after a code fix.
+  - **Budget: runs 3-6 only.** Runs 7-8 are the final proof and a release retake, so the "eight runs" rule binds here. No empty diff by run 6, or a failed guard: drop S12 as Target design's last bullet of "The four rules no profile reaches" says (revert query, its comment, `db/schema.sql` line, `profiles.ts` comment and build message together; `assertProfilesReady` stays in build; `ranges` back to today's code), add a handoff item and a Decision. S6 then writes today's order.
+  - DB runs: 2 (at most 4).
+
+- [ ] S4 · D20 and the written terms (`db/content/citations.json`, `LICENSE`, `CONTENT_LICENSE.md`, `README.md`, `AGENTS.md`, `docs/CONTENT_SOURCES.md`)
+  - D20: delete `citations.json:389-392` (the `rspb.2017.1347` entry), nothing else.
+  - `LICENSE`: edit bytes by script (A1/K11 texts, `LICENSE` bullet).
+  - `CONTENT_LICENSE.md`: A1/K11 texts items 1-4 and "Quoting terms". Fetch the Wayback page once, save it to `$S/iucn-terms-wayback.html`; if it fails, use A1's quotes marked "(as read 2026-11-10)". One Earth's citation is the brief's literal string.
+  - `docs/CONTENT_SOURCES.md`: the bold **Map data** label, three bullets and the `CONTENT_LICENSE.md` link after :134 (A1/K11 texts). `README.md` one line; `AGENTS.md:59` the brief's sentence.
+  - **Verify:** `git diff --numstat origin/main -- db/content/citations.json` prints 0 added, 4 deleted; `node -e "console.log(Object.keys(require('./db/content/citations.json')).length)"` = 261. `git ls-files --eol LICENSE` shows `i/crlf`; `grep -c $'\r$' LICENSE` = `wc -l < LICENSE` = 24; `git diff origin/main -- LICENSE` changes line 3 and adds the end only. `grep -c -F 'One Earth Bioregions Framework, One Earth. 2023. Los Angeles, CA. oneearth.org'` ≥ 1 in both docs. `npm run content -- preview | grep -c PROBLEM` = 0; `bash $S/refusal-check.sh` passes (its controls show no profile cites the removed page). dev(`npm run content -- check`): same two lines as `content-check-before.txt` (not a `ranges` run). Base checks. DB runs: 0.
+
+- [ ] S5 · Credits where players see the maps (`src/components/clueGame/JournalSheet.tsx`, `src/site/pages/Terms.tsx`) and an E2E
+  - Journal `:99`: text only, as the brief says. Terms `:24-25`: the brief's two sentences; `:6`: `updated` = `date -u +'%B %-d, %Y'` (the release unit resets it to the merge day if that differs).
+  - **Verify:** Base checks. `npm run site:build`; `ss -ltn` shows 3101 free; `npm run site:serve` in the background, `CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:site` exits 0, stop the server. Then dev(`CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:fresh`), no `ranges` run beside it: 1579/1579 (flaky-step rerun once, Decision rules); copy its artifact to `$S/e2e-s5/` and delete the worktree copy. Compare `05-journal.png`, `09-journal-sharp-eye.png`, `11-journal-sources-open.png` with `$S/baseline-e2e/`: the credit line in full, nothing else moved. `git status` shows no `next dev` rewrite of `AGENTS.md`. DB runs: 0 (one E2E).
+
+- [ ] S6 · One order for adding an animal (`docs/SHAPEFILE_BEST_PRACTICES.md`, `docs/CONTENT_SOURCES.md` `## Workflow`, `docs/CLUE_MATCH.md`)
+  - Target design "S9 docs", first three bullets: `## Adding or changing an animal` replaces `## After an import` (:42-51) with the 8 steps, who runs each, the folded details (step 3 the id rules and `PROBLEM`; step 4 the time from S3's Log line, the 15 min cap, the refusal, committing every rewritten profile, batch 2 without "globe place"; step 7 on `main` after `git pull --ff-only`, and the refusal incl. "every `checkProfile` problem"; step 8 both refreshes and `check`), "Changing an existing animal" (two cases), then the candidate note.
+  - `CONTENT_SOURCES.md` `## Workflow`: heading and :89 stay; :82-87 → one pointer. `CLUE_MATCH.md:59-65`: the intro names tiers and tags, then the pointer; the list goes.
+  - **If S3 dropped S12:** the two-build order for today's code (Goal 4, Decision rules: merge and app deploy before the owner's first build), each step with who runs it.
+  - **Verify:** `grep -nx '## Adding or changing an animal' docs/SHAPEFILE_BEST_PRACTICES.md`; the anchor check (Verification 6) prints nothing, the build message's link included; `grep -c 'globe place' docs/SHAPEFILE_BEST_PRACTICES.md` = 0; `git grep -n -E "reads that view|then after a build" -- docs` prints nothing; `npm run typecheck && npm run lint`. DB runs: 0.
+
+- [ ] S7 · The smaller fixes (`docs/CONTENT_SOURCES.md` :78, :93, :94; `docs/SHAPEFILE_BEST_PRACTICES.md:35`; `docs/CLUE_MATCH.md:67`; `docs/DEPLOY.md:45`; `src/lib/contentCitations.ts:8`)
+  - Brief Goal 4 "The smaller fixes", worded as in Findings Goal 4: suspects by `pickSuspectSet` (`animalBoard.ts`, relatives first) then `likeness` (`questionMatch.ts`), no rarity weight, no "similarity" or "round.ts"; both `parallel-search` lines reworded, tips kept; the presence fallback for any animal, `content -- ranges` included; countries from the IUCN range maps wherever IUCN assessed the species; `DEPLOY.md` the content sentence only (rollback sentence as found), linking `docs/CONTENT_SOURCES.md#citations`; the `contentCitations.ts` comment (the table's `CHECK`).
+  - **Verify:** Verification 6's stale-text grep and anchor check print nothing; comment-only grep over `src/lib/contentCitations.ts` prints nothing; `git diff -U0 origin/main -- docs/DEPLOY.md` shows one line changed, its first sentence intact; `npm run typecheck && npm run lint`. DB runs: 0.
+
 ## Verification
+
+On the final commit, after every step (final unit). One heavy job at a time, in this order. Artifact: `$S/final-e2e/`.
+
+0. `git fetch origin --prune`; state branch and commit; `git status --porcelain` empty, nothing untracked under `scripts/`.
+1. **E2E (dev copy):** CI idle not needed, but no `ranges` run in progress. dev(`CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:fresh`): exit 0, **1579/1579** (seed 7; a failure only in A10's timing steps: rerun once). Copy the artifact to `$S/final-e2e/` (`report.json`, screenshots, `run.log`, the command). Check `05-journal.png`, `09-journal-sharp-eye.png`, `11-journal-sources-open.png` against `$S/baseline-e2e/`: credit line in full, nothing else moved. Keep `baseline-e2e/`, `final-e2e/` and the latest intermediate only.
+2. **Site:** `npm run site:build`; `npm run site:serve` (3101 free per `ss -ltn`); `CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:site` exits 0; stop the server.
+3. **S12 proof (run n/8):** CI idle; `git diff --exit-code origin/main -- db/content/animals`; `node $S/empty-ranges.mjs`; 76 files in `git diff --stat`; dev(`time npm run content -- ranges`) → `$S/ranges-after.txt` (a line per profile); `git diff --exit-code HEAD -- db/content/animals` exits 0; restore; log the wall time. The rule check again (counts) only if `git diff <S3's commit> -- scripts/content.ts` touches `RANGES_SQL`. `bash $S/refusal-check.sh` passes (no DB). `git grep -n -E "clue_match_places|(FROM|JOIN) species( |$)" -- scripts/content.ts` prints nothing. **If S12 was dropped:** no proof; `git diff origin/main -- scripts/content.ts` holds only `assertProfilesReady` and build's call to it.
+4. **Content check:** dev(`npm run content -- check`) > `$S/content-check-after.txt`; `diff $S/content-check-before.txt $S/content-check-after.txt` empty (summary line, 0 errors, 0 warnings).
+5. **Static:** `rm -rf .next .next-e2e .test-dist`; `npm run typecheck`, `npm run lint` exit 0; `npm test` 64/64.
+6. **Diff gates (Brief DoD, "On the final commit"):**
+   - `git diff --exit-code origin/main -- db/content/animals db/content/sources.json scripts/import-natural-earth.mjs` exits 0; `git diff --numstat origin/main -- db/content/citations.json` shows 0 added and 4 deleted: the `rspb.2017.1347` entry.
+   - `git diff -U0 origin/main -- src/clueGame/profiles.ts src/lib/contentCitations.ts db/schema.sql | grep -E '^[+-]' | grep -v -E '^(\+\+\+|---)' | grep -v -E '^[+-]\s*(//|/?\*|--)'` prints nothing.
+   - `git ls-files --eol LICENSE` shows `i/crlf`; `grep -c $'\r$' LICENSE` = `wc -l < LICENSE`.
+   - `git grep -n -E "round\.ts|similarity|for now; plan 041|only for extinct|keeps it 1-4|don't need a redeploy" -- docs src scripts ':!docs/research' ':!docs/playtests'` prints nothing.
+   - Anchor check, prints nothing:
+     ```
+     git grep -h -o -E "(CONTENT_SOURCES|SHAPEFILE_BEST_PRACTICES)\.md#[A-Za-z0-9_-]+" -- . ':!plans' | sort -u | while IFS='#' read -r f a; do
+       grep -E '^#+ ' "docs/$f" | sed -E 's/^#+ //' | tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9 _-]//g; s/ /-/g' | grep -qx -- "$a" || echo "MISSING $f#$a"; done
+     ```
+   - The citation string `One Earth Bioregions Framework, One Earth. 2023. Los Angeles, CA. oneearth.org` appears in `CONTENT_LICENSE.md`, `docs/CONTENT_SOURCES.md`, `Terms.tsx` and `JournalSheet.tsx` (`git grep -c -F`).
+7. Record every run's wall time and the run count in the Log.
+
+**Release:** a separate unit; see Brief DoD "Release" and `~/.claude/CLAUDE.md`. Carry-overs from this plan: Terms' `updated=` → the merge day if it differs (then rerun item 2); `/terms/` text differs from the record in two places, the sentence and "Last updated" (Findings Goal 2); `DEPLOY.md:45` conflicts if M5 merged (keep M5's first sentence); a rebase bringing `db/content/` or `scripts/content.ts` retakes items 3-4 (run 8 is its budget) before the push, never while the PR's CI `e2e` runs.
+
+## Failure modes
+
+Written before the code they check (S1, S2). Each isolated check must catch:
+- **F1, refusal check** (S1): Target design "Refusal check" list (duplicate `id` passes; duplicate `iucnId` passes; missing or non-integer `iucnId` passes; check runs after the query or a write; refusal names no problem), plus: the dead URL isn't exported, so `.env.local` (live) is used (script asserts it first); valid profiles are refused (the two controls); the scratch file is left behind (script deletes it, `git status` checks).
+- **F2, rule harness** (S2, S3): the Target design table (Russia split or dropped; either France branch lost; mainland France dropped; Seven seas or Antarctica filter lost; two-animal rule lost; temp table didn't shadow `iucn`; a France box misses France), plus: it runs the old or a partial SQL (regex throws if absent; it prints the SQL's length); it runs outside the dev copy (dev block guard); it leaves a table (`ON COMMIT DROP`, temp only).
+- **F3, S12 proof** (S3, Verification 3): the emptying script changed nothing, so the proof is vacuous (76 files in `git diff --stat` before the run; a format change it made would show as a non-empty final diff, so it can only fail loud, never pass falsely); the base isn't `origin/main` (checked before emptying); a crashed run leaves half-written profiles (restore after every run).
 
 ## Code review (Astra)
 
@@ -493,6 +572,7 @@ SHOULD-CONSIDER:
 - 2026-11-15 Revision: IUCN field list in `CONTENT_LICENSE.md` grows past the brief (`taxonomy`, `systems`, `elevation`), read from `profiles.ts:242-282`; it states what the build credits to `iucn`, so it grants less, not more.
 - 2026-11-15 Revision: Astra MUST-FIX 1: build's refusal becomes `assertProfilesReady` in `scripts/content.ts` (adds duplicate `id`/`iucnId`), called by build and `ranges`; its message goes on one line because `run` (`connect.ts:21`) prints only the first line. Touches build code past the brief's "range query" parenthetical; needed so the refusal names the problem.
 - 2026-11-15 Revision: Astra MUST-FIX 2: changing an existing animal's `iucnId` or map runs the new-animal order (`ranges` over all profiles, committed in the same PR); replaces the brief's "steps 3, 6, 7 and 8" for that case. Doc rule only: enforcing needs a 1.5-3 min query per build or per-profile fingerprints.
+- 2026-11-15 Steps: S12 fix loop capped at runs 3-6 (of 8): runs 7-8 reserved for the final proof and a release-rebase retake, so "drop S12 after eight runs" binds at run 6.
 
 ## Log
 
@@ -501,5 +581,6 @@ SHOULD-CONSIDER:
 - 2026-11-15 07:07 UTC Fable review: APPROVE_WITH_CHANGES; 1 MUST-FIX (CONTENT_LICENSE.md wording interprets: other-source-key row, cite-lines rule), 3 MISSED, 5 SHOULD-CONSIDER; three read-only greps checked (comment-only DoD passable, no test asserts Terms/Journal text, no stale `ranges` doc line outside replaced sections). No code changed, no DB runs.
 - 2026-11-15 07:09 UTC Astra review: APPROVE_WITH_CHANGES; 2 MUST-FIX (profile id/iucnId uniqueness before ranges; regen ranges when an existing animal's range/iucnId changes), 1 SHOULD-CONSIDER (owner content build from merged commit). No code changed.
 - 2026-11-15 07:18 UTC Revision: architect resolved Fable MUST-FIX 1 + 3 MISSED, Astra MUST-FIX 1 (`assertProfilesReady` with dup id/iucnId, one-line refusal) and 2 (doc rule: range/iucnId change reruns `ranges`); SHOULD-CONSIDER: Fable 2,3,4 + Astra 1 adopted, Fable 1,5 declined. Claims spot-checked (`connect.ts:21`, `iucn.ts:6,153`). No code changed, no DB runs.
+- 2026-11-15 07:26 UTC Steps: planner wrote S1-S7 (profiles-first refusal, S12 query, S12 proof on dev copy, D20+terms, credits+E2E, add-animal order, smaller doc fixes), Verification 0-7, Failure modes F1-F3. No code changed, no DB runs.
 
 ## Summary
