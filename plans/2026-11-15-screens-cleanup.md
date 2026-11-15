@@ -728,7 +728,7 @@ Every step:
     - `no console errors`: the A16 case 2 error above.
   - `report.twoTabs` = `{"a":1,"b":2,"mysteries":[23,39],"x":29}`.
 
-- [ ] S2 · A16: a save that can't resume is dropped (+ D22's pool line)
+- [x] S2 · A16: a save that can't resume is dropped (+ D22's pool line)
   - Tests first: `tests/animalBoard/savedGame.test.ts`, header listing the ways `fitsShape` could fail, then Architecture A16 "Unit tests" cases. `npm test > $STATE/unit-fail-first/savedGame.txt 2>&1`; record the failure.
   - `src/components/animalBoard/savedGame.ts`: private `kindOf`, `holdsKeys`; `export function fitsShape(saved: unknown, fresh: SavedGame['session']): boolean` with the Architecture's doc (structural only; pre-highlight saves dropped).
   - `src/components/animalBoard/useAnimalSession.ts`:
@@ -738,6 +738,10 @@ Every step:
   - Unchanged: `v: 1`, `animalBoard.ts`, `animalSession.ts`.
   - Decisions: unit fail-first recorded inside the code step (pre-push typecheck covers `tests/`).
   - Checks: typecheck, lint, `npm test` (64 + N1; record N1), one E2E → `$STATE/e2e-s2/`. Must show `1584 3`: both A16 checks and every existing resume check pass; only the 3 `two tabs:` fail. A resume check failing = `fitsShape` too strict: fix the rule, never loosen it to array items.
+  - Done 2026-11-15. Unit fail-first: `tests/animalBoard/savedGame.test.ts` (header: 5 ways `fitsShape` could fail; 5 tests) → `$STATE/unit-fail-first/savedGame.txt`: esbuild `No matching export in "src/components/animalBoard/savedGame.ts" for import "fitsShape"`, whole run exit 1.
+  - Code: `savedGame.ts` `kindOf` + `holdsKeys` (skips fresh keys whose value is `undefined`: the hook's fresh isn't JSON round-tripped) + exported `fitsShape` with the Architecture's doc. `useAnimalSession.ts`: `isSeed` (urlSeed + saved seed), two `try` blocks as designed (pool line without the citations fallback; `deal` once in the first; drop = `clearSavedGame()` + one `console.warn`), `dispatch(load)` built once.
+  - typecheck 0, lint 0, `npm test` 69/69 (64 + N1 = 5).
+  - E2E (dev copy, guard passed) → `$STATE/e2e-s2/`: `1581/1584`, report check `1584 3`, only the 3 `two tabs:` fail. Both A16 checks pass (`trail`: board, score 0, seed 7, mystery 7, same suspects, save holds field; `orders`: same, no load error). Every resume check passes ("a reload resumes the round…" 27/27, board, stale-save, journal once, round-end card); `no console errors` passes (0).
 
 - [ ] S3 · A17: every journal/records write merges into storage
   - Tests first, `tests/clueGame/journal.test.ts`: a comment listing the ways the merge could fail, then Architecture A17 "Unit tests" (`mergeJournals` ×3, `saveSolve` ×2, `saveRecords` ×1). M7's merge case and the old-journal case untouched. `npm test > $STATE/unit-fail-first/journal.txt 2>&1`; record.
@@ -814,6 +818,7 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 
 - 2026-11-15 · Astra MUST-FIX 1 (serialize cross-tab read–merge–write + overlapping-save E2E) rejected: owner chose merge at save time, no `storage` listener; a Web Lock doesn't close the window (Chromium propagates localStorage writes across renderers async, apart from lock grant); only IndexedDB would, which breaks K2; window is one sync task per found round and the losing tab restores its find at next save; overlap E2E can't be deterministic. Cross-tab serialization left as a later owner choice (Revision notes R1).
 - 2026-11-15 · A save with an invalid seed that otherwise fits resumes under a new random seed (brief names the seed only on the drop path) (Fable SC2).
+- 2026-11-15 · S2/S3 unit fail-first recorded inside the code step, not a separate commit: pre-push typecheck covers `tests/`, so a test importing a missing export can't be pushed alone.
 
 ## Log
 
@@ -825,5 +830,6 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 - 2026-11-15 13:06 UTC · Revision: architect rejected Astra MUST-FIX (reasons under Decisions), adopted 6 SHOULD-CONSIDER (refs set at write, A16 structural-check wording, highlight note, seed note, A17 E2E key setup). Plan only; no checks needed.
 - 2026-11-15 13:15 UTC · Steps: planner wrote S1–S6 (E2E fail-first; A16; A17; O1 font cut + glyph proof; D22+D23; S11) and 11-point Verification (final 1584/1584). Brief grep `const HOLD_MS` fixed with `':!plans'`. Plan only; no checks needed.
 - 2026-11-15 13:36 UTC · S1: 5 fail-first E2E checks (A16 ×2, A17 ×3) + `setUpPage` refactor in `scripts/e2e.mjs`; typecheck/lint 0; E2E 1578/1584, exactly the 6 predicted fails → `checks-fail-first/`.
+- 2026-11-15 13:54 UTC · S2: A16 `fitsShape` + two-`try` load + `isSeed`, D22 pool line; unit fail-first then 69/69; typecheck/lint 0; E2E 1581/1584 (only 3 `two tabs:` fail, as planned) → `e2e-s2/`.
 
 ## Summary

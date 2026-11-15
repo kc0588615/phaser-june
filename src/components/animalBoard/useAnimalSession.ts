@@ -22,13 +22,15 @@ import { setDebugClueSource } from '@/game/debugBridge';
 import { getJson } from '@/lib/getJson';
 import { hash32, mulberry32 } from '@/lib/seededRng';
 import { isAutoRuleOutOn, setAutoRuleOutOn } from './autoRuleOut';
-import { readSavedGame, writeSavedGame, type SavedBoard, type SavedRowOrder } from './savedGame';
+import { clearSavedGame, fitsShape, readSavedGame, writeSavedGame, type SavedBoard, type SavedRowOrder } from './savedGame';
+
+const isSeed = (value: unknown): value is number => Number.isInteger(value) && (value as number) > 0 && (value as number) <= 0xffff_ffff;
 
 /** `?seed=N` replays a session: same trails, same boards (never saved or resumed). */
 function urlSeed(): number | null {
   if (typeof window === 'undefined') return null;
   const fromUrl = Number(new URLSearchParams(window.location.search).get('seed'));
-  return Number.isInteger(fromUrl) && fromUrl > 0 && fromUrl <= 0xffff_ffff ? fromUrl : null;
+  return isSeed(fromUrl) ? fromUrl : null;
 }
 
 interface Content {
@@ -45,7 +47,7 @@ interface Dealt { round: AnimalRound; boardSeed: number }
 export function useAnimalSession() {
   const [replay] = useState(urlSeed);
   const [saved] = useState(() => (replay || typeof window === 'undefined' ? null : readSavedGame()));
-  const [seed] = useState(() => replay ?? saved?.seed ?? Math.floor(Math.random() * 0xffff_fffe) + 1);
+  const [seed] = useState(() => replay ?? (isSeed(saved?.seed) ? saved.seed : null) ?? Math.floor(Math.random() * 0xffff_fffe) + 1);
   const [requested] = useState<ContinentKey | null>(() => continentOf(typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('place')));
   const [content, setContent] = useState<Content | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -85,10 +87,9 @@ export function useAnimalSession() {
     if (sessionRef.current) return; // a dev hot reload re-runs effects; keep the session
     let cancelled = false;
     (async () => {
-      try {
-        // A pool cached from before citations shipped (max-age 60 + stale 600) has none: treat as empty.
-        const fetched = await getJson<Omit<CluePool, 'citations'> & Partial<Pick<CluePool, 'citations'>>>('/api/clue-game/pool/');
-        const pool: CluePool = { ...fetched, citations: fetched.citations ?? {} };
+      let data: Content, first: Dealt;
+      try { // the network and the content; never touches the save
+        const pool = await getJson<CluePool>('/api/clue-game/pool/');
         const animals = animalsFromPool(pool);
         if (cancelled) return;
         const onContinent = requested ? poolFor(animals, requested) : [];
@@ -104,25 +105,34 @@ export function useAnimalSession() {
           setLoadError('Not enough animals that can be told apart yet.');
           return;
         }
-        const data: Content = { pool, animals, book, continent, sets };
-        setContent(data);
-        const resume = saved && saved.requested === requested && saved.session.round.rules.version === ANIMAL_RULES.version
-          && roundStillFits(book, saved.session.round) ? saved : null;
-        if (resume) {
-          // Later rounds don't replay the uninterrupted session exactly; they just shouldn't repeat round 1's deal.
-          rng.current = mulberry32(hash32(`${seed}:${resume.session.roundNo}`));
-          setBoard(resume.board);
-          setRowOrder(resume.rowOrder ?? null);
-          if (resume.session.end) setRecordedRound(resume.session.roundNo);
-          dispatch({ type: 'restore', session: { ...resume.session, book } });
-          return;
-        }
-        const first = deal(data, 1, []);
-        dispatch({ type: 'load', book, ...first, trail: newTrail(ANIMAL_RULES) });
+        data = { pool, animals, book, continent, sets };
+        first = deal(data, 1, []); // once, before the guard: deal advances rng.current, and a dropped save plays this deal
       } catch (error) {
         console.error('[AnimalBoard] Failed to load the animals:', error);
         if (!cancelled) setLoadError('Could not load the animals. Check the connection and reload.');
+        return;
       }
+      setContent(data);
+      const load = { type: 'load' as const, book: data.book, ...first, trail: newTrail(ANIMAL_RULES) };
+      if (saved) {
+        try { // only the guard, the shape check and the restore: a save that throws or doesn't fit is dropped
+          if (saved.requested === requested && saved.session.round.rules.version === ANIMAL_RULES.version && roundStillFits(data.book, saved.session.round)) {
+            const { book: _book, ...fresh } = animalSessionReducer(null, load)!;
+            if (!fitsShape(saved.session, fresh)) throw new Error("a field today's code writes is missing");
+            // Later rounds don't replay the uninterrupted session exactly; they just shouldn't repeat round 1's deal.
+            rng.current = mulberry32(hash32(`${seed}:${saved.session.roundNo}`));
+            setBoard(saved.board);
+            setRowOrder(saved.rowOrder ?? null);
+            if (saved.session.end) setRecordedRound(saved.session.roundNo);
+            dispatch({ type: 'restore', session: { ...saved.session, book: data.book } });
+            return;
+          }
+        } catch (error) {
+          clearSavedGame();
+          console.warn('[AnimalBoard] Dropped a saved game that no longer fits; a new game starts:', error);
+        }
+      }
+      dispatch(load);
     })();
     return () => { cancelled = true; };
   }, [requested, deal, saved, seed]);
