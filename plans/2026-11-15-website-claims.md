@@ -147,7 +147,7 @@ Each changed page's `updated` date is the merge day (UTC, in the `November 20, 2
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -443,7 +443,130 @@ Rejected or unchanged:
 
 ## Steps
 
+Every step:
+- `STATE=/srv/critter-ai/agent-state/missions/website-claims`. Start with `git fetch origin --prune`. If `origin/main` moved past `83eef270`, record `git diff --stat 83eef270 origin/main` and go on: the release rebases, so don't bring it in mid-mission (Decision rules say what a moved base redoes).
+- Anchor edits on quoted text; the Architecture's line numbers shift once earlier edits land. Drop the Target design's `{/* … */}` placeholder comments (they mean "keep today's block").
+- **Site E2E** = `npm run site:build`; `ss -ltn | grep -q ':3101 ' && echo BUSY` (must print nothing); `npm run site:serve` in the background; `curl -sf --retry 5 --retry-connrefused http://127.0.0.1:3101/ >/dev/null`; `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:site` prints `444/444 checks passed, 20 screenshots`; `pkill -f 'http.server 3101'`; `mv "$(ls -1d e2e-artifacts/*-site | tail -1)" $STATE/<name>`. Report check, must print `444 0`:
+  ```
+  node -e 'const r=require(process.argv[1]);const f=r.checks.filter(c=>!c.ok);console.log(r.checks.length,f.length);for(const c of f)console.log(c.name,"::",(c.detail??"").slice(0,200))' <dir>/report.json
+  ```
+- **Artifacts (disk):** intermediate runs go to `$STATE/e2e-s<n>-site/`; delete older `$STATE/e2e-s*` and leftover `e2e-artifacts/*-site` when writing a new one. Never delete `$STATE/baseline-e2e-site/`, `$STATE/site-before/`, `$STATE/final-e2e-site/`. One heavy job at a time.
+- **Page text** (for checks, the Summary and the PR body):
+  ```
+  txt() { python3 -I -c 'import html,re,sys; t=open(sys.argv[1]).read(); t=re.sub(r"<(script|style)\b.*?</\1>","",t,flags=re.S); t=re.sub(r"</(p|li|h[1-6]|dt|dd|title)>","\n",t); t=re.sub(r"<[^>]+>"," ",t); print("\n".join(" ".join(l.split()) for l in html.unescape(t).splitlines() if l.strip()))' "$1"; }
+  for p in privacy teachers terms; do txt out/site/$p/index.html > $STATE/text-$p.txt; txt $STATE/site-before/$p/index.html > $STATE/text-$p-before.txt; done
+  ```
+- Pre-push hook runs typecheck + lint. Record results as indented bullets under the step, check it off, add one Log line, commit code + plan together, push.
+
+- [ ] S1 · D21 alone: `src/site/Screenshot.tsx`, byte-identical build (Finding 7)
+  - Edit per Target design only: doc comment ends `radius m, lazy.`; signature `export default function Screenshot({ shot, crop = '' }: { shot: ShotImage; crop?: string }) {`; the `{...(lead ? LEAD_IMAGE : …)}` spread becomes `loading="lazy" decoding="async"`, placed after `className`. `LEAD_IMAGE` and its comment stay. No other file.
+  - Delete `e2e-artifacts/2026-11-15T18-24-20-160Z-site` (already copied to `$STATE/baseline-e2e-site/`).
+  - Checks:
+    - `npm run typecheck`, `npm run lint` exit 0.
+    - `npm run site:build` exits 0 and prints `(/site/site.f7f956df00.css)`.
+    - `diff -r $STATE/site-before out/site` prints nothing, exit 0. If it prints anything, fix the attribute order; never accept a diff.
+    - `git grep -n -w lead -- src/site` prints nothing; `git grep -n '<Screenshot' -- .` still gives 10 lines.
+    - `git diff --stat origin/main`: `Screenshot.tsx` + plan only.
+    - No E2E: identical bytes are the proof (DoD).
+  - Commit D21 alone, before any text change.
+
+- [ ] S2 · Bot run on the final base (DoD); find-rate figures. No code change.
+  - Inputs check: `git diff --quiet 83eef270 HEAD -- db/content src/clueGame scripts/balance-044.ts` exits 0, and the same against `origin/main` (if not, record it: the release rebase redoes this run); record `git rev-parse --short origin/main` and `ANIMAL_RULES.version` (`src/clueGame/animalBoard.ts`, `055-0` at baseline).
+  - Run (Bash timeout 900000; preview took 4 m 10 s):
+    ```
+    { time node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 400 --seed 44 --places africa,asia,north-america,south-america --players careful,random,autoguess ; } > $STATE/bot.txt 2>&1; echo "exit $?"
+    ```
+    Must print `exit 0`; `bot.txt` ends with `real …` (the wall time).
+  - Figures: `grep -E '^\| [a-z-]+ \(' $STATE/bot.txt | cut -d'|' -f2-4`. Same seed + same inputs should reproduce the Architecture's preview table; if `/tmp/wc-arch/bot.txt` still exists, `diff <(grep -E '^\|' /tmp/wc-arch/bot.txt) <(grep -E '^\|' $STATE/bot.txt)` prints nothing. A difference means the inputs differ: find why; the new figures win.
+  - Record under the step: the 4×3 table (found ±95%, printed values), wall time, and per Decision rules:
+    - `A` = round(100 ÷ mean `autoguess` over the four places), `R` = round(100 ÷ mean `random`), each as a word.
+    - `P` = largest multiple of 5 below the lowest `careful` (found − margin).
+    - `A` = `R`: drop the bracket. Bot fails: Decision rules fallback; say so.
+    - Preview gave A "three", R "five", P 90.
+  - Checks: `npm run typecheck`, `npm run lint` exit 0 (tree unchanged). Commit plan only.
+
+- [ ] S3 · Site text: `config.ts`, `Privacy.tsx`, `Teachers.tsx`, `Terms.tsx` (Findings 1, 2, 4, 5)
+  - Date: `date -u +'%B %-d, %Y'` (e.g. `November 15, 2026`) as `updated=` on Privacy and Terms. No `{MERGE_DAY}` left. The release resets it to the merge day.
+  - Text verbatim from Target design:
+    - `config.ts`: the header comment and the Privacy `description`. Nothing else.
+    - `Privacy.tsx`: the full body. "What we don't do" and "Changes" unchanged; the three device `<li>` are today's "If you play without signing in" list, verbatim.
+    - `Teachers.tsx`: the FAQ answer; the find-rate sentence with S2's `A`/`R`/`P`; the privacy section's `ul` + `p`. Keep the `Section` props, `h2`, `id="privacy"`. `H3` and `LIST` stay imported.
+    - `Terms.tsx`: "Your account" → "Playing fair" (one item); the date. M10's One Earth sentence and every other line stay.
+  - Checks:
+    - `npm run typecheck`, `npm run lint` exit 0; `npm test` 76/76.
+    - `npm run site:build` prints `(/site/site.f7f956df00.css)`: CSS unchanged, since every class the old two columns used is used elsewhere in `src/site`.
+    - `diff -rq $STATE/site-before out/site` lists exactly `privacy/index.html`, `teachers/index.html`, `terms/index.html` (Verification 4). Anything else: stop and explain (Failure modes).
+    - Verification 6 (DoD grep, dates) passes.
+    - Page text: run the `txt` loop; `text-privacy.txt`, `text-teachers.txt`, `text-terms.txt` hold every Target design sentence (with S2's figures and the date). Verification 8's removed phrases: 0 hits.
+    - Site E2E → `$STATE/e2e-s3-site/`, `444 0`. Inspect `site-privacy-*`, `site-teachers-*`, `site-terms-*` (390/1440 × light/dark) against `$STATE/baseline-e2e-site/` (Verification 2).
+  - Commit code + plan.
+
+- [ ] S4 · `docs/DATABASE_ACCESS.md` `## Deletion requests` (Finding 6, revised Target design)
+  - Re-read each fact first, on the then-current base (if `origin/main` moved, read `git show origin/main:<file>`). Record each fact as same or changed, with `file:line`:
+    1. Only `fetch` in `src/` is `src/lib/getJson.ts` (`git grep -n "fetch(" -- src`). Every `src/app/api/**/route.ts` exports `GET` only: `git grep -n -E "export (async )?function (POST|PUT|PATCH|DELETE)" -- src/app` prints nothing.
+    2. `grep -nw log deploy/Caddyfile` prints nothing.
+    3. `git grep -n -E "console\.(log|error|warn|info)" -- src/app src/lib`: only the API routes' `console.error` lines, each logging an error, no IP or request headers.
+    4. `db/schema.sql`: `profiles(user_id, clerk_user_id, created_at, updated_at)` (no email); `clue_match_solves.player_id … REFERENCES profiles(user_id) ON DELETE SET NULL`; `solved_at`. `grep -c "REFERENCES profiles" db/schema.sql` prints 1.
+    5. `deploy/backup/pg-backup.sh`: `set -euo pipefail`, daily `-mtime +14`, weekly `-mtime +56`, `rsync --delete` to `OFFSITE`.
+    6. `/srv/critter-ai/ops/bin/game-backup-pull`: `KEEP=3`, pruning only after a new copy.
+    7. `deploy/db/dev-role.sql`: nulls `player_id`, deletes `profiles`, keeps the solves.
+    8. M13's names: if `git ls-tree --name-only origin/main plans/ | grep -i db-retire` finds its plan, its names win; else the brief's `retired_clue_match_solves`, `retired_profiles`.
+    9. `### Runbook` exists in the doc (the `#runbook` link), and its steps 1–2 are the dev-copy refresh.
+    If one changed, write what is true then (Decision rules) and list it as a deviation.
+  - Insert the Target design's block (as revised) verbatim, just above `## Related`. No row counts.
+  - Checks: Verification 7 passes; record the section's line count. `npm run typecheck`, `npm run lint` exit 0. Markdown only: no build or E2E.
+  - Commit doc + plan.
+
+- [ ] S5 · Final Verification and Summary
+  - Runs only once `## Code review (Astra)` is recorded and every fix step it added (inserted above S5) is checked. If it's still empty, that review is this session's unit (CLAUDE.md, "Final code review"); leave S5 unchecked.
+  - Run all of Verification on the final commit; artifact `$STATE/final-e2e-site/`; then delete `$STATE/e2e-s*`.
+  - Write `## Summary` (Verification 9), set `status: done` in the front matter, commit, push, end `MISSION_CONTINUE` (the release is the next unit, not a step).
+
 ## Verification
+
+Run on the final commit (S5), and again by the release session after its rebase and date reset (item 10). `STATE`, `txt` and the report check as in Steps. One heavy job at a time.
+
+1. **Site E2E.** `npm run site:build`; port 3101 free; `npm run site:serve` in the background; `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:site` prints `444/444 checks passed, 20 screenshots` (baseline count); stop the server; `mv "$(ls -1d e2e-artifacts/*-site | tail -1)" $STATE/final-e2e-site` (the release replaces it with its own run). The report check prints `444 0`. Repro: the same commands; the build is deterministic (same sources, same bytes).
+2. **Screens.** `site-privacy-*`, `site-teachers-*`, `site-terms-*` at 390 and 1440, light and dark, against `$STATE/baseline-e2e-site/`. Teachers' Student privacy is one list (no columns, no `h3`). Privacy shows the brief's sections in order. Terms shows "Playing fair". Nothing overflows, and every other section looks as in the baseline. `site-home-*` and `site-404-*` look as in the baseline. Record each.
+3. **Gates.** `npm run typecheck`, `npm run lint` and `npm test` (**76/76**) exit 0. `npm run site:build` (item 1) exited 0 and printed `(/site/site.f7f956df00.css)`.
+4. **Build diff (Fable MISSED 1).** `diff -rq $STATE/site-before out/site` lists exactly `privacy/index.html`, `teachers/index.html` and `terms/index.html`. The Privacy description is built only into `privacy/index.html` (meta tags) and `teachers/index.html` (the class-link bundle imports `config.ts`): `grep -rl "keeps if you sign in" $STATE/site-before` lists only those two. `index.html`, `404.html`, `sitemap.xml`, `robots.txt`, `site/*` (CSS, shots, og), fonts and branding are identical. Anything else listed: explain it in the plan before the release (Failure modes).
+5. **Scope.** `git diff --stat origin/main` lists only `src/site/Screenshot.tsx`, `src/site/config.ts`, `src/site/pages/Privacy.tsx`, `src/site/pages/Teachers.tsx`, `src/site/pages/Terms.tsx`, `docs/DATABASE_ACCESS.md` and `plans/2026-11-15-website-claims.md`. If `origin/main` moved before the rebase, use `git diff --stat $(git merge-base HEAD origin/main)`.
+6. **DoD grep** prints nothing:
+   ```
+   git grep -n -i -E "clerk|sign[ -]?in([^a-z]|$)|signing in|map servers|account id|your account|matches without reasoning|unless it leads|lead\?: boolean|lead = false" -- src/site
+   ```
+   Also `git grep -n MERGE_DAY -- src/site` prints nothing, and `git grep -n 'updated=' -- src/site/pages` gives Privacy and Terms with the same real date (after the release reset, the merge day).
+7. **Deletion section.**
+   - `git grep -n "## Deletion requests" -- docs/DATABASE_ACCESS.md` gives one line, and `grep -n '^## ' docs/DATABASE_ACCESS.md | grep -A1 'Deletion requests'` shows `## Related` next.
+   - `for n in profiles user_id clerk_user_id created_at clue_match_solves player_id solved_at; do grep -qw "$n" db/schema.sql || echo "MISSING $n"; done` prints nothing.
+   - `for n in retired_clue_match_solves retired_profiles; do grep -q "$n" /srv/critter-ai/agent-state/missions/briefs/2026-11-13-db-retire.md || echo "MISSING $n"; done` prints nothing (or M13's plan, if it exists by then: S4 item 8).
+8. **Visible text.** Regenerate `$STATE/text-*.txt` with the `txt` loop. Each new Target design sentence is present. `grep -ci -E "clerk|sign in|signing in|your account|account id|map servers|either way|matches without reasoning" $STATE/text-{privacy,teachers,terms}.txt` prints 0 for each file.
+9. **Summary (S5 writes it; under the pre-approval the owner reads it after the release).** It lists:
+   - The changed files; D21's identical-build proof (S1); the baseline's M11 check, old-row counts (7 / 188, newest 2026-10-01) and outside hosts (Wikimedia Commons only).
+   - The bot table, wall time, `A`/`R`/`P` and the sentence they gave (`$STATE/bot.txt`).
+   - The full new Privacy text, and each changed Teachers and Terms sentence old → new (from `text-*.txt` and `text-*-before.txt`).
+   - Wording deviations from the brief: Target design (a)–(e). Also Fable SC 2: Privacy bullet 3 ("Nothing about how you play is kept in our database") sits above deviation (b)'s "Rounds played without one were saved too" (now vs then). And the deletion doc's deviations (about 8 weeks; copies only while the jobs run; dev copy; Clerk deleted last; attribution; Caddy clause) and its length against the brief's 15–25 lines, with the reason.
+   - The deletion section's outline; site E2E runs (baseline 444/444, S3, final) with artifact paths; review rounds: none (owner pre-approved, 2026-11-14). The release adds CI and smoke results.
+   - No production content build needed (no `db/content` change).
+   - For the owner: Clerk's production instance still holds former users' emails until he deletes it (Fable SC 3); Caddy logs IP and user agent to `docker logs caddy` on a 502 (Architecture Notes); H20 (4 result-less profiles).
+   - For M13: "are being deleted" stays true until the last weekly dump holding the rows ages out (56 days after the drop), and until its two kept dumps (`game-backups/kept/`) and the dev copy's rows go; then it should read "were deleted". The deletion section's table names (and W4/W5 dates) change when M13 renames the tables, and its old-rows part goes when M13 drops them. `db/schema.sql:91`'s comment is off (4 of 7 profiles hold no result).
+10. **Release session** (one session, not a step; owner pre-approval). After `git rebase origin/main`:
+    - If the rebase brought changes to `src/site/`, `db/content/`, `src/clueGame/animalBoard.ts`/`ANIMAL_RULES`, or anything that loads from a host, redo what they touch (Decision rules: S2's bot run; the outside-hosts check).
+    - Set Privacy's and Terms' `updated` to the merge's UTC day (Fable MISSED 2) and commit, then run items 1–8 again. Push, open the PR (old → new sentences from `text-*`), and wait for CI. If the merge lands on a later UTC day, fix the date again first.
+    - Smoke check: byte-identical compare (baseline live = build), per the DoD.
+
+## Failure modes
+
+Nothing is tested in isolation: the checks are the site E2E, the build diff and the greps. What could go wrong, and what catches it:
+- **D21 changes bytes** (attributes out of order) → S1's `diff -r`. Fix the order.
+- **The CSS hash changes:** a Tailwind candidate word in the added or removed text, or a class only the old columns used. The build line is no longer `site.f7f956df00.css`, and `diff -rq` lists `site/site.*.css` and every page, `index.html` included. That breaks the release smoke's "`/` equals its pre-merge record". Diff the two CSS files, find the class, and fix the markup by reusing existing classes. If that's unavoidable, record why, and the release compares `/` with the merge commit's `out/site/index.html` instead.
+- **Title or description mismatch** → e2e-site's `PAGES` check (`scripts/e2e-site.mjs:139`). `config.ts` is the only source.
+- **`H3` or `LIST` removed, or left unused** → typecheck or lint.
+- **The date:** a `{MERGE_DAY}` left behind, Privacy and Terms disagreeing, or a merge on a later UTC day → Verification 6 and item 10.
+- **The bot:** a different table on the same seed means the inputs changed (S2's inputs check), and the new figures win. A failed bot run → the Decision rules' fallback.
+- **A deletion-doc fact changed on the base** (a later PR edits `pg-backup.sh`, or the Caddyfile gains `log`) → S4's re-read. Write what is true then.
+- **The release rebase changes site inputs** (`src/site`, `src/styles`, `src/components/Wordmark.tsx`, `scripts/site.mjs`, `public/`, `package-lock.json`): `site-before` no longer matches `origin/main`. Build a fresh copy for item 4: `git worktree add --detach /tmp/wc-main origin/main`, `ln -s $PWD/node_modules /tmp/wc-main/node_modules`, `npm run site:build` there, copy `out/site` to `$STATE/site-main/`, diff against that, then `git worktree remove --force /tmp/wc-main`.
+- **Port 3101 busy, or a server left running** → the `ss -ltn` check, then `pkill -f 'http.server 3101'`.
 
 ## Code review (Astra)
 
@@ -462,5 +585,6 @@ Rejected or unchanged:
 - 2026-11-15 18:44 UTC · Fable review: APPROVE_WITH_CHANGES, MUST-FIX none (scripts/db txn ok; no pinned strings outside src/site); 2 MISSED for Steps (asset diff, real date); 5 SHOULD-CONSIDER. Plan only.
 - 2026-11-15 18:47 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (retention contract: dev copy keeps anonymized solves; backup expiry depends on rotation), 1 SHOULD-CONSIDER (keep Clerk/DB id map before deleting Clerk user). Revision next. Plan only.
 - 2026-11-15 18:52 UTC · Revision: architect resolved Astra MUST-FIX (both claims verified: dev-role.sql keeps anonymized solves; pruning only after successful pulls) in deletion doc "Copies"; Clerk user deleted last; attribution narrowed; Privacy/Terms unchanged. Plan only.
+- 2026-11-15 18:59 UTC · Steps: planner wrote S1 D21 alone (byte-identical), S2 bot run, S3 four site files, S4 deletion doc (9 facts re-read), S5 final Verification + Summary; Verification 1–10 (incl. Fable MISSED asset diff + date reset); Failure modes. Plan only.
 
 ## Summary
