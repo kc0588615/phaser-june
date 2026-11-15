@@ -145,7 +145,7 @@ Each changed page's `updated` date is the merge day (UTC, in the `November 20, 2
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -402,6 +402,18 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+2026-11-15, `astra-review` exit 0, output verbatim:
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. The [retention contract](/srv/critter-ai/worktrees/website-claims/plans/2026-11-15-website-claims.md:328) promises deletion from every copy after about eight weeks, but `dev-role.sql` retains anonymized solves indefinitely, and Oracle pruning requires successful new backup pulls. Distinguish retained anonymized records from deleted identities; qualify backup expiry on successful rotation and mirroring. No infrastructure changes needed.
+
+SHOULD-CONSIDER:
+
+1. Resolve and securely retain both Clerk and database identifiers before deleting the Clerk user. This preserves the only email-to-row mapping if backup or database deletion fails midway.
+
 ## Revision notes
 
 ## Steps
@@ -423,5 +435,6 @@ SHOULD-CONSIDER:
 - 2026-11-15 18:27 UTC · Baseline on `83eef270`: M11 live, typecheck/lint 0, test 76/76, site E2E 444/444, live pages = build, hosts = Wikimedia only, old rows 7/188 (max 2026-10-01; nothing writes; H20 FYI).
 - 2026-11-15 18:45 UTC · Architecture: architect wrote findings + exact text for Screenshot/config/Privacy/Teachers/Terms + deletion doc; "until early October 2026" confirmed; new risk: Caddy logs IP on 502 (wording avoids "nothing else"); trial bot careful 96–98%, random 20%, autoguess 28–37%. Plan only, no code.
 - 2026-11-15 18:44 UTC · Fable review: APPROVE_WITH_CHANGES, MUST-FIX none (scripts/db txn ok; no pinned strings outside src/site); 2 MISSED for Steps (asset diff, real date); 5 SHOULD-CONSIDER. Plan only.
+- 2026-11-15 18:47 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (retention contract: dev copy keeps anonymized solves; backup expiry depends on rotation), 1 SHOULD-CONSIDER (keep Clerk/DB id map before deleting Clerk user). Revision next. Plan only.
 
 ## Summary
