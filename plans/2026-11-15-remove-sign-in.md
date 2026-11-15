@@ -198,7 +198,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none): none needed
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -469,6 +469,8 @@ SHOULD-CONSIDER: none
 
 ## Revision notes
 
+None needed: Fable and Astra both APPROVE with MUST-FIX none. Fable's SHOULD-CONSIDER 1–2 go to the Steps stage (planner); 3 is already under Decisions.
+
 ## Steps
 
 ## Verification
@@ -490,5 +492,6 @@ SHOULD-CONSIDER: none
 - 2026-11-15 UTC: Architecture (architect). M9 branch confirmed (`mergeJournals` rule = Review corrections); one atomic `src/` step (ClerkProvider/useAuth/auth() coupling); 4 new E2E checks (1584→1588), `npm test` 75→76; DEPLOY.md renumber breaks 3 anchors; Anywhere link shifts into Sign in slot (expected). Plan-only change; verified merge rule and fixture count (4) against code.
 - 2026-11-15 UTC: Fable review: APPROVE, MUST-FIX none, MISSED none; 3 SHOULD-CONSIDER (Steps: name the red tests-first E2E state, anchor on quoted text; 3 deviations recorded under Decisions). Verified cited sites against code; DoD grep on e2e.mjs/next.config.mjs clean. Plan-only change.
 - 2026-11-15 UTC: Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only change.
+- 2026-11-15 UTC: Revision: none needed (both reviews APPROVE, no MUST-FIX). Plan-only change.
 
 ## Summary
