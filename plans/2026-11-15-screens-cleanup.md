@@ -770,14 +770,14 @@ Every step:
       - Deviation: the Bold page draws 700 and 800, so it's twice as tall as the Regular one, and a whole-shot wrong pair differs by size alone. So the wrong pair compares equal-size crops of the test block's first group (10 px, Regular at 400 vs Bold at 700): 12,338 (light), 12,524 (dark) px differ.
       - Harness extras: forces `load()` on all four faces (faces with `unicode-range` load lazily); viewport resized to page height, so the whole page is shot; `mobile: false` + viewport meta (no text autosizing); asserts no line overflows and control/test blocks have equal heights.
     - typecheck 0, lint 0; `site:build` 0; `e2e:site` 444/444 (server stopped).
-    - E2E: first run 1583/1584. The only failure was the timing check "field guide: signs in pages turn on their own…" (`turned: false`), audit A10's flaky class and not one of this mission's checks; its report is kept as `e2e-s4/flake-first-run-report.json`. Rerun once (Decision rule): 1584/1584, report check `1584 0`, 5 `true` (2 A16, 3 A17) → `$STATE/e2e-s4/`; `e2e-s3/` deleted.
+    - E2E: first run 1583/1584. The only failure was the timing check "field guide: signs in pages turn on their own…" (`turned: false`), audit A10's flaky class and not one of this mission's checks; its report is kept as `$STATE/s4-flake-first-run-report.json` (moved out of `e2e-s4/` when S5 deleted it). Rerun once (Decision rule): 1584/1584, report check `1584 0`, 5 `true` (2 A16, 3 A17) → `$STATE/e2e-s4/`; `e2e-s3/` deleted.
     - Screens vs `baseline-e2e/` (seed 7, decoded pixels with sharp, then by eye):
       - `02-board.png`, `02d-field-guide.png`, `04-round-1-end.png`, `05-journal.png`: 0 px differ (clue counter, moves, trail `n/5`, grid `have/size` and `?`, guide numbers, `+points` and stats, `×N` / `best N moves`).
       - `01-globe.png`: 21,199 px differ, all inside the globe (spin position, markers). The "N animals" list crop: 0 px.
       - `02c-notes.png`: top bar (`1/5`, moves) crop 0 px. The `3/20` cell and the Goliath Frog row differ only in color (the reviewing highlight mid-transition): same glyphs, weight, width and baseline by eye at 3×.
       - `08-pencil-bonus-end.png`: top bar and pencil stats (`1/1`, `+24`) crops 0 px. Baseline caught `+74 points` mid-pop (its `motion.span` pops in at 0.68 s); this run shot before it, and the photo fade differs. Timing, not font: `04-round-1-end.png`'s round-end card is identical.
 
-- [ ] S5 · D22 + D23: leftovers out
+- [x] S5 · D22 + D23: leftovers out
   - Guide only, never `git apply`: `/srv/critter-ai/agent-state/missions/critter-connect-audit/audit/area-6/dryrun.patch`.
   - `src/styles/globals.css`: "/* Clue Match (cm-*, roster-cross: the unrouted 043 game, plus the range map's ping) */" → `/* The range map's ping (RangeMap) */`; delete `@keyframes roster-cross-in`, `cm-shake`, `cm-pop-in`, `cm-countdown` and rules `.roster-cross`, `.cm-shake`, `.cm-pop-in`, `.cm-countdown`; keep `cm-range-ping` (keyframes + rule); reduced-motion `.cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit,` → `.cm-range-ping, .ev-lit,`.
   - `RangeMap.tsx`: delete `const area = new Intl.NumberFormat(…)`, `caption = true` / `caption?: boolean`, and `{range && caption && (`…figcaption…`)}`. `JournalSheet.tsx`: `<RangeMap speciesId={species.id} name={species.commonName} />`; credit line untouched.
@@ -790,6 +790,12 @@ Every step:
   - D23: `git rm public/branding/critterconnect-oauth-logo.png public/branding/critterconnect-oauth-logo.prompt.txt`.
   - Plan: Brief Notes "`SuspectPhoto`'s only caller is `AnimalCard`." → its callers are `AnimalCard` and `AnimalSheets.tsx` (Review corrections).
   - Checks: typecheck (no caller passed a removed prop), lint, `npm test`, Verification 9 greps, one E2E → `$STATE/e2e-s5/` (delete `e2e-s4/`), `1584 0`; its `05-journal.png` and `11-journal-sources-open.png`: map, no caption, credit unchanged.
+  - Done 2026-11-15 (code `613d6bb9`). Every quoted site found as quoted (the Verification 9 grep's hits before the edit were exactly S5's sites: AnimalCard `size={size}`, FactsWithSources `itemClassName` ×3, JournalSheet `caption={`, RangeMap figcaption ×2, SpeciesPortrait `width = 120`, globals.css 468–496 + 660). `.cm-countdown` was never in the reduced-motion list. The pool line was S2's: `before citations shipped` already 0 hits.
+    - Edits as listed; `ReactNode` dropped from `AnimalCard.tsx` only (FactsWithSources still uses it); `BoardController.ts`'s `HOLD_MS` doc ("How long a press on an animal tile…") went with its declaration; the `:75` doc still names it. `git rm` both OAuth files. Plan Notes line corrected.
+    - typecheck 0 (no caller passed a removed prop), lint 0, `npm test` 75/75.
+    - Verification 9: grep 1 prints nothing; `const HOLD_MS` one line `src/game/constants.ts:38`; `type Pencil` anchored (Decisions) one line `animalBoard.ts:428`; `public/branding` = the two wordmark SVGs; `cm-range-ping` in `RangeMap.tsx` (1) + `globals.css` (3).
+    - E2E (dev copy, guard passed) → `$STATE/e2e-s5/` (`e2e-s4/` deleted): `1584/1584`, report check `1584 0`, 5 `true` (2 A16, 3 A17).
+    - `05-journal.png`, `11-journal-sources-open.png` vs S4's: 0 px differ (780×1688, sharp). By eye: range map shown, no caption; JournalSheet's only diff is the `RangeMap` call, so the credit line is unchanged.
 
 - [ ] S6 · S11: `docs/CLUE_MATCH.md` says what is true
   - First write `$STATE/s11-protected.txt` from `git show origin/main:docs/CLUE_MATCH.md`, one string per line: "The Field Journal lives on the device; when signed in, it also pulls the player's solves saved before 2026-10-01."; "`GET /api/clue-game/journal` (a signed-in player's solves)"; "`profiles`, `clue_match_solves`,"; the full `clue_match_solves has a row per round finished before 2026-10-01 …` sentence; "The journal counts only `solved` rows."; the whole `07_solve_stats.sql` row.
@@ -853,5 +859,6 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 - 2026-11-15 13:54 UTC · S2: A16 `fitsShape` + two-`try` load + `isSeed`, D22 pool line; unit fail-first then 69/69; typecheck/lint 0; E2E 1581/1584 (only 3 `two tabs:` fail, as planned) → `e2e-s2/`.
 - 2026-11-15 14:10 UTC · S3: A17 `mergeJournals`/`saveSolve`/`saveRecords` + `useJournal` merges into storage at save; unit fail-first then 75/75; typecheck/lint 0; E2E 1584/1584 → `e2e-s3/`.
 - 2026-11-15 14:44 UTC · S4: Open Runde cut to 31 chars (154,604 → 6,892; 162,468 → 6,848; fontTools 4.68.0) + `unicode-range`; glyph proof ok (4 pairs 0 px); typecheck/lint 0; site 444/444; E2E 1583 → rerun 1584/1584 (A10 timing flake) → `e2e-s4/`; 7 screen pairs: font-data text identical.
+- 2026-11-15 15:01 UTC · S5: D22 leftovers out (4 CSS animations, RangeMap caption, 5 dead props, dup `Pencil`/`HOLD_MS`, always-true `is-fresh`) + D23 OAuth logo `git rm`; typecheck/lint 0, unit 75/75, greps clean; E2E 1584/1584 → `e2e-s5/`; journal screens 0 px vs S4.
 
 ## Summary
