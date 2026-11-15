@@ -563,6 +563,15 @@ Written before the code they check (S1, S2). Each isolated check must catch:
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. Complete planned final verification: `final-e2e/`, scrolled journal screenshots, and `ranges-after.txt` are absent. Typecheck and lint passed during review.
+2. Re-fetch before the PR; the read-only filesystem prevented verifying `origin/main` freshness.
+
 ## Release
 
 ## Decisions
@@ -592,5 +601,6 @@ Written before the code they check (S1, S2). Each isolated check must catch:
 - 2026-11-15 07:52 UTC S5: Journal credit line (text only) and Terms' two sentences (citation on one source line) + `updated="November 15, 2026"`. Citation `git grep -c -F` 1 each in both files; built `out/site/terms/index.html` holds the sentence and date. typecheck, lint 0; tests 64/64; `e2e:site` 444/444; dev `e2e:fresh` 1579/1579 first try (`$S/e2e-s5/`, run.log). Journal shots 05/09/11 identical to baseline above the fold; credit line below it in both, so its full-width check moves to Verification 1 (Decision). No `AGENTS.md` rewrite. DB runs: 0 (one E2E).
 - 2026-11-15 08:10 UTC S6: `## Adding or changing an animal` replaces `## After an import` in `docs/SHAPEFILE_BEST_PRACTICES.md` (8 steps, who runs each; id rules, PROBLEM/cite warn, ranges time/cap/refusal/commit-all, build on `main` + full refusal incl. every `checkProfile` problem, both REFRESH lines, existing-animal two cases, candidate note); `CONTENT_SOURCES.md` `## Workflow` list → one pointer (heading + copy rule kept); `CLUE_MATCH.md` list → pointer in the intro. Anchor check empty (4 links to the new anchor, build message's incl.); 'globe place' 0; stale 'reads that view|then after a build' and old refusal sentence gone; DoD stale grep hits only S7's five sites (`CONTENT_SOURCES.md:78`, `SHAPEFILE:35`, `CLUE_MATCH.md:61` now, `DEPLOY.md:45`, `contentCitations.ts:8`). typecheck, lint 0. DB runs: 0.
 - 2026-11-15 08:05 UTC S7: smaller fixes at their shifted lines: `CONTENT_SOURCES.md:78` suspects = `pickSuspectSet` relatives first then `likeness` (no rarity weight), `:88-89` parallel-search lines say owner's sessions only, not in `.mcp.json` (tips kept); `SHAPEFILE:35` fallback for any animal with no presence 1-3, `content -- ranges` incl.; `CLUE_MATCH.md:61` countries from IUCN range maps wherever assessed; `DEPLOY.md:45` content sentence only (rollback kept), links `CONTENT_SOURCES.md#citations` Release order; `contentCitations.ts:8` comment: only the table's `CHECK`. `checkProfile` refusal fix already in S6 step 7. Stale grep, anchor check, comment-only grep empty; DEPLOY diff one line; typecheck, lint 0. DB runs: 0.
+- 2026-11-15 08:09 UTC Code review (Astra): `astra-review --code origin/main`, APPROVE, MUST-FIX none; SHOULD-CONSIDER 1 (final-e2e, scrolled journal shots, ranges-after) and 2 (fresh fetch before PR) are already the final Verification unit and release rebase, so no new steps. No code changed, no DB runs.
 
 ## Summary
