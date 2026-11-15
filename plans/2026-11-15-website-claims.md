@@ -143,7 +143,7 @@ Each changed page's `updated` date is the merge day (UTC, in the `November 20, 2
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -164,6 +164,220 @@ Run 2026-11-15 ~18:25 UTC on `origin/main` = `83eef270` (Merge #81, remove-sign-
 - **Old rows (live, read-only):** `profiles`: **7** rows, created 2025-10-21 → 2026-09-26. `clue_match_solves`: **188** rows: 23 with `player_id` (max 2026-09-30 05:56 UTC), 165 without (max **2026-10-01 04:24 UTC**). Per profile: 3 profiles hold the 23 player rows (15, 7, 1); 4 profiles (2025-10-21/22/24, 2026-07-18) hold none. By month: Sep 2026 161 anon + 23 player; Oct 2026 4 anon. No row after 2026-10-01 → nothing writes. Brief expected 3 / 177: see Decisions.
 
 ## Architecture
+
+Read on `agent/website-claims` = `origin/main` `83eef270` + plan (fetched 2026-11-15). Line numbers are that tree's.
+
+### Findings (ranked by impact)
+
+1. **Privacy page describes accounts that M11 removed** (`src/site/pages/Privacy.tsx`). Intro `:8-9` ("keep if you do sign in"); heading `:12`; the whole "If you sign in" block `:22-37`: Clerk keeps your email and a link to `clerk.com` (`:25-26`), "an account ID from Clerk" (`:29`), and "They are added to your Field Journal when you sign in" (`:35`), which has been false since M11 deleted the journal merge; "maps from our map servers" (`:47`): no map server since 2026-10-13 (land is `/assets/clue-match/world-land.geojson`, ranges come from the game's own `/api/clue-game/range*`); under-13 "before signing in" plus "delete a child's account" (`:53-54`); "the address you signed in with ... delete your account" (`:59-60`). These are false public statements, and the Decision rules say the pages say what the code does. Fix: the Privacy text below.
+2. **Teachers page: the same, plus a stale find rate** (`src/site/pages/Teachers.tsx`). FAQ `:24` "Signing in is optional". Privacy section `:111-132`: two columns with `h3` "Without/With signing in", Clerk (`:126`), "Either way:" (`:131`). Find rate `:87` was measured with Auto rule-out off, but the game starts with it on (`src/components/animalBoard/autoRuleOut.ts:5`, `!== 'off'`). Fix below. The bot preview (below) gives "one in three (one in five with it off) ... over 90%".
+3. **Caddy logs failed requests with the client's IP, even with no `log` directive** (new; verified). `deploy/Caddyfile` has no `log` line (true), so there is no access log. But when Caddy can't reach the app (a 502, e.g. while a deploy recreates `critter-app`), it writes an `http.log.error` line holding `remote_ip`, `client_ip`, `uri` and `User-Agent` to its stderr, i.e. `docker logs caddy`. I reproduced this on 2026-11-15 with Caddy v2.11.7 (same `caddy:2` line as `Dockerfile:21`): no `log` directive, `reverse_proxy` to a closed port, one curl, and the line showed up. So two of the brief's phrases claim more than the code keeps: the doc's "What the game keeps about a player now: nothing on the server" and the page's "we hold nothing else about you". Fix: the doc says it in one clause, and the page drops that one clause (Target design). Changing Caddy's logging would be a `deploy/` change, out of scope; it's a note for the owner (Notes).
+4. **Terms still has "Your account"** (`src/site/pages/Terms.tsx:16-20`): "An account is optional ..." and "We may close accounts that do." Goal 4 applies (M11 left both lines). Fix: the section becomes "Playing fair", and the date becomes the merge day. M10's date (`:6`, "November 15, 2026") and the One Earth sentence (`:24-26`) stay.
+5. **Site config** (`src/site/config.ts`): the description at `:45` says "keeps if you sign in". The comment at `:2` says "No Next or Clerk here", but `eslint.config.mjs:19-23` now guards only `next`/`next/*` (M11 removed the Clerk pattern), so the comment is stale. Fix: the brief's exact strings.
+6. **No written deletion steps** (S6 item 5). `docs/DATABASE_ACCESS.md` has no such section; `## Related` is at `:278`. I re-read every fact the section needs on this tree:
+   - `getJson.ts:8` is the only `fetch` in `src/`, and every route exports `GET` only.
+   - The five `console.error` lines are in `src/app/api/**/route.ts`, each an error object.
+   - `db/schema.sql:92-98`: `profiles(user_id uuid PK, clerk_user_id text, created_at, updated_at)`. No email.
+   - `db/schema.sql:104`: `clue_match_solves.player_id ... REFERENCES profiles(user_id) ON DELETE SET NULL`. It is the only FK to `profiles`. Its columns (`:102-131`) hold no IP, name, email or device id.
+   - `pg-backup.sh:25-26,28`: daily dumps deleted at `-mtime +14`, weekly at `-mtime +56`, then `rsync --delete` to `OFFSITE`.
+   - `game-backup-pull:9,38`: `KEEP=3`.
+   - `deploy/db/dev-role.sql:29-31`: the dev copy has no player ids.
+   - M13's names are `retired_clue_match_solves` and `retired_profiles` (its brief, `agent-state/missions/briefs/2026-11-13-db-retire.md` Goal 4; M13 has no plan yet).
+7. **Dead `lead` prop (D21)** (`src/site/Screenshot.tsx:8,10,16`): all 10 `<Screenshot` calls pass `shot` and `crop` only. Leave Home's and Teachers' own `{...LEAD_IMAGE}` (`Teachers.tsx:51`) alone. Low impact.
+8. **Data facts that bound the wording** (Baseline). There are 7 profiles, and 4 of them hold no results. So `profiles` is not "one row per account that saved a round", and the schema comment `db/schema.sql:91` is slightly off too (note only: `db/` is out of scope, and M13 drops the table). The 165 rows with no `player_id` are 161 from September and 4 from October 2026, the newest 2026-10-01 04:24 UTC. They are rounds played without an account (`db/schema.sql:101,119`), saved with nothing that says who played. The brief's "results of rounds played with an account were saved" is true, but it implies that rounds played without one weren't.
+
+**Fine as is (verified):**
+- Privacy's "What we don't do". The analytics/cookie grep over `src public next.config.mjs deploy Dockerfile package.json` finds only the two page sentences.
+- Privacy's three device points: storage is only `localStorage` and `sessionStorage`, and the client sends only GETs.
+- The outside hosts. `photoAt` (`speciesInfo.ts:65`) keeps each photo's own host, so only Wikimedia Commons serves anything from outside.
+- The rest of Terms. "See the Privacy Policy for what we keep and how to delete it" is still fair.
+- Home, Layout and NotFound: they say only "No account", which is true.
+- The site E2E: `scripts/e2e-site.mjs:139` checks title and description against `PAGES`, and both page and meta come from config, so they agree. Its 444 checks are per page, mode and width, not per sentence, so the count stays 444.
+
+### Target design
+
+All changes are text and markup in the existing JSX conventions: `&apos;`, `LegalArticle` with plain `h2`/`p`/`ul`, the `roles.ts` classes, and the `mailto:` written inline as in Terms. There is no new component, constant or check. Order: D21 first and alone (byte-identical proof), then the pages and config, then the doc. `{MERGE_DAY}` means `updated="November NN, 2026"`, set in the implementing session and fixed at release if the merge lands on a later day.
+
+**`src/site/Screenshot.tsx` (D21).** Keep `LEAD_IMAGE` and its comment. The doc comment becomes `... radius m, lazy.` (no "unless it leads"). The signature becomes `export default function Screenshot({ shot, crop = '' }: { shot: ShotImage; crop?: string }) {`. Replace the spread (`:16`) with the plain attributes `loading="lazy" decoding="async"`, after `className`. React emits attributes in prop order, so the HTML stays the same bytes and `diff -r site-before out/site` prints nothing.
+
+**`src/site/config.ts`.** `:2` becomes `// No Next here (eslint.config.mjs): every page is plain HTML and CSS.` and `:45` becomes `description: 'No accounts. What stays on your device, what other services see, and how to delete it. No ads, no tracking.',`. Nothing else changes.
+
+**`src/site/pages/Privacy.tsx`.** Full body, in this order (the brief's sections; "What we don't do" and "Changes" unchanged):
+
+```tsx
+<LegalArticle title="Privacy Policy" updated="{MERGE_DAY}">
+  <p>
+    Critter Connect is a free game about real animals. It has no accounts, and we never ask who you are. This page
+    explains what stays on your device and what other services see.
+  </p>
+
+  <h2>What stays on your device</h2>
+  <ul>  {/* the three <li> of today's :14-19, verbatim */}
+    <li>We don&apos;t ask for your name or email.</li>
+    <li>
+      Your Field Journal and a few settings (like whether you&apos;ve seen the how-to-play screen) are saved in your
+      browser only. Clearing your browser data removes them.
+    </li>
+    <li>The rounds you play aren&apos;t sent to us. Nothing about how you play is kept in our database.</li>
+  </ul>
+
+  <h2>Results saved until early October 2026</h2>
+  <p>
+    The game used to have optional accounts. Until early October 2026, the results of rounds played with an account
+    were saved in our database. Rounds played without one were saved too, with nothing that says who played them.
+    Those results are being deleted, and no new ones are kept.
+  </p>
+
+  {/* What we don't do: unchanged (:39-43) */}
+
+  <h2>Other services</h2>
+  <p>
+    Animal photos load from Wikimedia Commons, which sees your IP address, like any website you visit. Everything
+    else, maps included, comes from Critter Connect itself.
+  </p>
+
+  <h2>Players under 13</h2>
+  <p>
+    The game never asks anyone for a name, an email or anything else about themselves, so no one gives any to play.
+    A parent with questions can email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+  </p>
+
+  <h2>Deleting your data</h2>
+  <p>
+    Your Field Journal is in your browser: clearing your browser&apos;s data for play.critterconnect.org deletes it.
+    If you played with an account while results were saved, until early October 2026, and want them deleted now,
+    email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> from the address you used for it.
+  </p>
+
+  {/* Changes: unchanged (:63-64) */}
+</LegalArticle>
+```
+
+Where this differs from the brief's wording (each one stays within the Decision rules; the Summary lists them for the owner):
+- (a) The month: "until early October 2026" (rule, see Answers).
+- (b) The added sentence about rounds played without an account (finding 8).
+- (c) "we hold nothing else about you" is dropped (finding 3). The sentence that remains keeps the brief's point and its address rule.
+- (d) "had an account before October" becomes "played with an account while results were saved, until early October 2026". With "until", the plain swap would read as if the account itself ended in October.
+- (e) "Results saved ..." is a paragraph, not a list. It is one narrative, like "Other services".
+
+**`src/site/pages/Teachers.tsx`.**
+- `:24`: `{ q: 'Do students need accounts?', a: 'No. There are no accounts: students open the game and play.' },`
+- `:87` (from the bot run on the final base; the preview values are filled in): `<p className={MEASURE}>So far tested with simulated players, not yet in a classroom study. With Auto rule-out on, as the game starts, one who moves at random and then guesses finds about one round in three (one in five with it off), and a careful one finds the animal in over 90% of rounds.</p>`
+- `:111-132`: keep the `Section`'s props and the `h2`. Replace the two-column `div` and the paragraph with:
+
+```tsx
+<ul className={`${LIST} ${MEASURE}`}>
+  <li>There are no accounts: students open the game and play.</li>
+  <li>No name or email is asked for.</li>
+  <li>The Field Journal stays in the browser, and rounds aren&apos;t sent to us.</li>
+</ul>
+<p className={MEASURE}>No ads, no tracking cookies, no analytics. Animal photos load from Wikimedia Commons, and everything else comes from Critter Connect itself. The <a href="/privacy/" className={LINK}>privacy policy</a> has the details.</p>
+```
+
+`H3` and `LIST` stay imported, because they are still used at `:103,138,161`. `${LIST} ${MEASURE}` matches the page's other full-width lists.
+
+**`src/site/pages/Terms.tsx`.** `:6` becomes `updated="{MERGE_DAY}"`. `:16-20` becomes:
+
+```tsx
+<h2>Playing fair</h2>
+<ul>
+  <li>Please don&apos;t try to break, overload, or cheat the game&apos;s servers.</li>
+</ul>
+```
+
+**`docs/DATABASE_ACCESS.md`.** Insert just above `## Related` (`:278`). The brief's content needs about 30 lines at this width, the SQL block included; that is its 15–25 target plus the statements it asks for.
+
+````markdown
+## Deletion requests
+
+Requests arrive at `privacy@critterconnect.org`, a Namecheap mail forward that reaches the owner (owner, 2026-11-14).
+Agents can't read that mailbox; the owner answers and runs these steps.
+
+**What the game keeps about a player now: nothing that names them.** No accounts, names or emails. The game's code
+sends only GET requests (`src/lib/getJson.ts`). `deploy/Caddyfile` has no `log` directive, so Caddy writes no access
+log; it still logs a request it can't pass to the app (a 502 while a deploy restarts it, say) with the client's IP
+address and user agent, in `docker logs caddy`. The app's own logs are the API routes' `console.error` lines: an
+error, no IP or player. The Field Journal is in the player's browser; clearing its data for play.critterconnect.org
+deletes it. So for anyone who never had an account, nothing we hold can be found from their email: say so.
+
+**The old rows, until M13 (`agent/db-retire`) retires them:** `profiles` (accounts, keyed by `clerk_user_id`; no
+email) and each account's rows in `clue_match_solves` (`player_id`), all saved until early October 2026 (the newest
+2026-10-01), all from the owner's own test accounts (owner, 2026-11-14). Rows with no `player_id`, rounds played
+without an account, match no one. For a request about an account:
+
+1. In Clerk's dashboard, find the user id for the requester's email, then delete that user there too. Once the owner
+   has deleted the production instance, an email can't be matched to a row (the database holds no email): say so,
+   and that M13 deletes them all.
+2. Take a fresh dump: `ssh play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`.
+3. In `./scripts/db`, find the row and show what is held, then delete in one transaction, solves first:
+   `player_id` is `ON DELETE SET NULL`, so deleting the profile alone keeps every result.
+
+```sql
+SELECT user_id FROM profiles WHERE clerk_user_id = '<clerk user id>';
+SELECT p.created_at, s.* FROM profiles p LEFT JOIN clue_match_solves s ON s.player_id = p.user_id
+ WHERE p.user_id = '<user_id>' ORDER BY s.solved_at;
+BEGIN;
+DELETE FROM clue_match_solves WHERE player_id = '<user_id>';
+DELETE FROM profiles WHERE user_id = '<user_id>';
+COMMIT;
+```
+
+If M13 has renamed them (`retired_clue_match_solves`, `retired_profiles`), run the same statements on those names;
+once it has dropped them, nothing about any player is left in the live database.
+
+**Copies age out.** The game server deletes daily dumps after 14 days and weekly ones after 56
+(`deploy/backup/pg-backup.sh`), the Oracle VPS keeps the newest 3 (`/srv/critter-ai/ops/bin/game-backup-pull`), and
+an `OFFSITE` mirror, if set, follows with `rsync --delete`; the scrubbed dev copy `phaser_june_dev` holds no player
+ids (`deploy/db/dev-role.sql`). So a deleted row is gone from every copy about 8 weeks later. These steps never
+restore or edit a dump.
+````
+
+The section gives no row counts (Decisions). Two of its wordings differ from the brief, because the code says otherwise:
+- "About 8 weeks" instead of "56 days": `-mtime +56` deletes a weekly dump only once it is 57 days old.
+- The Caddy clause and "nothing that names them" (finding 3).
+
+M13 adds its W4/W5 dates to the "If M13 has renamed them" paragraph (its brief, Decision rules).
+
+**No e2e change.** The brief fixes the site E2E at the baseline's count (444), so no new checks. The DoD grep and the release smoke check the text.
+
+### Answers to the questions put to the architect
+
+- **Month: confirm "until early October 2026".** The Decision rule keys on the baseline's `max(solved_at)`, and the newest saved round is 2026-10-01 04:24 UTC: 4 rows on 2026-10-01, all saved without an account. That falls in the rule's 10-01 to 10-08 band. The heading names every result saved, so "before October" would be untrue for those 4 rows. "Until" is also true for account rows (newest 2026-09-30), because the save path ran until 2026-10-01. The phrase goes in all four places: the heading, the section, "Deleting your data" and the doc.
+- **The 165 anonymous rows: one sentence on the page, one in the doc.** "Rounds played without one were saved too, with nothing that says who played them." The schema supports it (`:101,119`; no identifying column). "Those results are being deleted" then covers every row M13 drops, and M13 keeps that sentence verbatim (its brief). The doc says these rows can't be matched to a requester.
+- **DoD greps.**
+  - The grep is case-insensitive over all of `src/site`, so no comment may hold "Clerk" either (`config.ts:2` goes).
+  - No new text may hold "sign in/sign-in/signin", "signing in", "your account" or "account id". The text above holds none.
+  - `## Deletion requests` appears once.
+  - The tables and columns the doc names (`profiles`, `user_id`, `clerk_user_id`, `created_at`, `clue_match_solves`, `player_id`, `solved_at`) are in `db/schema.sql`. The `retired_*` names come from M13's brief; read the DoD's "M13's plan" as that brief.
+  - `git diff --stat` lists only the In files and the plan: don't touch `db/schema.sql:91` or `deploy/`.
+- **Bot preview (not the DoD artifact).** Run on this tree (rules `055-0`) with the DoD's exact command, 4 m 10 s, output `/tmp/wc-arch/bot.txt`.
+
+  | Player | africa | asia | north-america | south-america |
+  |---|---|---|---|---|
+  | careful | 98 ±1 | 96 ±2 | 96 ±2 | 96 ±2 |
+  | random | 20 ±4 | 20 ±4 | 20 ±4 | 20 ±4 |
+  | autoguess | 28 ±4 | 37 ±5 | 31 ±5 | 33 ±5 |
+
+  - A = round(100 / 32.25) = 3, "three".
+  - R = 100 / 20 = 5, "five".
+  - P: the lowest careful place is 96 − 2 = 94, so 90.
+  - A ≠ R, so the bracket stays. Use the printed (rounded) percentages, which can't move A across a boundary here.
+  - The step still re-runs on the final base and saves to the state folder's `bot.txt`.
+
+### Rejected alternatives
+
+- Keeping "we hold nothing else about you" and "nothing on the server" verbatim: rejected. Caddy's 5xx log lines hold the IP and user agent (finding 3), so these would be claims the code doesn't support.
+- Turning off Caddy's error log so the brief's phrases become true: rejected here, because it is a `deploy/` change and out of scope. It's a note for the owner.
+- "Before October 2026", because the account rows end on 2026-09-30: rejected. The rule keys on the overall max (2026-10-01), and the heading covers every saved result.
+- The brief's verbatim "Results" sentence with no word on the anonymous rows: rejected. It implies rounds played without an account were never saved, and 165 were.
+- A shared mailto component or constant: rejected. There are two inline uses, and Terms already writes it inline.
+- A `LAZY_IMAGE` constant spread in place of the attributes: rejected. Plain JSX attributes are simpler and render the same bytes.
+- New e2e-site checks pinning the sentences: rejected. The brief fixes the count at 444, and the DoD grep plus the release smoke cover the text.
+
+### Notes (not edits)
+
+- **For the owner.** Caddy (`caddy:2`, default logger) writes a request's IP, URI and user agent to `docker logs caddy` whenever it can't reach the app. That log lasts until the `caddy` container is recreated (only when the Caddyfile or the site changes), or as Hetzner's Docker log settings allow (not checked). Changing it is a `deploy/Caddyfile` change for a later mission. If it changes, the doc's clause goes, and "we hold nothing else about you" could return to the page.
+- **For M13.** `db/schema.sql:91` says each profile saved a round; 4 of the 7 hold none.
 
 ## Architecture review (Fable)
 
@@ -188,5 +402,6 @@ Run 2026-11-15 ~18:25 UTC on `origin/main` = `83eef270` (Merge #81, remove-sign-
 ## Log
 
 - 2026-11-15 18:27 UTC · Baseline on `83eef270`: M11 live, typecheck/lint 0, test 76/76, site E2E 444/444, live pages = build, hosts = Wikimedia only, old rows 7/188 (max 2026-10-01; nothing writes; H20 FYI).
+- 2026-11-15 18:45 UTC · Architecture: architect wrote findings + exact text for Screenshot/config/Privacy/Teachers/Terms + deletion doc; "until early October 2026" confirmed; new risk: Caddy logs IP on 502 (wording avoids "nothing else"); trial bot careful 96–98%, random 20%, autoguess 28–37%. Plan only, no code.
 
 ## Summary
