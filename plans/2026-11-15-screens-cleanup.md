@@ -813,6 +813,6 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 - 2026-11-15 13:02 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (A17 overlapping read-merge-write race across tabs; wants serialization + overlapping-save E2E), 2 SHOULD-CONSIDER. Plan only; no checks needed.
 
 - 2026-11-15 13:06 UTC · Revision: architect rejected Astra MUST-FIX (reasons under Decisions), adopted 6 SHOULD-CONSIDER (refs set at write, A16 structural-check wording, highlight note, seed note, A17 E2E key setup). Plan only; no checks needed.
-- 2026-11-15 13:20 UTC · Steps: planner wrote S1–S6 (E2E fail-first; A16; A17; O1 font cut + glyph proof; D22+D23; S11) and 11-point Verification (final 1584/1584). Brief grep `const HOLD_MS` fixed with `':!plans'`. Plan only; no checks needed.
+- 2026-11-15 13:15 UTC · Steps: planner wrote S1–S6 (E2E fail-first; A16; A17; O1 font cut + glyph proof; D22+D23; S11) and 11-point Verification (final 1584/1584). Brief grep `const HOLD_MS` fixed with `':!plans'`. Plan only; no checks needed.
 
 ## Summary
