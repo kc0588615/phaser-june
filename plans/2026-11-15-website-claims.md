@@ -2,7 +2,7 @@
 mission: website-claims
 project: critter-connect
 branch: agent/website-claims
-status: active
+status: done
 started: 2026-11-15 18:22 UTC
 ---
 
@@ -569,7 +569,7 @@ Every step:
     - Edit, Copies paragraph only: "8 weeks" is now limited to finished `*.dump` files. A failed or killed run leaves `daily/*.dump.partial`, which no prune matches and the mirror copies. So after a deletion, delete `*.partial` on the game server (the `find` command is given), and the next successful `rsync --delete` clears `OFFSITE`. A killed pull can leave `*.part` in `agent-state/game-backups/`. Steps 1–4, the SQL and the Privacy page are unchanged (Privacy makes no timing claim).
     - Section now `docs/DATABASE_ACCESS.md:278-327` (50 lines + blank; `## Related` `:329`). Verification 7 passes (one heading, Related next, schema and brief names present). `git diff --stat origin/main` = the Verification 5 list. typecheck 0, lint 0. Markdown only: no build/E2E.
 
-- [ ] S5 · Final Verification and Summary
+- [x] S5 · Final Verification and Summary
   - Runs only once `## Code review (Astra)` is recorded and every fix step it added (inserted above S5) is checked. If it's still empty, that review is this session's unit (CLAUDE.md, "Final code review"); leave S5 unchecked.
   - Run all of Verification on the final commit; artifact `$STATE/final-e2e-site/`; then delete `$STATE/e2e-s*`.
   - Write `## Summary` (Verification 9), set `status: done` in the front matter, commit, push, end `MISSION_CONTINUE` (the release is the next unit, not a step).
@@ -658,5 +658,53 @@ Lead: MUST-FIX 1 is real (`deploy/backup/pg-backup.sh:20-22` leaves `$file.parti
 - 2026-11-15 19:13 UTC · S4 deletion doc: 9 facts re-read on `83eef270`, all same; `## Deletion requests` inserted verbatim above `## Related` (46 lines); Verification 7 pass, typecheck/lint 0.
 - 2026-11-15 19:16 UTC · Astra code review: APPROVE_WITH_CHANGES, 1 MUST-FIX (deletion doc's 8-week expiry ignores leftover `.dump.partial` files; verified real) -> step S4b added; 1 SHOULD-CONSIDER (freshness; fetch fine here). Plan only.
 - 2026-11-15 19:19 UTC · S4b: deletion doc Copies limits 8 weeks to finished `*.dump`; leftover `*.partial` (prod count 0) and a killed pull's `*.part` deleted by hand; Verification 7 pass, typecheck/lint 0.
+- 2026-11-15 19:27 UTC · S5 final Verification on `50f11b12` (base `83eef270`): typecheck/lint 0, test 76/76, css hash same, build diff = 3 pages, DoD grep clean, site E2E 444/444 (`$STATE/final-e2e-site`); Summary written; status done.
 
 ## Summary
+
+Final commit verified on `50f11b12` + this plan update (base `origin/main` = `83eef270`, unmoved all mission; the release rebases on a fresh fetch).
+
+**What changed** (`git diff --stat origin/main`, exactly the Verification 5 list):
+- `src/site/Screenshot.tsx` (D21): no `lead` prop; every screenshot `<img>` is `loading="lazy" decoding="async"`; `LEAD_IMAGE` stays. Proof: site build byte-identical before/after (`diff -r $STATE/site-before out/site` empty, S1).
+- `src/site/config.ts`, `src/site/pages/Privacy.tsx`, `Teachers.tsx`, `Terms.tsx`: pages describe a game with no accounts.
+- `docs/DATABASE_ACCESS.md`: new `## Deletion requests` (`:278-327`, above `## Related`).
+- Baseline: M11 live (no sign-in in the game); old rows **7 profiles / 188 solves**, newest `solved_at` 2026-10-01 (nothing writes; brief said 3/177; H20 asks the owner about the 4 result-less profiles); outside hosts: Wikimedia Commons only.
+
+**Bot (S2, `$STATE/bot.txt`, seed 44, 400 rounds × 4 places, 4 m 9.9 s, `ANIMAL_RULES` `055-0`):** careful 98/96/96/96 (±1–2); random 20 everywhere; autoguess 28/37/31/33 (mean 32.25). A = three, R = five, P = 90. Sentence: "So far tested with simulated players, not yet in a classroom study. With Auto rule-out on, as the game starts, one who moves at random and then guesses finds about one round in three (one in five with it off), and a careful one finds the animal in over 90% of rounds."
+
+**New Privacy text** (Last updated November 15, 2026; the release resets it to the merge day):
+- Intro: Critter Connect is a free game about real animals. It has no accounts, and we never ask who you are. This page explains what stays on your device and what other services see.
+- What stays on your device: We don't ask for your name or email. / Your Field Journal and a few settings (like whether you've seen the how-to-play screen) are saved in your browser only. Clearing your browser data removes them. / The rounds you play aren't sent to us. Nothing about how you play is kept in our database.
+- Results saved until early October 2026: The game used to have optional accounts. Until early October 2026, the results of rounds played with an account were saved in our database. Rounds played without one were saved too, with nothing that says who played them. Those results are being deleted, and no new ones are kept.
+- What we don't do: unchanged.
+- Other services: Animal photos load from Wikimedia Commons, which sees your IP address, like any website you visit. Everything else, maps included, comes from Critter Connect itself.
+- Players under 13: The game never asks anyone for a name, an email or anything else about themselves, so no one gives any to play. A parent with questions can email privacy@critterconnect.org.
+- Deleting your data: Your Field Journal is in your browser: clearing your browser's data for play.critterconnect.org deletes it. If you played with an account while results were saved, until early October 2026, and want them deleted now, email privacy@critterconnect.org from the address you used for it.
+- Changes: unchanged.
+
+**Teachers, old → new:**
+- Find rate: "…not yet in a classroom study: one who matches without reasoning finds about one round in five, and a careful one finds the animal in over 90% of rounds." → the bot sentence above.
+- Student privacy: two columns ("Without signing in" / "With signing in": optional sign-in, under-13s ask a parent, Clerk keeps the email, parent can ask for deletion; "Either way: no ads…") → one list: "There are no accounts: students open the game and play." / "No name or email is asked for." / "The Field Journal stays in the browser, and rounds aren't sent to us." + "No ads, no tracking cookies, no analytics. Animal photos load from Wikimedia Commons, and everything else comes from Critter Connect itself. The privacy policy has the details."
+- FAQ "Do students need accounts?": "No. The game plays fully without one. Signing in is optional." → "No. There are no accounts: students open the game and play."
+- Privacy link description (`config.ts`): no longer "what we keep if you sign in".
+
+**Terms, old → new:** "Your account: An account is optional. If you are under 13, ask a parent or guardian first. Please don't try to break, overload, or cheat the game's servers. We may close accounts that do." → "Playing fair: Please don't try to break, overload, or cheat the game's servers." Date already November 15, 2026 (M10).
+
+**Wording deviations from the brief** (pre-approved text): (a) month "until early October 2026" (newest row 2026-10-01); (b) added "Rounds played without one were saved too, with nothing that says who played them" (165 anonymous rows); (c) "we hold nothing else about you" dropped (Caddy logs IP on a 502, so it isn't strictly true); (d) "had an account before October" → "played with an account while results were saved, until early October 2026"; (e) "Results saved…" is a paragraph, not a list. Fable SC 2: Privacy bullet 3 ("Nothing about how you play is kept in our database") sits just above (b)'s "Rounds played without one were saved too" — reads as now vs then.
+
+**Deletion doc** (`## Deletion requests`): outline = what the game keeps now (nothing that names a player) → the old rows until M13 (`profiles`, `clue_match_solves`) → steps 1 find the Clerk id, 2 fresh dump, 3 select + delete in one transaction in `./scripts/db`, 4 delete the Clerk user last → Copies. Deviations from the brief: "about 8 weeks", and only while the backup jobs run and succeed; dev copy keeps the results anonymously until a refresh or M13; Clerk user deleted last (only email→row link); attribution narrowed to "the accounts that saved results are the owner's own test accounts (owner, 2026-11-14)"; Caddy clause. S4b (Astra code-review MUST-FIX 1): "about 8 weeks" covers finished `*.dump` files only; a failed run's `daily/*.dump.partial` (no prune matches it, OFFSITE mirrors it) and a killed pull's `*.part` are deleted by hand (prod count today: 0). Length 50 lines vs the brief's 15–25: the copies/backup retention and the exact SQL are what make a deletion actually complete and checkable.
+
+**Verification (final):** typecheck 0, lint 0, `npm test` 76/76; `site:build` `(/site/site.f7f956df00.css)` (CSS hash unchanged); `diff -rq site-before out/site` = exactly `privacy/`, `teachers/`, `terms/index.html` (old description was only in those two + terms' body); DoD grep empty, no `MERGE_DAY`, both `updated=` November 15, 2026; Verification 7 pass; visible-text removed-phrase counts 0/0/0, text identical to S3's. Site E2E: baseline 444/444 (`$STATE/baseline-e2e-site/`), S3 444/444 (deleted after this run), final **444/444, 20 screenshots, report `444 0`** → `$STATE/final-e2e-site/` (`STATE=/srv/critter-ai/agent-state/missions/website-claims`). Screens: home/404 pixel-identical to baseline; privacy/terms and teachers 390 pixel-identical to S3 (inspected there); teachers 1440 differs only by the random class-link seed; viewed teachers 1440 light, privacy 390 light: sections in order, one Student-privacy list, no overflow. Repro: `npm run site:build && npm run site:serve & CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:site`.
+
+**Reviews:** architecture Fable APPROVE_WITH_CHANGES (no MUST-FIX), Astra APPROVE_WITH_CHANGES (1 MUST-FIX, revised); code review Astra APPROVE_WITH_CHANGES (1 MUST-FIX → S4b). No owner review rounds (pre-approved 2026-11-14). The release adds CI and smoke results.
+
+**No production content build needed** (no `db/content` change).
+
+**For the owner:**
+- Clerk's production instance still holds former users' emails until you delete it (H19).
+- Caddy logs IP and user agent to `docker logs caddy` on a 502.
+- H20: 4 profiles with no results — yours?
+- `deploy/backup/pg-backup.sh` could remove `$file.partial` on failure (a trap) or prune `*.partial`; that would make the deletion doc's hand check unneeded (a `deploy/` change, out of scope).
+- Astra code review SHOULD-CONSIDER (freshness): fetch worked here; the release rebases on a fresh fetch.
+
+**For M13 (db-retire):** "are being deleted" stays true until the last weekly dump holding the rows ages out (56 days after the drop), its two kept dumps (`game-backups/kept/`), any leftover `*.partial`/`*.part`, and the dev copy's rows go; then it should read "were deleted". The deletion section's table names change when M13 renames the tables, and its old-rows part goes when M13 drops them. `db/schema.sql:91`'s comment is off (4 of 7 profiles hold no result).
