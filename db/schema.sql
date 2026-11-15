@@ -153,7 +153,7 @@ CREATE UNIQUE INDEX clue_match_ranges_species_id ON clue_match_ranges (species_i
 --
 -- bbox and center use the continent's largest part. outline is simplified for drawing.
 --
--- Refresh after range, clue-species or place changes (about {{T}}, dev copy {{T_DATE}}):
+-- Refresh after range, clue-species or place changes (about 45 s, dev copy 2026-11-15):
 --   REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_places;
 CREATE MATERIALIZED VIEW clue_match_places AS
 WITH playable AS (

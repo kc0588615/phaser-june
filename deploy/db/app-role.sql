@@ -18,7 +18,7 @@ END $$;
 GRANT USAGE ON SCHEMA public TO critter_app;
 
 -- Read only. A restored dump brings back the grants it was taken with (one from
--- before {{W1_DATE}} also the old player tables' writes), so take everything back first.
+-- before 2026-11-15 21:23 UTC also the old player tables' writes), so take everything back first.
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM critter_app;
 REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM critter_app;
 

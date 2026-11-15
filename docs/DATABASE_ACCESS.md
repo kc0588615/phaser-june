@@ -289,9 +289,9 @@ deletes it. So for anyone who never had an account, nothing we hold can be found
 
 **The old rows are out of the live database.** Until early October 2026 it kept accounts (a Clerk user id; no email)
 and the rounds played with or without one (the newest 2026-10-01); the accounts were the owner's own test accounts
-(owner, 2026-11-14). M13 (`agent/db-retire`) renamed both tables out of the app's reach on {{W4_DATE}} and dropped them
-on {{W5_DATE}}, live and in the dev copy `phaser_june_dev`, so neither holds anything about any player. Dumps taken
-before the drop still hold them until they age out, by {{AGE_OUT}} (Copies, below). For a request about an
+(owner, 2026-11-14). M13 (`agent/db-retire`) renamed both tables out of the app's reach on 2026-11-15 and dropped them
+on 2026-11-15, live and in the dev copy `phaser_june_dev`, so neither holds anything about any player. Dumps taken
+before the drop still hold them until they age out, by 2027-01-12 (Copies, below). For a request about an
 account, say so, and delete the user in Clerk's dashboard if it is still there.
 
 **Copies.** A dump ages out only while the job that prunes it runs and succeeds. The game server's nightly
@@ -304,8 +304,8 @@ and the mirror copies. So after a deletion, delete any `*.partial` on the game s
 (`ssh play.critterconnect.org 'find /var/backups/critter-connect -name "*.partial"'`); the next successful run's
 `rsync --delete` drops them from `OFFSITE`. A killed pull can likewise leave `*.part` in the Oracle VPS's
 `agent-state/game-backups/`. A dump copied elsewhere by hand stays until someone deletes it. These steps never restore or edit a dump.
-If one taken before {{W5_DATE}} is ever restored, it brings the two player tables back (and, from before
-{{W1_DATE}}, the app's write grants on them): right after the restore, run `deploy/db/app-role.sql`, which
+If one taken before 2026-11-15 22:21 UTC is ever restored, it brings the two player tables back (and, from
+before 21:23 UTC that day, the app's write grants on them): right after the restore, run `deploy/db/app-role.sql`, which
 takes back every grant but the app's reads, and, on `phaser_june`, the `DROP TABLE IF EXISTS` line of
 `deploy/db/dev-role.sql` (a dev-copy refresh runs it on the copy by itself).
 
