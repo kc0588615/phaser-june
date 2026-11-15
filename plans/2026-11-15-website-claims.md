@@ -146,7 +146,7 @@ Each changed page's `updated` date is the merge day (UTC, in the `November 20, 2
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -179,9 +179,9 @@ Read on `agent/website-claims` = `origin/main` `83eef270` + plan (fetched 2026-1
    - The five `console.error` lines are in `src/app/api/**/route.ts`, each an error object.
    - `db/schema.sql:92-98`: `profiles(user_id uuid PK, clerk_user_id text, created_at, updated_at)`. No email.
    - `db/schema.sql:104`: `clue_match_solves.player_id ... REFERENCES profiles(user_id) ON DELETE SET NULL`. It is the only FK to `profiles`. Its columns (`:102-131`) hold no IP, name, email or device id.
-   - `pg-backup.sh:25-26,28`: daily dumps deleted at `-mtime +14`, weekly at `-mtime +56`, then `rsync --delete` to `OFFSITE`.
-   - `game-backup-pull:9,38`: `KEEP=3`.
-   - `deploy/db/dev-role.sql:29-31`: the dev copy has no player ids.
+   - `pg-backup.sh:25-26,28`: daily dumps deleted at `-mtime +14`, weekly at `-mtime +56`, then `rsync --delete` to `OFFSITE`. It runs under `set -euo pipefail` (`:9`), so a night whose dump fails (`:20-21`) deletes and mirrors nothing.
+   - `game-backup-pull:9,38`: `KEEP=3`, but it prunes only after copying a new dump (`:38`); a "waiting" (`:23-26`), "already have" (`:31`) or failed run (`fail`, `:15-20`) exits first.
+   - `deploy/db/dev-role.sql:29-31`: the dev copy has no player ids or profiles but keeps every solve ("solves stay, anonymous"), as of its last refresh, which is by hand (`docs/DATABASE_ACCESS.md` Runbook, steps 1–2).
    - M13's names are `retired_clue_match_solves` and `retired_profiles` (its brief, `agent-state/missions/briefs/2026-11-13-db-retire.md` Goal 4; M13 has no plan yet).
 7. **Dead `lead` prop (D21)** (`src/site/Screenshot.tsx:8,10,16`): all 10 `<Screenshot` calls pass `shot` and `crop` only. Leave Home's and Teachers' own `{...LEAD_IMAGE}` (`Teachers.tsx:51`) alone. Low impact.
 8. **Data facts that bound the wording** (Baseline). There are 7 profiles, and 4 of them hold no results. So `profiles` is not "one row per account that saved a round", and the schema comment `db/schema.sql:91` is slightly off too (note only: `db/` is out of scope, and M13 drops the table). The 165 rows with no `player_id` are 161 from September and 4 from October 2026, the newest 2026-10-01 04:24 UTC. They are rounds played without an account (`db/schema.sql:101,119`), saved with nothing that says who played. The brief's "results of rounds played with an account were saved" is true, but it implies that rounds played without one weren't.
@@ -285,7 +285,7 @@ Where this differs from the brief's wording (each one stays within the Decision 
 </ul>
 ```
 
-**`docs/DATABASE_ACCESS.md`.** Insert just above `## Related` (`:278`). The brief's content needs about 30 lines at this width, the SQL block included; that is its 15–25 target plus the statements it asks for.
+**`docs/DATABASE_ACCESS.md`.** Insert just above `## Related` (`:278`). It is about 46 lines with blanks (38 without): over the brief's 15–25, because the brief also asks for the statements, and the Caddy clause and the copies' conditions are needed to keep it true.
 
 ````markdown
 ## Deletion requests
@@ -302,38 +302,45 @@ deletes it. So for anyone who never had an account, nothing we hold can be found
 
 **The old rows, until M13 (`agent/db-retire`) retires them:** `profiles` (accounts, keyed by `clerk_user_id`; no
 email) and each account's rows in `clue_match_solves` (`player_id`), all saved until early October 2026 (the newest
-2026-10-01), all from the owner's own test accounts (owner, 2026-11-14). Rows with no `player_id`, rounds played
-without an account, match no one. For a request about an account:
+2026-10-01). The accounts that saved results are the owner's own test accounts (owner, 2026-11-14). Rows with no
+`player_id`, rounds played without an account, match no one. For a request about an account:
 
-1. In Clerk's dashboard, find the user id for the requester's email, then delete that user there too. Once the owner
-   has deleted the production instance, an email can't be matched to a row (the database holds no email): say so,
-   and that M13 deletes them all.
+1. In Clerk's dashboard, find the user id for the requester's email. Once the owner has deleted the production
+   instance, an email can't be matched to a row (the database holds no email): say so, and that M13 deletes them all.
 2. Take a fresh dump: `ssh play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`.
-3. In `./scripts/db`, find the row and show what is held, then delete in one transaction, solves first:
-   `player_id` is `ON DELETE SET NULL`, so deleting the profile alone keeps every result.
+3. In the interactive shell (`./scripts/db`), find the row and show what is held, then delete in one transaction,
+   solves first: `player_id` is `ON DELETE SET NULL`, so deleting the profile alone keeps every result.
 
-```sql
-SELECT user_id FROM profiles WHERE clerk_user_id = '<clerk user id>';
-SELECT p.created_at, s.* FROM profiles p LEFT JOIN clue_match_solves s ON s.player_id = p.user_id
- WHERE p.user_id = '<user_id>' ORDER BY s.solved_at;
-BEGIN;
-DELETE FROM clue_match_solves WHERE player_id = '<user_id>';
-DELETE FROM profiles WHERE user_id = '<user_id>';
-COMMIT;
-```
+   ```sql
+   SELECT user_id FROM profiles WHERE clerk_user_id = '<clerk user id>';
+   SELECT p.created_at, s.* FROM profiles p LEFT JOIN clue_match_solves s ON s.player_id = p.user_id
+    WHERE p.user_id = '<user_id>' ORDER BY s.solved_at;
+   BEGIN;
+   DELETE FROM clue_match_solves WHERE player_id = '<user_id>';
+   DELETE FROM profiles WHERE user_id = '<user_id>';
+   COMMIT;
+   ```
+
+4. Once that commits, delete the user in Clerk's dashboard: until then it is the only link from the email to the row.
 
 If M13 has renamed them (`retired_clue_match_solves`, `retired_profiles`), run the same statements on those names;
 once it has dropped them, nothing about any player is left in the live database.
 
-**Copies age out.** The game server deletes daily dumps after 14 days and weekly ones after 56
-(`deploy/backup/pg-backup.sh`), the Oracle VPS keeps the newest 3 (`/srv/critter-ai/ops/bin/game-backup-pull`), and
-an `OFFSITE` mirror, if set, follows with `rsync --delete`; the scrubbed dev copy `phaser_june_dev` holds no player
-ids (`deploy/db/dev-role.sql`). So a deleted row is gone from every copy about 8 weeks later. These steps never
-restore or edit a dump.
+**Copies.** A dump ages out only while the job that prunes it runs and succeeds. The game server's nightly
+`deploy/backup/pg-backup.sh` deletes daily dumps after 14 days and weekly ones after 56, and nothing on a night its
+dump fails; an `OFFSITE` mirror, if set, follows only when that run's `rsync --delete` succeeds. The Oracle VPS's
+`/srv/critter-ai/ops/bin/game-backup-pull` keeps the newest 3 and drops older ones only when it copies a new one. So,
+while those jobs run, the account is in none of their dumps about 8 weeks after the deletion; a dump copied elsewhere
+by hand stays until someone deletes it. The scrubbed dev copy `phaser_june_dev` holds the solves as of its last
+refresh with no player (`deploy/db/dev-role.sql`): the account's results stay there, anonymous, until the copy is
+refreshed ([Runbook](#runbook), steps 1–2) or M13 drops the table. These steps never restore or edit a dump.
 ````
 
-The section gives no row counts (Decisions). Two of its wordings differ from the brief, because the code says otherwise:
+The section gives no row counts (Decisions). Where it differs from the brief:
 - "About 8 weeks" instead of "56 days": `-mtime +56` deletes a weekly dump only once it is 57 days old.
+- "In none of their dumps ... while those jobs run" instead of "gone from every copy": pruning happens only on a successful run (finding 6), and the dev copy keeps the account's solves without the player until it is refreshed or M13 drops the table (Astra MUST-FIX 1).
+- The Clerk user is deleted last (step 4), not before the dump: Clerk holds the only email-to-row link, so it stays until the database delete has committed (Astra SHOULD-CONSIDER 1).
+- "The accounts that saved results are the owner's" instead of "all from the owner's own test accounts": he confirmed 3 accounts; 4 more profiles hold no results and H20 is open (Fable SHOULD-CONSIDER 1).
 - The Caddy clause and "nothing that names them" (finding 3).
 
 M13 adds its W4/W5 dates to the "If M13 has renamed them" paragraph (its brief, Decision rules).
@@ -377,7 +384,7 @@ M13 adds its W4/W5 dates to the "If M13 has renamed them" paragraph (its brief, 
 ### Notes (not edits)
 
 - **For the owner.** Caddy (`caddy:2`, default logger) writes a request's IP, URI and user agent to `docker logs caddy` whenever it can't reach the app. That log lasts until the `caddy` container is recreated (only when the Caddyfile or the site changes), or as Hetzner's Docker log settings allow (not checked). Changing it is a `deploy/Caddyfile` change for a later mission. If it changes, the doc's clause goes, and "we hold nothing else about you" could return to the page.
-- **For M13.** `db/schema.sql:91` says each profile saved a round; 4 of the 7 hold none.
+- **For M13.** `db/schema.sql:91` says each profile saved a round; 4 of the 7 hold none. Its two kept dumps (`game-backups/kept/`, outside every rotation) hold the old rows until the owner deletes them, so the Summary's "were deleted" note waits for those too; its edit of the deletion section's "Copies" paragraph should name them.
 
 ## Architecture review (Fable)
 
@@ -416,6 +423,24 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+2026-11-15, one round, plan only. Astra's MUST-FIX checked against the code; both halves are real:
+- `deploy/db/dev-role.sql:29-31` nulls `player_id` and deletes `profiles` but keeps every solve. The copy is refreshed only by hand (`docs/DATABASE_ACCESS.md` Runbook, steps 1–2), so a deleted account's solves stay there, anonymous.
+- `game-backup-pull:38` prunes only after a successful new copy; `:23-26`, `:31` and `fail` exit first. `pg-backup.sh` (`set -euo pipefail`, `:9`) deletes and mirrors nothing on a night its dump fails, and `OFFSITE` lags whenever its `rsync` fails.
+
+Changes:
+1. **Deletion doc, "Copies age out" → "Copies"** (Target design, `docs/DATABASE_ACCESS.md` block). Pruning is now conditional on the jobs running and succeeding. "Gone from every copy" becomes "in none of their dumps … while those jobs run". New: a dump copied by hand stays until someone deletes it. The dev copy holds the account's results anonymously until a refresh (Runbook) or M13's drop. (Astra MUST-FIX 1.)
+2. **Finding 6's fact list** now carries the pruning conditions and the dev copy's kept solves, with `file:line`.
+3. **Deletion doc, steps:** the Clerk user is deleted last, as a new step 4 after the `COMMIT`, with one clause on why: Clerk holds the only email-to-row link. Reordering does this without making another copy of the id, so I took that over "retain the ids securely". The SQL block is indented under step 3 so the list stays one list. (Astra SHOULD-CONSIDER 1.)
+4. **Deletion doc, attribution:** "all from the owner's own test accounts" becomes "The accounts that saved results are the owner's own test accounts (owner, 2026-11-14)". It now claims only what he confirmed. The 4 profiles with no results stay open in H20. (Fable SHOULD-CONSIDER 1.)
+5. **Deletion doc, step 3:** "the interactive shell (`./scripts/db`)". (Fable SHOULD-CONSIDER 5.)
+6. **The deviations list under the doc** names changes 1, 3 and 4. The length line now gives the real size (46 lines, 38 without blanks) and why it runs over the brief's 15–25, which covers Fable SHOULD-CONSIDER 4.
+7. **Notes for M13:** its two kept dumps (`game-backups/kept/`) sit outside every rotation. So "were deleted" waits for the owner to delete them, and its edit of "Copies" should name them.
+
+Rejected or unchanged:
+- **Privacy and Terms pages: no change.** Neither makes the promise Astra flagged. Privacy never mentions copies, backups or timing. Terms only points to Privacy. "Want them deleted now" is kept in the live database at once. The dev copy's leftover rows carry no player, and the doc names the refresh that removes them, so the owner can delete those too. Changing the wording further would drift from the text the owner pre-approved.
+- **A mandatory dev-copy refresh or delete step:** rejected. Refreshing means dropping CI's database and running WSL's tunnel step. That is heavy for requests that can only come from the owner's own test accounts, and M13 drops the table there anyway. The doc names the refresh as the way to clear it.
+- **Fable SHOULD-CONSIDER 2 and 3** (Summary notes for the owner): those are for the Steps and the Summary, not the architecture. No change here.
+
 ## Steps
 
 ## Verification
@@ -436,5 +461,6 @@ SHOULD-CONSIDER:
 - 2026-11-15 18:45 UTC · Architecture: architect wrote findings + exact text for Screenshot/config/Privacy/Teachers/Terms + deletion doc; "until early October 2026" confirmed; new risk: Caddy logs IP on 502 (wording avoids "nothing else"); trial bot careful 96–98%, random 20%, autoguess 28–37%. Plan only, no code.
 - 2026-11-15 18:44 UTC · Fable review: APPROVE_WITH_CHANGES, MUST-FIX none (scripts/db txn ok; no pinned strings outside src/site); 2 MISSED for Steps (asset diff, real date); 5 SHOULD-CONSIDER. Plan only.
 - 2026-11-15 18:47 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (retention contract: dev copy keeps anonymized solves; backup expiry depends on rotation), 1 SHOULD-CONSIDER (keep Clerk/DB id map before deleting Clerk user). Revision next. Plan only.
+- 2026-11-15 18:52 UTC · Revision: architect resolved Astra MUST-FIX (both claims verified: dev-role.sql keeps anonymized solves; pruning only after successful pulls) in deletion doc "Copies"; Clerk user deleted last; attribution narrowed; Privacy/Terms unchanged. Plan only.
 
 ## Summary
