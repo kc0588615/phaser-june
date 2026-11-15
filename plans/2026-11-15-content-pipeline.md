@@ -2,7 +2,7 @@
 mission: content-pipeline
 project: critter-connect
 branch: agent/content-pipeline
-status: active
+status: done
 started: 2026-11-15 06:23 UTC
 ---
 
@@ -602,5 +602,26 @@ SHOULD-CONSIDER:
 - 2026-11-15 08:10 UTC S6: `## Adding or changing an animal` replaces `## After an import` in `docs/SHAPEFILE_BEST_PRACTICES.md` (8 steps, who runs each; id rules, PROBLEM/cite warn, ranges time/cap/refusal/commit-all, build on `main` + full refusal incl. every `checkProfile` problem, both REFRESH lines, existing-animal two cases, candidate note); `CONTENT_SOURCES.md` `## Workflow` list → one pointer (heading + copy rule kept); `CLUE_MATCH.md` list → pointer in the intro. Anchor check empty (4 links to the new anchor, build message's incl.); 'globe place' 0; stale 'reads that view|then after a build' and old refusal sentence gone; DoD stale grep hits only S7's five sites (`CONTENT_SOURCES.md:78`, `SHAPEFILE:35`, `CLUE_MATCH.md:61` now, `DEPLOY.md:45`, `contentCitations.ts:8`). typecheck, lint 0. DB runs: 0.
 - 2026-11-15 08:05 UTC S7: smaller fixes at their shifted lines: `CONTENT_SOURCES.md:78` suspects = `pickSuspectSet` relatives first then `likeness` (no rarity weight), `:88-89` parallel-search lines say owner's sessions only, not in `.mcp.json` (tips kept); `SHAPEFILE:35` fallback for any animal with no presence 1-3, `content -- ranges` incl.; `CLUE_MATCH.md:61` countries from IUCN range maps wherever assessed; `DEPLOY.md:45` content sentence only (rollback kept), links `CONTENT_SOURCES.md#citations` Release order; `contentCitations.ts:8` comment: only the table's `CHECK`. `checkProfile` refusal fix already in S6 step 7. Stale grep, anchor check, comment-only grep empty; DEPLOY diff one line; typecheck, lint 0. DB runs: 0.
 - 2026-11-15 08:09 UTC Code review (Astra): `astra-review --code origin/main`, APPROVE, MUST-FIX none; SHOULD-CONSIDER 1 (final-e2e, scrolled journal shots, ranges-after) and 2 (fresh fetch before PR) are already the final Verification unit and release rebase, so no new steps. No code changed, no DB runs.
+- 2026-11-15 08:36 UTC Verification (final, on `10e31085`, based on `origin/main` `aabc91d5`): V1 dev `e2e:fresh` 1579/1579 first try, 12 m 43 s (`$S/final-e2e/`, `run.log`, `COMMAND.txt`); journal shots 05/09/11 byte-identical to S5's; journal scrolled to end at 375 and 320 px (`12-journal-end-{375,320}.png`, `journal-end.mjs` over CDP on a dev-copy dev server :3102): credit line in full, wraps, no clipping, no overflow. V2 `site:build` + `e2e:site` 444/444 (`$S/final-e2e/site/`). V3 run 5/8: 76 emptied, dev `ranges` exit 0 in **1 m 54 s**, 76 lines, 0 "no range map", `git diff --exit-code HEAD` 0, restored (`$S/ranges-after.txt`); rule check not rerun (`content.ts` last changed S2, before S3); `refusal-check.sh` ALL PASS (`$S/refusal-check-final.txt`); species/view grep empty. V4 dev `content -- check` same summary, 0/0 (`$S/content-check-after.txt`). V5 typecheck, lint 0; tests 64/64. V6 every diff gate passes. DB runs: 5 of 8 used (1 timeout + 1 baseline + rule check + S3 proof + final).
 
 ## Summary
+
+**Done:** audit M10 (D20, A1, K11, S12, S9, K13) on `agent/content-pipeline`. One build now adds an animal (after `ranges`), the order is written once, and the content's terms are written down. Release is the next unit.
+
+**Changed files (16):** `db/content/citations.json` (D20), `LICENSE`, new `CONTENT_LICENSE.md`, `README.md`, `AGENTS.md`, `scripts/content.ts` (`assertProfilesReady`; `RANGES_SQL` from the profiles), `db/schema.sql`, `src/clueGame/profiles.ts`, `src/lib/contentCitations.ts` (comments only), `src/components/clueGame/JournalSheet.tsx`, `src/site/pages/Terms.tsx`, `docs/SHAPEFILE_BEST_PRACTICES.md`, `docs/CONTENT_SOURCES.md`, `docs/CLUE_MATCH.md`, `docs/DEPLOY.md`, this plan.
+
+**D20:** `rspb.2017.1347` entry gone, numstat 0 added / 4 deleted, 261 entries; no profile cites it (baseline grep), and the live pool already had 261 citations without it.
+
+**Copyright holder:** Haunted Pavement LLC, from `OPERATOR` in `src/site/config.ts` (the site's operator), the owner's choice 2026-11-14. `LICENSE` keeps "Portions copyright (c) 2025 Phaser" and its CRLF endings (24/24 lines).
+
+**`ranges` on the dev copy (5 of 8 runs):** run 1 today's code, 60 s role timeout; run 2 today's SQL + 15 min cap, empty diff, 65 s; run 3 rule check 13/13 (Russia, France, open ocean, Antarctica, lone animal), 5.7 s; run 4 S3 proof, all 76 rebuilt from empty, empty diff, 1 m 55 s; run 5 final proof, empty diff, 1 m 54 s.
+
+**Checks:** content check before = after (76 playable, 2478 clues, 491 facts, 0 errors, 0 warnings). Unit tests 64/64 before and after. `e2e:fresh` 1579/1579 at baseline, S5 and final (`/srv/critter-ai/agent-state/missions/content-pipeline/final-e2e/`, plus the journal-end shots at 375 and 320 px); `e2e:site` 444/444 (S5, final).
+
+**Smoke:** see `## Release` (next unit).
+
+**Goal 5 (second range source), note only:** no profile lacks an IUCN range today: all 76 have realms, and the final run printed 0 "no range map" lines. Three have realms but 0 countries (Darwin Frog, Livingstone's Flying Fox, Hispaniolan Solenodon: no country meets the two-animal rule). A second source would need: a key other than `iucn.id_no` = profile `iucnId` (`RANGES_SQL`'s `ranges` CTE); `clue_match_ranges`'s `JOIN iucn i ON i.id_no = s.iucn_id` (`db/schema.sql`); a table shaped like `iucn` and an importer like `scripts/iucn.ts`; a source key beside `iucn_range` (`sources.json`) and its clue credit (`profiles.ts`), not "IUCN Red List"; and the two credit lines (`JournalSheet.tsx`, `Terms.tsx`). The source and its licence are the owner's choice.
+
+**Production content build:** not needed. Nothing under `db/content/animals/` or `sources.json` changed, and the removed citation was cited by no live row, so a build would write the same pool. The next animal follows `docs/SHAPEFILE_BEST_PRACTICES.md#adding-or-changing-an-animal`.
+
+**For the owner:** One Earth's citation uses the brief's string `One Earth. 2023. Los Angeles, CA.` (its page reads `{2023} Los Angeles` with no period). IUCN's terms in `CONTENT_LICENSE.md` are quoted from a Wayback copy (fetched 2026-11-15); One Earth's and Natural Earth's from the audit's A1 (read 2026-11-10). Astra's code review: APPROVE, no MUST-FIX; both its SHOULD-CONSIDER items are covered by this Verification and the release's fresh fetch.
