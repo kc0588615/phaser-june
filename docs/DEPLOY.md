@@ -1,17 +1,17 @@
 # Deploying Critter Connect on the VPS
 
-Today the app runs as `npm run dev` in WSL against the Hetzner database. This is the path to serving it from the VPS, next to the database, over HTTPS. Steps marked **owner** need the server, a password or the Clerk dashboard.
+The game runs on the Hetzner server in Docker, next to its database, and `deploy/deploy.sh` deploys it ([Start and update](#start-and-update)). Steps marked **owner** need the server, a password or the Clerk dashboard.
 
 ## What runs where
 
 | Service | From | Reachable |
 |---|---|---|
-| `db` (PostGIS 17) | `/opt/postgis/docker-compose.yml` (server copy of `docker-compose.yml`, plus `postgres-mcp`) | internal network only |
-| `pgbouncer` (TLS, port 6432) | `/opt/postgis/docker-compose.yml` | public, for dev machines and QGIS |
+| `db` (PostGIS 17) | `/opt/postgis/docker-compose.yml` (compose project `postgis`, the server's copy of the repo's `docker-compose.yml`; see the file's header) | internal network only |
+| `pgbouncer` (TLS, port 6432) | `/opt/postgis/docker-compose.yml` | public, for dev machines, the Oracle VPS's agents and CI's `e2e` job. QGIS uses its own tunnel ([database access](DATABASE_ACCESS.md#windowsqgis)) |
 | `app` (Next.js, `Dockerfile`) | `deploy/docker-compose.app.yml` | internal, port 8080 |
 | `caddy` (HTTPS: the game at `APP_DOMAIN`, the website at `critterconnect.org`, `www` redirects to it) | `deploy/docker-compose.app.yml`, image built from `Dockerfile` stage `caddy` | public, ports 80 and 443 |
 
-The app is its own Compose project (`critter`, in `/opt/critter-connect`). It joins the database stack's `postgis_backend` network and reaches Postgres as `db`, so deploying the app never restarts the database.
+Two Compose projects run there: `critter` (`critter-app`, `caddy`) from `/opt/critter-connect/deploy/docker-compose.app.yml`, and `postgis` (`postgis`, `pgbouncer`) from `/opt/postgis/docker-compose.yml`. The app joins the database stack's `postgis_backend` network and reaches Postgres as `db`, so deploying the app never restarts the database.
 
 ## One-time setup
 
@@ -32,7 +32,7 @@ The app is its own Compose project (`critter`, in `/opt/critter-connect`). It jo
 
 ## Start and update
 
-After pushing `main`: `npm run deploy` (`deploy/deploy.sh`), from WSL or from the Oracle VPS (`deploy critter-connect`, which runs this script from a clean copy of `origin/main`). SSH uses a no-passphrase deploy key, `~/.ssh/critter-deploy`, named in `~/.ssh/config`, so nobody has to unlock anything. It refuses if local `main` has unpushed commits or the VPS checkout isn't on `main`, then pulls, rebuilds, waits for `critter-app` to be healthy, checks that `caddy` has the website's files and runs `deploy/check.sh` (see [The website](#the-website)); any failure fails the deploy. By hand on the VPS:
+After pushing `main`: `npm run deploy` (`deploy/deploy.sh`), from WSL or from the Oracle VPS (`deploy critter-connect`, which runs this script from a clean copy of `origin/main`). SSH uses a no-passphrase deploy key, `~/.ssh/critter-deploy`, named in `~/.ssh/config`, so nobody has to unlock anything. It refuses if local `main` has unpushed commits or the VPS checkout isn't on `main`, then pulls, rebuilds, keeps the images it is about to replace as `:previous` when they had passed every check, waits for `critter-app` to be healthy, checks that `caddy` has the website's files, removes untagged images and build cache unused for 7 days (a failure there only warns), runs `deploy/check.sh` (see [The website](#the-website)) and, once that passes, tags the live images `:verified` (a failure there only warns too); any other failure fails the deploy. By hand on the VPS:
 
 ```sh
 cd /opt/critter-connect
@@ -42,7 +42,7 @@ docker compose -f deploy/docker-compose.app.yml --project-directory . ps     # a
 curl -fsS https://$APP_DOMAIN/api/places/ > /dev/null && echo ok
 ```
 
-Roll back with `git checkout <previous commit>` and the same `up -d --build`. A content change goes live with the owner's content build (`npm run content -- build`), which updates the database the app reads live; a change that cites a new page also needs this deploy first (Release order in [`docs/CONTENT_SOURCES.md#citations`](CONTENT_SOURCES.md#citations)).
+Roll back with `git revert <commit>` on `main` (`-m 1` for a merge), push, then `npm run deploy` or `deploy critter-connect`: `git checkout <commit>` on the server would leave a detached checkout, which `deploy.sh` refuses. A mission whose deploy fails reverts the same way. When no deploy can run, put back `critter-app:previous`, the last image that passed every check before the live one (failed deploys don't replace it), in `/opt/critter-connect`: `docker tag critter-app:previous critter-app && docker compose -f deploy/docker-compose.app.yml --project-directory . up -d --no-build app` (and likewise `critter-caddy:previous` with service `caddy`, whose tag comes from the last deploy that changed the Caddyfile or the website). These commands were checked with `--help` only and haven't been tried. A content change goes live with the owner's content build (`npm run content -- build`), which updates the database the app reads live; a change that cites a new page also needs this deploy first (Release order in [`docs/CONTENT_SOURCES.md#citations`](CONTENT_SOURCES.md#citations)).
 
 ## The website
 
@@ -59,7 +59,7 @@ critterconnect.org is a static site (plan 051): `src/site/` rendered to HTML by 
 
 - **DNS** (Namecheap): `@` A and `www` (CNAME to the apex, or A) point at this VPS, like `play`. Caddy gets each host's certificate once its DNS points here.
 - **Which commit is live:** `curl https://play.critterconnect.org/version.txt`. `deploy.sh` stamps the commit into the image as it builds, and `check.sh` fails the deploy unless the live game reports it. A failed build leaves the old stamp in place, so this stays true where `git log` on the server wouldn't. An image built by hand with `docker compose` says `unknown`.
-- **`deploy/check.sh`** checks all three hosts and prints `OK`, `BAD` or `SKIP` per line; it exits 1 on any `BAD`. play. always: the game's routes 200, `/privacy/`, `/terms/` and `/teachers/` 404. The apex and www only once their DNS points at play.'s IP (`SKIP` before that): the pages with their canonical and no `<script src`, every `/site/` file with its type, `robots.txt`, `sitemap.xml`, the 404 page, the 308s. `deploy.sh` runs it after every deploy; run `bash deploy/check.sh --strict` (a `SKIP` is `BAD`) after a DNS change. A TLS failure means the certificate isn't issued yet: wait a few minutes or `docker restart caddy`, then rerun.
+- **`deploy/check.sh`** checks all three hosts on every run and prints `OK` or `BAD` per line; it exits 1 on any `BAD`. play.: the game's routes 200, `/privacy/`, `/terms/` and `/teachers/` 404. The apex and www: the pages with their canonical and no `<script src`, every `/site/` file with its type, `robots.txt`, `sitemap.xml`, the 404 page, the 308s. Last, the board check: `scripts/check-live-board.mjs` opens `https://play.critterconnect.org/explore/?seed=1` in headless Chrome on a phone-sized screen, and passes once the board's canvas and the round's animals show, with no error alert and no failed or failing script from play. (up to 3 tries). Chrome comes from `CHROME_PATH`, default `/usr/bin/google-chrome`; on the Oracle VPS, `~/.local/bin/chrome-nosandbox` when `CHROME_PATH` is unset. A deploy from a machine with neither fails at that check, and its `BAD` line says the deploy is live. `deploy.sh` runs it after every deploy. A TLS failure means the certificate isn't issued yet: wait a few minutes or `docker restart caddy`, then rerun.
 - **The game's styles stay the game's.** The site's cc addition (`--space-xxxl`) lives in `src/site/site.css`, never in `globals.css` (its primary-fill override went when the game's WCAG pass darkened `--color-1`, 2026-11-01).
 - **Legal pages** (`/privacy/`, `/terms/`) exist only on the site; CI's "No game links to site pages" step fails on a play.-relative link to them or to `/teachers/` from `src/` outside `src/site/`.
 
@@ -75,6 +75,7 @@ critterconnect.org is a static site (plan 051): `src/site/` rendered to HTML by 
   ```
 
   Set `OFFSITE=u123456@u123456.your-storagebox.de:critter` (Hetzner Storage Box over SSH) in the cron line to copy each night's set off the server.
+- **Off the server:** the Oracle VPS's `/srv/critter-ai/ops/bin/game-backup-pull` (its crontab, 04:30 UTC) copies the newest daily dump, checks its sha256 against the server's, and keeps the newest 3 in `/srv/critter-ai/agent-state/game-backups/` (mode 700: real player data). It is the one copy off the server on record; whether `OFFSITE` is set in Hetzner's cron line is not confirmed.
 - **Restore drill** (on a scratch database first):
 
   ```sh
@@ -88,51 +89,20 @@ critterconnect.org is a static site (plan 051): `src/site/` rendered to HTML by 
 
 ## Hardening status (2026-09-26)
 
-Owner-reported state and tests; not independently re-tested during this documentation update.
+Owner reports, not re-tested by an agent; each row is from 2026-09-26 unless it gives another date.
 
 | Area | Reported state |
 |---|---|
 | PostgreSQL password | Rotated to a random value, never printed. Root-only server copy: `/root/postgres-password.txt`; local app copy: `DATABASE_URL` in `.env.local`. Agents continue using `DATABASE_URL`. |
-| Server configuration | Updated `/opt/postgis/.env` and the hardcoded password in the server's `docker-compose.yml`. Restarted `pgbouncer` and `postgres-mcp`; did not restart `postgis`. The repository Compose file uses environment substitution and does not define `postgres-mcp`. |
+| Server configuration | Updated `/opt/postgis/.env` and the hardcoded password in the server's `docker-compose.yml`. Restarted `pgbouncer` (and a database MCP service, since removed: owner, 2026-11-14); did not restart `postgis`. The repository Compose file uses environment substitution. |
 | Database tests | PgBouncer accepted the new password and rejected a wrong one; the app connection read 50 species. |
 | SSH | `/etc/ssh/sshd_config.d/00-hardening.conf` disables password login; root uses keys only. Fresh key login succeeded; password login was refused. |
-| Host firewall | UFW enabled; ports 22, 80, 443 and 6432 allowed. Port 8000 (`postgres-mcp`, host network, no Docker DNAT) allows only the owner's home IP; verified 2026-09-26 via iptables. 6432 is Docker-published, so it bypasses UFW (public by design). Provider-firewall state was not included in the handoff. |
+| Host firewall | UFW enabled; ports 22, 80, 443 and 6432 allowed. 6432 is Docker-published, so it bypasses UFW (public by design). Provider-firewall state was not included in the handoff. |
+| Updates | `unattended-upgrades` is active; `fail2ban` is not installed and won't be, because SSH takes keys only (owner, 2026-11-14). |
 | Rotation backups | Server config backups: `/opt/postgis/*.bak-20260926-165109`. Old `.env.local`: prior session scratchpad. These contain old credentials; keep them private. |
-
-### Port 8000 verification outstanding
-
-The existing `postgres-mcp` service was reported to expose superuser SQL publicly
-before hardening. **A UFW rule alone does not prove it is now restricted:**
-[Docker-published container ports can bypass UFW](https://docs.docker.com/engine/network/packet-filtering-firewalls/#docker-and-ufw).
-Inspect the live container's port binding/network mode and effective firewall
-rules, then verify access from the allowed IP and rejection from another IP
-(including IPv6 if exposed). The repository lacks this service's configuration.
-
-If the home IP changes, replace the old source allowance with the new IP in the
-effective firewall. The reported UFW addition is
-`ufw allow from <new-ip> to any port 8000 proto tcp`; remove the obsolete allowance
-after testing. WSL agents continue using the SSH tunnel on local port 55432;
-port 8000 is not their database route.
 
 ### Remaining owner tasks
 
 1. Update QGIS's saved database password from `.env.local` (see [database access](DATABASE_ACCESS.md#windowsqgis)).
 2. Change the exposed SSH key passphrase interactively: `ssh-keygen -p -f ~/.ssh/hetzner-vps`. Also update the Windows key copy at `D:\VPS\new_hetzner_keys_ssh\id_ed25519`, then delete `hetzner ssh key passphrase.txt`. Keep passphrases out of chat and command arguments.
-3. Remove obsolete password-bearing entries from `~/.codex/rules/default.rules` and old session logs/scratchpad. Preserve unrelated rules; the old database password is no longer valid.
-4. Sign up on play.critterconnect.org to test Clerk production sign-in.
-5. `unattended-upgrades` and `fail2ban` installation remains unconfirmed by this handoff.
-
-## First deploy (2026-09-26)
-
-Ran `deploy-vps.sh` (steps above) from WSL.
-
-| Step | Result |
-|---|---|
-| Checkout | `/opt/critter-connect` at `e43d1264` |
-| `critter_app` | LOGIN with a random password, only in `deploy/app.env` (mode 600); login from `postgis_backend` read 50 species |
-| Settings | `.env` and `deploy/app.env` written from Clerk live keys (sent over stdin, temp copy deleted) |
-| certbot | `pre_hook = docker stop caddy`, `post_hook = docker start caddy` added to the renewal config |
-| Swap | 2 GB `/swapfile` added (in fstab) for the Next build |
-| Stack | Compose project `critter`: `critter-app` healthy, `caddy` up; Let's Encrypt cert for play.critterconnect.org issued |
-| Backups | `/etc/cron.d/critter-backup` installed; first dump written (90 MB) |
-| HTTPS from outside | Works after an inbound TCP 443 rule (IPv4 + IPv6) was added to the Hetzner Cloud firewall. `/`, `/clue-match/`, `/login/`, `/privacy/`, `/terms/`, `/api/places/`, pool (50 species, 1,458 clues) and range APIs return 200; HSTS and nosniff headers set. |
+3. Sign up on play.critterconnect.org to test Clerk production sign-in; moot once mission M11 (remove-sign-in) removes sign-in.
