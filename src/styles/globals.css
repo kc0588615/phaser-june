@@ -51,12 +51,17 @@
   font-display: swap;
   unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
 }
+/* Open Runde's two files hold only what `font-data` draws: the space, digits, + . / ? × and the minus sign, and the
+   letters of "Clue", "of", "best", "moves" and "animals". A new character in `font-data` needs both files cut again
+   from the full ones (git 9f72f360, public/fonts/open-runde/) with the pyftsubset command in
+   plans/2026-11-15-screens-cleanup.md (O1), and both unicode-ranges below updated to match. */
 @font-face {
   font-family: "Open Runde";
   src: url("/fonts/open-runde/OpenRunde-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0020,U+002B,U+002E-0039,U+003F,U+0043,U+0061-0062,U+0065-0066,U+0069,U+006C-006F,U+0073-0076,U+00D7,U+2212;
 }
 @font-face {
   font-family: "Open Runde";
@@ -64,6 +69,7 @@
   font-weight: 700 800;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0020,U+002B,U+002E-0039,U+003F,U+0043,U+0061-0062,U+0065-0066,U+0069,U+006C-006F,U+0073-0076,U+00D7,U+2212;
 }
 
 /* Patrick Hand (OFL-1.1): the handwritten number on each animal's card (board, grid, sheets). Only digits and names. */

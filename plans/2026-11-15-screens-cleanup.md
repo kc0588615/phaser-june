@@ -753,7 +753,7 @@ Every step:
   - typecheck 0, lint 0, `npm test` 75/75 (64 + N1 5 + N2 6); M7's merge case passes unchanged.
   - E2E (dev copy, guard passed) → `$STATE/e2e-s3/` (`e2e-s2/` deleted): `1584/1584`, report check `1584 0`. Two tabs: storage `Okapia johnstoni` (X, unchanged) + `Equus grevyi` (B) + `Daubentonia madagascariensis` (A), each 1; records 9999/99; A's journal `3 of 76 animals identified`; no new console errors. `report.twoTabs` `{"a":1,"b":2,"mysteries":[23,39],"x":29}`.
 
-- [ ] S4 · O1: cut the data font
+- [x] S4 · O1: cut the data font
   - List still holds: `git grep -n -w font-data -- src ':!src/styles'` = the Architecture table's 20 lines in 6 files (a new line: add its characters). List: `U+0020,U+002B,U+002E-0039,U+003F,U+0043,U+0061-0062,U+0065-0066,U+0069,U+006C-006F,U+0073-0076,U+00D7,U+2212`.
   - Sources: `sha256sum $STATE/fonts-original/*` equals `fonts-before.txt` and `git show origin/main:public/fonts/open-runde/<file> | sha256sum`.
   - Cut both with the Architecture's `pyftsubset` command, `$STATE/fonts-original/<file>` → `public/fonts/open-runde/<file>`.
@@ -761,6 +761,21 @@ Every step:
   - `src/styles/globals.css`: both Open Runde `@font-face` get `unicode-range: <list>;`; a comment above them: the files hold only the characters `font-data` draws (in words); a new one needs both files cut again from the full ones (git `9f72f360`, `public/fonts/open-runde/`) with this plan's command, and both ranges updated. `:2-4` comment unchanged.
   - Glyph proof, `$STATE/glyphs/glyphs.mjs` per Architecture "Glyph proof" (writes `glyphs.html`; `cdp.mjs` and `sharp` by absolute path / `createRequire` from the worktree; loads all four faces; writes 8 PNGs + `compare.json`; exits 1 on any failed condition). Run `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox node $STATE/glyphs/glyphs.mjs`. Must show: 4 orig/cut pairs 0 differing pixels, same dimensions; test ≠ control crop in all 8; `orig-regular` ≠ `orig-bold`; all four `check` true, `status` loaded. Not identical → find the cause (Decision rule); none can be → restore originals + rules, handoff item, go on.
   - Checks: typecheck, lint; `npm run site:build`, `npm run site:serve` in background, `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:site` (444/444; stop the server); one E2E → `$STATE/e2e-s4/` (delete `e2e-s3/`), `1584 0`; Verification 2's 7 screen pairs vs `baseline-e2e/`, recorded here.
+  - Results (2026-11-15):
+    - List holds: `git grep -n -w font-data -- src ':!src/styles'` = 20 lines, 6 files, the table's line numbers exactly.
+    - Sources: `fonts-original/*` sha256 = `fonts-before.txt` = `git show origin/main:…` (Regular `da42a035…`, Bold `9a64eabe…`).
+    - fontTools 4.68.0 (both `uvx … fonttools` banner and `uv run … fontTools.version`). Sizes: Regular 154,604 → 6,892 B; Bold 162,468 → 6,848 B; total 13,740 (< 40,000). Cmap: 31 each, ` +./0123456789?Cabefilmnostuv×−`. `git status`: only the two `.woff2` changed under `public/fonts`; `OFL.txt` untouched.
+    - `globals.css`: both rules get the list as `unicode-range`; comment above them as specified; `:2-4` unchanged.
+    - Glyph proof `$STATE/glyphs/` (exit 0, `compare.json` `ok: true`): 4 orig/cut pairs same size (780×2464 regular, 780×4832 bold), 0 differing pixels; test ≠ control crop in all 8 (157,872–348,806 px); all 4 FontFaces `loaded` and all 4 `check` true in every render; repeat render of `orig-regular-light` 0 px (deterministic).
+      - Deviation: the Bold page draws 700 and 800, so it's twice as tall as the Regular one, and a whole-shot wrong pair differs by size alone. So the wrong pair compares equal-size crops of the test block's first group (10 px, Regular at 400 vs Bold at 700): 12,338 (light), 12,524 (dark) px differ.
+      - Harness extras: forces `load()` on all four faces (faces with `unicode-range` load lazily); viewport resized to page height, so the whole page is shot; `mobile: false` + viewport meta (no text autosizing); asserts no line overflows and control/test blocks have equal heights.
+    - typecheck 0, lint 0; `site:build` 0; `e2e:site` 444/444 (server stopped).
+    - E2E: first run 1583/1584. The only failure was the timing check "field guide: signs in pages turn on their own…" (`turned: false`), audit A10's flaky class and not one of this mission's checks; its report is kept as `e2e-s4/flake-first-run-report.json`. Rerun once (Decision rule): 1584/1584, report check `1584 0`, 5 `true` (2 A16, 3 A17) → `$STATE/e2e-s4/`; `e2e-s3/` deleted.
+    - Screens vs `baseline-e2e/` (seed 7, decoded pixels with sharp, then by eye):
+      - `02-board.png`, `02d-field-guide.png`, `04-round-1-end.png`, `05-journal.png`: 0 px differ (clue counter, moves, trail `n/5`, grid `have/size` and `?`, guide numbers, `+points` and stats, `×N` / `best N moves`).
+      - `01-globe.png`: 21,199 px differ, all inside the globe (spin position, markers). The "N animals" list crop: 0 px.
+      - `02c-notes.png`: top bar (`1/5`, moves) crop 0 px. The `3/20` cell and the Goliath Frog row differ only in color (the reviewing highlight mid-transition): same glyphs, weight, width and baseline by eye at 3×.
+      - `08-pencil-bonus-end.png`: top bar and pencil stats (`1/1`, `+24`) crops 0 px. Baseline caught `+74 points` mid-pop (its `motion.span` pops in at 0.68 s); this run shot before it, and the photo fade differs. Timing, not font: `04-round-1-end.png`'s round-end card is identical.
 
 - [ ] S5 · D22 + D23: leftovers out
   - Guide only, never `git apply`: `/srv/critter-ai/agent-state/missions/critter-connect-audit/audit/area-6/dryrun.patch`.
@@ -836,5 +851,6 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 - 2026-11-15 13:36 UTC · S1: 5 fail-first E2E checks (A16 ×2, A17 ×3) + `setUpPage` refactor in `scripts/e2e.mjs`; typecheck/lint 0; E2E 1578/1584, exactly the 6 predicted fails → `checks-fail-first/`.
 - 2026-11-15 13:54 UTC · S2: A16 `fitsShape` + two-`try` load + `isSeed`, D22 pool line; unit fail-first then 69/69; typecheck/lint 0; E2E 1581/1584 (only 3 `two tabs:` fail, as planned) → `e2e-s2/`.
 - 2026-11-15 14:10 UTC · S3: A17 `mergeJournals`/`saveSolve`/`saveRecords` + `useJournal` merges into storage at save; unit fail-first then 75/75; typecheck/lint 0; E2E 1584/1584 → `e2e-s3/`.
+- 2026-11-15 14:47 UTC · S4: Open Runde cut to 31 chars (154,604 → 6,892; 162,468 → 6,848; fontTools 4.68.0) + `unicode-range`; glyph proof ok (4 pairs 0 px); typecheck/lint 0; site 444/444; E2E 1583 → rerun 1584/1584 (A10 timing flake) → `e2e-s4/`; 7 screen pairs: font-data text identical.
 
 ## Summary
