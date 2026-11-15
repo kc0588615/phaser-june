@@ -674,7 +674,7 @@ Every step:
     - `setup step` links: 4 (line 96, Ports hooks), 2 (100, Database role password), 3 (106, Settings). No other "One-time setup" reference besides the heading.
     - Extra (advisor): wider grep (`signing in|signs? in|sign(ed|ing)? out|log ?in|oauth|NEXT_PUBLIC|pk_|sk_|clk`) hits only DB-role logins, the `/login` redirect and its AGENTS.md mention, Caddyfile's `@game` matcher (out of scope), `/login*` in DEPLOY.md's website table (true: Caddy still forwards it) and e2e's "field guide: signs in pages" (unrelated): nothing to change. `.agents` has no Clerk or create-test-player. DEPLOY.md's Rebuild from nothing has no Clerk step.
 
-- [ ] S5 · The live-check script (outside the repo, never committed), tried on today's live site
+- [x] S5 · The live-check script (outside the repo, never committed), tried on today's live site
   - Write `$STATE/live-check.mjs`, per DoD Release "The live-check script":
     - It imports `launchChrome`, `connect` and `openPage` from `/srv/critter-ai/worktrees/remove-sign-in/scripts/cdp.mjs` by absolute path.
     - It runs with `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox` and the profile `$STATE/live-profile/`.
@@ -693,6 +693,10 @@ Every step:
     - If any of these fails, fix the script now.
   - Then `rm -rf $STATE/live-profile`, so the Release's seed and before runs start from nothing. Keep `live-try.json`.
   - Checks: `node --check $STATE/live-check.mjs`. `git status` shows only the plan changed. Live load: about 4 page loads, and the game writes nothing to the database.
+  - **Done 2026-11-15 18:20 UTC** (`origin/main` still `f1826f56`):
+    - `$STATE/live-check.mjs` as specified, plus (advisor): each load arms a `Page.loadEventFired` wait before `Page.navigate` (throws on `errorText` or no load in 60 s); `Network.setCacheDisabled` (the Release's after-run reuses the profile); the header is waited for with e2e's `^\d+ of \d+ animals found$` regex on the globe load; the journal is read after `/explore/`; the seed is the fixture's raw text, read back and compared; `Browser.close` in a `finally`, waiting up to 15 s for Chrome's exit (else SIGKILL and exit 1); any error exits 1 with no report. `chrome-nosandbox` `exec`s Chrome, so the spawned process is Chrome.
+    - `node --check` ok. Seed run → `$STATE/live-try-seed.json`: 167 requests, clerk host `clerk.critterconnect.org`, header `4 of 76 animals found`, journal = fixture. Fresh launch without seed → `$STATE/live-try.json`: 127 requests, 22 to `clerk.critterconnect.org` (the only Clerk host), header `4 of 76 animals found`, `journal` byte-for-byte the fixture (profile keeps storage). Both exit 0; no Chrome left on the profile.
+    - `rm -rf $STATE/live-profile` done; `live-try.json` (and the seed run's JSON) kept. `git status`: only the plan.
 
 ## Verification
 
@@ -828,5 +832,6 @@ Build and release failures, and what catches each:
 - 2026-11-15 17:35 UTC: S2 sign-in out of the game: 3 files deleted, `_app` fragment, header/hook/journal.ts edits, `/login` redirect, `@clerk/nextjs` uninstalled (lock −142, +0). typecheck/lint ok, test 76/76, build routes clean, E2E 1588/1588 (4 new checks green); screens: Anywhere shift + full-size wordmark (expected), rest identical.
 - 2026-11-15 17:50 UTC: S3 CI/Dockerfile/compose/env examples/ESLint guard/check-live-board comment de-Clerked. typecheck/lint ok, YAML ok, site:build ok, guard fires, Clerk + NEXT_PUBLIC_ greps clean, deploy scripts untouched; no E2E (no game change).
 - 2026-11-15 18:05 UTC: S4 docs/agent files/playtest skill/schema comments de-Clerked, create-test-player.mjs deleted, DEPLOY.md setup steps renumbered. typecheck/lint ok; V6 final grep, DEPLOY awk, V7, V8 clean; e2e.mjs 7 lines, next.config 1; no E2E (no game change).
+- 2026-11-15 18:20 UTC: S5 live-check script at `$STATE/live-check.mjs` (not committed); tried on live: seed run then fresh run both see `clerk.critterconnect.org` (22 req), header `4 of 76`, journal = fixture (profile keeps storage); profile removed, `live-try.json` kept. Plan-only change.
 
 ## Summary
