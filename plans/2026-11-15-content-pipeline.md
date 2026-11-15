@@ -574,6 +574,13 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- Rebase: none needed; `origin/main` still `aabc91d5` (the verified base), so the tree is the final Verification's (`10e31085`) plus the plan only. Re-ran V5 (typecheck, lint 0; tests 64/64) and V6 gates (all pass); V1-V4 not rerun (same code, Decision). Terms' `updated=` = merge day (Nov 15), no change.
+- PR #78 https://github.com/kc0588615/phaser-june/pull/78; CI run 43695471207: `check` pass (1m23s), `e2e` pass (9m47s), first try.
+- Merge commit: `ce04bf327c9b2e26a744f5205d61c5b4e7591e5f`.
+- Deploy: `deploy critter-connect` exit 0, last line `deploy critter-connect: live at https://critterconnect.org`. Log: `/srv/critter-ai/agent-state/missions/content-pipeline/deploy.log`.
+- Smoke: `version.txt` = `ce04bf32…`; `https://critterconnect.org/terms/` 200, holds the One Earth citation (1×) and "November 15, 2026"; `critterconnect.org/` 200; `play.critterconnect.org/` 200, `/explore/` 200, `/api/clue-game/pool/` 200 (JSON species), `/api/places/` 200; journal credit line found in live chunk `static/chunks/3vt73o7xmoe46.js` (lazy-loaded from /explore).
+Result: done
+
 ## Decisions
 
 - 2026-11-15 Baseline: today's `ranges` can't finish on the dev copy (60 s role timeout), so the baseline's diff comes from the unchanged SQL with only the brief's `SET LOCAL statement_timeout = '15min'` transaction added. That's the wrapper Goal 3 asks for anyway, so it confirms the need. Both runs count toward the eight.
@@ -584,6 +591,7 @@ SHOULD-CONSIDER:
 - 2026-11-15 Steps: S12 fix loop capped at runs 3-6 (of 8): runs 7-8 reserved for the final proof and a release-rebase retake, so "drop S12 after eight runs" binds at run 6.
 - 2026-11-15 S4: IUCN §3 "Commercial Use" and §4 quoted verbatim from the Wayback copy fetched 2026-11-15 (`$S/iucn-terms-wayback.html`, snapshot 20261101143939, version 3.1 June 2024), not the brief's "by or for a for-profit entity" paraphrase; §4 quote stops before its Waiver clause (no permission talk). One Earth and Natural Earth quotes not refetched: A1's text, marked "(as read 2026-11-10)". `CONTENT_LICENSE.md` links `CONTENT_SOURCES.md#citations` only (Map data is a bold label, no anchor). Money section states the facts plus "Haunted Pavement LLC is a company" and "doesn't say how any source's terms apply": no conclusion.
 - 2026-11-15 S5: the E2E's journal shots (05, 09, 11) stop above the credit line in baseline and S5 alike, so they show only that nothing above it moved; the "credit line in full" check moves to Verification 1 (scrolled shot at 375 and 320 px).
+- 2026-11-15 Release: no rebase (base unmoved, tree = verified commit + plan), so only V5 and V6 rerun; V1-V4 results on `10e31085` stand.
 - 2026-11-15 S6: "Changing an existing animal" second case also covers a removed profile (the brief's "set of animals … changed"; a country needs two animals), beside a changed `iucnId` or new map. Step 4 time written as "about 2 min" (S3: 1 m 55 s) so the final proof needs no doc edit. `photos` and the balance bot read profile files only (`content.ts` photos branch, `balance-044.ts` readdirSync), so both run before the one build.
 
 ## Log
@@ -603,6 +611,7 @@ SHOULD-CONSIDER:
 - 2026-11-15 08:05 UTC S7: smaller fixes at their shifted lines: `CONTENT_SOURCES.md:78` suspects = `pickSuspectSet` relatives first then `likeness` (no rarity weight), `:88-89` parallel-search lines say owner's sessions only, not in `.mcp.json` (tips kept); `SHAPEFILE:35` fallback for any animal with no presence 1-3, `content -- ranges` incl.; `CLUE_MATCH.md:61` countries from IUCN range maps wherever assessed; `DEPLOY.md:45` content sentence only (rollback kept), links `CONTENT_SOURCES.md#citations` Release order; `contentCitations.ts:8` comment: only the table's `CHECK`. `checkProfile` refusal fix already in S6 step 7. Stale grep, anchor check, comment-only grep empty; DEPLOY diff one line; typecheck, lint 0. DB runs: 0.
 - 2026-11-15 08:09 UTC Code review (Astra): `astra-review --code origin/main`, APPROVE, MUST-FIX none; SHOULD-CONSIDER 1 (final-e2e, scrolled journal shots, ranges-after) and 2 (fresh fetch before PR) are already the final Verification unit and release rebase, so no new steps. No code changed, no DB runs.
 - 2026-11-15 08:36 UTC Verification (final, on `10e31085`, based on `origin/main` `aabc91d5`): V1 dev `e2e:fresh` 1579/1579 first try, 12 m 43 s (`$S/final-e2e/`, `run.log`, `COMMAND.txt`); journal shots 05/09/11 byte-identical to S5's; journal scrolled to end at 375 and 320 px (`12-journal-end-{375,320}.png`, `journal-end.mjs` over CDP on a dev-copy dev server :3102): credit line in full, wraps, no clipping, no overflow. V2 `site:build` + `e2e:site` 444/444 (`$S/final-e2e/site/`). V3 run 5/8: 76 emptied, dev `ranges` exit 0 in **1 m 54 s**, 76 lines, 0 "no range map", `git diff --exit-code HEAD` 0, restored (`$S/ranges-after.txt`); rule check not rerun (`content.ts` last changed S2, before S3); `refusal-check.sh` ALL PASS (`$S/refusal-check-final.txt`); species/view grep empty. V4 dev `content -- check` same summary, 0/0 (`$S/content-check-after.txt`). V5 typecheck, lint 0; tests 64/64. V6 every diff gate passes. DB runs: 5 of 8 used (1 timeout + 1 baseline + rule check + S3 proof + final).
+- 2026-11-15 08:51 UTC Release: no rebase (base unmoved); V5 + V6 rerun pass; PR #78, CI check + e2e pass; merged `ce04bf32`; `deploy critter-connect` exit 0; smoke 200s, version.txt = merge, Terms citation + date, journal credit in live chunk. DB runs: 0.
 
 ## Summary
 
@@ -618,7 +627,7 @@ SHOULD-CONSIDER:
 
 **Checks:** content check before = after (76 playable, 2478 clues, 491 facts, 0 errors, 0 warnings). Unit tests 64/64 before and after. `e2e:fresh` 1579/1579 at baseline, S5 and final (`/srv/critter-ai/agent-state/missions/content-pipeline/final-e2e/`, plus the journal-end shots at 375 and 320 px); `e2e:site` 444/444 (S5, final).
 
-**Smoke:** see `## Release` (next unit).
+**Smoke:** released: PR #78 merged (`ce04bf32`), CI check + e2e pass, deployed; live `version.txt`, `/terms/` (citation + date), game pages, APIs and the journal credit chunk all check out (`## Release`).
 
 **Goal 5 (second range source), note only:** no profile lacks an IUCN range today: all 76 have realms, and the final run printed 0 "no range map" lines. Three have realms but 0 countries (Darwin Frog, Livingstone's Flying Fox, Hispaniolan Solenodon: no country meets the two-animal rule). A second source would need: a key other than `iucn.id_no` = profile `iucnId` (`RANGES_SQL`'s `ranges` CTE); `clue_match_ranges`'s `JOIN iucn i ON i.id_no = s.iucn_id` (`db/schema.sql`); a table shaped like `iucn` and an importer like `scripts/iucn.ts`; a source key beside `iucn_range` (`sources.json`) and its clue credit (`profiles.ts`), not "IUCN Red List"; and the two credit lines (`JournalSheet.tsx`, `Terms.tsx`). The source and its licence are the owner's choice.
 
