@@ -36,7 +36,7 @@ $compose build -q
 # hand rollback, docs/DEPLOY.md) if it is the last one that passed every check (<image>:verified, tagged at the end of
 # deploy.sh) and it is up (healthy, or running if it has no health check). Otherwise the old :previous stays, so failed
 # deploys can't push the last good image out. No container (a first deploy) or a same-commit redeploy changes nothing;
-# a failed build never gets here (set -e). The first deploy to find no :verified takes the running image as verified.
+# a failed build never gets here (set -e). No :verified yet (only a passing check.sh tags one): the old :previous stays.
 keep_previous() {
   local state old name
   state=$(docker inspect "$1" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' 2>/dev/null) || return 0
@@ -44,8 +44,7 @@ keep_previous() {
   old=$(docker inspect "$1" --format '{{.Image}}')
   name=$(docker inspect "$1" --format '{{.Config.Image}}'); name=${name%:*}
   [ "$old" != "$(docker image inspect "$name" --format '{{.Id}}')" ] || return 0
-  docker image inspect "$name:verified" >/dev/null 2>&1 || docker tag "$old" "$name:verified"
-  if [ "$old" != "$(docker image inspect "$name:verified" --format '{{.Id}}')" ]; then
+  if [ "$old" != "$(docker image inspect "$name:verified" --format '{{.Id}}' 2>/dev/null)" ]; then
     echo "$1 runs ${old:7:12}, which never passed deploy/check.sh: $name:previous stays"; return 0
   fi
   docker tag "$old" "$name:previous"
