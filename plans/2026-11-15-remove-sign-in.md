@@ -196,7 +196,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
+- [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -444,6 +444,21 @@ After the change, the game has no auth layer and no request hook:
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE
+
+Checked against the code at `4c4c0f46` (= `origin/main` `f1826f56`, fetched this session): `journal.ts` (the `mergeJournals` rule, `toJournalEntry` dropping only `speciesId`/`placeKeys`), `useJournal.ts` (both effects return early signed out; `mergeJournals` imported only for the deleted effect), `journal.test.ts` (the ported values hold; "only in other" and the repeat line exist), `_app.tsx`, `GlobeScreen.tsx` header, `proxy.ts` (only attaches the session; the one `auth()` reader is the deleted route), `e2e.mjs` listener (`:118-133`, network events first page only, `requests` BASE-only), D14 and two-tab blocks, fixture (4 keys), `next-env.d.ts` (side-effect `import`s, so a missing `.next-e2e` doesn't fail tsc), `.next-e2e/dev/types/{routes.d.ts,validator.ts}` name the deleted routes, `db.execute` count 8, DEPLOY.md anchors `:97/:101/:107` and `:128`, every Goal 5 site quoted. The full DoD grep on `scripts/e2e.mjs` and `next.config.mjs` prints nothing today; `grep -i 'clerk\|sign' docs/DEPLOY.md` shows only `:3`, `:19`, `:29`, `:30`, `:49`, `:128` (plus "design" at `:120`, which the awk pattern doesn't match).
+
+No data loss (journal read/save paths untouched), no access control weakened, nothing over-engineered.
+
+MUST-FIX: none
+
+MISSED: none
+
+SHOULD-CONSIDER:
+1. Steps: the tests-first E2E step leaves the run red by design across a session boundary. Its Verification should name the three expected failures (Clerk request, `/login/` 200, journal route 200) and say 1585/1588 with exit 1 is that step's pass, so a later session doesn't treat them as regressions or rerun them.
+2. Steps: anchor each edit on quoted text, not line numbers (deleting `DEPLOY.md:19` shifts later lines; the `sessionId` return in `e2e.mjs` is `:126`, not `:125`).
+3. Record the Architecture's deviations from the brief under Decisions (done this session): `DEPLOY.md:128` deleted despite the "skip" correction; the QR/link purpose in `journal.ts`'s header since `mergeJournals`' doc comment is frozen; Finding 6's Anywhere shift (also for the Summary).
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -459,10 +474,14 @@ After the change, the game has no auth layer and no request hook:
 ## Decisions
 
 - 2026-11-15 (Architecture): `scripts/check-live-board.mjs:10` comment drops " such as Clerk's," rather than excluding the file from the final grep: the grep doesn't exclude it, the example names a host the game no longer contacts, and an exclusion would weaken the grep for `scripts/`. Comment-only edit.
+- 2026-11-15 (Fable review): `docs/DEPLOY.md`'s owner task "Sign up on play.critterconnect.org to test Clerk production sign-in; moot once mission M11 …" is deleted, although the Review corrections say to skip a reworded task: they also say the final check still holds, and the awk check fails on this line.
+- 2026-11-15 (Fable review): `mergeJournals`' doc comment stays as it is (Review corrections freeze the function); the planned QR/link transfer is named in `journal.ts`'s header instead.
+- 2026-11-15 (Fable review): the DoD's "only the Sign in button is gone … nothing else moved" can't hold. In the header's flex row, **Anywhere** moves right into the button's place and the count line gets wider. That is expected, not a regression, and goes in the Summary.
 
 ## Log
 
 - 2026-11-15 16:25 UTC: Baseline. Prereqs (M6, M7) pass; M9 branch (`mergeJournals` exists). typecheck/lint ok, `npm test` 75/75, E2E 1584/1584 (2nd run; 1st failed one A10 timing check). Greps recorded; one new hit, a comment in `scripts/check-live-board.mjs`.
 - 2026-11-15 UTC: Architecture (architect). M9 branch confirmed (`mergeJournals` rule = Review corrections); one atomic `src/` step (ClerkProvider/useAuth/auth() coupling); 4 new E2E checks (1584→1588), `npm test` 75→76; DEPLOY.md renumber breaks 3 anchors; Anywhere link shifts into Sign in slot (expected). Plan-only change; verified merge rule and fixture count (4) against code.
+- 2026-11-15 UTC: Fable review: APPROVE, MUST-FIX none, MISSED none; 3 SHOULD-CONSIDER (Steps: name the red tests-first E2E state, anchor on quoted text; 3 deviations recorded under Decisions). Verified cited sites against code; DoD grep on e2e.mjs/next.config.mjs clean. Plan-only change.
 
 ## Summary
