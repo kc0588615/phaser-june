@@ -71,19 +71,36 @@ tidy df -h /
 tidy docker system df
 REMOTE
 
-# What the server just built: check.sh fails unless the live game reports this commit.
-EXPECT_COMMIT=$(ssh -o BatchMode=yes "$HOST" git -C /opt/critter-connect rev-parse HEAD)
+# What the server just built and the images it runs, read in one call before the checks: check.sh fails unless the
+# live game reports this commit, and only these two images can be tagged :verified after it passes.
+live=$(ssh -o BatchMode=yes "$HOST" 'git -C /opt/critter-connect rev-parse HEAD && docker inspect critter-app caddy --format "{{.Image}}"')
+mapfile -t ids <<<"$live"
+# ssh re-parses the ids as shell words on the server below, so only these exact shapes may pass.
+if [ "${#ids[@]}" -ne 3 ] || ! [[ ${ids[0]} =~ ^[0-9a-f]{40}$ && ${ids[1]} =~ ^sha256:[0-9a-f]{64}$ && ${ids[2]} =~ ^sha256:[0-9a-f]{64}$ ]]; then
+  echo "Expected the server's commit and the critter-app and caddy image ids, one per line; got:" >&2
+  echo "$live" >&2
+  exit 1
+fi
+EXPECT_COMMIT=${ids[0]}
 export EXPECT_COMMIT
 # All three hosts, then the board check: a browser opens the live game (needs node and Chrome, docs/DEPLOY.md).
 bash "$(dirname "$0")/check.sh"
-# Every check passed (set -e ends the deploy at check.sh otherwise): tag the live images <image>:verified, the mark
-# keep_previous reads on the next deploy. The deploy is live and checked by now, so a failure here only warns.
-ssh -o BatchMode=yes "$HOST" bash -s <<'VERIFIED' || echo "warning: the live images weren't tagged :verified; the next deploy keeps today's :previous" >&2
+# Every check passed (set -e ends the deploy at check.sh otherwise): tag the images read before the check
+# <image>:verified, the mark keep_previous reads on the next deploy, if their containers still run them (an
+# overlapping deploy may have replaced one; deploys take no lock). The deploy is live and checked by now, so a failure
+# here only warns.
+ssh -o BatchMode=yes "$HOST" bash -s -- "${ids[1]}" "${ids[2]}" <<'VERIFIED' || echo "warning: the live images weren't tagged :verified; the next deploy keeps today's :previous" >&2
 set -euo pipefail
-for c in critter-app caddy; do
-  id=$(docker inspect "$c" --format '{{.Image}}')
-  name=$(docker inspect "$c" --format '{{.Config.Image}}'); name=${name%:*}
-  docker tag "$id" "$name:verified"
-  echo "$name:verified is ${id:7:12}"
-done
+app_id=$1 caddy_id=$2
+tag_verified() {  # <container> <the image id it ran before check.sh>
+  local name
+  if [ "$(docker inspect "$1" --format '{{.Image}}')" != "$2" ]; then
+    echo "warning: $1 changed during the check (another deploy?): not tagged" >&2; return 0
+  fi
+  name=$(docker inspect "$1" --format '{{.Config.Image}}'); name=${name%:*}
+  docker tag "$2" "$name:verified"
+  echo "$name:verified is ${2:7:12}"
+}
+tag_verified critter-app "$app_id"
+tag_verified caddy "$caddy_id"
 VERIFIED
