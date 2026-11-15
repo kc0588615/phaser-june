@@ -486,7 +486,7 @@ Every step:
 - Pre-push runs typecheck and lint (lint covers `src`, `tests` and `scripts`).
 - Record results as indented bullets under the step, check it off, add one Log line, then commit the code and the plan together and push.
 
-- [ ] S1 · Tests first: the four E2E checks and the ported merge cases, on unchanged `src/`
+- [x] S1 · Tests first: the four E2E checks and the ported merge cases, on unchanged `src/`
   - Files: `scripts/e2e.mjs` and `tests/clueGame/journal.test.ts` only. No `src/` change.
   - `scripts/e2e.mjs`, per Architecture "`scripts/e2e.mjs`: four checks":
     1. Under `const requests = [];`, add `const clerkRequests = [];`.
@@ -519,6 +519,14 @@ Every step:
   - If the Clerk check passes, the env has no Clerk key. Record that and keep the check; the run then shows `1586/1588` and `1588 2`.
   - Any other outcome means a check is wrong: fix the check, never the expectation, and rerun.
   - Record: each new check's result and detail; checks added, 4 (1584 → 1588); `npm test` 76/76; that both unit cases passed at once.
+  - **Done 2026-11-15 17:10 UTC** (`origin/main` still `f1826f56`):
+    - `npm run typecheck`, `npm run lint` exit 0. `npm test` **76/76**; the ported `mergeJournals` case and the self-merge case passed at once on the unchanged `src/`, as expected (M9 branch). The DoD grep on `tests/clueGame/journal.test.ts` prints nothing (baseline 7).
+    - E2E (dev copy, guard passed): **1585/1588**, exit 1, report check `1588 3`; all 1584 old checks pass, no `run completed` failure, no flake. Checks added: 4 (1584 → 1588).
+      - `false no request goes to Clerk`: 377 requests, first `https://clean-lynx-72.clerk.accounts.dev/v1/client/handshake?…`, then `…/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, `…/npm/@clerk/ui@1/dist/ui.browser.js`.
+      - `false /login/ redirects to the globe`: `200 null`.
+      - `false the journal route is gone`: `200`.
+      - `true a journal stored before this change …`: `{"header":"4 of 76 animals found","n":4,"kept":true}` (passes before the change by design).
+    - Artifact `$STATE/e2e-s1/`; fail-first evidence `$STATE/s1-fail-first-report.json` (kept).
 
 - [ ] S2 · Sign-in out of the game: the six `src/` sites, the `/login` redirect and the uninstall, in one commit (Finding 1)
   - `git rm src/proxy.ts src/pages/login.tsx src/app/api/clue-game/journal/route.ts`. The `journal/` folder holds nothing else.
@@ -792,5 +800,6 @@ Build and release failures, and what catches each:
 - 2026-11-15 UTC: Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only change.
 - 2026-11-15 UTC: Revision: none needed (both reviews APPROVE, no MUST-FIX). Plan-only change.
 - 2026-11-15 UTC: Steps (planner): S1 tests-first red E2E (1585/1588 named fails), S2 atomic src/ + uninstall, S3 CI/deploy/env/ESLint, S4 docs/skill/schema + DoD greps, S5 live-check script; Verification 1588/1588, test 76/76, Release smoke. Plan-only change.
+- 2026-11-15 17:10 UTC: S1 tests first: 4 E2E checks + ported/self-merge unit cases. typecheck/lint ok, `npm test` 76/76 (both cases pass at once), E2E 1585/1588 red as designed (Clerk request, /login 200, journal route 200; stored-journal check passes).
 
 ## Summary

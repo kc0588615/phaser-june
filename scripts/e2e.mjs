@@ -113,7 +113,8 @@ async function main() {
 
     // Every request the page makes to the app, in order (the network check slices it per load).
     const requests = [];
-    // Console errors and exceptions from every page the run opens (the two-tab check adds its second); network events from the first only.
+    const clerkRequests = [];
+    // Console errors and exceptions from every page the run opens (the two-tab check adds its second); network events from the first only (Clerk requests from every page).
     const watched = new Set([sessionId]);
     browser.on(message => {
       if (!watched.has(message.sessionId)) return;
@@ -123,6 +124,8 @@ async function main() {
       } else if (method === 'Runtime.exceptionThrown') {
         report.consoleErrors.push((params.exceptionDetails.exception?.description ?? params.exceptionDetails.text).slice(0, 300));
       }
+      // Sign-in is gone: no page the run opens asks a Clerk host for anything.
+      if (method === 'Network.requestWillBeSent' && URL.parse(params.request.url)?.hostname.includes('clerk')) clerkRequests.push(params.request.url);
       if (message.sessionId !== sessionId) return;
       if (method === 'Network.responseReceived' && params.response.url.startsWith(BASE) && params.response.status >= 400) {
         report.failedRequests.push(`${params.response.status} ${params.response.url}`);
@@ -2491,6 +2494,8 @@ async function main() {
       }
     }
 
+    // The pre-2026-11 journal fixture: the D14 checks and the stored-journal check at the end load it.
+    const oldJournalRaw = readFileSync(path.join(process.cwd(), 'tests/clueGame/old-journal.json'), 'utf8');
     // Plan 2026-11-14-rules-cleanup (D14). Last, on their own loads, so the checks above keep their counts.
     // A ?seed= game is never resumed, so its find is always recorded.
     {
@@ -2504,7 +2509,6 @@ async function main() {
       check('a game on a continent asks nothing of /api/places/', paths.some(p => p.startsWith('/api/clue-game/pool')) && !paths.some(p => p.startsWith('/api/places')), JSON.stringify(paths.filter(p => p.startsWith('/api/'))));
 
       // A journal saved before 2026-11 (with sightings, one malformed, and an unknown field) keeps every find.
-      const oldJournalRaw = readFileSync(path.join(process.cwd(), 'tests/clueGame/old-journal.json'), 'utf8');
       const oldJournal = JSON.parse(oldJournalRaw);
       const oldNames = Object.keys(oldJournal);
       const poolNames = new Set([...poolSpecies.values()].map(species => species.scientificName));
@@ -2609,8 +2613,25 @@ async function main() {
       names.forEach((name, i) => check(name, results[i].ok, results[i].detail));
     }
 
+    // A journal stored before this change is counted on the globe and left as stored (nothing on the globe writes it).
+    {
+      const n = Object.keys(JSON.parse(oldJournalRaw)).length;
+      await evaluate(raw => localStorage.setItem('clue-match:journal:v1', raw), oldJournalRaw);
+      await goto(`${BASE}/`);
+      await waitFor(() => /^\d+ of \d+ animals found$/.test(document.querySelector('header p')?.textContent ?? ''), 'the globe\'s count', 30_000);
+      await sleep(3000);
+      const { header, stored } = await evaluate(() => ({ header: document.querySelector('header p').textContent, stored: localStorage.getItem('clue-match:journal:v1') }));
+      check('a journal stored before this change is counted on the globe and kept as stored', header.startsWith(`${n} of `) && stored === oldJournalRaw, JSON.stringify({ header, n, kept: stored === oldJournalRaw }));
+    }
+
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));
     check('no failed requests', report.failedRequests.length === 0, report.failedRequests.slice(0, 3).join(' | '));
+    check('no request goes to Clerk', clerkRequests.length === 0, `${clerkRequests.length}: ${clerkRequests.slice(0, 3).join(' | ')}`);
+    // From Node, so neither reaches the page's request lists.
+    const login = await fetch(`${BASE}/login/`, { redirect: 'manual' });
+    check('/login/ redirects to the globe', login.status === 308 && login.headers.get('location') === '/', `${login.status} ${login.headers.get('location')}`);
+    const journalRoute = await fetch(`${BASE}/api/clue-game/journal/`);
+    check('the journal route is gone', journalRoute.status === 404, String(journalRoute.status));
   } finally {
     await close();
   }
