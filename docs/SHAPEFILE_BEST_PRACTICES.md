@@ -52,7 +52,7 @@ A new animal:
 5. **Agent or owner:** `npm run content -- photos` (fills each missing `photo`), and look at every photo.
 6. **Agent or owner:** `npm test` (validates every profile), the balance bot (`node scripts/run-typescript.mjs scripts/balance-044.ts`, seeded rounds from the profiles), the PR, its merge and the app deploy. The deploy goes out before the content build: the app bundles `citations.json` (`docs/CONTENT_SOURCES.md#citations`, Release order).
 7. **Owner, WSL:** a fresh dump (step 1), then `npm run content -- build`, once, on `main` with the merge pulled (`git pull --ff-only`), never a branch, so the profiles it loads match the `citations.json` the deploy bundled. One transaction; it refuses before touching the database on any `checkProfile` problem or `checkCitations` error, or an `id` or `iucnId` two profiles share, and prints the citation warning count.
-8. **Owner, WSL, straight after the build:** refresh both views (`./scripts/db "<statement>"`; places took 90 to 150 s, fine through PgBouncer), then `npm run content -- check` (0 errors, 0 warnings; it errors on a fact or hand-written clue whose page has no citation) and play `/explore/?seed=1`.
+8. **Owner, WSL, straight after the build:** refresh both views (`./scripts/db "<statement>"`; places took {{T}} on the dev copy ({{T_DATE}}), fine through PgBouncer), then `npm run content -- check` (0 errors, 0 warnings; it errors on a fact or hand-written clue whose page has no citation) and play `/explore/?seed=1`.
    ```sql
    REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_ranges;
    REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_places;

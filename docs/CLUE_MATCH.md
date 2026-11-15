@@ -64,7 +64,7 @@ A profile's `traits` and habitats become the questions; its `clues` and `facts` 
 
 ## Database
 
-`db/schema.sql` is the schema the app uses: the content tables (`content_sources`, `species` with Red List link and photo credit, `species_deduction_clues` and `species_facts` with their sources), `profiles`, `clue_match_solves`, and two materialized views. `clue_match_solves` has a row per round finished before 2026-10-01 (nothing writes it now): `outcome` (`solved` or `lost`; rows before plan 041 are `solved`), `last_chance` (from rules 041-2, so first-try and rescued solves can be told apart), `rules_version`, moves used and left, wrong guesses, animals standing at the guess, notes saved, family tree steps and every question with its answer. `clue_match_ranges` holds simplified ranges as SVG paths for the journal's range map and GeoJSON for the globe (~10 s to refresh). `clue_match_places` holds the globe's places and who lives there (≥5% or 5,000 km² of a range; the game draws a continent's animals from their countries instead, so counts can differ by one or two). It splits Russia at the Urals and moves France's overseas parts to their continent, and takes 90 s to 2.5 min to refresh. The file is a baseline, not a history: the old migrations 001–044 are in git history. Change the database with SQL, then update the file to match.
+`db/schema.sql` is the schema the app uses: the content tables (`content_sources`, `species` with Red List link and photo credit, `species_deduction_clues` and `species_facts` with their sources) and two materialized views. `clue_match_ranges` holds simplified ranges as SVG paths for the journal's range map and GeoJSON for the globe (~10 s to refresh). `clue_match_places` holds the globe's continents and who lives there (≥5% or 5,000 km² of a range; the game draws a continent's animals from their countries instead, so counts can differ by one or two). It splits Russia at the Urals and moves France's overseas parts to their continent, and takes about {{T}} to refresh. The file is a baseline, not a history: the old migrations 001–044 are in git history. Change the database with SQL, then update the file to match.
 
 The world basemaps (`public/assets/clue-match/world-land.svg` under range maps, `world-land.geojson` on the globe) are drawn from `natural_earth.countries` by `npm run clue:world-map`.
 
@@ -80,7 +80,6 @@ The world basemaps (`public/assets/clue-match/world-land.svg` under range maps, 
 | `04_realm_shares.sql` | PostGIS `ST_Intersects`, `ST_Intersection`, `ST_Area(geography)`, window functions |
 | `05_text_quality.sql` | UNION ALL, regex operators: the validator's text checks in SQL |
 | `06_ranges_for_qgis.sql` | `ST_Union`, a geometry layer to load in QGIS over the realm map |
-| `07_solve_stats.sql` | `percentile_cont`, `jsonb_array_elements`: hardest animals, most-asked questions, notes and family tree by outcome |
 
 ## Checking it as an agent
 

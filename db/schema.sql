@@ -8,7 +8,7 @@
 --
 -- Also needed, imported from their sources and not defined here:
 --   iucn                         IUCN range polygons (docs/SHAPEFILE_BEST_PRACTICES.md)
---   oneearth.oneearth_bioregion  OneEarth bioregions: realm, sub_realm, wkb_geometry
+--   oneearth.oneearth_bioregion  OneEarth bioregions: realm, wkb_geometry
 --   natural_earth.countries      Natural Earth countries (scripts/import-natural-earth.mjs)
 -- Extensions: postgis. init/01-extensions.sql also installs pgcrypto, which no SQL in the repo calls.
 BEGIN;
@@ -86,54 +86,6 @@ CREATE TABLE habitat_colormap (
   label  text
 );
 
--- Players ---------------------------------------------------------------------
-
--- One row per signed-in player (a Clerk user) who saved a round before 2026-10-01; nothing adds rows now (nothing reads them now).
-CREATE TABLE profiles (
-  user_id        uuid PRIMARY KEY,
-  clerk_user_id  text,
-  created_at     timestamptz DEFAULT CURRENT_TIMESTAMP,
-  updated_at     timestamptz DEFAULT CURRENT_TIMESTAMP
-);
-CREATE UNIQUE INDEX uq_profiles_clerk_user_id ON profiles (clerk_user_id);
-
--- One row per round finished before 2026-10-01, solved or lost; nothing writes here now. For analysis with SQL
--- (db/analysis/clue-match/07_solve_stats.sql). Anonymous play has no player_id.
-CREATE TABLE clue_match_solves (
-  id               bigserial PRIMARY KEY,
-  player_id        uuid REFERENCES profiles(user_id) ON DELETE SET NULL,
-  session_seed     bigint NOT NULL CHECK (session_seed BETWEEN 1 AND 4294967295),
-  round            smallint NOT NULL CHECK (round BETWEEN 1 AND 10000),
-  species_id       integer NOT NULL REFERENCES species(id) ON DELETE CASCADE,
-  moves            smallint NOT NULL CHECK (moves BETWEEN 0 AND 10000),
-  wrong_guesses    smallint NOT NULL CHECK (wrong_guesses BETWEEN 0 AND 5),
-  clues_seen       smallint NOT NULL CHECK (clues_seen BETWEEN 0 AND 1000),
-  relatives        smallint NOT NULL CHECK (relatives BETWEEN 0 AND 5),
-  points           integer NOT NULL CHECK (points BETWEEN 0 AND 1000),
-  revealed_by_gem  jsonb NOT NULL DEFAULT '{}' CHECK (jsonb_typeof(revealed_by_gem) = 'object'),
-  -- When the round ended, solved or lost.
-  solved_at        timestamptz NOT NULL DEFAULT now(),
-  -- clue_match_places.key when played from the globe.
-  place_key        text CHECK (place_key IS NULL OR place_key ~ '^(country|area|continent):[A-Za-z0-9-]{1,80}$'),
-  -- From plan 041 until 2026-10-01 every finished round was saved. Discoveries (the journal) count only 'solved'.
-  outcome           text NOT NULL DEFAULT 'solved' CHECK (outcome IN ('solved', 'lost')),
-  -- Solved (or lost) on a last chance, to tell first-try and rescued solves apart; NULL for rounds saved before 2026-09-28.
-  last_chance       boolean,
-  -- Rules.version of the rules played, from the 041 and 043 games' Rules (src/clueGame/questionMatch.ts; the 044 board never saved): 041-1 charges; 041-5 charges with toys and 12 look-alikes; 043-0 gems ask questions; 041-2 to 041-4 were removed experiments (plans/041); NULL before plan 041.
-  rules_version     text CHECK (rules_version IS NULL OR rules_version ~ '^[a-z0-9.-]{1,20}$'),
-  moves_left        smallint CHECK (moves_left IS NULL OR moves_left BETWEEN 0 AND 100),
-  -- Animals still standing at the first guess.
-  standing_at_guess smallint CHECK (standing_at_guess IS NULL OR standing_at_guess BETWEEN 1 AND 50),
-  notes_saved       smallint CHECK (notes_saved IS NULL OR notes_saved BETWEEN 0 AND 100),
-  -- Family tree steps bought (free steps not counted).
-  tree_steps        smallint CHECK (tree_steps IS NULL OR tree_steps BETWEEN 0 AND 3),
-  -- Every question asked, in order: [{"tag": "region:east-africa", "answer": "yes"}, ...].
-  questions         jsonb CHECK (questions IS NULL OR jsonb_typeof(questions) = 'array')
-);
-CREATE INDEX ix_clue_match_solves_species ON clue_match_solves (species_id);
-CREATE INDEX ix_clue_match_solves_player ON clue_match_solves (player_id) WHERE player_id IS NOT NULL;
-CREATE INDEX ix_clue_match_solves_place ON clue_match_solves (place_key) WHERE place_key IS NOT NULL;
-
 -- Range maps ------------------------------------------------------------------
 
 -- Each playable species' IUCN range as a small SVG path (lon/lat degrees, y
@@ -188,24 +140,20 @@ CREATE UNIQUE INDEX clue_match_ranges_species_id ON clue_match_ranges (species_i
 
 -- Globe places ----------------------------------------------------------------
 
--- One row per continent, country (natural_earth.countries) and wildlife area
--- (OneEarth bioregion, the sub_realm level) where at least two playable animals
--- live. An animal lives in a place when the place holds at least 5% of its
--- range, or at least 5,000 km² of it (so a big range brushing a border doesn't
--- count). Ranges as in clue_match_ranges.
--- scripts/content.ts (content -- ranges) repeats these country rules: change both together while this view has country rows.
+-- One row per continent (built from natural_earth.countries) where at least two
+-- playable animals live. An animal lives in a place when the place holds at
+-- least 5% of its range, or at least 5,000 km² of it (so a big range brushing a
+-- border doesn't count). Ranges as in clue_match_ranges.
+-- scripts/content.ts (content -- ranges) builds its countries from the same country parts (Russia split at 60°E, France's overseas parts, no open ocean or Antarctica) with the same 5% or 5,000 km² rule: change both together. country_parts below is its copy, unused columns included, so the two read alike.
 --
 -- Natural Earth files all of Russia under Europe and French Guiana under France,
--- which would put tigers in Europe and Amazon frogs in France. So Russia is split
--- at the Urals (60°E: west is Europe, east is Asia, and Russia is listed under
--- Asia), and France's overseas parts count for the continent they sit on, not
--- for France. OneEarth spells a few sub_realms two ways ("Southern Mexican Dry
--- Forests" / "... dry forests"), so wildlife areas group by their key.
+-- which would put tigers and Amazon frogs in Europe. So Russia is split at the
+-- Urals (60°E: west is Europe, east is Asia), and France's overseas parts count
+-- for the continent they sit on.
 --
--- bbox and center use the place's largest part, so France flies to France, not
--- to a box that also holds French Guiana. outline is simplified for drawing.
+-- bbox and center use the continent's largest part. outline is simplified for drawing.
 --
--- Refresh after range, clue-species or place changes (90 s to 2.5 min):
+-- Refresh after range, clue-species or place changes (about {{T}}, dev copy {{T_DATE}}):
 --   REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_places;
 CREATE MATERIALIZED VIEW clue_match_places AS
 WITH playable AS (
@@ -239,19 +187,9 @@ WITH playable AS (
   SELECT c.adm0_a3, c.name, 'Asia', ST_Intersection(ST_MakeValid(c.geom), ST_MakeEnvelope(-180, -90, 60, 90, 4326)), 'Europe'
   FROM natural_earth.countries c WHERE c.adm0_a3 = 'RUS'
 ), areas AS (
-  SELECT 'country'::text AS kind, 'country:' || adm0_a3 AS key, name, home AS grp, ST_Union(geom) AS geom
-  FROM country_parts
-  WHERE continent = home OR adm0_a3 = 'RUS'
-  GROUP BY adm0_a3, name, home
-  UNION ALL
-  SELECT 'continent', 'continent:' || lower(replace(continent, ' ', '-')), continent, 'Continents', ST_Union(geom)
+  SELECT 'continent'::text AS kind, 'continent:' || lower(replace(continent, ' ', '-')) AS key, continent AS name, 'Continents' AS grp, ST_Union(geom) AS geom
   FROM country_parts
   GROUP BY continent
-  UNION ALL
-  SELECT 'wildlife_area', 'area:' || lower(regexp_replace(b.sub_realm, '[^A-Za-z0-9]+', '-', 'g')), min(b.sub_realm), min(b.realm), ST_Union(ST_MakeValid(b.wkb_geometry))
-  FROM oneearth.oneearth_bioregion b
-  WHERE btrim(coalesce(b.sub_realm, '')) <> ''
-  GROUP BY 2
 ), lives_in AS (
   SELECT a.key, k.species_id
   FROM areas a

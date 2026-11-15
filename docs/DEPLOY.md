@@ -65,7 +65,7 @@ critterconnect.org is a static site (plan 051): `src/site/` rendered to HTML by 
 ## Backups
 
 - Content (animal profiles and sources) lives in git, `db/content/`. `npm run content -- build` rebuilds those tables from it.
-- Everything else (player profiles, solves, GIS layers, views) is covered by `deploy/backup/pg-backup.sh`. It runs `pg_dump` inside the `postgis` container (so its version matches the server), checks that the dump reads back, and keeps 14 daily and 8 weekly dumps in `/var/backups/critter-connect`. The whole database is about 120 MB.
+- Everything else (GIS layers, views) is covered by `deploy/backup/pg-backup.sh`. It runs `pg_dump` inside the `postgis` container (so its version matches the server), checks that the dump reads back, and keeps 14 daily and 8 weekly dumps in `/var/backups/critter-connect`. The whole database is about 120 MB.
 - **Owner. Install it** (as root on the VPS):
 
   ```sh
@@ -80,7 +80,7 @@ critterconnect.org is a static site (plan 051): `src/site/` rendered to HTML by 
   ```sh
   docker exec postgis createdb -U postgres restore_check
   docker exec -i postgis pg_restore -U postgres -d restore_check < /var/backups/critter-connect/daily/<file>.dump
-  docker exec postgis psql -U postgres -d restore_check -c "SELECT count(*) FROM clue_match_solves"
+  docker exec postgis psql -U postgres -d restore_check -c "SELECT count(*) FROM species"
   docker exec postgis dropdb -U postgres restore_check
   ```
 
