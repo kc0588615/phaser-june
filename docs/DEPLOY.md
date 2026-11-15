@@ -27,7 +27,18 @@ Two Compose projects run there: `critter` (`critter-app`, `caddy`) from `/opt/cr
 3. **Owner. Settings on the VPS** (repo checked out at `/opt/critter-connect`):
    - `.env` (app stack, `/opt/critter-connect/.env`): `APP_DOMAIN`.
    - `deploy/app.env` (runtime): copy `deploy/app.env.example` and fill in `DATABASE_URL` (the `critter_app` password). `chmod 600 deploy/app.env`.
-4. **Ports 80 and 443.** Caddy needs them to get and renew its certificate. If certbot renews the PgBouncer certificate in standalone mode on port 80, add hooks so it doesn't collide with Caddy: `--pre-hook "docker stop caddy" --post-hook "docker start caddy"` in `/etc/letsencrypt/renewal/<DB_DOMAIN>.conf`.
+4. **Ports 80 and 443, and PgBouncer's certificate.** Caddy needs 80 and 443 to get and renew its certificate. Certbot gets PgBouncer's certificate in standalone mode, which needs port 80 too, so `/etc/letsencrypt/renewal/<DB_DOMAIN>.conf` stops Caddy around each renewal: `authenticator = standalone`, `pre_hook = docker stop caddy`, `post_hook = docker start caddy` (`certbot.timer` runs the renewals).
+   PgBouncer can't read certbot's `live/<DB_DOMAIN>` (symlinks into root-only `archive/`), so it reads plain copies in `/opt/postgis/certs`, mounted read-only (`docker-compose.yml`). After each renewal this hook, `/etc/letsencrypt/renewal-hooks/post/restart-pgbouncer.sh` (root, mode 755), refreshes them and restarts PgBouncer, which reads its certificate only at start:
+
+   ```sh
+   #!/bin/bash
+   cp /etc/letsencrypt/live/db.critterconnect.org/fullchain.pem /opt/postgis/certs/
+   cp /etc/letsencrypt/live/db.critterconnect.org/privkey.pem /opt/postgis/certs/
+   chmod 644 /opt/postgis/certs/*.pem
+   docker restart pgbouncer
+   ```
+
+   The `chmod 644` lets the container's non-root user read the key. Owner's check, 2026-11-15: the 2026-10-26 renewal ran it (PgBouncer restarted at 13:02 UTC, the copies match `live/`).
 
 ## Start and update
 
@@ -93,10 +104,8 @@ Written 2026-11-15 from the repo's files; not tried on a scratch server. Each st
 1. **Server:** Docker and its compose plugin; a 2 GB `/swapfile` in fstab, for the Next build; SSH with keys only and `unattended-upgrades` ([Hardening status](#hardening-status-2026-09-26)); UFW allowing 22, 80, 443 and 6432; the Hetzner Cloud firewall allowing 22 (also from the Oracle VPS, `170.9.239.99`), 80, 443 over IPv4 and IPv6, and 6432.
 2. **DNS:** `play`, the apex and `www` ([The website](#the-website)), and `DB_DOMAIN` (`.env.vps.example`), pointed at the new server.
 3. **Deploy keys:** the public halves of `~/.ssh/critter-deploy` (WSL and the Oracle VPS) in root's `authorized_keys`, then `ssh-keygen -R play.critterconnect.org` on both machines, which would refuse the new host key.
-4. **PgBouncer's certificate:** `certbot certonly --standalone -d <DB_DOMAIN>` before Caddy holds port 80, then [setup step 4](#one-time-setup)'s hooks.
-   - PgBouncer must read `fullchain.pem` and `privkey.pem` as real, readable files at `/etc/pgbouncer/certs`, and be restarted after each renewal.
-   - The repo's mount of `live/<DB_DOMAIN>` alone gives neither (its files are symlinks into root-only `archive/`), so do what the server's copy does (not confirmed: see the header of `docker-compose.yml`).
-5. **Database stack:** a folder named `/opt/postgis` (the name makes the `postgis_backend` network `deploy/docker-compose.app.yml` joins) with the repo's `docker-compose.yml`, `init/`, and `.env.vps.example` filled in as `.env`. `PGDATA_PATH` must exist and be writable by UID 999. Then `docker compose up -d` there.
+4. **PgBouncer's certificate:** `certbot certonly --standalone -d <DB_DOMAIN>` before Caddy holds port 80, then [setup step 4](#one-time-setup): the three renewal settings, and the hook script installed as root with mode 755. `mkdir -p /opt/postgis/certs`, then run the hook once by hand to make the first copies; its last line, `docker restart pgbouncer`, fails until step 5 starts the stack, which is fine.
+5. **Database stack:** a folder named `/opt/postgis` (the name makes the `postgis_backend` network `deploy/docker-compose.app.yml` joins) with the repo's `docker-compose.yml`, `init/`, and `.env.vps.example` filled in as `.env`. Then `docker compose up -d` there; the data goes in the named volume `postgis_pgdata`.
 6. **Restore:** in psql as `postgres`, `CREATE ROLE critter_app NOLOGIN;` (the dump holds no roles, and `critter_app` is the only one it grants to). Then `pg_restore` the newest dump into `phaser_june` as the [restore drill](#backups) does, from `/var/backups/critter-connect` or the Oracle VPS's copy. Then `deploy/db/app-role.sql`, then the password as in [setup step 2](#one-time-setup).
 7. **The scrubbed copy `phaser_june_dev`** (not in the dump), in this order:
    1. [The runbook](DATABASE_ACCESS.md#runbook)'s steps 1 and 2. `dev-role.sql` creates `critter_dev` without a login and closes `phaser_june` to PUBLIC, which the restore left open (no database-level grants without `--create`).
