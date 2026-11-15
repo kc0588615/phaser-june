@@ -824,6 +824,6 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 
 - 2026-11-15 13:06 UTC · Revision: architect rejected Astra MUST-FIX (reasons under Decisions), adopted 6 SHOULD-CONSIDER (refs set at write, A16 structural-check wording, highlight note, seed note, A17 E2E key setup). Plan only; no checks needed.
 - 2026-11-15 13:15 UTC · Steps: planner wrote S1–S6 (E2E fail-first; A16; A17; O1 font cut + glyph proof; D22+D23; S11) and 11-point Verification (final 1584/1584). Brief grep `const HOLD_MS` fixed with `':!plans'`. Plan only; no checks needed.
-- 2026-11-15 13:40 UTC · S1: 5 fail-first E2E checks (A16 ×2, A17 ×3) + `setUpPage` refactor in `scripts/e2e.mjs`; typecheck/lint 0; E2E 1578/1584, exactly the 6 predicted fails → `checks-fail-first/`.
+- 2026-11-15 13:36 UTC · S1: 5 fail-first E2E checks (A16 ×2, A17 ×3) + `setUpPage` refactor in `scripts/e2e.mjs`; typecheck/lint 0; E2E 1578/1584, exactly the 6 predicted fails → `checks-fail-first/`.
 
 ## Summary
