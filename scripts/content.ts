@@ -36,12 +36,19 @@ async function load(tx: postgres.TransactionSql, table: string, rows: ReadonlyAr
   console.log(`${table}: ${rows.length} rows`);
 }
 
-// Realms holding at least 10% of each playable species' range (the nearest
-// realm for a range too small to touch one), and the globe's countries.
+// Each profile's realms (at least 10% of its range; the nearest realm for a range
+// too small to touch one) and countries, from the IUCN range maps (iucn), the One
+// Earth bioregions and the Natural Earth countries. The animals are the profiles
+// themselves, passed as one JSON parameter of [{ id, iucn_id }], so a new animal
+// gets its realms and countries before any build.
+// The country rules repeat the places view's in db/schema.sql: change both together.
+// The view splits Russia at 60°E for its continents; here the halves rejoin, so the
+// split changes nothing (kept so the two copies read alike).
 const RANGES_SQL = `
 WITH ranges AS (
-  SELECT s.id AS species_id, i.wkb_geometry AS geom, i.presence
-  FROM species s JOIN iucn i ON i.id_no = s.iucn_id
+  SELECT p.id AS species_id, i.wkb_geometry AS geom, i.presence
+  FROM json_to_recordset($1::json) AS p(id integer, iucn_id bigint)
+  JOIN iucn i ON i.id_no = p.iucn_id
 ), kept AS (
   SELECT r.species_id, ST_Union(ST_MakeValid(r.geom)) AS geom
   FROM ranges r
@@ -57,13 +64,43 @@ WITH ranges AS (
 ), nearest AS (
   SELECT k.species_id, (SELECT b.realm FROM oneearth.oneearth_bioregion b ORDER BY b.wkb_geometry <-> k.geom LIMIT 1) AS realm, 1.0 AS share
   FROM kept k WHERE NOT EXISTS (SELECT 1 FROM shares s WHERE s.species_id = k.species_id)
+), country_parts AS (
+  SELECT c.adm0_a3, c.name, c.continent AS home, d.geom,
+         CASE
+           WHEN c.adm0_a3 = 'FRA' AND ST_X(ST_Centroid(d.geom)) < -30 THEN 'South America'
+           WHEN c.adm0_a3 = 'FRA' AND ST_X(ST_Centroid(d.geom)) > 40 THEN 'Africa'
+           ELSE c.continent
+         END AS continent
+  FROM natural_earth.countries c
+  CROSS JOIN LATERAL ST_Dump(ST_MakeValid(c.geom)) d
+  WHERE c.continent NOT IN ('Seven seas (open ocean)', 'Antarctica') AND c.adm0_a3 <> 'RUS'
+  UNION ALL
+  SELECT c.adm0_a3, c.name, 'Asia', ST_Intersection(ST_MakeValid(c.geom), ST_MakeEnvelope(60, -90, 180, 90, 4326)), 'Asia'
+  FROM natural_earth.countries c WHERE c.adm0_a3 = 'RUS'
+  UNION ALL
+  SELECT c.adm0_a3, c.name, 'Asia', ST_Intersection(ST_MakeValid(c.geom), ST_MakeEnvelope(-180, -90, 60, 90, 4326)), 'Europe'
+  FROM natural_earth.countries c WHERE c.adm0_a3 = 'RUS'
+), country_shapes AS MATERIALIZED (
+  SELECT adm0_a3, name, ST_Union(geom) AS geom
+  FROM country_parts
+  WHERE continent = home OR adm0_a3 = 'RUS'
+  GROUP BY adm0_a3, name, home
+), country_animals AS MATERIALIZED (
+  SELECT c.adm0_a3, c.name, array_agg(k.species_id) AS species_ids
+  FROM country_shapes c
+  JOIN kept k ON ST_Intersects(c.geom, k.geom)
+  WHERE ST_Area(ST_Intersection(c.geom, k.geom)::geography) >= LEAST(0.05 * ST_Area(k.geom::geography), 5e9)
+  GROUP BY c.adm0_a3, c.name
+  HAVING count(*) >= 2
 )
 SELECT species_id,
        array_agg(realm ORDER BY share DESC) FILTER (WHERE share >= 0.10) AS realms,
-       (SELECT coalesce(json_agg(json_build_object('code', substr(p.key, 9), 'name', p.name) ORDER BY p.name), '[]'::json)
-          FROM clue_match_places p WHERE p.kind = 'country' AND a.species_id = ANY (p.species_ids)) AS countries
+       (SELECT coalesce(json_agg(json_build_object('code', c.adm0_a3, 'name', c.name) ORDER BY c.name), '[]'::json)
+          FROM country_animals c WHERE a.species_id = ANY (c.species_ids)) AS countries
 FROM (SELECT * FROM shares UNION ALL SELECT * FROM nearest) a
 GROUP BY species_id`;
+
+type RangeRow = { species_id: number; realms: string[] | null; countries: Array<{ code: string; name: string }> };
 
 const REALM_TAG: Record<string, string> = {
   Nearctic: 'realm:nearctic', Neotropics: 'realm:neotropical', Palearctic: 'realm:palearctic', Afrotropics: 'realm:afrotropical',
@@ -130,7 +167,12 @@ run(async () => {
     if (mode === 'ranges') {
       const entries = await readProfiles();
       assertProfilesReady(entries.map(({ profile }) => profile)); // before the query: it keys ranges on id and iucnId
-      const rows = await sql.unsafe<Array<{ species_id: number; realms: string[] | null; countries: Array<{ code: string; name: string }> }>>(RANGES_SQL);
+      const animals = entries.map(({ profile }) => ({ id: profile.id, iucn_id: profile.iucnId }));
+      // Read only and bounded: critter_dev stops statements at 60 s, and its Postgres serves the live game.
+      const rows = await sql.begin('read only', async tx => {
+        await tx.unsafe("SET LOCAL statement_timeout = '15min'");
+        return tx.unsafe<RangeRow[]>(RANGES_SQL, [tx.json(animals)]);
+      });
       const bySpecies = new Map(rows.map(row => [row.species_id, row]));
       for (const { file, profile } of entries) {
         const row = bySpecies.get(profile.id);
@@ -155,7 +197,7 @@ run(async () => {
       await load(tx, 'species_deduction_clues', rows.clues);
       await load(tx, 'species_facts', rows.facts);
     });
-    console.log('Built. Refresh the views if ranges or the set of animals changed (docs/CLUE_MATCH.md).');
+    console.log('Built. Refresh the views if ranges or the set of animals changed (docs/SHAPEFILE_BEST_PRACTICES.md#adding-or-changing-an-animal).');
   } finally {
     await sql.end({ timeout: 5 });
   }

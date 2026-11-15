@@ -53,7 +53,7 @@ export interface AnimalProfile {
     trees?: Sourced<YesNo>;
     covering?: Sourced<Covering>;
   };
-  /** Written by `npm run content -- ranges` from the range maps (realms with at least 10% of the range; globe countries). */
+  /** Written by `npm run content -- ranges` from the range maps (realms with at least 10% of the range; countries for the country clue). */
   range?: { realms: string[]; countries: Array<{ code: string; name: string }> };
   /** Clues only this animal has (tags make them deductive). */
   clues: Array<{ category: SpeciesClueCategory; text: string; tags?: string[]; source: string; url?: string }>;
