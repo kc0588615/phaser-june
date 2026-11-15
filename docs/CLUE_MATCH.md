@@ -58,7 +58,7 @@ The earlier games (041 charges, 043 gems ask questions) are deleted from the cod
 
 Content lives in git as one JSON profile per animal (`db/content/animals/`), each fact sourced from a ranked registry (`db/content/sources.json`). docs/CONTENT_SOURCES.md has the source tiers and the tag vocabulary. Adding or changing an animal, step by step and who runs each: docs/SHAPEFILE_BEST_PRACTICES.md#adding-or-changing-an-animal.
 
-A profile's `traits` and habitats become the questions; its `clues` and `facts` become field notes (`isHandWrittenClue` in `profiles.ts` tells them apart in the database), and the notes' open tags become signs (`SIGNS` in `signs.ts`; the sign rule is in docs/CONTENT_SOURCES.md#signs). Write notes that don't name the animal ("It can't purr", not "Tigers can't purr"): named words become blanks. Countries come from the range maps for now; plan 041 (review fix 6) moves them to IUCN countries of occurrence.
+A profile's `traits` and habitats become the questions; its `clues` and `facts` become field notes (`isHandWrittenClue` in `profiles.ts` tells them apart in the database), and the notes' open tags become signs (`SIGNS` in `signs.ts`; the sign rule is in docs/CONTENT_SOURCES.md#signs). Write notes that don't name the animal ("It can't purr", not "Tigers can't purr"): named words become blanks. Countries come from the IUCN range maps wherever IUCN has assessed the species.
 
 **Plain words.** Players are in grades 6–12. Science words stay (they are part of the lesson), and `src/clueGame/glossary.ts` gives each one a tap-to-read definition in the field guide and on the reveal card. Add a glossary entry when new content brings a new term.
 

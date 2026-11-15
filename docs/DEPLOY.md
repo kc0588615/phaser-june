@@ -42,7 +42,7 @@ docker compose -f deploy/docker-compose.app.yml --project-directory . ps     # a
 curl -fsS https://$APP_DOMAIN/api/places/ > /dev/null && echo ok
 ```
 
-Roll back with `git checkout <previous commit>` and the same `up -d --build`. Content changes don't need a redeploy: `npm run content -- build` from a dev machine updates the database, which the app reads live.
+Roll back with `git checkout <previous commit>` and the same `up -d --build`. A content change goes live with the owner's content build (`npm run content -- build`), which updates the database the app reads live; a change that cites a new page also needs this deploy first (Release order in [`docs/CONTENT_SOURCES.md#citations`](CONTENT_SOURCES.md#citations)).
 
 ## The website
 

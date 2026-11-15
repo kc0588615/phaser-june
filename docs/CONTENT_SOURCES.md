@@ -75,7 +75,7 @@ The sign rule:
 - If no evidence word in the note fits, drop the tag (the note stays untagged); never invent one.
 - Reuse a shared tag where notes say the same thing: a witness note shows only when two suspects share its tag (plan 044).
 
-Look-alike decoys are the animals sharing the most traits, rare ones weighted most (`similarity` in `src/clueGame/round.ts`).
+Look-alike suspects come from `pickSuspectSet` in `src/clueGame/animalBoard.ts`: relatives first (the most shared family-tree ranks), then `likeness` in `src/clueGame/questionMatch.ts` (+1 for each trait category two animals share, -1 for each they differ on; no weight for rare traits).
 
 ## Workflow
 
@@ -85,8 +85,8 @@ Copy is for grades 6 to 12: short sentences, no gore, no medical words. Science 
 
 ## Research access
 
-- **IUCN**: `iucnredlist.org` blocks bots. The `parallel-search` MCP `web_fetch` can read `https://staging-www.iucnredlist.org/details/<taxon>/0` (latest assessment: category, year, trend, habitat classes, elevation, citation with assessment id) and `https://staging-www.iucnredlist.org/species/<taxon>/<assessment>/pdf` (full text + Appendix habitat table). Batch ~7 URLs per call. Excerpts can silently drop table rows (the savanna elephant's wetland and desert rows only came back on a second fetch): when a habitat class on the details page has no kinds in the table, refetch with objective "every row of the Appendix Habitats table" and `search_queries`.
-- **parallel-search `web_search` hits a free-tier rate limit** after a burst (~15 calls); `web_fetch` kept working. Fall back to direct fetches.
+- **IUCN**: `iucnredlist.org` blocks bots. The `parallel-search` MCP (a tool the owner has used in his own sessions; the repo's `.mcp.json` doesn't set it up) `web_fetch` can read `https://staging-www.iucnredlist.org/details/<taxon>/0` (latest assessment: category, year, trend, habitat classes, elevation, citation with assessment id) and `https://staging-www.iucnredlist.org/species/<taxon>/<assessment>/pdf` (full text + Appendix habitat table). Batch ~7 URLs per call. Excerpts can silently drop table rows (the savanna elephant's wetland and desert rows only came back on a second fetch): when a habitat class on the details page has no kinds in the table, refetch with objective "every row of the Appendix Habitats table" and `search_queries`.
+- **parallel-search `web_search`** (same tool, owner's sessions only, not in `.mcp.json`) **hits a free-tier rate limit** after a burst (~15 calls); `web_fetch` kept working. Fall back to direct fetches.
 - **ADW**: plain `curl`/urllib works: `https://animaldiversity.org/accounts/<Genus_species>/`, sections split on `<h2 id="...">` (`physical_description, reproduction, lifespan_longevity, behavior, food_habits, habitat, communication, predation`). Some accounts use old spellings (`Zaglossus_bruijni`). Keep ~7,000 chars per section; the first scraper truncated to 1,600 and lost the key numbers.
 - **Wikipedia**: the API with a User-Agent works: `api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=<title>`. Retry on rate limits.
 - **AmphibiaWeb**: the site times out from the VPS and challenges scripts, and we have no access yet (the owner asked, 2026-11). Until it answers, read species pages from Wayback snapshots ([below](#amphibiaweb-via-wayback)); never scrape the live site, `amphib_dump.xml` or its web services.
