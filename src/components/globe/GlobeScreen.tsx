@@ -5,7 +5,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Shuffle } from 'lucide-react';
-import { SignInButton, Show, UserButton } from '@clerk/nextjs';
 import { MIN_PLACE_ANIMALS, classColor, type PlaceAnimal, type PlacesResponse } from '@/clueGame/places';
 import { useJournal } from '@/components/clueGame/useJournal';
 import Wordmark from '@/components/Wordmark';
@@ -59,14 +58,6 @@ export function GlobeScreen() {
           <Link href="/explore/" className="btn btn-outline shrink-0" aria-label="Play with animals from everywhere">
             <Shuffle className="h-4 w-4" aria-hidden="true" /> Anywhere
           </Link>
-          <Show when="signed-out">
-            <SignInButton mode="modal">
-              <button type="button" className="btn btn-primary shrink-0">Sign in</button>
-            </SignInButton>
-          </Show>
-          <Show when="signed-in">
-            <div className="grid h-11 w-11 shrink-0 place-items-center"><UserButton /></div>
-          </Show>
         </header>
 
         <section className="relative [grid-area:globe]" aria-label="Globe">

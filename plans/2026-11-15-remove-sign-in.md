@@ -528,7 +528,7 @@ Every step:
       - `true a journal stored before this change …`: `{"header":"4 of 76 animals found","n":4,"kept":true}` (passes before the change by design).
     - Artifact `$STATE/e2e-s1/`; fail-first evidence `$STATE/s1-fail-first-report.json` (kept).
 
-- [ ] S2 · Sign-in out of the game: the six `src/` sites, the `/login` redirect and the uninstall, in one commit (Finding 1)
+- [x] S2 · Sign-in out of the game: the six `src/` sites, the `/login` redirect and the uninstall, in one commit (Finding 1)
   - `git rm src/proxy.ts src/pages/login.tsx src/app/api/clue-game/journal/route.ts`. The `journal/` folder holds nothing else.
   - `src/pages/_app.tsx`: delete `import { ClerkProvider } from '@clerk/nextjs';`. `<ClerkProvider>` becomes `<>` and `</ClerkProvider>` becomes `</>`. Nothing else changes.
   - `src/components/globe/GlobeScreen.tsx`: delete `import { SignInButton, Show, UserButton } from '@clerk/nextjs';`, and everything from `<Show when="signed-out">` through the second `</Show>`. The rest of the header doesn't change.
@@ -576,6 +576,16 @@ Every step:
       - `02-board.png`, `04-round-1-end.png`, `05-journal.png` and `09-journal-sharp-eye.png` look the same as the baseline's. If the eye can't tell, diff the pixels with the worktree's `sharp`.
       - Anything else that differs: find out why before checking this step off.
   - Record: the files deleted; the numstat; `npm audit`; the build's route list; the E2E result; each screen pair.
+  - **Done 2026-11-15 17:35 UTC** (`origin/main` still `f1826f56`):
+    - Deleted: `src/proxy.ts`, `src/pages/login.tsx`, `src/app/api/clue-game/journal/route.ts` (folder gone); names `ServerJournalEntry`, `toJournalEntry`, `mergeServerJournal`, the `saved`/`useAuth` state and both server effects. `mergeJournals` byte-for-byte; `git diff origin/main -- src/clueGame/journal.ts` read whole: only the header, the `sharpEyes` comment and the three deleted blocks.
+    - `npm uninstall @clerk/nextjs`: numstat `package.json 0 1`, `package-lock.json 0 142` (deletes only: the 4 `@clerk/*` + nested `@tanstack/query-core`, and `@stablelib/base64`, `dequal`, `fast-sha256`, `glob-to-regexp`, `js-cookie`, `server-only`, `standardwebhooks`). npm left an empty `node_modules/@clerk/` scope dir; `rmdir`'d, then `test ! -e` → `gone`. `npm ls … @clerk/*` `(empty)`, exit 1; lock `@clerk/` count 0; `npm audit --omit=dev` `found 0 vulnerabilities`.
+    - typecheck, lint exit 0; `npm test` **76/76**. Build exit 0, routes: app `/_not-found`, `/api/clue-game/{pool,range,ranges}`, `/api/places`, `/api/places/outline`; pages `/`, `/_app`, `/explore`. No `/login`, no journal route, no Proxy/Middleware line. Extra (advisor): `next start` on :3102 gave `/login/` `308` `location: /`, journal route `404`, `/` 200 with no `x-clerk-`/`x-middleware-` header.
+    - Greps: Clerk/journal names in `src tests` (not `src/site`) none; `git ls-files` of the deleted paths none; Goal 8 diff empty; storage loop (all 9 functions matched on `origin/main`) and `export const` diff print nothing; added lines exactly `<>`, `</>` and the two import-block lines; `/login` redirect grep `1`.
+    - E2E (dev copy, guard passed): **1588/1588**, exit 0, report check `1588 0`, no flake. New checks: Clerk `0: `; `/login/` `308 /`; journal route `404`; stored journal `{"header":"4 of 76 animals found","n":4,"kept":true}`. Artifact `$STATE/e2e-s2/` (`e2e-s1/` deleted; `s1-fail-first-report.json` kept).
+    - Screens vs `baseline-e2e/`:
+      - `01-globe.png`, `07-globe-found.png`: Sign in gone, **Anywhere** at the right edge, count line wider (Finding 6). Also the **wordmark now shows at its full `h-6` size**: at 390 px the left column had ~120 px beside Anywhere and Sign in, so `max-width:100%` squeezed the 24 px-tall, ~217 px-wide SVG and its art scaled down inside the box; now it fits. Same flex cause as Finding 6, not a regression (Decisions). Globe and panel otherwise the same (globe spins).
+      - `04-round-1-end.png`, `05-journal.png`, `09-journal-sharp-eye.png`: pixel-identical (sharp diff 0).
+      - `02-board.png`: same board, every gem in place; 972 px differ, all 1 px slivers on gem icon top edges (animation-frame sub-pixel timing), no layout change.
 
 - [ ] S3 · CI, deploy and env files, the ESLint guard, and `check-live-board.mjs`'s comment
   - `.github/workflows/ci.yml`:
@@ -791,6 +801,7 @@ Build and release failures, and what catches each:
 - 2026-11-15 (Fable review): `docs/DEPLOY.md`'s owner task "Sign up on play.critterconnect.org to test Clerk production sign-in; moot once mission M11 …" is deleted, although the Review corrections say to skip a reworded task: they also say the final check still holds, and the awk check fails on this line.
 - 2026-11-15 (Fable review): `mergeJournals`' doc comment stays as it is (Review corrections freeze the function); the planned QR/link transfer is named in `journal.ts`'s header instead.
 - 2026-11-15 (Fable review): the DoD's "only the Sign in button is gone … nothing else moved" can't hold. In the header's flex row, **Anywhere** moves right into the button's place and the count line gets wider. That is expected, not a regression, and goes in the Summary.
+- 2026-11-15 (S2): with Sign in gone the globe header's wordmark also renders at its full `h-6` size (it was squeezed by `max-width:100%` in the narrower left column). Same flex cause as Finding 6; expected, goes in the Summary with the Anywhere shift.
 
 ## Log
 
@@ -801,5 +812,6 @@ Build and release failures, and what catches each:
 - 2026-11-15 UTC: Revision: none needed (both reviews APPROVE, no MUST-FIX). Plan-only change.
 - 2026-11-15 UTC: Steps (planner): S1 tests-first red E2E (1585/1588 named fails), S2 atomic src/ + uninstall, S3 CI/deploy/env/ESLint, S4 docs/skill/schema + DoD greps, S5 live-check script; Verification 1588/1588, test 76/76, Release smoke. Plan-only change.
 - 2026-11-15 17:10 UTC: S1 tests first: 4 E2E checks + ported/self-merge unit cases. typecheck/lint ok, `npm test` 76/76 (both cases pass at once), E2E 1585/1588 red as designed (Clerk request, /login 200, journal route 200; stored-journal check passes).
+- 2026-11-15 17:35 UTC: S2 sign-in out of the game: 3 files deleted, `_app` fragment, header/hook/journal.ts edits, `/login` redirect, `@clerk/nextjs` uninstalled (lock −142, +0). typecheck/lint ok, test 76/76, build routes clean, E2E 1588/1588 (4 new checks green); screens: Anywhere shift + full-size wordmark (expected), rest identical.
 
 ## Summary
