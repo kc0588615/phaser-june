@@ -738,14 +738,14 @@ Run on the final commit, after the Astra code review's fixes. Use `STATE` as in 
    - `git diff $BASE -- src/clueGame/animalBoard.ts src/components/animalBoard/savedGame.ts` (Goal 8: `ANIMAL_RULES.version` holds).
    - S2's storage check, with `$BASE` for `origin/main`.
 9. **Acceptance (Brief Goals).** Tick each with its evidence in the Summary:
-   - [ ] G1: files deleted, no `@clerk/*` package, `_app.tsx` a fragment, header without sign-in (V1, V2, V5, V6). Live: no Clerk request, no Clerk name in the HTML, no `x-clerk-` header (Release smoke).
-   - [ ] G2: no journal route and no server merge; `mergeJournals` unchanged, with M9's rule and no difference to record; `npm test` 76 (V4, V6, V8). Live 404 (Release smoke).
-   - [ ] G3: `/login/` answers 308 to `/` (V1's check, V5). Live, both hosts (Release smoke).
-   - [ ] G4: the stored journal is counted and kept byte-for-byte (V1's check). Live: `live-before.json` and `live-after.json` (Release smoke).
-   - [ ] G5: every config, CI, doc and agent site (V6, S3, S4).
-   - [ ] G6: the handoff item (Release, after smoke).
-   - [ ] G7: both CI secrets deleted (Release, after smoke).
-   - [ ] G8: no saved-game change (V8), no database change, no content build.
+   - [x] G1: files deleted, no `@clerk/*` package, `_app.tsx` a fragment, header without sign-in (V1, V2, V5, V6). Live: no Clerk request, no Clerk name in the HTML, no `x-clerk-` header (Release smoke).
+   - [x] G2: no journal route and no server merge; `mergeJournals` unchanged, with M9's rule and no difference to record; `npm test` 76 (V4, V6, V8). Live 404 (Release smoke).
+   - [x] G3: `/login/` answers 308 to `/` (V1's check, V5). Live, both hosts (Release smoke).
+   - [x] G4: the stored journal is counted and kept byte-for-byte (V1's check). Live: `live-before.json` and `live-after.json` (Release smoke).
+   - [x] G5: every config, CI, doc and agent site (V6, S3, S4).
+   - [x] G6: the handoff item (Release, after smoke).
+   - [x] G7: both CI secrets deleted (Release, after smoke).
+   - [x] G8: no saved-game change (V8), no database change, no content build.
 
 **Done 2026-11-15 18:00 UTC** (on `aa59e3a3`; `origin/main` still `f1826f56`, `BASE` = `f1826f56`):
 1. Final E2E (dev copy, guard passed): **1588/1588**, exit 0, first run, no flake. Report check `1588 0`; new checks all `true`: Clerk `0: `, `/login/` `308 /`, journal route `404`, stored journal `{"header":"4 of 76 animals found","n":4,"kept":true}`. Artifact `$STATE/final-e2e/` (seed 7); `e2e-s2/` deleted.
@@ -830,6 +830,23 @@ SHOULD-CONSIDER:
 
 ## Release
 
+2026-11-15 UTC, critter-connect `deploy` rules. State folder `S=/srv/critter-ai/agent-state/missions/remove-sign-in`.
+- **Rebase:** none needed. `origin/main` still `f1826f56` (merge-base); commits after `aa59e3a3` touch only the plan, so Verification 1–8 on `aa59e3a3` holds (no retake).
+- **PR:** #81 (https://github.com/kc0588615/phaser-june/pull/81). CI run 43744338802, first attempt: `check` pass (3m41s), `e2e` pass (10m43s), with no Clerk secret, which proves the game needs no Clerk key.
+- **Live baseline, just before the merge** (`$S/live-before-curl.txt`): live-check `seed` → `$S/live-before-seed.json` (169 requests), then a fresh run → `$S/live-before.json`: 125 requests, 20 to `clerk.critterconnect.org`, header `4 of 76 animals found`, journal = fixture. HTML Clerk count `/` 2, `/explore/` 2; `version.txt` `x-clerk-*` 2; `/` headers `x-clerk-auth-reason`, `x-clerk-auth-status: signed-out`, `x-middleware-rewrite: /`, no `Cache-Control`. Codes `/` 200, `/explore/` 200, `/login/` 200, `/api/clue-game/journal/` 200; `critterconnect.org/login/` -L `200 https://play.critterconnect.org/login/`. Places `[africa, asia, north-america, oceania, south-america]` (continent keys); pool `[76,2478,491]`.
+- **Merge:** `gh pr merge 81 --merge` → merge commit `83eef270`.
+- **Deploy:** `deploy critter-connect` exit 0, last line `deploy critter-connect: live at https://critterconnect.org` (log `$S/deploy.log`).
+- **Smoke** (`$S/live-after-curl.txt`; every check passed first try, no retry):
+  - `version.txt` = `83eef270b7bacced4880c378c3553aeb4f7d0915`; `bash deploy/check.sh` exit 0 (39 OK).
+  - live-check, no seed → `$S/live-after.json`: 87 requests, **0** Clerk hosts; header `4 of 76 animals found` = before; journal byte-for-byte = before.
+  - HTML Clerk count `/` 0, `/explore/` 0; `version.txt` and `/`: no `x-clerk-*`, no `x-middleware-rewrite`; `/` still no `Cache-Control` (as before).
+  - `play./login/` `308 https://play.critterconnect.org/`; `critterconnect.org/login/` -L `200 https://play.critterconnect.org/`.
+  - `/api/clue-game/journal/` 404; `/` 200, `/explore/` 200. Places keys and pool lengths `[76,2478,491]` unchanged.
+- **Secrets (G7):** `gh secret delete E2E_CLERK_PUBLISHABLE_KEY` and `E2E_CLERK_SECRET_KEY` (`-R kc0588615/phaser-june`) done; `gh secret list` now `E2E_DATABASE_URL` only. The guard grep `git grep -n E2E_CLERK origin/main` printed only `plans/` lines (records); outside `plans/` it prints nothing and `.github` names no Clerk (Decisions).
+- **Handoff (G6):** H19 "Delete Clerk: sign-in is gone from the game", `Blocks: nothing`, Goal 6's steps 1–5, the 5 CNAMEs as `dig` answered today; no key or value.
+
+Result: done
+
 ## Decisions
 
 - 2026-11-15 (Architecture): `scripts/check-live-board.mjs:10` comment drops " such as Clerk's," rather than excluding the file from the final grep: the grep doesn't exclude it, the example names a host the game no longer contacts, and an exclusion would weaken the grep for `scripts/`. Comment-only edit.
@@ -837,6 +854,8 @@ SHOULD-CONSIDER:
 - 2026-11-15 (Fable review): `mergeJournals`' doc comment stays as it is (Review corrections freeze the function); the planned QR/link transfer is named in `journal.ts`'s header instead.
 - 2026-11-15 (Fable review): the DoD's "only the Sign in button is gone … nothing else moved" can't hold. In the header's flex row, **Anywhere** moves right into the button's place and the count line gets wider. That is expected, not a regression, and goes in the Summary.
 - 2026-11-15 (S2): with Sign in gone the globe header's wordmark also renders at its full `h-6` size (it was squeezed by `max-width:100%` in the narrower left column). Same flex cause as Finding 6; expected, goes in the Summary with the Anywhere shift.
+
+- 2026-11-15 (Release): the secret guard `git grep -n E2E_CLERK origin/main` is not literally empty after the merge: it hits only `plans/` (this plan and `2026-11-15-deploy-ci.md`, records that quote the old names). The guard's purpose is that nothing reads the secrets; `git grep E2E_CLERK origin/main -- ':!plans'` and a Clerk grep of `.github` print nothing, so both secrets were deleted.
 
 ## Log
 
@@ -853,10 +872,11 @@ SHOULD-CONSIDER:
 - 2026-11-15 18:20 UTC: S5 live-check script at `$STATE/live-check.mjs` (not committed); tried on live: seed run then fresh run both see `clerk.critterconnect.org` (22 req), header `4 of 76`, journal = fixture (profile keeps storage); profile removed, `live-try.json` kept. Plan-only change.
 - 2026-11-15 UTC: Final code review (Astra, `--code origin/main`): APPROVE, MUST-FIX none; 1 SHOULD-CONSIDER (refresh origin/main before PR: Release rebases on fresh origin/main anyway). Plan-only change.
 - 2026-11-15 18:00 UTC: Final Verification on `aa59e3a3`: E2E 1588/1588 (first run, `final-e2e/`), site 444/444, test 76/76, typecheck/lint/build ok, @clerk none, audit 0, greps/diffs clean; screens as expected. Summary written, status done. Plan-only change.
+- 2026-11-15 UTC: Release: PR #81, CI first try (check, e2e pass, no Clerk secret), merged `83eef270`, deployed, smoke all green first try (no Clerk request, journal + header kept, `/login/` 308, journal route 404). Secrets deleted, handoff H19. Result: done.
 
 ## Summary
 
-M11 done on the branch; the Release (PR, CI, merge, deploy, live smoke, secrets, handoff item) is the next unit and fills in its parts below.
+M11 done and live (`83eef270`).
 
 - **Deleted:** `src/proxy.ts`, `src/pages/login.tsx`, `src/app/api/clue-game/journal/route.ts` (and folder), `.claude/skills/playtest/scripts/create-test-player.mjs` (and folder); `@clerk/nextjs` uninstalled (lock −142 lines: the 4 `@clerk/*` and 8 deps only they used). Names gone: `ClerkProvider`, `SignInButton`, `Show`, `UserButton`, `useAuth`, `mergeServerJournal`, `ServerJournalEntry`, `toJournalEntry`. `_app.tsx` is a fragment; the globe header has no sign-in. `/login` → `/` (308) in `next.config.mjs`. 31 files, +945/−403 (most of the + is this plan).
 - **Merge rule:** M9 branch. `mergeJournals` unchanged (M9's rule, larger `sharpEyes`); no rule difference from Goal 2 to record beyond the Review corrections. M7's server case ported, plus a self-merge case.
@@ -870,4 +890,4 @@ M11 done on the branch; the Release (PR, CI, merge, deploy, live smoke, secrets,
 - **Account queries:** cut by the Review corrections (M12 and M13 take their own).
 - **For M12**, `git grep -n -i -E 'clerk|sign' -- src/site` still prints: `src/site/config.ts:2` (comment "No Next or Clerk here"), `:45` (Privacy description "keeps if you sign in"); `src/site/pages/Privacy.tsx:9,12,22,25,26,29,35,53,59` (the sign-in and Clerk sections); `src/site/pages/Teachers.tsx:24,115,123,125,126` ("Signing in is optional", "Sign-in is handled by Clerk"); `src/site/shots.ts:40` is a false hit ("signs").
 - **Acceptance:** G1 files, packages, fragment, header ✓ (V1, V2, V5, V6); live: Release. G2 route and server merge gone, `mergeJournals` unchanged, 76 tests ✓ (V4, V6, V8); live 404: Release. G3 `/login/` 308 `/` ✓ (V1, V5); live both hosts: Release. G4 stored journal counted and kept ✓ (V1); live before/after: Release. G5 config, CI, docs, agent files ✓ (V6, S3, S4). G6 handoff item: Release. G7 CI secrets: Release. G8 no saved-game, database or content change ✓ (V8).
-- **Release (next unit):** CI attempts, `live-before.json` vs `live-after.json` and other smoke results, secrets deleted, handoff item number.
+- **Release:** PR #81, CI run 43744338802 first attempt (`check` and `e2e` pass, `e2e` with no Clerk secret). Merged `83eef270`, deployed, smoke all green first try: `live-before.json` 125 requests (20 to `clerk.critterconnect.org`) vs `live-after.json` 87 requests, 0 Clerk; header `4 of 76 animals found` and stored journal byte-for-byte equal; HTML Clerk counts 2/2 → 0/0; `x-clerk-*` and `x-middleware-rewrite` gone; `/login/` 308 → `/` on both hosts; journal route 404; places and pool unchanged. CI secrets `E2E_CLERK_PUBLISHABLE_KEY`, `E2E_CLERK_SECRET_KEY` deleted. Owner: handoff **H19** (delete Clerk app, its 5 CNAMEs, Hetzner env lines, Google OAuth client). Acceptance G1–G8 all ✓.
