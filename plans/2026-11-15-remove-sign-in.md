@@ -810,6 +810,13 @@ Build and release failures, and what catches each:
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+1. Refresh `origin/main` before PR; read-only filesystem blocked fetch. Typecheck and 12 journal tests passed; inspected E2E report shows 1588/1588 passing.
+
 ## Release
 
 ## Decisions
@@ -833,5 +840,6 @@ Build and release failures, and what catches each:
 - 2026-11-15 17:50 UTC: S3 CI/Dockerfile/compose/env examples/ESLint guard/check-live-board comment de-Clerked. typecheck/lint ok, YAML ok, site:build ok, guard fires, Clerk + NEXT_PUBLIC_ greps clean, deploy scripts untouched; no E2E (no game change).
 - 2026-11-15 18:05 UTC: S4 docs/agent files/playtest skill/schema comments de-Clerked, create-test-player.mjs deleted, DEPLOY.md setup steps renumbered. typecheck/lint ok; V6 final grep, DEPLOY awk, V7, V8 clean; e2e.mjs 7 lines, next.config 1; no E2E (no game change).
 - 2026-11-15 18:20 UTC: S5 live-check script at `$STATE/live-check.mjs` (not committed); tried on live: seed run then fresh run both see `clerk.critterconnect.org` (22 req), header `4 of 76`, journal = fixture (profile keeps storage); profile removed, `live-try.json` kept. Plan-only change.
+- 2026-11-15 UTC: Final code review (Astra, `--code origin/main`): APPROVE, MUST-FIX none; 1 SHOULD-CONSIDER (refresh origin/main before PR: Release rebases on fresh origin/main anyway). Plan-only change.
 
 ## Summary
