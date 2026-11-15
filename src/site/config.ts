@@ -1,5 +1,5 @@
 // The website at critterconnect.org (plan 051): a static build of src/site (scripts/site.mjs), served by Caddy.
-// No Next or Clerk here (eslint.config.mjs): every page is plain HTML and CSS.
+// No Next here (eslint.config.mjs): every page is plain HTML and CSS.
 
 export const SITE_URL = 'https://critterconnect.org';
 export const PLAY_URL = 'https://play.critterconnect.org/';
@@ -42,7 +42,7 @@ export const PAGES = {
     path: '/privacy/',
     file: 'privacy/index.html',
     title: 'Privacy Policy · Critter Connect',
-    description: 'What Critter Connect keeps if you sign in, what stays on your device, and how to delete it. No ads, no tracking.',
+    description: 'No accounts. What stays on your device, what other services see, and how to delete it. No ads, no tracking.',
     indexed: true,
   },
   terms: {

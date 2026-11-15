@@ -3,13 +3,13 @@ import LegalArticle from '../LegalArticle';
 
 export default function Privacy() {
   return (
-    <LegalArticle title="Privacy Policy" updated="November 6, 2026">
+    <LegalArticle title="Privacy Policy" updated="November 15, 2026">
       <p>
-        Critter Connect is a free game about real animals. You can play without an account. This page explains what we
-        keep if you do sign in, and what stays on your own device.
+        Critter Connect is a free game about real animals. It has no accounts, and we never ask who you are. This page
+        explains what stays on your device and what other services see.
       </p>
 
-      <h2>If you play without signing in</h2>
+      <h2>What stays on your device</h2>
       <ul>
         <li>We don&apos;t ask for your name or email.</li>
         <li>
@@ -19,22 +19,12 @@ export default function Privacy() {
         <li>The rounds you play aren&apos;t sent to us. Nothing about how you play is kept in our database.</li>
       </ul>
 
-      <h2>If you sign in</h2>
-      <ul>
-        <li>
-          Sign-in is handled by <a href="https://clerk.com/legal/privacy">Clerk</a>. Clerk keeps your email address, and
-          your name and profile picture if you sign in with Google. We never see your password.
-        </li>
-        <li>
-          Our database keeps an account ID from Clerk. New rounds aren&apos;t saved there: your Field Journal stays in your
-          browser, as it does without an account.
-        </li>
-        <li>
-          If you played before October 2026, our database still holds the game results saved then: which animal, which
-          place, whether you found it, moves, the questions you asked, points, and when you played. They are added to your
-          Field Journal when you sign in.
-        </li>
-      </ul>
+      <h2>Results saved until early October 2026</h2>
+      <p>
+        The game used to have optional accounts. Until early October 2026, the results of rounds played with an account
+        were saved in our database. Rounds played without one were saved too, with nothing that says who played them.
+        Those results are being deleted, and no new ones are kept.
+      </p>
 
       <h2>What we don&apos;t do</h2>
       <ul>
@@ -44,20 +34,21 @@ export default function Privacy() {
 
       <h2>Other services</h2>
       <p>
-        Animal photos load from Wikimedia Commons, and maps from our map servers. Those services see your IP address, like
-        any website you visit.
+        Animal photos load from Wikimedia Commons, which sees your IP address, like any website you visit. Everything
+        else, maps included, comes from Critter Connect itself.
       </p>
 
       <h2>Players under 13</h2>
       <p>
-        The game works fully without an account. If you are under 13, please ask a parent or guardian before signing in. A
-        parent can ask us to see or delete a child&apos;s account and game results at any time.
+        The game never asks anyone for a name, an email or anything else about themselves, so no one gives any to play.
+        A parent with questions can email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
       </p>
 
       <h2>Deleting your data</h2>
       <p>
-        Email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> from the address you signed in with, and we will
-        delete your account and game results.
+        Your Field Journal is in your browser: clearing your browser&apos;s data for play.critterconnect.org deletes it.
+        If you played with an account while results were saved, until early October 2026, and want them deleted now,
+        email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> from the address you used for it.
       </p>
 
       <h2>Changes</h2>

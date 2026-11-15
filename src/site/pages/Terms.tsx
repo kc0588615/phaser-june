@@ -13,10 +13,9 @@ export default function Terms() {
         <li>Animal facts come from the IUCN Red List and other trusted sources. We work to get them right, but for anything important, check the animal&apos;s Red List page, linked from your Field Journal.</li>
       </ul>
 
-      <h2>Your account</h2>
+      <h2>Playing fair</h2>
       <ul>
-        <li>An account is optional. If you are under 13, ask a parent or guardian first.</li>
-        <li>Please don&apos;t try to break, overload, or cheat the game&apos;s servers. We may close accounts that do.</li>
+        <li>Please don&apos;t try to break, overload, or cheat the game&apos;s servers.</li>
       </ul>
 
       <h2>Photos and content</h2>
