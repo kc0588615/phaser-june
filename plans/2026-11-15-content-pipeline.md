@@ -166,7 +166,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -195,6 +195,195 @@ At `94049996` (= `origin/main` `aabc91d5` + mission start), 2026-11-15 06:20-06:
 
 ## Architecture
 
+Read at `911cd426` (`origin/main` `aabc91d5` + Baseline). Merged before: M2 #71, M6 #72, M1 #73, M3 #74, M4 #75, M7 #76, M8 #77. **M5 (deploy-ci) hasn't merged.** ✓ = site as the brief says; ✗ = brief off, with the fix.
+
+### Findings
+
+**Goal 1 (D20).** ✓ `db/content/citations.json:389-392`, between `…rspb.2017.0347` (:385-388) and `…aje.13279` (:393). Deleting exactly those 4 lines leaves valid JSON (neighbours keep their `},`). 262 entries now.
+
+**Goal 2 (A1, K11).**
+- ✗ **IUCN-derived fields.** Brief lists `redList`, `habitats`, `range`. The build credits more to IUCN: generated clues from `taxonomy`, `systems`, `habitats`, `elevation` and `redList` carry source `iucn`, and `range` carries `iucn_range` (`src/clueGame/profiles.ts:242-256,260-265,281-282`; `sources.json:2` notes name systems and elevation; `profiles.ts:44` "Metres above sea level, from the Red List"). Fix: `CONTENT_LICENSE.md` lists the fields the build credits to IUCN: `taxonomy`, `redList`, `systems`, `habitats`, `elevation`, `range`. Read from code, not interpreted.
+- ✗ **"each item's `sources`/`src` key".** No `src` exists. Every trait, clue and fact has `source` (a `key` of `db/content/sources.json`) and optional `url`; its page is `url`, else the profile's `sources[<key>]` (`profiles.ts:28,58-62`; `docs/CONTENT_SOURCES.md:23,108`). Source default licence: `sources.json` `license` (:5 amphibiaweb, :8 adw, :15 wikipedia). Page licence: `citations.json` `license` (8 entries, all CC BY 3.0/4.0, so none forces share-alike). Photo: `photo.license`, `photo.credit`, `photo.page`.
+- ✓ `src/site/pages/Terms.tsx:24-25`: the sentence spans two lines, "Maps use data from⏎        the IUCN Red List and other credited sources." (JSX joins with one space). `updated="November 6, 2026"` at `:6`; `Privacy.tsx:6` has the same date: leave it.
+- ✓ `src/components/clueGame/JournalSheet.tsx:99`: `{found.length > 0 && <li className="pb-xs text-center text-xxs text-neutral-7">Range maps: IUCN Red List</li>}`. No E2E asserts the text.
+- ✓ `LICENSE`: 21 lines, all CRLF incl. the last (`SOFTWARE.\r\n`); `i/crlf w/crlf`, no `.gitattributes`, and `.editorconfig` sets `end_of_line = lf`, so an editor may convert it. Copyright is line 3.
+- ✓ `src/site/config.ts:7` `OPERATOR = 'Haunted Pavement LLC'`; `package.json:10` `"license": "MIT"`; `AGENTS.md:59` is the "Content:" bullet (M3 kept it); `README.md` has no licence line.
+- `docs/CONTENT_SOURCES.md` `## Citations` is :103-147 (licence table :121-132, "Wikipedia share-alike" :134), then `### AmphibiaWeb via Wayback` :149.
+- ✗ **Release smoke.** The brief changes Terms' `updated=` and then says `/terms/` text "differs from the record only in the one sentence". It differs twice: "Last updated …" (`src/site/LegalArticle.tsx:12`) and the sentence. Planner: the smoke expects both.
+
+**Goal 3 (S12).**
+- ✓ `scripts/content.ts:41-66` `RANGES_SQL`. Animals: `FROM species s JOIN iucn i ON i.id_no = s.iucn_id` (:44), every `species` row, no playable filter. Countries: a correlated subquery `FROM clue_match_places p WHERE p.kind = 'country' AND a.species_id = ANY (p.species_ids)`, building `json_build_object('code', substr(p.key, 9), 'name', p.name) ORDER BY p.name` (:63-64). Run at :117 as a bare `sql.unsafe(RANGES_SQL)`, no transaction, so `critter_dev`'s 60 s timeout (`deploy/db/dev-role.sql:16`) kills it (Baseline run 1). "no range map" :121 (no row for the id); write :122-123.
+- ✓ Build's last message :144: `'Built. Refresh the views if ranges or the set of animals changed (docs/CLUE_MATCH.md).'` ✓ `profiles.ts:56` comment as quoted.
+- **The view's country rules**, `db/schema.sql`: header :191-208; animals = `species` with clue rows :210-216; `kept` :217-222 (same text as `RANGES_SQL`'s); `country_parts` :223-239 (France's polygons with centroid x < -30 or > 40 get another continent :227-228; Seven seas and Antarctica out, Russia apart :233; Russia cut at 60°E into two rows, both `home = 'Asia'` :235-239); country branch of `areas` :241-244 (`WHERE continent = home OR adm0_a3 = 'RUS'`: overseas France drops out, Russia's halves rejoin; `GROUP BY adm0_a3, name, home`); `lives_in` :254-258; `place_species` :259-263 (`HAVING count(*) >= 2`).
+- **Area:** `ST_Area(ST_Intersection(a.geom, k.geom)::geography) >= LEAST(0.05 * ST_Area(k.geom::geography), 5e9)` (:258): the intersection is planar in SRID 4326, the area is taken on the spheroid (geography cast, m²). Copy it verbatim; no `ST_Transform`, no `use_spheroid` change.
+- ✗ **DoD grep `clue_match_places|(FROM|JOIN) species( |$)`** covers all of `scripts/content.ts`, comments and SQL comments included. The "repeats the view's rules" comment must say "the places view in db/schema.sql", never its name.
+- `iucn.id_no` is `numeric` (`docs/SHAPEFILE_BEST_PRACTICES.md:57`, `scripts/iucn.ts:137`) and today compares with `species.iucn_id bigint`; a `bigint` parameter keeps that comparison.
+- Same animals either way today: 76 profiles = 76 `species` rows = 76 playable (Baseline).
+
+**Goal 4 (S9).**
+- `docs/SHAPEFILE_BEST_PRACTICES.md:42-51` `## After an import` (order :44-49; batch 2 example :48, which also says "globe place"; candidate note :51). No `#after-an-import` link exists (`git grep -i after-an-import` empty); nothing links `#workflow` either.
+- `docs/CONTENT_SOURCES.md` `## Workflow` :80-87; copy rule :89 stays. ✗ "refuses on any `checkCitations` error" (:85) sits inside the replaced Workflow: the fix ("and every `checkProfile` problem", `scripts/content.ts:131-132`) travels with the sentence into the new section's build step.
+- ✗ partly: :78 "(`similarity` in `src/clueGame/round.ts`)". `pickSuspectSet` is `src/clueGame/animalBoard.ts:147-151` (closest in the family tree first), but `likeness` is `src/clueGame/questionMatch.ts:165` (+1 per shared trait category, −1 per differing one; no rarity weight, so "rare ones weighted most" goes too). The new line must not contain "similarity" or "round.ts".
+- ✓ :93 and :94 (parallel-search). ✓ SHAPEFILE :35 "only for extinct species"; `ranges` now applies the same fallback, so: "The views and `content -- ranges` use 1 to 3 and fall back to all polygons for any animal with no polygon of presence 1 to 3".
+- ✓ `docs/CLUE_MATCH.md`: heading :57, intro :59 ends "…and the workflow:", list :61-65, "for now; plan 041" :67, Plain words :69 (stays).
+- ✓ `docs/DEPLOY.md:45`: one line, rollback sentence first, content sentence second. M5 isn't merged: if it lands before the release rebase, this line conflicts; keep M5's first sentence and ours second.
+- ✓ `src/lib/contentCitations.ts:8`.
+- Anchors that must survive (all present): `#citations` (`AGENTS.md:59`, `CONTENT_SOURCES.md:7`), `#signs` (`CLUE_MATCH.md:67`), `#research-access` (`plans/040…:70`), `#amphibiaweb-via-wayback` (`CONTENT_SOURCES.md:97`, in-page). The DoD five-pattern grep hits exactly the five sites above today.
+- Notes, not edits (Decision rules): `CONTENT_SOURCES.md:38` also says "the globe countries" and omits the two-animal rule; `README.md:32` and `AGENTS.md:63,65` still describe the docs as before S9.
+
+**Goal 5 (Q15 note), sites.** Key `iucn.id_no` = profile `iucnId` (`RANGES_SQL` `ranges` CTE); `clue_match_ranges` `JOIN iucn i ON i.id_no = s.iucn_id` (`db/schema.sql:156`); `iucn` shape `SHAPEFILE_BEST_PRACTICES.md:30-36`, importer `scripts/iucn.ts`; `iucn_range` `sources.json:3`, its clues `profiles.ts:260,265`; credits `JournalSheet.tsx:99`, `Terms.tsx:24-25`. All 76 profiles have realms today, so the "no IUCN range" list is empty.
+
+### Target design
+
+**S12: `ranges` (scripts/content.ts)**
+
+TS, the `ranges` branch:
+```ts
+const profiles = await readProfiles();
+const animals = profiles.map(({ profile }) => ({ id: profile.id, iucn_id: profile.iucnId }));
+// Read only and bounded: critter_dev stops statements at 60 s, and its Postgres serves the live game.
+const rows = await sql.begin('read only', async tx => {
+  await tx.unsafe("SET LOCAL statement_timeout = '15min'");
+  return tx.unsafe<RangeRow[]>(RANGES_SQL, [tx.json(animals)]);
+});
+// then today's loop over `profiles`, unchanged (no-range-map line, REALM_TAG, writeProfile)
+```
+- One JSON parameter, as `load` (:31-33) passes rows (`tx.json` + `$1::json`): one way to pass rows in this file.
+- `'read only'` (postgres.js `begin(options, fn)` appends it to `BEGIN`): the tool can't write whatever database it points at. `SET LOCAL` works in a read-only transaction; PgBouncer is transaction-mode, and Baseline run 2 proved this wrapper.
+- Profiles are read once, before the query (today: after); the same files are written.
+
+SQL: today's realm CTEs verbatim; only `ranges` changes (two lines); country CTEs copied from the view minus continents, wildlife areas, `largest` and the bbox/outline columns.
+```sql
+WITH ranges AS (
+  SELECT p.id AS species_id, i.wkb_geometry AS geom, i.presence
+  FROM json_to_recordset($1::json) AS p(id integer, iucn_id bigint)
+  JOIN iucn i ON i.id_no = p.iucn_id
+), kept AS (
+  SELECT r.species_id, ST_Union(ST_MakeValid(r.geom)) AS geom
+  FROM ranges r
+  WHERE r.presence IN (1, 2, 3)
+     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2, 3))
+  GROUP BY r.species_id
+), realm_area AS (
+  SELECT k.species_id, b.realm, sum(ST_Area(ST_Intersection(ST_MakeValid(b.wkb_geometry), k.geom)::geography)) AS area
+  FROM kept k JOIN oneearth.oneearth_bioregion b ON ST_Intersects(b.wkb_geometry, k.geom)
+  GROUP BY k.species_id, b.realm
+), shares AS (
+  SELECT species_id, realm, area / sum(area) OVER (PARTITION BY species_id) AS share FROM realm_area
+), nearest AS (
+  SELECT k.species_id, (SELECT b.realm FROM oneearth.oneearth_bioregion b ORDER BY b.wkb_geometry <-> k.geom LIMIT 1) AS realm, 1.0 AS share
+  FROM kept k WHERE NOT EXISTS (SELECT 1 FROM shares s WHERE s.species_id = k.species_id)
+), country_parts AS (
+  SELECT c.adm0_a3, c.name, c.continent AS home, d.geom,
+         CASE
+           WHEN c.adm0_a3 = 'FRA' AND ST_X(ST_Centroid(d.geom)) < -30 THEN 'South America'
+           WHEN c.adm0_a3 = 'FRA' AND ST_X(ST_Centroid(d.geom)) > 40 THEN 'Africa'
+           ELSE c.continent
+         END AS continent
+  FROM natural_earth.countries c
+  CROSS JOIN LATERAL ST_Dump(ST_MakeValid(c.geom)) d
+  WHERE c.continent NOT IN ('Seven seas (open ocean)', 'Antarctica') AND c.adm0_a3 <> 'RUS'
+  UNION ALL
+  SELECT c.adm0_a3, c.name, 'Asia', ST_Intersection(ST_MakeValid(c.geom), ST_MakeEnvelope(60, -90, 180, 90, 4326)), 'Asia'
+  FROM natural_earth.countries c WHERE c.adm0_a3 = 'RUS'
+  UNION ALL
+  SELECT c.adm0_a3, c.name, 'Asia', ST_Intersection(ST_MakeValid(c.geom), ST_MakeEnvelope(-180, -90, 60, 90, 4326)), 'Europe'
+  FROM natural_earth.countries c WHERE c.adm0_a3 = 'RUS'
+), country_shapes AS MATERIALIZED (
+  SELECT adm0_a3, name, ST_Union(geom) AS geom
+  FROM country_parts
+  WHERE continent = home OR adm0_a3 = 'RUS'
+  GROUP BY adm0_a3, name, home
+), country_animals AS MATERIALIZED (
+  SELECT c.adm0_a3, c.name, array_agg(k.species_id) AS species_ids
+  FROM country_shapes c
+  JOIN kept k ON ST_Intersects(c.geom, k.geom)
+  WHERE ST_Area(ST_Intersection(c.geom, k.geom)::geography) >= LEAST(0.05 * ST_Area(k.geom::geography), 5e9)
+  GROUP BY c.adm0_a3, c.name
+  HAVING count(*) >= 2
+)
+SELECT species_id,
+       array_agg(realm ORDER BY share DESC) FILTER (WHERE share >= 0.10) AS realms,
+       (SELECT coalesce(json_agg(json_build_object('code', c.adm0_a3, 'name', c.name) ORDER BY c.name), '[]'::json)
+          FROM country_animals c WHERE a.species_id = ANY (c.species_ids)) AS countries
+FROM (SELECT * FROM shares UNION ALL SELECT * FROM nearest) a
+GROUP BY species_id
+```
+
+| Rule | View (`db/schema.sql`) | New CTE |
+|---|---|---|
+| presence 1-3, else all polygons | :217-222 | `kept` (unchanged) |
+| France overseas not France | :227-228 + :243 | `country_parts` CASE + `country_shapes` WHERE |
+| Seven seas, Antarctica out | :233 | `country_parts` WHERE |
+| Russia one country | :233, :235-239, :243 | `country_parts` RUS rows + `OR adm0_a3 = 'RUS'` |
+| 5% or 5,000 km² | :258 | `country_animals` WHERE |
+| at least 2 animals | :263 | `country_animals` HAVING |
+| code, name, order | today's :63 (`substr(key, 9)`, `p.name`) | `adm0_a3`, `c.name`, `ORDER BY c.name` |
+
+- **Why it matches.** `substr('country:' || adm0_a3, 9)` = `adm0_a3`; the view's `name` for country rows is `c.name`, so `ORDER BY c.name` sorts the same column under the same collation. Grouping by `(adm0_a3, name)` in place of `key` differs only if two country rows share an `adm0_a3`, which the view's unique index on `key` (:282) already rules out for any listed country. Same expressions on the same `kept`, so the same areas; `ST_Union`'s input order may differ (float noise), which matters only for a country exactly at a threshold, and the full proof would show it.
+- **`MATERIALIZED`** (PG 12+; `docker-compose.yml:4` is 17): each country CTE is referenced once, so Postgres would inline it, and `country_animals` sits under the correlated subquery that runs per animal. Forcing it computes the country geometry once, as the view's `areas` (used three times) was. `ranges` and `kept` are multiply referenced and materialize anyway.
+- **"no range map"** keeps today's code: a profile with no `iucn` rows has no `kept` row, so no output row, so :121 prints it and leaves the file. A file missing `iucnId` gets NULL and the same line; `checkProfile` already rejects it in preview/build/test. No new validation.
+- **Comments.** Over `RANGES_SQL` (replaces :39-40): each profile's realms (at least 10% of its range; the nearest realm for a range too small to touch one) and countries, from `iucn`, the One Earth bioregions and the Natural Earth countries; `$1` is the profiles' `[{ id, iucn_id }]`, so a new animal needs no build first; the country rules repeat the places view's in db/schema.sql, so change both together. Don't name the view, and don't put `$1` inside the SQL text's own comments. `db/schema.sql`: one `--` line in the places header after :195, e.g. `-- scripts/content.ts (content -- ranges) repeats these country rules: change both together while this view has country rows.` (no audit IDs: the audit isn't in the repo). Build message :144 → `(docs/SHAPEFILE_BEST_PRACTICES.md#adding-or-changing-an-animal)`. `profiles.ts:56` → `(realms with at least 10% of the range; countries for the country clue)`.
+- **Load.** Realm part as today (65 s measured) plus the country part. The places refresh, which also unioned 8 continents and the wildlife areas, took 90-150 s, so expect about 1.5-3 min, well under the 15 min cap. If a run passes 5 min, run one plain `EXPLAIN` (it plans only, executes nothing) to check the country CTEs show as `CTE Scan`, before the next full run.
+
+**The four rules no profile reaches** (Decision rules). A unit case can't reach SQL (`npm test` has no database). Instead, a scratch check runs the committed `RANGES_SQL` text over synthetic ranges on the dev copy:
+- Harness `scripts/check-country-rules.ts` is untracked and never committed (`run-typescript.mjs` only runs entries under `scripts/`). Keep a copy at `$S/check-country-rules.ts` and its output at `$S/check-country-rules.txt`. Reproduce: copy it back, then run it inside the dev-copy block.
+- It reads `RANGES_SQL` out of `scripts/content.ts`'s text (`/const RANGES_SQL = `([^`]*)`/`; throw if absent; importing the file would run the CLI). Then, in one `sql.begin`: `SET LOCAL statement_timeout = '15min'`; `CREATE TEMP TABLE iucn (id_no bigint, presence int, wkb_geometry geometry) ON COMMIT DROP`; insert the cases; run `RANGES_SQL` with their `[{ id, iucn_id }]`. Postgres resolves an unqualified name in `pg_temp` first, so the real SQL runs over synthetic ranges and the real countries and bioregions. Nothing persists: no table, row or grant changes (Scope). `critter_dev` owns the database, so it has TEMP.
+- Ways the rules could break (written first), and the cases (presence 1, `id_no` 900000001+, `ST_MakeEnvelope(…, 4326)`):
+
+| Case | Ranges | Pass when | Catches |
+|---|---|---|---|
+| Russia | A (90,55,100,60) Siberia; B (36,53,44,57) Moscow region | A and B each list `RUS` | Russia split into two countries (neither half holds 2) or dropped |
+| Overseas France | C, D (-53.8,3.8,-52.6,5.2) French Guiana | no `FRA` for C, D | overseas parts counted for France |
+| Mainland France (control) | E, F (0,45,5,48) | `FRA` for E, F | France dropped; shows the harness can list a country |
+| Open ocean | G, H = geometry of one `continent = 'Seven seas (open ocean)'` country, picked by query and printed | its code absent | Seven seas filter lost |
+| Antarctica | I, J (0,-85,60,-75) | `ATA` absent | Antarctica filter lost |
+| Lone animal | K (100,45,105,48) Mongolia | K lists no country | two-animal rule lost |
+| Harness | all | every id has a row | temp table didn't shadow `iucn` |
+
+  Exit 1 on any failure. It's one read-only query, lighter than a full run, but count it in the eight and keep it away from the E2E. Run it before the full proof.
+- The full proof (DoD: emptied ranges, empty diff over 83 realm and 414 country tags) covers the rest: realms, threshold, two-animal rule, order, collation.
+- If S12 is dropped (Decision rules), revert the query, its two comments, the `profiles.ts` comment and the build message together.
+
+**A1/K11 texts**
+- `CONTENT_LICENSE.md`:
+  1. Code: MIT, `LICENSE`. (One optional line: fonts under `public/fonts/` keep their `OFL.txt`.)
+  2. `db/content/`: licensor Haunted Pavement LLC; the licence is set per item by its source, because share-alike licences make adaptations keep theirs. How to tell the source is the `source` field above. Then a table: written by the project (any other source key, `sources.json`, the profiles' structure) → CC BY-NC-SA 4.0; `adw` (CC BY-NC-SA 3.0, which allows a later version) → CC BY-NC-SA 4.0; `wikipedia` → CC BY-SA 4.0 (not NC-SA: they don't mix); `amphibiaweb` → CC BY-NC 4.0 terms, offered under CC BY-NC-SA 4.0, which keeps them; IUCN (`taxonomy`, `redList`, `systems`, `habitats`, `elevation`, `range`, and items sourced `iucn`/`iucn_range`) → no Creative Commons licence, IUCN Red List Terms of Use only, which forbid reposting or redistribution (quote §4, link); `photo` → its `photo.license`, credited to `photo.credit`, page `photo.page`; `citations.json` `cite` lines are quoted from their pages, so each follows its page's source like any item.
+  3. Map data (in the database, not `db/content/`): One Earth CC BY-NC 4.0 with the citation; Natural Earth public domain; IUCN ranges under IUCN's terms.
+  4. Money: the owner's facts; IUCN's §3 definition of commercial use quoted and linked; no conclusion, and no permission or correspondence mentioned.
+- **Quoting terms.** iucnredlist.org refuses scripts. Fetch the Wayback copy A1 read once (`https://web.archive.org/web/20261101143939/https://www.iucnredlist.org/terms/terms-of-use`); if that fails, use A1's quotes marked "(as read 2026-11-10)". The brief's "by or for a for-profit entity" isn't in A1's quote: take it from the page, or quote only what A1 records.
+- `docs/CONTENT_SOURCES.md`: a bold **Map data** label with three bullets (One Earth licence, citation and link; Natural Earth public domain and link; IUCN range maps under the terms link) after :134, ending with the `CONTENT_LICENSE.md` link. No new heading, so no anchor changes.
+- `LICENSE`: edit the bytes with a script, not an editor. Line 3 becomes the two copyright lines; append `\r\n` and the closing line with `\r\n`. 24 lines. Check `git ls-files --eol LICENSE` (`i/crlf`) and `grep -c $'\r$' LICENSE` = `wc -l < LICENSE`.
+- `README.md`: one line after the Docs list naming `LICENSE` (code, MIT) and `CONTENT_LICENSE.md` (content, per source). `AGENTS.md:59`: append the brief's sentence.
+- Terms (`:24-25` → the brief's two sentences; `:6` → merge day, `Month D, YYYY`) and Journal (`:99` text only) as the brief says. The merge day isn't known while implementing: set the expected day, and the release unit corrects it before the merge if it slips.
+
+**S9 docs**
+- `docs/SHAPEFILE_BEST_PRACTICES.md`: `## Adding or changing an animal` (anchor `#adding-or-changing-an-animal`) replaces :42-51 with the brief's 8 steps, each led by **who**. Fold the moved details in: step 3 gets the next-id rule, "ids never change" and the `PROBLEM`-line meaning (from `CONTENT_SOURCES.md:82-83`); step 4 says what `ranges` reads, its measured time on the dev copy (from the final proof), its own 15 min cap, and the batch 2 example reworded without "globe place"; step 7 says the build "refuses on any `checkProfile` problem or `checkCitations` error"; step 8 has both `REFRESH … CONCURRENTLY` lines (places 90-150 s) and `check` erroring on an uncited fact. Then the "changing an existing profile" line, and :51's candidate note ("A range row with no profile is ignored by `ranges`; one with no `species` row is invisible to the game…").
+- `CONTENT_SOURCES.md` `## Workflow`: keep the heading; replace :82-87 with one pointer to `docs/SHAPEFILE_BEST_PRACTICES.md#adding-or-changing-an-animal`; keep :89. `CLUE_MATCH.md:59-65`: the intro names the source tiers and tag vocabulary, then points to the same section; the list goes.
+- The smaller fixes go where the brief says, worded as in Findings. `DEPLOY.md:45`: the second sentence only, linking `docs/CONTENT_SOURCES.md#citations`.
+
+### Rejected alternatives
+- Keep reading `species` and `clue_match_places`: that's the two-build loop S12 removes.
+- `unnest($1::int[], $2::bigint[])`: works, but `load` already passes rows as one JSON parameter, and one file should have one way.
+- One SQL function or view holding the country rules for both: a database change (out of scope), and S17 removes the view's copy anyway.
+- Ranges from `clue_match_ranges`: simplified shapes, specks dropped, playable only, and it needs a build and refresh first. Different numbers and the same loop.
+- Countries in TypeScript (turf): a new dependency, different numerics, and 10m country shapes over PgBouncer.
+- A unit test of the rules: no database in `npm test`, and a copy of the SQL would only test the copy.
+- Synthetic rows in the real `iucn`: a row change (Scope says none). A shadowing temp table does the same with nothing persisted.
+- Duplicated real animals as the rule check: no profile's range reaches Russia, Antarctica or an open-ocean country.
+- Exporting `RANGES_SQL` from a new module so the check can import it: a new file for a throwaway check.
+- Committing the check: another script nothing runs (D10). The state folder keeps it repeatable.
+- A `### Map data` heading: a new anchor for three bullets.
+
+### Risks
+1. **Shared server.** Each full run holds one backend for about 1.5-3 min on the server that serves players (2 of 8 runs used; the scratch check makes 3). One at a time, never beside the E2E, record every wall time. `MATERIALIZED` is what keeps the country geometry from running per animal: if the first run is far slower than the estimate, stop and `EXPLAIN`.
+2. **Behavior.** The animal set is now the profiles, not `species`/playable. That's the same set today; afterwards an unbuilt profile counts toward the two-animal rule, which is the point of S12. "no range map" now means no `iucn` rows only. `ranges` no longer reads a materialized view, so it no longer depends on a fresh refresh, and the build no longer depends on `ranges` being run after it.
+3. **Profiles.** Every run rewrites all 76 files in the worktree; restore with `git checkout -- db/content/animals` after each run, crashed runs too. DoD `git diff --exit-code origin/main -- db/content/animals …` guards the commit. A wrong query would show as a non-empty diff, never as a committed change.
+4. **Rule drift.** The country rules exist twice until S17. Comments on both sides; the proof binds them today.
+5. **LICENSE detection.** GitHub's detector compares `LICENSE` with MIT's text. The "Portions copyright" and closing lines may make the repo show "Other". The owner set the text: record `gh api repos/kc0588615/phaser-june/license --jq .license.spdx_id` after the merge in the Summary. Not a gate.
+6. **Journal line** wraps to 2-3 lines at `text-xxs`; the DoD screenshots check it.
+7. **DEPLOY.md:45** conflicts if M5 merges first (Findings).
+
 ## Architecture review (Fable)
 
 ## Architecture review (Astra)
@@ -216,5 +405,6 @@ At `94049996` (= `origin/main` `aabc91d5` + mission start), 2026-11-15 06:20-06:
 ## Log
 
 - 2026-11-15 06:42 UTC Baseline: D13 in; greps as expected; live pool 76/2478/491/261 without rspb.2017.1347; ranges baseline empty diff in 65 s (run 2 of 8, after a 60 s timeout on run 1); content check 0/0; tests 64/64; e2e:fresh 1579/1579.
+- 2026-11-15 06:59 UTC Architecture: architect wrote findings + target design (S12 query from profiles JSON param, read-only tx + 15min cap, MATERIALIZED country CTEs; scratch temp-table check for RUS/FRA/ocean/ATA rules; licence/doc texts). No code changed, no DB runs.
 
 ## Summary
