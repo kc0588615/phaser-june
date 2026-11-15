@@ -21,7 +21,7 @@ const COMING = [
 // plan 051 §4 row 8: plain, visible Q&A (not collapsed), answered only from §5's claims.
 const FAQ: Array<{ q: string; a: string }> = [
   { q: 'Is it free?', a: 'Yes. No ads, and nothing to install.' },
-  { q: 'Do students need accounts?', a: 'No. The game plays fully without one. Signing in is optional.' },
+  { q: 'Do students need accounts?', a: 'No. There are no accounts: students open the game and play.' },
   { q: 'What grades is it for?', a: 'Grades 6–12.' },
   { q: 'How long is a round?', a: 'About 5–10 minutes.' },
   { q: 'What devices does it run on?', a: 'Phones and computers, in a browser.' },
@@ -84,7 +84,7 @@ export default function Teachers({ shots, animals, classLinkScript }: PageProps)
           <blockquote className={`${MEASURE} rounded-m bg-neutral-3 px-m py-s`}>
             <p>The game does not claim to teach these on its own; it gives repeated, low-stakes practice with real data.</p>
           </blockquote>
-          <p className={MEASURE}>So far tested with simulated players, not yet in a classroom study: one who matches without reasoning finds about one round in five, and a careful one finds the animal in over 90% of rounds.</p>
+          <p className={MEASURE}>So far tested with simulated players, not yet in a classroom study. With Auto rule-out on, as the game starts, one who moves at random and then guesses finds about one round in three (one in five with it off), and a careful one finds the animal in over 90% of rounds.</p>
         </div>
         <Screenshot shot={witnessNote} crop={`${CROP} object-bottom`} />
       </Section>
@@ -110,25 +110,12 @@ export default function Teachers({ shots, animals, classLinkScript }: PageProps)
 
       <Section labelledBy="privacy" className="flex flex-col gap-l">
         <h2 id="privacy" className={H2}>Student privacy</h2>
-        <div className="grid gap-l md:grid-cols-2 md:gap-xl">
-          <div className="flex flex-col gap-s">
-            <h3 className={H3}>Without signing in</h3>
-            <ul className={LIST}>
-              <li>The game plays fully without an account.</li>
-              <li>No name or email is asked for.</li>
-              <li>The Field Journal stays in the browser.</li>
-            </ul>
-          </div>
-          <div className="flex flex-col gap-s">
-            <h3 className={H3}>With signing in</h3>
-            <ul className={LIST}>
-              <li>Signing in is optional. Players under 13 should ask a parent or guardian first.</li>
-              <li>Sign-in is handled by Clerk, which keeps the email address.</li>
-              <li>A parent can ask for a child&apos;s account and results to be deleted.</li>
-            </ul>
-          </div>
-        </div>
-        <p className={MEASURE}>Either way: no ads, no tracking cookies, no analytics. Animal photos load from Wikimedia Commons. The <a href="/privacy/" className={LINK}>privacy policy</a> has the details.</p>
+        <ul className={`${LIST} ${MEASURE}`}>
+          <li>There are no accounts: students open the game and play.</li>
+          <li>No name or email is asked for.</li>
+          <li>The Field Journal stays in the browser, and rounds aren&apos;t sent to us.</li>
+        </ul>
+        <p className={MEASURE}>No ads, no tracking cookies, no analytics. Animal photos load from Wikimedia Commons, and everything else comes from Critter Connect itself. The <a href="/privacy/" className={LINK}>privacy policy</a> has the details.</p>
       </Section>
 
       <Section band labelledBy="facts" className={SPLIT}>

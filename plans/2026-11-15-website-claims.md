@@ -504,7 +504,7 @@ Every step:
     - Sentence: "So far tested with simulated players, not yet in a classroom study. With Auto rule-out on, as the game starts, one who moves at random and then guesses finds about one round in three (one in five with it off), and a careful one finds the animal in over 90% of rounds."
     - Tree unchanged (plan only), so typecheck/lint = S1's (0/0); pre-push hook reruns both.
 
-- [ ] S3 · Site text: `config.ts`, `Privacy.tsx`, `Teachers.tsx`, `Terms.tsx` (Findings 1, 2, 4, 5)
+- [x] S3 · Site text: `config.ts`, `Privacy.tsx`, `Teachers.tsx`, `Terms.tsx` (Findings 1, 2, 4, 5)
   - Date: `date -u +'%B %-d, %Y'` (e.g. `November 15, 2026`) as `updated=` on Privacy and Terms. No `{MERGE_DAY}` left. The release resets it to the merge day.
   - Text verbatim from Target design:
     - `config.ts`: the header comment and the Privacy `description`. Nothing else.
@@ -519,6 +519,15 @@ Every step:
     - Page text: run the `txt` loop; `text-privacy.txt`, `text-teachers.txt`, `text-terms.txt` hold every Target design sentence (with S2's figures and the date). Verification 8's removed phrases: 0 hits.
     - Site E2E → `$STATE/e2e-s3-site/`, `444 0`. Inspect `site-privacy-*`, `site-teachers-*`, `site-terms-*` (390/1440 × light/dark) against `$STATE/baseline-e2e-site/` (Verification 2).
   - Commit code + plan.
+  - Results (2026-11-15, base `83eef270`, `origin/main` unmoved):
+    - Pre-check: every class of the old two-column block (`md:grid-cols-2`, `md:gap-xl`, `flex flex-col gap-s`) is used elsewhere in `src/site` (Home, Teachers "later"), so CSS can't change.
+    - Text per Target design, placeholders dropped. Date: today = `November 15, 2026`, so only Privacy's `updated` changed; Terms already had it (M10). `git grep 'updated=' -- src/site/pages`: both `November 15, 2026`.
+    - DoD grep (source): nothing. typecheck 0, lint 0, `npm test` 76/76.
+    - `site:build` → `(/site/site.f7f956df00.css)` (hash unchanged). `diff -rq site-before out/site` = exactly `privacy/`, `teachers/`, `terms/index.html`.
+    - Raw HTML mailto spacing: `can email <a…>…</a>.` and `now, email <a…>…</a> from` (no glued words).
+    - `$STATE/text-*.txt`: all 13 new phrases present; removed-phrase grep 0/0/0.
+    - Site E2E `444/444 checks passed, 20 screenshots` → `$STATE/e2e-s3-site/`, report check `444 0`. Viewed teachers 1440 light / 390 dark, privacy 390 dark, terms 1440 dark: Student privacy is one list, no columns/`h3`; Privacy sections in brief order; Terms "Playing fair"; no overflow; rest as baseline.
+    - Note: `pkill -f 'http.server 3101'` inside the same Bash call matches its own shell (exit 144); run it as a separate call.
 
 - [ ] S4 · `docs/DATABASE_ACCESS.md` `## Deletion requests` (Finding 6, revised Target design)
   - Re-read each fact first, on the then-current base (if `origin/main` moved, read `git show origin/main:<file>`). Record each fact as same or changed, with `file:line`:
@@ -607,5 +616,6 @@ Nothing is tested in isolation: the checks are the site E2E, the build diff and 
 - 2026-11-15 18:59 UTC · Steps: planner wrote S1 D21 alone (byte-identical), S2 bot run, S3 four site files, S4 deletion doc (9 facts re-read), S5 final Verification + Summary; Verification 1–10 (incl. Fable MISSED asset diff + date reset); Failure modes. Plan only.
 - 2026-11-15 19:01 UTC · S1 D21: `lead` prop removed from Screenshot.tsx; build byte-identical to site-before (diff -r empty), typecheck/lint 0, css hash same.
 - 2026-11-15 19:08 UTC · S2 bot run (seed 44, 400 rounds, 4 places, 4m10s, `$STATE/bot.txt`): = preview; A three, R five, P 90. Plan only.
+- 2026-11-15 19:12 UTC · S3 site text: Privacy/Teachers/Terms/config rewritten per Target design (A three, R five, P 90; date Nov 15); DoD grep clean, typecheck/lint 0, test 76/76, css hash same, build diff = 3 pages, site E2E 444/444 (`$STATE/e2e-s3-site`).
 
 ## Summary
