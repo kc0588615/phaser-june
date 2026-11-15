@@ -195,7 +195,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -228,6 +228,220 @@ From `agent/remove-sign-in` at `45cf474f` (= `origin/main` `f1826f56`, fetched 2
 
 ## Architecture
 
+From `agent/remove-sign-in` at `4c4c0f46` (= `origin/main` `f1826f56` + plan commits). Line numbers are this tree's. Review corrections win over the Goal text.
+
+### Findings (ranked)
+
+1. **The six `src/` sites are one change.** `useAuth()` (`useJournal.ts:37`) and `<Show>`/`<SignInButton>`/`<UserButton>` (`GlobeScreen.tsx:62-69`) throw outside `<ClerkProvider>` (`_app.tsx:12`); the route's `auth()` (`route.ts:19`) throws without `clerkMiddleware()` (`proxy.ts:4`, D3 R3); `npm uninstall` before the last import is gone breaks the typecheck. So deleting and editing all six, adding the `/login` redirect (so `/login/` never 404s at a commit), the uninstall, `rm -rf .next .next-e2e .test-dist` and the typecheck are **one step and one commit**.
+2. **E2E wiring.** One `browser.on` listener (`e2e.mjs:118-133`) serves every page in `watched` (`:117`; the two-tab check adds its second page at `:2573`, and `setUpPage` enables Network on both). Its network branch returns early for every page except the first (`:125`), and `requests` keeps only `BASE` URLs (`:131`). So a Clerk check placed after `:125`, or one built on `requests`, would miss M9's second tab and every off-origin host. The fixture string `oldJournalRaw` is scoped to the D14 block (`:2507`).
+3. **Merge rule: the M9 branch applies, with no rule difference to record.** `mergeJournals` (`journal.ts:62-86`) is exactly the Review corrections' rule: every animal from either side, the larger count, the lower best, the earliest and latest dates, local's names, local's class or else other's, and the larger `sharpEyes`. An animal on one side only is taken whole. It stays byte-for-byte, doc comment included (its comment already says "Every animal in either journal … safe to repeat"). It has a caller (`saveSolve`, `:107`), so the Notes' "no caller after this" doesn't apply.
+   - M7's case (`journal.test.ts:38-88`) ports with **the same expected values**, because `toJournalEntry` (`journal.ts:88-91`) drops only `speciesId` and `placeKeys`. Worked through `mergeJournals(local, other)`: frog 5 / 9 / 09-01 / 09-20 / `AMPHIBIA` / 1; tortoise 7 / 4 / 08-01 / 10-01 / `REPTILIA` (local has no class); tiger unchanged; okapi as `other` has it.
+   - Its "Safe to repeat" line (`:87`) already has Goal 2's form, `mergeJournals(mergeJournals(a, b), b)`, and Goal 2's "an animal only in other is added" case already exists (`:100-106`). So the one new case is the Review corrections' self-merge. **`npm test`: 75 − 0 (the case is ported, not deleted) + 1 = 76.**
+4. **`useJournal.ts`: the brief's import list misses `mergeJournals`.** `:4` imports it only for the deleted merge effect (`:60`); `record` goes through `saveSolve` (`:71`). It goes with `getJson`, `ServerJournalEntry` and `mergeServerJournal`. `useEffect` and `useRef` stay in use.
+   - What doesn't change: the hook's API `{ journal, records, record }` (`:79`; callers `AnimalGame.tsx:197` and `GlobeScreen.tsx:22`), its read path (`:44-47`) and its save path (`:65-77`).
+   - Signed out, both deleted effects already return at once (`:50`, `:59`), so nothing changes for a player without an account. Removing a hook changes the hook order only between builds, which is harmless.
+5. **`docs/DEPLOY.md`.**
+   - Renumbering One-time setup breaks three links the brief doesn't list: `[setup step 5]` (`:97`), `[setup step 3]` (`:101`) and `[setup step 4]` (`:107`) become 4, 2 and 3.
+   - M5 deleted "First deploy (2026-09-26)", so the awk check covers the whole file.
+   - M5 reworded the owner task (`:128`: "Sign up on play.critterconnect.org to test Clerk production sign-in; moot once mission M11 (remove-sign-in) removes sign-in."). The Review corrections' "skip" can't apply here, because "the final check still holds" and this line fails it. So it is deleted. It is the last item, so nothing is renumbered.
+6. **The DoD's screenshot expectation is wrong.** It says "only the Sign in button is gone … nothing else moved", but the header is `flex … gap-xs` (`GlobeScreen.tsx:52`) and the baseline `01-globe.png` shows `[wordmark + count] [Anywhere] [Sign in]`. Without the button, **Anywhere moves right to the edge** and the count line gets more width. That comes from the flex layout, not a regression, and it answers the "layout shift → find out why" rule in advance. No E2E check reads the right side of the header (the off-globe drag releases at x=40, `e2e.mjs:644`).
+7. **`scripts/check-live-board.mjs:10`: decision: edit it.** `// page's own host (other hosts, such as Clerk's, are ignored). Up to 3 attempts, …` becomes `// page's own host (other hosts are ignored). Up to 3 attempts, …`.
+   - Why: the DoD grep is the acceptance test and doesn't exclude this file.
+   - After this mission the example names a host the game no longer contacts, so the comment is false, not dead code. "Delete only what Goal names" is about removing code.
+   - Adding the file to the grep's exclusions would weaken the grep for any future Clerk name in `scripts/`.
+   - Behaviour doesn't change (`deploy/check.sh` runs this script). Record the decision under Decisions.
+8. **Generated types.**
+   - `tsconfig.json:37-38` includes `.next-e2e/**/types`, and `.next-e2e/dev/types/{routes.d.ts,validator.ts}` name `/login` and the journal route (checked), so the brief's `rm -rf` is needed.
+   - The untracked, gitignored `next-env.d.ts` imports `.next-e2e/dev/types/routes.d.ts` for its side effects. TypeScript 5.8.3 doesn't report a missing side-effect import (`noUncheckedSideEffectImports` is off), so the typecheck passes after the `rm`. CI has neither file.
+9. **Coupling checked, nothing to change:**
+   - `getJson` stays: four other files import it (`GlobeScreen.tsx:12`, `useAnimalSession.ts:22`, `RangeMap.tsx:4`, `Globe.tsx:10`).
+   - `ServerJournalEntry` is used only by the route, `useJournal.ts` and the test.
+   - Nothing reads `window.Clerk` outside the skill.
+   - `deploy/check.sh`, `deploy/deploy.sh`, `scripts/e2e-fresh.mjs` and `scripts/e2e-site.mjs` name nothing from Clerk.
+   - `src/pages` has no custom 404 page, so Next's default answers the deleted route with 404.
+   - Redirects run before pages (`node_modules/next/dist/docs/…/redirects.md:39`) and pass the query through (`:43`), so `/login/?x=…` goes to `/?x=…`, which is harmless. The live `/clue-match/` → `Location: /explore` shows that a source without a trailing slash matches the slashed URL under `trailingSlash: true`, and that `Location` is relative.
+10. **Smaller differences from the brief:**
+    - The Dockerfile has two Clerk ARGs (`:14-15`).
+    - DRIZZLE's "There are 9" becomes 8 (`db.execute` in `src/` outside `src/db/index.ts`: places 3, cluePool 3, range 1, ranges 1).
+    - Once the route is gone, no `count(*)::int` is left in `src/`. The doc's advice still holds as general advice (a note only).
+    - `CONTEXT.md:140` doesn't match the final grep, but it is a Goal site.
+    - The OAuth logo is already gone (Baseline).
+
+### Goal sites: current text → new text
+
+Text that Goal 5 gives word for word is marked "as Goal".
+
+- **Deleted:** `src/proxy.ts`, `src/pages/login.tsx`, `src/app/api/clue-game/journal/route.ts` (the folder holds nothing else), `.claude/skills/playtest/scripts/create-test-player.mjs` (the same).
+- **`src/pages/_app.tsx`:** `:5` goes. `:12` `<ClerkProvider>` becomes `<>`, and `:22` becomes `</>`.
+- **`GlobeScreen.tsx`:** `:8` and `:62-69` go.
+- **`useJournal.ts`:**
+  - `:2`, `:7`, `:31` (the doc-comment sentence), `:36-37` (`saved`, `useAuth`) and `:49-64` (both effects and their blank lines) go.
+  - `:3-6` becomes:
+    ```ts
+    import {
+      JOURNAL_STORAGE_KEY, NO_RECORDS, RECORDS_STORAGE_KEY, parseJournal, parseRecords, saveRecords, saveSolve,
+      type Journal, type Records,
+    } from '@/clueGame/journal';
+    ```
+- **`journal.ts`:**
+  - `:48-61` (`ServerJournalEntry`) and `:88-97` (`toJournalEntry`, `mergeServerJournal`) go.
+  - `:18`: "On this device only (the server keeps no badges)." becomes "On this device only."
+  - The header `:1-4` becomes:
+    ```
+    // The Field Journal: animals this player has identified, kept on their device only.
+    // Keyed by scientific name so it survives database id changes.
+    // mergeJournals is the one merge rule: for another tab's saves (saveSolve), and later for a journal
+    // moved from another device by QR code or link.
+    ```
+    The planned transfer is named here, not in `mergeJournals`' frozen doc comment.
+- **`next.config.mjs:16-18`:** each redirect gets its own comment:
+  ```js
+      async redirects() {
+          return [
+              // The game moved from /clue-match to /explore (plan 041); old links keep their ?place= and ?seed=.
+              { source: '/clue-match', destination: '/explore', permanent: true },
+              // Clerk's settings still name /login as the sign-in page until the owner deletes the instance.
+              { source: '/login', destination: '/', permanent: true },
+          ];
+      },
+  ```
+  The existing comment `:15` moves into the array.
+- **`eslint.config.mjs`:** `:19` and `:22` as Goal.
+- **`package.json:50` and the lock:** changed only by `npm uninstall @clerk/nextjs`.
+- **`ci.yml`:** `:54` ends at "never queries."; `:61` becomes `# credentials (docs/DATABASE_ACCESS.md).`; `:75-76` go.
+- **`Dockerfile`:** `:3-4` become the single line `# (docs/DEPLOY.md). Settings come in at run time (deploy/app.env).`; `:14-15` go; `:19` "No Clerk key or database needed." becomes "No database needed."
+- **`deploy/docker-compose.app.yml`:** `:4-5` become `# Needs deploy/app.env (from deploy/app.env.example) and, in .env, APP_DOMAIN` / `# and DB_NETWORK if not postgis_backend.`; `:13` goes.
+- **`deploy/app.env.example`:** `:2` becomes `# (never commit it).`; `:7-11` go, so the file ends after `:6`.
+- **`.env.example`:** `:5-11` go. Edit it from a shell with `sed -i '5,11d' .env.example`; the file then ends at the `DATABASE_URL` line and its newline.
+- **`AGENTS.md`:**
+  - `:10` and `:58` go.
+  - `:48` becomes "- Env (`.env.local`): `DATABASE_URL`."
+  - `:51` "`/clue-match` redirects" becomes "`/clue-match` and `/login` redirect".
+  - `:56` drops ", `GET /api/clue-game/journal` (signed-in journal sync)", the leading comma included.
+  - `:57` "No Next or Clerk there" becomes "No Next there".
+- **`CODING_STANDARDS.md:5`:** as Goal.
+- **`README.md`:** `:5` drops ", Clerk (sign-in)"; `:17` becomes "`.env.local` needs `DATABASE_URL`."; `:25` drops ", `clue-game/journal`".
+- **`CONTEXT.md:140`:** Goal's sentence.
+- **`docs/CLUE_MATCH.md`:**
+  - `:10` becomes "There are no accounts and no round is saved: the game only reads from the server. The Field Journal lives on the device. `?seed=N` replays a session exactly (same mysteries, same boards)."
+  - `:24` drops ", `GET /api/clue-game/journal` (a signed-in player's solves)".
+  - `:67` drops " The journal counts only `solved` rows."
+- **`docs/DRIZZLE_ORM_GUIDE.md`:** `:15` "There are 9:" becomes "There are 8:"; `:20` goes; `:32` "(`count(*)::int`, journal route)" becomes "(`count(*)::int`)".
+- **`docs/DATABASE_ACCESS.md`:**
+  - `:190-193` become "CI's e2e job connects to the copy below as `critter_dev` (GitHub secret" / "`E2E_DATABASE_URL`), so a schema change the app reads must reach `phaser_june_dev`" / "too, or that job goes red. The refresh steps are below."
+  - `:205-207` go; the block keeps `:204`.
+- **`docs/DEPLOY.md`:**
+  - `:3` becomes "… need the server or a password."
+  - `:19` goes; `:20`, `:28` and `:31` are renumbered 2, 3 and 4.
+  - `:29` becomes "- `.env` (app stack, `/opt/critter-connect/.env`): `APP_DOMAIN`."
+  - `:30` becomes "… fill in `DATABASE_URL` (the `critter_app` password). `chmod 600 deploy/app.env`."
+  - `:49` becomes "(no Next or other framework script)".
+  - The links at `:97`, `:101` and `:107` change to steps 4, 2 and 3; `:128` goes (Finding 5).
+- **`.claude/skills/playtest/SKILL.md`:** `:16-30` go; `:15` is then followed by the blank line before "## 2. Globe".
+- **`db/schema.sql`:** `:91` "(the journal route reads them)" becomes "(nothing reads them now)"; `:101` "07_solve_stats.sql) and the journal route." becomes "07_solve_stats.sql).".
+- **`scripts/check-live-board.mjs:10`:** see Finding 7.
+
+### Target design
+
+After the change, the game has no auth layer and no request hook:
+- `_app.tsx` holds only `Head` and `MotionConfig`.
+- The API is read-only: `places`, `places/outline` and `clue-game/{pool,range,ranges}`.
+- `/login` → `/` is config in `next.config.mjs`, beside `/clue-match`.
+- The journal lives only in localStorage. `useJournal` handles React state and storage I/O on top of the pure `journal.ts` (`parseJournal`, `recordSolve`, `saveSolve` → `mergeJournals`, the records).
+- `mergeJournals` is the single merge rule: the save-time merge now, the QR or link transfer later.
+- Layers are unchanged: pure rules in `src/clueGame`, storage in the hook, UI in `GlobeScreen`.
+
+#### `scripts/e2e.mjs`: four checks, 1584 → 1588 (each is a single `check()`)
+
+1. **Listener.** Beside `const requests = [];` (`:115`), add `const clerkRequests = [];`. In the handler, between the console branch and `if (message.sessionId !== sessionId) return;` (`:125`), add:
+   ```js
+      // Sign-in is gone: no page the run opens asks a Clerk host for anything.
+      if (method === 'Network.requestWillBeSent' && URL.parse(params.request.url)?.hostname.includes('clerk')) clerkRequests.push(params.request.url);
+   ```
+   This covers every session in `watched`: the first page, the old-journal load on it, and the two-tab second page. `URL.parse` (Node 22+) returns null where `new URL` would throw. `:116`'s comment gains "(Clerk requests from every page)".
+2. **Hoist** `oldJournalRaw` (`:2507`) to just above the D14 block's comment (`:2494`). Its comment avoids the grep's words, for example "The pre-2026-11 journal fixture: the D14 checks and the stored-journal check at the end load it." The D14 block uses it unchanged.
+3. **Stored-journal check.** A new block after the two-tab block (`:2610`) and before `check('no console errors'` (`:2612`), so the run-wide checks cover its requests:
+   ```js
+    // A journal stored before this change is counted on the globe and left as stored (nothing on the globe writes it).
+    {
+      const n = Object.keys(JSON.parse(oldJournalRaw)).length;
+      await evaluate(raw => localStorage.setItem('clue-match:journal:v1', raw), oldJournalRaw);
+      await goto(`${BASE}/`);
+      await waitFor(() => /^\d+ of \d+ animals found$/.test(document.querySelector('header p')?.textContent ?? ''), 'the globe\'s count', 30_000);
+      await sleep(3000);
+      const { header, stored } = await evaluate(() => ({ header: document.querySelector('header p').textContent, stored: localStorage.getItem('clue-match:journal:v1') }));
+      check('a journal stored before this change is counted on the globe and kept as stored', header.startsWith(`${n} of `) && stored === oldJournalRaw, JSON.stringify({ header, n, kept: stored === oldJournalRaw }));
+    }
+   ```
+   - It sets storage and then navigates, as D14 does (`:2512`); it doesn't use `addScriptToEvaluateOnNewDocument`.
+   - `n` is the fixture's raw key count (4), not `parseJournal`'s output. The unit test (`journal.test.ts:26-36`) already pins that `parseJournal` keeps every entry, and counting raw keys makes a parser that drops an entry fail here instead of moving `n` with it.
+   - The header counts `Object.keys(journal).length` (`GlobeScreen.tsx:46`), so the count doesn't depend on which animals the places list holds. `header p` is that line; the globe has a single `<header>`.
+4. **Run-wide checks**, after `check('no failed requests', …)` (`:2613`):
+   ```js
+    check('no request goes to Clerk', clerkRequests.length === 0, `${clerkRequests.length}: ${clerkRequests.slice(0, 3).join(' | ')}`);
+    // From Node, so neither reaches the page's request lists.
+    const login = await fetch(`${BASE}/login/`, { redirect: 'manual' });
+    check('/login/ redirects to the globe', login.status === 308 && login.headers.get('location') === '/', `${login.status} ${login.headers.get('location')}`);
+    const journalRoute = await fetch(`${BASE}/api/clue-game/journal/`);
+    check('the journal route is gone', journalRoute.status === 404, String(journalRoute.status));
+   ```
+   Node's `fetch` with `redirect: 'manual'` returns the 308 itself, headers included.
+- **Expected on the unchanged code (record them):**
+  - Clerk check: FAIL (the dev key loads from `*.clerk.accounts.dev`). If it passes, the env has no key: record that and keep the check.
+  - `/login/` check: FAIL (`200 null`).
+  - Journal-route check: FAIL (`200`).
+  - Stored-journal check: PASS, by design (signed out, nothing writes on the globe).
+  - Result: 1588 checks, exit 1. After the change: 1588/1588.
+- **The separate DoD grep on `e2e.mjs`** then lists only the listener's comment and condition, the `:116` comment, and the Clerk and journal-route checks with their comment.
+
+#### `tests/clueGame/journal.test.ts`
+
+- `:8-9`: drop `mergeServerJournal` and `type ServerJournalEntry`.
+- `:38-40`: new comment and title:
+  ```ts
+  // M7's case for the old server merge, its solves rewritten as a journal: the rule a journal moved by QR code or link will use.
+  test('mergeJournals: another journal merges in: the larger count, the lower best, the earliest and latest dates, the local names, local class or else theirs, the larger badge count', () => {
+  ```
+- `:55-68`: `const server: ServerJournalEntry[]` becomes `const other: Journal`, keyed by scientific name, with the same fields except `speciesId` and `placeKeys`.
+- `:84` and `:87` become `mergeJournals(local, other)` and `mergeJournals(merged, other)`; `expected` (`:69-83`) doesn't change.
+- New, after `:131`:
+  ```ts
+  test('mergeJournals: a journal merged with itself is unchanged', () => {
+    const journal: Journal = {
+      'Rhinoderma darwinii': entry('Rhinoderma darwinii', { timesSolved: 3, bestMoves: 7, lastSolvedAt: '2026-11-03T10:00:00.000Z', className: 'AMPHIBIA', sharpEyes: 2 }),
+      'Okapia johnstoni': entry('Okapia johnstoni'),
+    };
+    assert.deepEqual(mergeJournals(journal, journal), journal);
+  });
+  ```
+- Both cases pass at once on the unchanged `src/` (record that). `npm test` is 76/76 then, and again after the deletions.
+
+#### Order (tests first), for the Steps
+
+1. Write the E2E checks and run them once on the unchanged code (dev-copy block). Record each result and the +4.
+2. Port the unit case and add the self-merge case. `npm test` gives 76/76 on the unchanged `src/`.
+3. Finding 1's single step: the six `src/` sites, the redirect, `npm uninstall @clerk/nextjs`, the `rm -rf`, then typecheck, lint, test and E2E.
+4. CI, deploy and env files, and the ESLint guard.
+5. Docs, agent files, the schema comments and `check-live-board.mjs:10`. Then the final grep, the awk check and the schema-diff check.
+6. The final Verification.
+
+### Rejected alternatives
+
+- Importing `parseJournal` from `../src/clueGame/journal.ts` into `e2e.mjs` (Node type stripping) to get `n`: a new pattern in a plain-Node script, and laxer, since `n` would follow a parser bug.
+- A second listener, or one listener per page, for Clerk: the existing listener already sees every watched session.
+- Finding Clerk requests through `requests`: it keeps `BASE` URLs only.
+- Excluding `scripts/check-live-board.mjs` from the final grep: it weakens the acceptance check and leaves a false example.
+- Keeping `mergeServerJournal` as a wrapper, or editing `mergeJournals`' doc comment: the wrapper has no caller, and the Review corrections freeze the function.
+- Redirecting `/login` from a page or in Caddy: the config redirect sits with `/clue-match`, runs before pages, and Caddy's existing forward already brings the website host's `/login` to it.
+
+### Risks
+
+- **The dev-copy env keeps its four Clerk variables.** After the change nothing reads them: no `@clerk` package is installed, and Next inlines a `NEXT_PUBLIC_*` value only where code names it. The Clerk check proves this on the VPS, and the PR's CI (which gets no secrets) proves it there.
+- **Lockfile.** `npm uninstall` should only delete: the five `node_modules/@clerk/*` entries and dependencies nothing else needs. Check that `git diff --numstat package-lock.json` adds no lines, or only npm's own normalisation. Check that `node_modules/@clerk` is gone, so a leftover install can't let the typecheck pass. CI's `npm ci` proves the lock is consistent.
+- **Stale generated types:** see Finding 8. **Screenshot shift:** see Finding 6.
+- **Live headers.** Without the proxy, `/` and `/explore/` lose `x-clerk-*` and `x-middleware-rewrite`, and their `Cache-Control` may change to Next's static-page header. Record both (Review corrections). Caddy caches nothing and sets `Cache-Control` only on `/site/*`.
+- **Flaky checks.** Removing the provider also removes a whole-tree re-render when Clerk's script loads mid-round, so E2E timings may shift slightly. A10 flakes get the rerun-once rule, which never applies to the four new checks.
+
 ## Architecture review (Fable)
 
 ## Architecture review (Astra)
@@ -244,8 +458,11 @@ From `agent/remove-sign-in` at `45cf474f` (= `origin/main` `f1826f56`, fetched 2
 
 ## Decisions
 
+- 2026-11-15 (Architecture): `scripts/check-live-board.mjs:10` comment drops " such as Clerk's," rather than excluding the file from the final grep: the grep doesn't exclude it, the example names a host the game no longer contacts, and an exclusion would weaken the grep for `scripts/`. Comment-only edit.
+
 ## Log
 
 - 2026-11-15 16:25 UTC: Baseline. Prereqs (M6, M7) pass; M9 branch (`mergeJournals` exists). typecheck/lint ok, `npm test` 75/75, E2E 1584/1584 (2nd run; 1st failed one A10 timing check). Greps recorded; one new hit, a comment in `scripts/check-live-board.mjs`.
+- 2026-11-15 UTC: Architecture (architect). M9 branch confirmed (`mergeJournals` rule = Review corrections); one atomic `src/` step (ClerkProvider/useAuth/auth() coupling); 4 new E2E checks (1584→1588), `npm test` 75→76; DEPLOY.md renumber breaks 3 anchors; Anywhere link shifts into Sign in slot (expected). Plan-only change; verified merge rule and fixture count (4) against code.
 
 ## Summary
