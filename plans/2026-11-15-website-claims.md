@@ -458,7 +458,7 @@ Every step:
   ```
 - Pre-push hook runs typecheck + lint. Record results as indented bullets under the step, check it off, add one Log line, commit code + plan together, push.
 
-- [ ] S1 · D21 alone: `src/site/Screenshot.tsx`, byte-identical build (Finding 7)
+- [x] S1 · D21 alone: `src/site/Screenshot.tsx`, byte-identical build (Finding 7)
   - Edit per Target design only: doc comment ends `radius m, lazy.`; signature `export default function Screenshot({ shot, crop = '' }: { shot: ShotImage; crop?: string }) {`; the `{...(lead ? LEAD_IMAGE : …)}` spread becomes `loading="lazy" decoding="async"`, placed after `className`. `LEAD_IMAGE` and its comment stay. No other file.
   - Delete `e2e-artifacts/2026-11-15T18-24-20-160Z-site` (already copied to `$STATE/baseline-e2e-site/`).
   - Checks:
@@ -469,6 +469,12 @@ Every step:
     - `git diff --stat origin/main`: `Screenshot.tsx` + plan only.
     - No E2E: identical bytes are the proof (DoD).
   - Commit D21 alone, before any text change.
+  - Results (2026-11-15, base `83eef270`, `origin/main` unmoved):
+    - Control first: untouched tree `site:build` → `site.f7f956df00.css`, `diff -r site-before out/site` empty (site-before still valid).
+    - `e2e-artifacts/2026-11-15T18-24-20-160Z-site` = `$STATE/baseline-e2e-site` (`diff -rq` empty), deleted.
+    - After edit: typecheck 0, lint 0; build `(/site/site.f7f956df00.css)`; `diff -r $STATE/site-before out/site` empty, exit 0 (byte-identical).
+    - `git grep -n -w lead -- src/site`: nothing. `<Screenshot` = 10 in `src` (Home 6, Teachers 4); deviation: with `-- .` it's 15, plan file matches itself, so counted with `-- src`.
+    - `git diff --stat origin/main`: `Screenshot.tsx` (6 lines) + plan only.
 
 - [ ] S2 · Bot run on the final base (DoD); find-rate figures. No code change.
   - Inputs check: `git diff --quiet 83eef270 HEAD -- db/content src/clueGame scripts/balance-044.ts` exits 0, and the same against `origin/main` (if not, record it: the release rebase redoes this run); record `git rev-parse --short origin/main` and `ANIMAL_RULES.version` (`src/clueGame/animalBoard.ts`, `055-0` at baseline).
@@ -586,5 +592,6 @@ Nothing is tested in isolation: the checks are the site E2E, the build diff and 
 - 2026-11-15 18:47 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (retention contract: dev copy keeps anonymized solves; backup expiry depends on rotation), 1 SHOULD-CONSIDER (keep Clerk/DB id map before deleting Clerk user). Revision next. Plan only.
 - 2026-11-15 18:52 UTC · Revision: architect resolved Astra MUST-FIX (both claims verified: dev-role.sql keeps anonymized solves; pruning only after successful pulls) in deletion doc "Copies"; Clerk user deleted last; attribution narrowed; Privacy/Terms unchanged. Plan only.
 - 2026-11-15 18:59 UTC · Steps: planner wrote S1 D21 alone (byte-identical), S2 bot run, S3 four site files, S4 deletion doc (9 facts re-read), S5 final Verification + Summary; Verification 1–10 (incl. Fable MISSED asset diff + date reset); Failure modes. Plan only.
+- 2026-11-15 19:01 UTC · S1 D21: `lead` prop removed from Screenshot.tsx; build byte-identical to site-before (diff -r empty), typecheck/lint 0, css hash same.
 
 ## Summary
