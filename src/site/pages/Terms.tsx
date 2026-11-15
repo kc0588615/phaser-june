@@ -3,7 +3,7 @@ import LegalArticle from '../LegalArticle';
 
 export default function Terms() {
   return (
-    <LegalArticle title="Terms of Service" updated="November 6, 2026">
+    <LegalArticle title="Terms of Service" updated="November 15, 2026">
       <p>By playing Critter Connect you agree to these terms. They are short on purpose. Critter Connect is run by {OPERATOR}, the &ldquo;we&rdquo; in these terms.</p>
 
       <h2>The game</h2>
@@ -22,7 +22,8 @@ export default function Terms() {
       <h2>Photos and content</h2>
       <p>
         Animal photos belong to their creators and are used under the licenses credited on each card. Maps use data from
-        the IUCN Red List and other credited sources.
+        the IUCN Red List and Natural Earth. Realms come from the
+        One Earth Bioregions Framework, One Earth. 2023. Los Angeles, CA. oneearth.org.
       </p>
 
       <h2>Privacy</h2>
