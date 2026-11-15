@@ -167,7 +167,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
+- [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -386,6 +386,27 @@ GROUP BY species_id
 
 ## Architecture review (Fable)
 
+2026-11-15, advisor (Fable 5.2), each point checked against the code at `58becdf8`.
+
+VERDICT: APPROVE_WITH_CHANGES
+
+Confirmed: the copied country CTEs match `db/schema.sql:223-263` (column order of the three `country_parts` branches included); `begin('read only', fn)` passes postgres.js's `[^a-z ]` filter (`node_modules/postgres/src/index.js:242`); the build credits `taxonomy`, `systems`, `habitats`, `elevation`, `redList` to `iucn` and `range` to `iucn_range` (`profiles.ts:242-282`); items carry `source`, no `src`; `citations.json` has 8 `license` entries, all CC BY; `MATERIALIZED` on `country_animals` is needed (one reference, under the per-animal correlated subquery). Checks run: `contentCitations.ts:8` is a standalone `/** … */` line, so the DoD comment-only grep can pass; no test, script or deploy check asserts Terms' sentence, its date or the Journal line (`git grep` hits only `Terms.tsx`, `Privacy.tsx`, `LegalArticle.tsx`); every doc line saying `ranges` needs a build or the view first is inside a replaced section (`CLUE_MATCH.md:62`, `CONTENT_SOURCES.md:84`, `SHAPEFILE_BEST_PRACTICES.md:44,48`) or the build message; `scripts/iucn.ts` says nothing about it.
+
+MUST-FIX:
+1. `CONTENT_LICENSE.md` interprets in two places, against the brief's Decision rule ("doesn't interpret"): (a) the "any other source key → written by the project" row: word it as the owner's default instead (everything not listed below is offered under CC BY-NC-SA 4.0; `source` names where its facts come from); (b) drop the sentence that `citations.json` `cite` lines "follow their page's source": state only what each entry's `license` field records.
+
+MISSED:
+- One Earth citation: its page reads `One Earth. {2023} Los Angeles`; the brief says "copy its punctuation, don't add any" but its own string, given four times and expected by the release smoke, has `2023.`. Use the brief's literal string; record the mismatch under Decisions and in the Summary.
+- CI's `e2e` job runs against the same dev copy: a `ranges` proof retake after the release rebase finishes before the push, or waits until `gh pr checks` is done (the Load rule's "never alongside the E2E").
+- The IUCN field list grows past the brief (`taxonomy`, `systems`, `elevation`): keep it (read from code, grants less), and log it as a Decision.
+
+SHOULD-CONSIDER:
+1. With no continents in the query, the Russia split at 60°E and its re-union is a no-op costing two intersections of Russia's 10m shape per run. Either collapse `country_parts`+`country_shapes` (dump, drop Seven seas/Antarctica, drop FRA polygons with centroid x < -30 or > 40, group by `adm0_a3, name`), or keep the verbatim copy with a comment that the split is inert here. The scratch Russia case covers either.
+2. The harness tests only France's `< -30` branch: add a pair of boxes on Réunion for `> 40`.
+3. Delete the harness from `scripts/` right after its run (the pre-push typecheck and lint may pick it up); stage files by name.
+4. Step order: the doc's step 4 quotes the proof's measured time, so run the proof before that text is final.
+5. `country_shapes AS MATERIALIZED` is redundant under a materialized `country_animals`: harmless, keep or drop.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -406,5 +427,6 @@ GROUP BY species_id
 
 - 2026-11-15 06:42 UTC Baseline: D13 in; greps as expected; live pool 76/2478/491/261 without rspb.2017.1347; ranges baseline empty diff in 65 s (run 2 of 8, after a 60 s timeout on run 1); content check 0/0; tests 64/64; e2e:fresh 1579/1579.
 - 2026-11-15 06:59 UTC Architecture: architect wrote findings + target design (S12 query from profiles JSON param, read-only tx + 15min cap, MATERIALIZED country CTEs; scratch temp-table check for RUS/FRA/ocean/ATA rules; licence/doc texts). No code changed, no DB runs.
+- 2026-11-15 07:20 UTC Fable review: APPROVE_WITH_CHANGES; 1 MUST-FIX (CONTENT_LICENSE.md wording interprets: other-source-key row, cite-lines rule), 3 MISSED, 5 SHOULD-CONSIDER; three read-only greps checked (comment-only DoD passable, no test asserts Terms/Journal text, no stale `ranges` doc line outside replaced sections). No code changed, no DB runs.
 
 ## Summary
