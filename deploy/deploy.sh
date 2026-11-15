@@ -47,5 +47,5 @@ REMOTE
 # What the server just built: check.sh fails unless the live game reports this commit.
 EXPECT_COMMIT=$(ssh -o BatchMode=yes "$HOST" git -C /opt/critter-connect rev-parse HEAD)
 export EXPECT_COMMIT
-# play. now, the apex and www once DNS points here (they SKIP until then).
+# All three hosts, then the board check: a browser opens the live game (needs node and Chrome, docs/DEPLOY.md).
 bash "$(dirname "$0")/check.sh"

@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Checks the live hosts (plan 051 §10): play. serves the game only, the apex serves the website, www
-# redirects to the apex. Prints OK|BAD|SKIP per line and exits 1 on any BAD. Run by deploy/deploy.sh;
-# the apex and www are skipped until their DNS points at play.'s server.
-# Usage: bash deploy/check.sh [--strict]   (--strict: a SKIP is BAD; run it once DNS has moved)
-# Env: EXPECT_COMMIT is the commit play./version.txt must report (deploy.sh sets it). PLAY, APEX, WWW override the host names. CHECK_CONNECT=<ip:port> is for a local Caddy test only:
-# every request goes there, its local certificate is accepted and the DNS guard is skipped.
+# redirects to the apex, and a browser sees the live game draw its board (scripts/check-live-board.mjs).
+# Prints OK or BAD per line and exits 1 on any BAD. Run by deploy/deploy.sh after every deploy.
+# Usage: bash deploy/check.sh   (no arguments)
+# Env: EXPECT_COMMIT is the commit play./version.txt must report (deploy.sh sets it). PLAY, APEX, WWW override the host names.
+# CHROME_PATH: the board check's Chrome (scripts/cdp.mjs); when unset, ~/.local/bin/chrome-nosandbox if present.
+# CHECK_CONNECT=<ip:port> is for a local Caddy test only: every request goes there and its local certificate
+# is accepted; the board check doesn't run (a NOTE line says so).
 set -uo pipefail
 
 PLAY=${PLAY:-play.critterconnect.org}
@@ -14,12 +16,7 @@ WWW=${WWW:-www.critterconnect.org}
 SITE_URL=https://critterconnect.org
 CERT_HINT='certificate not issued yet: wait a few minutes or run docker restart caddy on the VPS, then rerun'
 
-strict=0
-case "${1:-}" in
-  '') ;;
-  --strict) strict=1 ;;
-  *) echo "usage: bash deploy/check.sh [--strict]" >&2; exit 2 ;;
-esac
+[ $# -eq 0 ] || { echo "usage: bash deploy/check.sh" >&2; exit 2; }
 
 curl_opts=(-sS --max-time 30)
 [ -n "${CHECK_CONNECT:-}" ] && curl_opts+=(-k --connect-to "::$CHECK_CONNECT")
@@ -31,9 +28,6 @@ failed=0
 
 ok()   { echo "OK   $1 $2"; }
 bad()  { echo "BAD  $1 $2: $3"; failed=1; }
-skip() {
-  if [ "$strict" = 1 ]; then echo "BAD  $1: $2"; failed=1; else echo "SKIP $1: $2"; fi
-}
 
 # fetch <url>: never follows redirects. Sets code (000 on no connection), type, location; the body goes to $body.
 fetch() {
@@ -92,34 +86,30 @@ expect_page() {
   done
 }
 
-# moved <host>: true if <host> resolves to play.'s IPv4 (DNS has moved); otherwise prints a SKIP line.
-moved() {
-  [ -n "${CHECK_CONNECT:-}" ] && return 0
-  local ip play_ip
-  ip=$(getent ahostsv4 "$1" | awk 'NR == 1 { print $1 }')
-  play_ip=$(getent ahostsv4 "$PLAY" | awk 'NR == 1 { print $1 }')
-  [ -n "$ip" ] && [ "$ip" = "$play_ip" ] && return 0
-  skip "$1" "DNS not moved yet (${ip:-unresolved}, play. is ${play_ip:-unresolved}); check: dig +short $1 @1.1.1.1; a cached answer needs a few minutes or ipconfig /flushdns"
-  return 1
-}
-
 # play.: the game, and no website pages.
 for path in / /explore/ /api/places/ /api/clue-game/pool/; do expect "https://$PLAY$path" 200; done
 for path in /privacy/ /terms/ /teachers/; do expect "https://$PLAY$path" 404; done
 expect "https://$PLAY/version.txt" 200 "${EXPECT_COMMIT:-}"
 
 # The apex: the website, the 404 page, and the game's old paths sent to play.
-if moved "$APEX"; then
-  for path in / /teachers/ /privacy/ /terms/; do expect_page "$path"; done
-  expect "https://$APEX/robots.txt" 200 "Sitemap: $SITE_URL/sitemap.xml"
-  expect "https://$APEX/sitemap.xml" 200 "<loc>$SITE_URL/</loc>"
-  expect "https://$APEX/nope/" 404 ">This page isn"
-  expect_redirect "https://$APEX/explore/?seed=1" "https://$PLAY/explore/?seed=1"
-  expect_redirect "https://$APEX/api/places/" "https://$PLAY/api/places/"
-fi
+for path in / /teachers/ /privacy/ /terms/; do expect_page "$path"; done
+expect "https://$APEX/robots.txt" 200 "Sitemap: $SITE_URL/sitemap.xml"
+expect "https://$APEX/sitemap.xml" 200 "<loc>$SITE_URL/</loc>"
+expect "https://$APEX/nope/" 404 ">This page isn"
+expect_redirect "https://$APEX/explore/?seed=1" "https://$PLAY/explore/?seed=1"
+expect_redirect "https://$APEX/api/places/" "https://$PLAY/api/places/"
 
-if moved "$WWW"; then
-  expect_redirect "https://$WWW/teachers/" "https://$APEX/teachers/"
+expect_redirect "https://$WWW/teachers/" "https://$APEX/teachers/"
+
+# The board: the pages above answer 200 even when the game's script fails (explore.tsx loads it with ssr: false).
+board_url="https://$PLAY/explore/?seed=1"
+if [ -n "${CHECK_CONNECT:-}" ]; then
+  echo "NOTE board check: not run with CHECK_CONNECT, which tests Caddy, not the game"
+elif ! command -v node >/dev/null; then
+  bad "$board_url" "board drawn" "node not found (the board check needs node and Chrome, CHROME_PATH); the deploy is live, only this check could not run"
+else
+  if [ -z "${CHROME_PATH:-}" ] && [ -x "$HOME/.local/bin/chrome-nosandbox" ]; then export CHROME_PATH=$HOME/.local/bin/chrome-nosandbox; fi
+  node "$(dirname "$0")/../scripts/check-live-board.mjs" "$board_url" || failed=1
 fi
 
 exit "$failed"
