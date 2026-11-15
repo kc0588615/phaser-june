@@ -878,6 +878,18 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- Rebase: no-op (`origin/main` still `9f72f360` = BASE; HEAD differs from the verified `e9b172ad` in the plan only), so per Verification 11 the E2E + glyph proof results stand; gates re-run: typecheck 0, lint 0, unit 75/75.
+- PR #80; CI `check` pass (2m59s), `e2e` pass (11m6s), first run. Merged: `f1826f564bd351449a751fdc7dc12b1dc18ec129`.
+- Deploy (`$STATE/deploy.log`), last line: `deploy critter-connect: live at https://critterconnect.org`. `bash deploy/check.sh` exit 0 (`$STATE/check-after.log`).
+- Smoke (`$STATE/smoke.sh`, retries 3× 10 s; before `$STATE/smoke-before.txt`, after `$STATE/smoke-after.txt`):
+  - `version.txt` `9f72f360…` → `f1826f56…` (merge commit).
+  - `/`, `/explore/`, `/api/clue-game/journal/` on play., `/` on critterconnect.org: 200 before and after.
+  - Pool lengths `[76,2478,491,261]` and places keys (africa, asia, north-america, oceania, south-america) unchanged.
+  - Open Runde Regular/Bold on both hosts: 200 `font/woff2`, 154,604/162,468 → 6,892/6,848 B; sha256 = merge commit's files (`d971c3c6…`, `842f341a…`). `OFL.txt` 200 4380, Nunito 400 200 16316: unchanged.
+  - OAuth logo + prompt: 200 → 404. Both wordmark SVGs: 200.
+
+Result: done
+
 ## Decisions
 
 - 2026-11-15 · Astra MUST-FIX 1 (serialize cross-tab read–merge–write + overlapping-save E2E) rejected: owner chose merge at save time, no `storage` listener; a Web Lock doesn't close the window (Chromium propagates localStorage writes across renderers async, apart from lock grant); only IndexedDB would, which breaks K2; window is one sync task per found round and the losing tab restores its find at next save; overlap E2E can't be deterministic. Cross-tab serialization left as a later owner choice (Revision notes R1).
@@ -902,6 +914,7 @@ SHOULD-CONSIDER:
 - 2026-11-15 15:05 UTC · S6: S11 `docs/CLUE_MATCH.md` 12 lines corrected against code (sign-in lines + Content step list untouched); Verification 10 clean; typecheck/lint 0. Markdown only, no E2E.
 - 2026-11-15 15:08 UTC · Code review (Astra): APPROVE, no MUST-FIX; 1 SHOULD-CONSIDER (refresh origin/main before PR: done at release). Plan only; no checks needed.
 - 2026-11-15 15:30 UTC · Final Verification: E2E 1584/1584 first run → `final-e2e/`; site 444/444; typecheck/lint 0; unit 75/75; glyph proof ok; screens, K2, K5, rules, greps, S11 clean. Summary written, status done.
+- 2026-11-15 16:20 UTC · Release: rebase no-op, gates 0/0/75; PR #80 CI pass; merged `f1826f56`; deployed; check.sh 0; smoke = record (fonts cut, OAuth 404).
 
 ## Summary
 
@@ -919,4 +932,4 @@ Mission M9 (screens cleanup), done on branch `agent/screens-cleanup`, base `orig
 - **`ANIMAL_RULES.version` unchanged**, and so is `SavedGame` `v: 1`: no rule and no save field changed, so existing saves still resume. Only saves that already couldn't resume are dropped.
 - **No production content build needed:** no content, DB or schema change.
 - **S11 `docs/CLUE_MATCH.md`:** 12 lines corrected against code (S6 lists each). Left for M11 (sign-in), word for word: `:10` "No sign-in needed… when signed in, it also pulls the player's solves saved before 2026-10-01", the Data row's `GET /api/clue-game/journal`, the Database paragraph's `profiles`, `clue_match_solves` and its "row per round finished before 2026-10-01" sentence, "The journal counts only `solved` rows.", and the `07_solve_stats.sql` row.
-- **Smoke:** pending the release unit (`## Release`).
+- **Released:** PR #80 merged (`f1826f56`), CI check + e2e passed first run, deployed; check.sh + smoke passed (`## Release`).
