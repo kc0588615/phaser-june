@@ -199,7 +199,7 @@ Out:
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none): none needed
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -473,7 +473,305 @@ None needed: Fable and Astra both APPROVE with MUST-FIX none. Fable's SHOULD-CON
 
 ## Steps
 
+Every step:
+- `STATE=/srv/critter-ai/agent-state/missions/remove-sign-in`. Start with `git fetch origin --prune`. If `origin/main` moved past `f1826f56`, note it in the step's record and go on; the Release rebases, so don't bring it in mid-mission.
+- Anchor every edit on the quoted text. The Architecture's line numbers shift once earlier edits land (Fable SC 2).
+- "E2E" means the Definition of done's dev-copy block, verbatim, guard included. Never use `.env.local`, never print the URL, never `cat` the file. A run takes about 13 min (baseline: 16:07 to 16:20). One heavy job at a time, at most 3 E2E runs per session.
+- After an E2E: `mv "$(ls -1d e2e-artifacts/*-seed7 | tail -1)" $STATE/<name>`. Intermediate runs go to `$STATE/e2e-s<n>/`; delete the older `e2e-s*` when you write a new one. Never delete `baseline-e2e/` or `final-e2e/`.
+- Report check: it prints the total and the failing counts, then every failing check and the four new checks:
+  ```
+  node -e 'const r=require(process.argv[1]);const f=r.checks.filter(c=>!c.ok);console.log(r.checks.length,f.length);const n=/^(no request goes to Clerk|\/login\/ redirects to the globe|the journal route is gone|a journal stored before this change is counted on the globe and kept as stored)$/;for(const c of r.checks)if(!c.ok||n.test(c.name))console.log(c.ok,c.name,"::",(c.detail??"").slice(0,240))' <dir>/report.json
+  ```
+- Flakes (Decision rules): if a run fails only on an A10 timing check outside the four new checks (for example "field guide: signs in pages turn on their own…"), rerun once and keep the failed run's `report.json` as `$STATE/s<n>-flake-report.json`. Never waive one of the four.
+- Pre-push runs typecheck and lint (lint covers `src`, `tests` and `scripts`).
+- Record results as indented bullets under the step, check it off, add one Log line, then commit the code and the plan together and push.
+
+- [ ] S1 · Tests first: the four E2E checks and the ported merge cases, on unchanged `src/`
+  - Files: `scripts/e2e.mjs` and `tests/clueGame/journal.test.ts` only. No `src/` change.
+  - `scripts/e2e.mjs`, per Architecture "`scripts/e2e.mjs`: four checks":
+    1. Under `const requests = [];`, add `const clerkRequests = [];`.
+       - The comment above `const watched` ("…; network events from the first only.") ends "…; network events from the first only (Clerk requests from every page)."
+    2. In `browser.on(message => {`: after the `Runtime.exceptionThrown` branch's closing `}` and before `if (message.sessionId !== sessionId) return;`, add the Architecture's comment line and the `URL.parse(…)?.hostname.includes('clerk')` line, verbatim.
+    3. Hoist `const oldJournalRaw = readFileSync(path.join(process.cwd(), 'tests/clueGame/old-journal.json'), 'utf8');` out of the D14 block.
+       - It goes just above `// Plan 2026-11-14-rules-cleanup (D14). Last, on their own loads, …`, with the comment `// The pre-2026-11 journal fixture: the D14 checks and the stored-journal check at the end load it.`
+       - The D14 comment "// A journal saved before 2026-11 (…) keeps every find." stays above `const oldJournal = JSON.parse(oldJournalRaw);`.
+    4. Add the stored-journal block, verbatim. It goes after the two-tab block's last line `names.forEach((name, i) => check(name, results[i].ok, results[i].detail));` and that block's closing `}`, and before `check('no console errors', …)`.
+    5. After `check('no failed requests', …);`, add the three run-wide checks verbatim: Clerk, `/login/` and the journal route.
+  - `tests/clueGame/journal.test.ts`, per Architecture "`tests/clueGame/journal.test.ts`":
+    - The import drops `mergeServerJournal, ` and `, type ServerJournalEntry`.
+    - The comment "// A signed-in player's saved solves fold into the device's journal. The E2E can't / sign in, so this is the merge's only test." and the title `'saved solves merge in: …'` become the Architecture's comment and title.
+    - `const server: ServerJournalEntry[] = [ … ]` becomes `const other: Journal = { … }`.
+      - It is keyed by scientific name, with the same three animals and the same field values minus `speciesId` and `placeKeys`. Their classes stay: `'Amphibia'`, `'REPTILIA'`, `'MAMMALIA'`.
+      - `expected` doesn't change.
+    - `mergeServerJournal(local, server)` becomes `mergeJournals(local, other)`, and `mergeServerJournal(merged, server)` becomes `mergeJournals(merged, other)`.
+    - The self-merge case, verbatim, goes after `test('mergeJournals: two empty journals merge to an empty one', …)`.
+  - Checks:
+    - `npm run typecheck` and `npm run lint` exit 0.
+    - `npm test` gives **76/76** (75 − 0 + 1). The ported case and the self-merge case pass at once on the unchanged `src/`; record that (Review corrections).
+    - One E2E to `$STATE/e2e-s1/`, then `cp $STATE/e2e-s1/report.json $STATE/s1-fail-first-report.json`. The JSON is the fail-first evidence and stays; the folder goes in S2.
+  - **This step's pass is a red run (Fable SC 1).** It must print `1585/1588 checks passed` with exit 1, and the report check prints `1588 3`:
+    - `false no request goes to Clerk`, with `*.clerk.accounts.dev` URLs in the detail.
+    - `false /login/ redirects to the globe`, detail `200 null`.
+    - `false the journal route is gone`, detail `200`.
+    - `true a journal stored before this change …`, with `"n":4`, `"kept":true` and a header starting `4 of`.
+    - The run has no `run completed` failure, and all 1584 old checks pass, which proves the hoist and the listener changed nothing.
+    - Later sessions: these three failures are expected and S2 turns them green. Don't treat them as regressions or rerun them.
+  - If the Clerk check passes, the env has no Clerk key. Record that and keep the check; the run then shows `1586/1588` and `1588 2`.
+  - Any other outcome means a check is wrong: fix the check, never the expectation, and rerun.
+  - Record: each new check's result and detail; checks added, 4 (1584 → 1588); `npm test` 76/76; that both unit cases passed at once.
+
+- [ ] S2 · Sign-in out of the game: the six `src/` sites, the `/login` redirect and the uninstall, in one commit (Finding 1)
+  - `git rm src/proxy.ts src/pages/login.tsx src/app/api/clue-game/journal/route.ts`. The `journal/` folder holds nothing else.
+  - `src/pages/_app.tsx`: delete `import { ClerkProvider } from '@clerk/nextjs';`. `<ClerkProvider>` becomes `<>` and `</ClerkProvider>` becomes `</>`. Nothing else changes.
+  - `src/components/globe/GlobeScreen.tsx`: delete `import { SignInButton, Show, UserButton } from '@clerk/nextjs';`, and everything from `<Show when="signed-out">` through the second `</Show>`. The rest of the header doesn't change.
+  - `src/components/clueGame/useJournal.ts`, per Architecture:
+    - Delete:
+      - `import { useAuth } from '@clerk/nextjs';` and `import { getJson } from '@/lib/getJson';`
+      - the doc sentence ` * A signed-in player's solves saved before 2026-10-01 are merged in.`
+      - `const [saved, setSaved] = useState<ServerJournalEntry[]>([]);` and `const { isSignedIn } = useAuth();`
+      - the effect starting `if (!isSignedIn) return;` and the one starting `if (saved.length === 0) return;`, each with the blank line before it.
+    - The `@/clueGame/journal` import becomes the Architecture's block. It drops `mergeJournals`, `mergeServerJournal` and `type ServerJournalEntry`.
+    - `stored`, `save`, the refs, the mount effect, `record` and the return don't change.
+  - `src/clueGame/journal.ts`:
+    - The header's 4 lines become the Architecture's 4 lines.
+    - In the `sharpEyes` comment, "On this device only (the server keeps no badges)." becomes "On this device only."
+    - Delete `ServerJournalEntry` (its doc comment "/** One animal the signed-in player solved, …" and the interface), `function toJournalEntry(…)`, and `mergeServerJournal` (its doc comment "/** The device's journal plus what the player solved while signed in elsewhere …" and the function).
+    - `mergeJournals`, doc comment included, and everything else stay byte-for-byte.
+  - `next.config.mjs`: `redirects()` becomes the Architecture's block. The "// The game moved from /clue-match to /explore (plan 041); …" comment moves into the array, above its entry, and the `/login` entry gets its Clerk comment.
+  - Then, in this order: `npm uninstall @clerk/nextjs` (the only change to `package.json` and `package-lock.json`), then `rm -rf .next .next-e2e .test-dist`.
+  - Checks:
+    - `npm run typecheck` and `npm run lint` exit 0; `npm test` gives 76/76.
+    - `DATABASE_URL=postgres://build@127.0.0.1:1/build NEXT_TELEMETRY_DISABLED=1 npm run build` exits 0. Its route list has no `/login`, no journal route and no Proxy/Middleware line; record it. Then `rm -rf .next`.
+    - Packages:
+      - `npm ls --omit=dev --package-lock-only @clerk/nextjs @clerk/backend @clerk/shared @clerk/react` lists none (exit 1 is the pass).
+      - `grep -c '"node_modules/@clerk/' package-lock.json` prints 0, and `test ! -e node_modules/@clerk && echo gone` prints `gone`.
+      - `git diff --numstat -- package.json package-lock.json` shows package.json `0 1` and the lock adding 0 lines. If the lock adds any, record them and why (npm's own normalisation only).
+      - Record `npm audit --omit=dev`.
+    - `grep -c "source: '/login', destination: '/', permanent: true" next.config.mjs` prints 1.
+    - These print nothing:
+      - `git grep -n -i -E 'clerk|useAuth|isSignedIn|mergeServerJournal|ServerJournalEntry|toJournalEntry|clue-game/journal' -- src tests ':!src/site'`
+      - `git ls-files src/proxy.ts src/pages/login.tsx src/app/api/clue-game/journal`
+      - `git diff origin/main -- src/clueGame/animalBoard.ts src/components/animalBoard/savedGame.ts` (Goal 8)
+    - The journal's storage is untouched. This prints nothing:
+      ```
+      for f in recordSolve mergeJournals saveSolve toEntry parseJournal parseWords updateRecords saveRecords parseRecords; do diff <(git show origin/main:src/clueGame/journal.ts | awk "/^(export )?function $f\\(/,/^}/") <(awk "/^(export )?function $f\\(/,/^}/" src/clueGame/journal.ts) >/dev/null || echo "CHANGED $f"; done
+      diff <(git show origin/main:src/clueGame/journal.ts | grep -E '^export const [A-Z_]+') <(grep -E '^export const [A-Z_]+' src/clueGame/journal.ts)
+      ```
+    - Added lines only: `git diff -U0 origin/main -- src/pages/_app.tsx src/components/globe/GlobeScreen.tsx src/components/clueGame/useJournal.ts | grep '^+[^+]'` prints exactly `+    <>`, `+    </>` and the two changed lines of the import block.
+    - One E2E to `$STATE/e2e-s2/` (delete `e2e-s1/`). It must show `1588/1588` and the report check `1588 0`, with the four new checks `true`:
+      - the Clerk check: `0: `
+      - `/login/`: `308 /`
+      - the journal route: `404`
+      - the stored journal: `4 of`, kept.
+    - Screens against `baseline-e2e/` (Decision rule "anything else on screen"):
+      - `01-globe.png` and `07-globe-found.png`: the Sign in button is gone, **Anywhere** sits at the header's right edge and the count line is wider (Finding 6, expected). Nothing else in the header or the panel moves; the globe itself spins.
+      - `02-board.png`, `04-round-1-end.png`, `05-journal.png` and `09-journal-sharp-eye.png` look the same as the baseline's. If the eye can't tell, diff the pixels with the worktree's `sharp`.
+      - Anything else that differs: find out why before checking this step off.
+  - Record: the files deleted; the numstat; `npm audit`; the build's route list; the E2E result; each screen pair.
+
+- [ ] S3 · CI, deploy and env files, the ESLint guard, and `check-live-board.mjs`'s comment
+  - `.github/workflows/ci.yml`:
+    - "# Typecheck + production build. The build loads route modules but never queries, and needs no Clerk keys." becomes "# Typecheck + production build. The build loads route modules but never queries."
+    - "# credentials (docs/DATABASE_ACCESS.md). Next dev needs both keys of Clerk's dev instance." becomes "# credentials (docs/DATABASE_ACCESS.md)."
+    - Delete `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY }}` and `CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}`. Nothing else changes.
+  - `Dockerfile`:
+    - The two header lines "# (docs/DEPLOY.md). NEXT_PUBLIC_* values are baked into the browser bundle at" and "# build time, so they are build args; server secrets come in at run time." become one: "# (docs/DEPLOY.md). Settings come in at run time (deploy/app.env)."
+    - Delete `ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `ARG NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login`.
+    - "No Clerk key or database needed." becomes "No database needed."
+  - `deploy/docker-compose.app.yml`:
+    - "# Needs deploy/app.env (from deploy/app.env.example) and, in .env, APP_DOMAIN," and "# the build-time NEXT_PUBLIC_* values and DB_NETWORK if not postgis_backend." become "# Needs deploy/app.env (from deploy/app.env.example) and, in .env, APP_DOMAIN" and "# and DB_NETWORK if not postgis_backend."
+    - Delete `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}`. `args:` and `GIT_COMMIT` stay.
+  - `deploy/app.env.example`:
+    - "# (never commit it). Build-time NEXT_PUBLIC_* values go in the stack's .env." becomes "# (never commit it)."
+    - Delete the blank line before "# Clerk production instance (…)" and that block's 4 lines. The file ends with the `DATABASE_URL=…` line and its newline.
+  - `.env.example`, from a shell (the edit hook blocks it). `sed -n '5,11p' .env.example` must show the blank line, the three "Clerk Auth (Required)" heading lines and three `…CLERK…` lines. Then run `sed -i '5,11d' .env.example`; `tail -n 2 .env.example` shows the Database heading's last line and `DATABASE_URL=…`.
+  - `eslint.config.mjs`:
+    - "// Everything the website bundles stays free of Next and Clerk." becomes "// Everything the website bundles stays free of Next."
+    - `group: ["next", "next/*", "@clerk/*"]` becomes `group: ["next", "next/*"]`.
+    - `"The website (src/site) is static HTML: no Next or Clerk."` becomes `"The website (src/site) is static HTML: no Next."`
+  - `scripts/check-live-board.mjs` (Finding 7, Decisions): "// page's own host (other hosts, such as Clerk's, are ignored). Up to 3 attempts, …" becomes "// page's own host (other hosts are ignored). Up to 3 attempts, …". The comment only.
+  - Checks:
+    - `npm run typecheck` and `npm run lint` exit 0 (the guard still loads).
+    - `python3 -I -c 'import sys,yaml;yaml.safe_load(open(sys.argv[1]))' .github/workflows/ci.yml` exits 0.
+    - `npm run site:build` exits 0.
+    - `git grep -n -i clerk -- .github Dockerfile deploy .env.example eslint.config.mjs scripts ':!scripts/e2e.mjs'` prints nothing (S1's checks in `scripts/e2e.mjs` name Clerk on purpose).
+    - `git diff origin/main -- deploy/Caddyfile deploy/check.sh deploy/deploy.sh` is empty.
+    - No E2E: nothing the local game runs changed.
+    - Docker isn't on this VPS. CI's `docker build --target caddy` proves the `deps`, `site` and `caddy` stages at the PR, and only the Release deploy proves the `build` stage.
+
+- [ ] S4 · Docs, agent files, the playtest skill and the schema comments; then the DoD greps
+  - `git rm .claude/skills/playtest/scripts/create-test-player.mjs`. The folder holds nothing else.
+  - `.claude/skills/playtest/SKILL.md`: delete the Preflight bullet from "- Signing in is optional and saves nothing (…)" through "  If the account is gone (`form_identifier_not_found`), run `node .claude/skills/playtest/scripts/create-test-player.mjs` from the repo root.", including its code block. The `npm run e2e:fresh` bullet is then followed by one blank line and `## 2. Globe (`/`)`. Nothing else in the skill changes.
+  - `AGENTS.md`:
+    - Delete the Project Stack line "- Auth: Clerk", exactly that.
+    - Delete "- Auth: Clerk (`src/pages/_app.tsx`, `src/proxy.ts`). Nothing creates `profiles` rows now; the journal route reads the ones saved before 2026-10-01."
+    - "- Env (`.env.local`): `DATABASE_URL`, Clerk keys." becomes "- Env (`.env.local`): `DATABASE_URL`."
+    - "; `/clue-match` redirects)" becomes "; `/clue-match` and `/login` redirect)".
+    - The Data line drops ", `GET /api/clue-game/journal` (signed-in journal sync)".
+    - "No Next or Clerk there (ESLint guard)." becomes "No Next there (ESLint guard)."
+  - `CODING_STANDARDS.md`: "(Postgres, fetch, Clerk)" becomes "(Postgres, fetch)".
+  - `README.md`:
+    - The stack line "…(content, ranges, places), Clerk (sign-in)." becomes "…(content, ranges, places)."
+    - "`.env.local` needs `DATABASE_URL` and Clerk keys." becomes "`.env.local` needs `DATABASE_URL`."
+    - The routes line drops ", `clue-game/journal`".
+  - `CONTEXT.md`: "The player's record of the animals they've found or named, kept on the device. Signing in only merges in the finds an account saved before October 2026; nothing new is saved there." becomes "The player's record of the animals they've found or named, kept on the device only."
+  - `docs/CLUE_MATCH.md`:
+    - The opening "No sign-in needed, … saved before 2026-10-01." becomes the Architecture's sentence; the `?seed=N` sentence stays.
+    - The Data row drops ", `GET /api/clue-game/journal` (a signed-in player's solves)".
+    - Delete " The journal counts only `solved` rows."
+  - `docs/DRIZZLE_ORM_GUIDE.md`:
+    - First, `git grep -c 'db\.execute' -- src ':!src/db/index.ts' | awk -F: '{s+=$2} END {print s}'` must print 8. Then "There are 9:" becomes "There are 8:".
+    - Delete "- `src/app/api/clue-game/journal/route.ts`: the signed-in player's past solves."
+    - "(`count(*)::int`, journal route)" becomes "(`count(*)::int`)".
+  - `docs/DATABASE_ACCESS.md`:
+    - The 4 lines from "CI's e2e job connects to the copy below as `critter_dev` (GitHub secret" through "too, or that job goes red. The refresh steps are below." become the Architecture's 3 lines.
+    - The settings block loses its three `…CLERK…` lines and keeps `DATABASE_URL=postgres://critter_dev:<password>@…`.
+  - `docs/DEPLOY.md`:
+    - "Steps marked **owner** need the server, a password or the Clerk dashboard." becomes "Steps marked **owner** need the server or a password."
+    - Delete "2. **Owner. Clerk production instance:** …". Then renumber "3. **Database role.**" to 2, "4. **Owner. Settings on the VPS**" to 3 and "5. **Ports 80 and 443.**" to 4.
+    - The Settings bullets become the Architecture's two lines: `APP_DOMAIN` only, and `DATABASE_URL` (the `critter_app` password) only.
+    - "(no Next, Clerk or other framework script)" becomes "(no Next or other framework script)".
+    - The links change **in this order**, so that none changes twice: `[setup step 3](#one-time-setup)` becomes `[setup step 2]`, then `[setup step 4]` becomes `[setup step 3]`, then `[setup step 5]` becomes `[setup step 4]`.
+    - Delete Remaining owner task "3. Sign up on play.critterconnect.org to test Clerk production sign-in; moot once mission M11 …". It is the last item, so nothing is renumbered.
+  - `db/schema.sql`, comments only:
+    - "(the journal route reads them)" becomes "(nothing reads them now)".
+    - "07_solve_stats.sql) and the journal route." becomes "07_solve_stats.sql)."; the line's "Anonymous play has no player_id." stays.
+  - Checks:
+    - `npm run typecheck` and `npm run lint` exit 0.
+    - Verification 6–8: the final grep, the DEPLOY awk check, the per-file greps, the schema-diff check, and the files the mission doesn't touch.
+    - `git grep -n 'setup step' -- docs` shows 4, 2 and 3. Step 4 is Ports 80 and 443 (the hooks), step 2 the Database role (the password), step 3 the Settings on the VPS.
+    - `git ls-files .claude/skills/playtest/scripts` prints nothing.
+    - No E2E: Markdown, comments and a script nothing runs.
+
+- [ ] S5 · The live-check script (outside the repo, never committed), tried on today's live site
+  - Write `$STATE/live-check.mjs`, per DoD Release "The live-check script":
+    - It imports `launchChrome`, `connect` and `openPage` from `/srv/critter-ai/worktrees/remove-sign-in/scripts/cdp.mjs` by absolute path.
+    - It runs with `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox` and the profile `$STATE/live-profile/`.
+    - On the page: `Page.enable`, `Runtime.enable`, `Network.enable`, and a `Network.requestWillBeSent` listener that records every URL.
+    - Arg `seed`: load `https://play.critterconnect.org/` and set `clue-match:journal:v1` to the raw text of the worktree's `tests/clueGame/old-journal.json`.
+    - Every run then loads `https://play.critterconnect.org/` and `https://play.critterconnect.org/explore/`, each until its load event plus 15 s.
+    - It writes JSON to the path given as `--out`: `{ at, mode, requests, header, journal }`.
+      - `header` is the globe's `header p` text.
+      - `journal` is the raw stored value, read at the end of the run.
+    - It ends with `Browser.close` and waits for Chrome to exit, so the profile is written.
+    - It reads no secret and prints no env.
+  - Try it: one run with `seed`, then a fresh run without it: `--out $STATE/live-try.json`. It must show:
+    - requests to `clerk.critterconnect.org` (proof the listener sees them);
+    - a header starting `4 of`;
+    - a `journal` equal to the fixture file's text. The second launch keeping it proves the profile keeps storage.
+    - If any of these fails, fix the script now.
+  - Then `rm -rf $STATE/live-profile`, so the Release's seed and before runs start from nothing. Keep `live-try.json`.
+  - Checks: `node --check $STATE/live-check.mjs`. `git status` shows only the plan changed. Live load: about 4 page loads, and the game writes nothing to the database.
+
 ## Verification
+
+Run on the final commit, after the Astra code review's fixes. Use `STATE` as in Steps, and `BASE=$(git merge-base HEAD origin/main)` (`f1826f56` until the release rebase). At most 3 E2E runs; one heavy job at a time.
+
+1. **Final E2E first.** Run the dev-copy block verbatim, then `mv "$(ls -1d e2e-artifacts/*-seed7 | tail -1)" $STATE/final-e2e` and delete the last `e2e-s*`.
+   - It must print `1588/1588 checks passed` (1584 + the 4 S1 added).
+   - The report check prints `1588 0` and the four new checks `true`.
+   - Repro: the same block; seed 7 gives the same run.
+2. **Screens.** Compare `final-e2e/01-globe.png` with `baseline-e2e/01-globe.png` by eye:
+   - Expected: the Sign in button is gone, **Anywhere** sits at the right edge and the count line is wider (Finding 6, Decisions). Nothing else moved.
+   - `02-board.png`, `04-round-1-end.png` and `05-journal.png` are as in the baseline.
+   - Record each pair.
+3. **Website.** `npm run site:build`; `npm run site:serve` in the background; `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:site` exits 0 (record its count); stop the server.
+4. **Gates.**
+   - `npm run typecheck`, `npm run lint` and `npm test` exit 0, and `npm test` gives **76/76**.
+   - `DATABASE_URL=postgres://build@127.0.0.1:1/build NEXT_TELEMETRY_DISABLED=1 npm run build` exits 0.
+5. **Packages and redirect.**
+   - `npm ls --omit=dev --package-lock-only @clerk/nextjs @clerk/backend @clerk/shared @clerk/react` lists none (exit 1).
+   - `grep -c '"node_modules/@clerk/' package-lock.json` prints 0.
+   - Record `npm audit --omit=dev` (baseline: 0 vulnerabilities).
+   - `grep -c "source: '/login', destination: '/', permanent: true" next.config.mjs` prints 1.
+6. **The final grep** prints nothing:
+   ```
+   git grep -n -i -E 'clerk|SignInButton|UserButton|useAuth|isSignedIn|mergeServerJournal|ServerJournalEntry|clue-game/journal|journal route|create-test-player|\bsigned[- ]in\b|\bsign[- ]?in\b|\bsign[- ]?up\b' -- . ':!plans' ':!docs/research' ':!docs/playtests' ':!package-lock.json' ':!src/site' ':!db' ':!.agents' ':!.gitignore' ':!docs/DEPLOY.md' ':!scripts/e2e.mjs' ':!next.config.mjs'
+   ```
+   - `awk '/^## /{s=$0} tolower($0) ~ /clerk|sign-in|signed in|sign up|clue-game\/journal/ && s !~ /^## First deploy/' docs/DEPLOY.md` prints nothing.
+   - The same `git grep` on `-- scripts/e2e.mjs` prints exactly 7 lines:
+     - `const clerkRequests = [];`
+     - the `watched` comment
+     - the listener's comment and its condition
+     - `check('no request goes to Clerk', …)`
+     - the journal-route `fetch`
+     - `check('the journal route is gone', …)`
+   - On `-- next.config.mjs` it prints exactly 1 line: the `/login` redirect's comment.
+7. **Schema comments only.** `git diff -U0 $BASE -- db/schema.sql | grep -E '^[+-]' | grep -v -E '^(\+\+\+|---)' | grep -v -E '^[+-]\s*--'` prints nothing, and `git diff --stat $BASE -- db` lists only `db/schema.sql`.
+8. **Left alone.** These are empty:
+   - `git diff $BASE -- src/site deploy/Caddyfile deploy/check.sh .gitignore` (otherwise the plan says which file a `src/site` build failure forced, and why).
+   - `git diff $BASE -- src/clueGame/animalBoard.ts src/components/animalBoard/savedGame.ts` (Goal 8: `ANIMAL_RULES.version` holds).
+   - S2's storage check, with `$BASE` for `origin/main`.
+9. **Acceptance (Brief Goals).** Tick each with its evidence in the Summary:
+   - [ ] G1: files deleted, no `@clerk/*` package, `_app.tsx` a fragment, header without sign-in (V1, V2, V5, V6). Live: no Clerk request, no Clerk name in the HTML, no `x-clerk-` header (Release smoke).
+   - [ ] G2: no journal route and no server merge; `mergeJournals` unchanged, with M9's rule and no difference to record; `npm test` 76 (V4, V6, V8). Live 404 (Release smoke).
+   - [ ] G3: `/login/` answers 308 to `/` (V1's check, V5). Live, both hosts (Release smoke).
+   - [ ] G4: the stored journal is counted and kept byte-for-byte (V1's check). Live: `live-before.json` and `live-after.json` (Release smoke).
+   - [ ] G5: every config, CI, doc and agent site (V6, S3, S4).
+   - [ ] G6: the handoff item (Release, after smoke).
+   - [ ] G7: both CI secrets deleted (Release, after smoke).
+   - [ ] G8: no saved-game change (V8), no database change, no content build.
+
+**Release** (the Release unit, not a Step; critter-connect `deploy` rules in `~/.claude/CLAUDE.md`). Record everything under `## Release`.
+1. Rebase on `origin/main` and re-run Verification 1–8. If the rebase changes `useJournal.ts`, `journal.ts`, `GlobeScreen.tsx`, `_app.tsx`, `next.config.mjs` or `scripts/e2e.mjs`, retake the final E2E on the new base. Push (`--force-with-lease` after a rebase) and open the PR.
+2. CI:
+   - `gh pr checks <n> --watch`. `check` must pass.
+   - `e2e` gets no Clerk secret now, so a pass proves the game needs no Clerk key. If it fails, rerun once (`gh run rerun <id> --failed`); if it fails again, merge anyway and report the failing step and the run's link.
+3. **Just before the merge**, the live baseline:
+   - The live-check script with `seed`, then without it, `--out $STATE/live-before.json`. It must show `clerk.critterconnect.org` requests and the header counting the fixture; if it doesn't, fix the script before merging.
+   - Record:
+     - `curl -s https://play.critterconnect.org/ | grep -c -i clerk`, and the same for `/explore/`.
+     - `curl -sI https://play.critterconnect.org/version.txt | grep -c -i '^x-clerk-'`.
+     - `curl -sI https://play.critterconnect.org/ | grep -i -E '^(x-clerk-|x-middleware-rewrite|cache-control)'`.
+     - The codes of `/`, `/explore/`, `/login/` and `/api/clue-game/journal/` on `play.` (`curl -s -o /dev/null -w '%{http_code}\n' <url>`).
+     - `curl -sL -o /dev/null -w '%{http_code} %{url_effective}\n' https://critterconnect.org/login/`.
+     - `curl -s https://play.critterconnect.org/api/places/ | jq -c '[.places[].key]'` and `curl -s https://play.critterconnect.org/api/clue-game/pool/ | jq -c '[(.species|length),(.clues|length),(.facts|length)]'`.
+4. `gh pr merge <n> --merge`, then `deploy critter-connect`.
+5. **Smoke**: each check against step 3's record, retried up to 3 times 30 s apart before it counts as failed.
+   - `bash deploy/check.sh` passes, and `version.txt` shows the merge commit.
+   - The live-check script without `seed`, `--out $STATE/live-after.json`:
+     - no request URL has a hostname containing `clerk`;
+     - its `header` equals `live-before.json`'s;
+     - its `journal` is byte-for-byte `live-before.json`'s.
+   - Both `grep -c -i clerk` counts print 0. `version.txt` and `/` answer with no `x-clerk-` header and no `x-middleware-rewrite`; record `Cache-Control`.
+   - `curl -s -o /dev/null -w '%{http_code} %{redirect_url}' https://play.critterconnect.org/login/` prints `308 https://play.critterconnect.org/`, and `https://critterconnect.org/login/` with `-L` ends `200 https://play.critterconnect.org/`.
+   - `/api/clue-game/journal/` answers 404, and `/` and `/explore/` answer 200.
+   - Same `/api/places/` keys, same pool lengths.
+6. A smoke check still failing after its retries is a failed release:
+   - On a fresh `origin/main`, `git revert -m 1 <merge>`, push to `main`, run `deploy critter-connect` again, and check that `version.txt` shows the revert and the smoke passes.
+   - The secrets stay and the "Delete Clerk" item is not added. Write `Result: failed: <what>`, add a handoff item saying what failed, and end with `MISSION_BLOCKED`.
+7. Only after a good smoke:
+   - `git fetch origin --prune && git grep -n E2E_CLERK origin/main` prints nothing.
+   - `gh secret delete E2E_CLERK_PUBLISHABLE_KEY -R kc0588615/phaser-june` and `gh secret delete E2E_CLERK_SECRET_KEY -R kc0588615/phaser-june`. `gh secret list -R kc0588615/phaser-june` then names neither, and `E2E_DATABASE_URL` stays.
+   - The handoff item in `/srv/critter-ai/handoff/critter-connect.md`:
+     - Use the next free `H<n>`, titled "Delete Clerk: sign-in is gone from the game", with `Blocks: nothing` and `From: remove-sign-in · <date>`.
+     - Its steps are Goal 6's 1–5. Step 2 lists `dig +short CNAME <name>.critterconnect.org` for `clerk`, `accounts`, `clkmail`, `clk._domainkey` and `clk2._domainkey` as answered at writing time.
+     - Its reply line: `done` when steps 1–4 are done.
+     - No key or value in it.
+8. The Summary covers the Brief's list, plus:
+   - Finding 6's Anywhere shift;
+   - the `check-live-board.mjs` decision;
+   - `ANIMAL_RULES.version` unchanged, because no saved-game field changed;
+   - no production content build needed;
+   - the `git grep -n -i -E 'clerk|sign' -- src/site` lines, for M12.
+
+## Failure modes
+
+The one isolated test is the merge (`tests/clueGame/journal.test.ts`). These are the ways it could fail that S1's ported case and its self-merge case must catch, written before S2 deletes the server merge. M9's existing cases already cover one side only, each field's winner and two empty journals.
+1. The port moves a value: once the server entries are a `Journal`, a field (count, best, first or last date, names, class or badge) comes out different from M7's `expected`, which doesn't change.
+2. An animal only in `other` (the okapi) is dropped, or loses its class.
+3. Merging again with the same journal changes a count, a date or a badge, or adds a field, so the merge isn't safe to repeat. Both the "Safe to repeat" assert and the self-merge case catch this.
+4. A self-merge adds `sharpEyes: 0`, or a `className` neither side had, or drops an animal.
+
+Build and release failures, and what catches each:
+- `npm uninstall` changes more than Clerk's packages in the lock (S2's numstat), or needs the network. Baseline `npm ci` and `npm audit` reached the registry. If it fails, record the error and rerun once with `--no-audit --no-fund`.
+- A leftover `node_modules/@clerk` lets the typecheck pass (S2's `test ! -e`). CI's `npm ci` proves the lock.
+- Stale `.next-e2e` types name the deleted page and route (S2's `rm -rf` before the typecheck).
+- The Next build still expects `proxy.ts`: S2's `npm run build`. The proxy is optional in Next, and the build proves it.
+- CI's `e2e` job still reads the deleted secrets: S3 removes the env lines, and the secrets go only after a good release. A reverted release keeps them.
+- The Dockerfile's `build` stage at deploy: only the Release deploy builds it. `deploy.sh` fails the deploy and keeps the live images if the build fails, and the revert rule applies.
+- The Clerk lines left in Hetzner's `.env` and `deploy/app.env` are read by nothing (Notes); the owner removes them through the handoff item.
+- The DEPLOY.md links get renumbered twice (S4's replacement order).
 
 ## Code review (Astra)
 
@@ -493,5 +791,6 @@ None needed: Fable and Astra both APPROVE with MUST-FIX none. Fable's SHOULD-CON
 - 2026-11-15 UTC: Fable review: APPROVE, MUST-FIX none, MISSED none; 3 SHOULD-CONSIDER (Steps: name the red tests-first E2E state, anchor on quoted text; 3 deviations recorded under Decisions). Verified cited sites against code; DoD grep on e2e.mjs/next.config.mjs clean. Plan-only change.
 - 2026-11-15 UTC: Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only change.
 - 2026-11-15 UTC: Revision: none needed (both reviews APPROVE, no MUST-FIX). Plan-only change.
+- 2026-11-15 UTC: Steps (planner): S1 tests-first red E2E (1585/1588 named fails), S2 atomic src/ + uninstall, S3 CI/deploy/env/ESLint, S4 docs/skill/schema + DoD greps, S5 live-check script; Verification 1588/1588, test 76/76, Release smoke. Plan-only change.
 
 ## Summary
