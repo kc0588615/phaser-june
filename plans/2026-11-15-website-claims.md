@@ -422,6 +422,6 @@ SHOULD-CONSIDER:
 
 - 2026-11-15 18:27 UTC · Baseline on `83eef270`: M11 live, typecheck/lint 0, test 76/76, site E2E 444/444, live pages = build, hosts = Wikimedia only, old rows 7/188 (max 2026-10-01; nothing writes; H20 FYI).
 - 2026-11-15 18:45 UTC · Architecture: architect wrote findings + exact text for Screenshot/config/Privacy/Teachers/Terms + deletion doc; "until early October 2026" confirmed; new risk: Caddy logs IP on 502 (wording avoids "nothing else"); trial bot careful 96–98%, random 20%, autoguess 28–37%. Plan only, no code.
-- 2026-11-15 19:05 UTC · Fable review: APPROVE_WITH_CHANGES, MUST-FIX none (scripts/db txn ok; no pinned strings outside src/site); 2 MISSED for Steps (asset diff, real date); 5 SHOULD-CONSIDER. Plan only.
+- 2026-11-15 18:44 UTC · Fable review: APPROVE_WITH_CHANGES, MUST-FIX none (scripts/db txn ok; no pinned strings outside src/site); 2 MISSED for Steps (asset diff, real date); 5 SHOULD-CONSIDER. Plan only.
 
 ## Summary
