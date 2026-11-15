@@ -851,6 +851,6 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 - 2026-11-15 13:36 UTC · S1: 5 fail-first E2E checks (A16 ×2, A17 ×3) + `setUpPage` refactor in `scripts/e2e.mjs`; typecheck/lint 0; E2E 1578/1584, exactly the 6 predicted fails → `checks-fail-first/`.
 - 2026-11-15 13:54 UTC · S2: A16 `fitsShape` + two-`try` load + `isSeed`, D22 pool line; unit fail-first then 69/69; typecheck/lint 0; E2E 1581/1584 (only 3 `two tabs:` fail, as planned) → `e2e-s2/`.
 - 2026-11-15 14:10 UTC · S3: A17 `mergeJournals`/`saveSolve`/`saveRecords` + `useJournal` merges into storage at save; unit fail-first then 75/75; typecheck/lint 0; E2E 1584/1584 → `e2e-s3/`.
-- 2026-11-15 14:47 UTC · S4: Open Runde cut to 31 chars (154,604 → 6,892; 162,468 → 6,848; fontTools 4.68.0) + `unicode-range`; glyph proof ok (4 pairs 0 px); typecheck/lint 0; site 444/444; E2E 1583 → rerun 1584/1584 (A10 timing flake) → `e2e-s4/`; 7 screen pairs: font-data text identical.
+- 2026-11-15 14:44 UTC · S4: Open Runde cut to 31 chars (154,604 → 6,892; 162,468 → 6,848; fontTools 4.68.0) + `unicode-range`; glyph proof ok (4 pairs 0 px); typecheck/lint 0; site 444/444; E2E 1583 → rerun 1584/1584 (A10 timing flake) → `e2e-s4/`; 7 screen pairs: font-data text identical.
 
 ## Summary
