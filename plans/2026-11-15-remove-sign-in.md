@@ -197,7 +197,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -461,6 +461,12 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER: none
+
 ## Revision notes
 
 ## Steps
@@ -483,5 +489,6 @@ SHOULD-CONSIDER:
 - 2026-11-15 16:25 UTC: Baseline. Prereqs (M6, M7) pass; M9 branch (`mergeJournals` exists). typecheck/lint ok, `npm test` 75/75, E2E 1584/1584 (2nd run; 1st failed one A10 timing check). Greps recorded; one new hit, a comment in `scripts/check-live-board.mjs`.
 - 2026-11-15 UTC: Architecture (architect). M9 branch confirmed (`mergeJournals` rule = Review corrections); one atomic `src/` step (ClerkProvider/useAuth/auth() coupling); 4 new E2E checks (1584→1588), `npm test` 75→76; DEPLOY.md renumber breaks 3 anchors; Anywhere link shifts into Sign in slot (expected). Plan-only change; verified merge rule and fixture count (4) against code.
 - 2026-11-15 UTC: Fable review: APPROVE, MUST-FIX none, MISSED none; 3 SHOULD-CONSIDER (Steps: name the red tests-first E2E state, anchor on quoted text; 3 deviations recorded under Decisions). Verified cited sites against code; DoD grep on e2e.mjs/next.config.mjs clean. Plan-only change.
+- 2026-11-15 UTC: Astra review: APPROVE, MUST-FIX none, SHOULD-CONSIDER none. Plan-only change.
 
 ## Summary
