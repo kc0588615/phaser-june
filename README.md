@@ -33,3 +33,5 @@ npm run typecheck && npm run lint
 - [`docs/DEPLOY.md`](docs/DEPLOY.md): running it on the VPS over HTTPS, the app's database role, nightly backups.
 - [`docs/DATABASE_ACCESS.md`](docs/DATABASE_ACCESS.md), [`docs/SHAPEFILE_BEST_PRACTICES.md`](docs/SHAPEFILE_BEST_PRACTICES.md), [`docs/DRIZZLE_ORM_GUIDE.md`](docs/DRIZZLE_ORM_GUIDE.md): the data layer.
 - [`AGENTS.md`](AGENTS.md): notes for coding agents.
+
+Licences: the code is MIT ([`LICENSE`](LICENSE)); the content in `db/content/` is licensed per source ([`CONTENT_LICENSE.md`](CONTENT_LICENSE.md)).

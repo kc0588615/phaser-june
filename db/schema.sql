@@ -193,6 +193,7 @@ CREATE UNIQUE INDEX clue_match_ranges_species_id ON clue_match_ranges (species_i
 -- live. An animal lives in a place when the place holds at least 5% of its
 -- range, or at least 5,000 km² of it (so a big range brushing a border doesn't
 -- count). Ranges as in clue_match_ranges.
+-- scripts/content.ts (content -- ranges) repeats these country rules: change both together while this view has country rows.
 --
 -- Natural Earth files all of Russia under Europe and French Guiana under France,
 -- which would put tigers in Europe and Amazon frogs in France. So Russia is split
