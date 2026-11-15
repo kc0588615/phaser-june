@@ -554,15 +554,35 @@ async function main() {
     // A snap would land somewhere else; the eased first step at a few fps moves up to ~0.15°.
     check('the spin comes back where the player left it, at their zoom, easing in', Boolean(spinBack) && spinBack.jumpDeg < 0.5 && spinBack.zoomChange < 1e-6 && easeIn !== null && baseRate.degPerS > 0 && easeIn < 0.4 * baseRate.degPerS, JSON.stringify(spinBack));
 
-    await evaluate(() => document.querySelector('.maplibregl-canvas').focus());
+    await evaluate(() => {
+      document.querySelector('.maplibregl-canvas').focus();
+      // The key's own ease in page time (its movestart/moveend carry the keydown), for the detail below.
+      const map = window.__globe, ease = window.__keyEase = { start: null, end: null, starts: 0, ends: 0 };
+      const onStart = event => { if (event.originalEvent?.type === 'keydown') { ease.starts++; ease.start ??= performance.now(); } };
+      const onEnd = event => { if (event.originalEvent?.type === 'keydown') { ease.ends++; ease.end = performance.now(); } };
+      map.on('movestart', onStart);
+      map.on('moveend', onEnd);
+      window.__keyEaseOff = () => { map.off('movestart', onStart); map.off('moveend', onEnd); };
+    });
     const beforeKey = await globeView();
     const keyAt = await pageNow();
     await key('ArrowLeft', 37);
     await watchGlobe();
     await sleep(1000);
     const keyed = dLng(beforeKey.lng, (await globeView()).lng);
-    const keyReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, keyAt);
-    check('arrow keys move the globe while it spins, then the spin returns', keyed < -5 && Boolean(keyReturn) && inIdleWindow(keyReturn.gap), JSON.stringify({ dLng: keyed.toFixed(1), restMs: keyReturn?.gap, window: IDLE_WINDOW }));
+    const keyWatch = await untilSpin(IDLE_WINDOW[1] + 1000);
+    const keyEase = await evaluate(() => { window.__keyEaseOff(); return window.__keyEase; });
+    const keyReturn = spinReturn(keyWatch.samples, keyAt);
+    // Evidence (plan 2026-11-14-board-e2e, G): the ease and the samples around the first spin sample, in ms after keyAt.
+    const afterKey = t => (typeof t === 'number' ? Math.round(t - keyAt) : null);
+    const firstSpinAt = keyWatch.samples.findIndex(sample => sample.kind === 'spin');
+    const aroundFrom = firstSpinAt < 0 ? Math.max(0, keyWatch.samples.length - 6) : Math.max(0, firstSpinAt - 3);
+    const keyAround = keyWatch.samples.slice(aroundFrom, firstSpinAt < 0 ? undefined : firstSpinAt + 3).map((sample, k) => {
+      const prev = keyWatch.samples[aroundFrom + k - 1];
+      return [afterKey(sample.t), sample.kind, prev ? (sample.lng - prev.lng).toExponential(1) : null];
+    });
+    const keyDetail = { ease: [afterKey(keyEase?.start), afterKey(keyEase?.end)], easeEvents: [keyEase?.starts ?? null, keyEase?.ends ?? null], firstAt: afterKey(keyWatch.samples[0]?.t), n: keyWatch.samples.length, fps: keyWatch.fps, around: keyAround };
+    check('arrow keys move the globe while it spins, then the spin returns', keyed < -5 && Boolean(keyReturn) && inIdleWindow(keyReturn.gap), JSON.stringify({ dLng: keyed.toFixed(1), restMs: keyReturn?.gap, window: IDLE_WINDOW, ...keyDetail }));
 
     // Two fingers spread 60 -> 240 px apart (zoom +2), then hold still.
     const beforePinch = await globeView();
