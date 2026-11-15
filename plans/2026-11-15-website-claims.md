@@ -476,7 +476,7 @@ Every step:
     - `git grep -n -w lead -- src/site`: nothing. `<Screenshot` = 10 in `src` (Home 6, Teachers 4); deviation: with `-- .` it's 15, plan file matches itself, so counted with `-- src`.
     - `git diff --stat origin/main`: `Screenshot.tsx` (6 lines) + plan only.
 
-- [ ] S2 · Bot run on the final base (DoD); find-rate figures. No code change.
+- [x] S2 · Bot run on the final base (DoD); find-rate figures. No code change.
   - Inputs check: `git diff --quiet 83eef270 HEAD -- db/content src/clueGame scripts/balance-044.ts` exits 0, and the same against `origin/main` (if not, record it: the release rebase redoes this run); record `git rev-parse --short origin/main` and `ANIMAL_RULES.version` (`src/clueGame/animalBoard.ts`, `055-0` at baseline).
   - Run (Bash timeout 900000; preview took 4 m 10 s):
     ```
@@ -490,6 +490,19 @@ Every step:
     - `A` = `R`: drop the bracket. Bot fails: Decision rules fallback; say so.
     - Preview gave A "three", R "five", P 90.
   - Checks: `npm run typecheck`, `npm run lint` exit 0 (tree unchanged). Commit plan only.
+  - Results (2026-11-15, `origin/main` = `83eef270` unmoved, `ANIMAL_RULES.version` `055-0`):
+    - Inputs: `git diff --quiet 83eef270 HEAD|origin/main -- db/content src/clueGame scripts/balance-044.ts` both exit 0.
+    - Run: `exit 0`, wall time **4 m 9.9 s**, `$STATE/bot.txt`. Table identical to the preview (`diff` of `/tmp/wc-arch/bot.txt` empty).
+
+      | Player | africa | asia | north-america | south-america | mean |
+      |---|---|---|---|---|---|
+      | careful | 98 ±1 | 96 ±2 | 96 ±2 | 96 ±2 | |
+      | random | 20 ±4 | 20 ±4 | 20 ±4 | 20 ±4 | 20 |
+      | autoguess | 28 ±4 | 37 ±5 | 31 ±5 | 33 ±5 | 32.25 |
+
+    - **A** = round(100 ÷ 32.25 = 3.10) = **three**; **R** = 100 ÷ 20 = **five**; **P**: lowest careful 96 − 2 = 94 → **90**. A ≠ R: bracket stays.
+    - Sentence: "So far tested with simulated players, not yet in a classroom study. With Auto rule-out on, as the game starts, one who moves at random and then guesses finds about one round in three (one in five with it off), and a careful one finds the animal in over 90% of rounds."
+    - Tree unchanged (plan only), so typecheck/lint = S1's (0/0); pre-push hook reruns both.
 
 - [ ] S3 · Site text: `config.ts`, `Privacy.tsx`, `Teachers.tsx`, `Terms.tsx` (Findings 1, 2, 4, 5)
   - Date: `date -u +'%B %-d, %Y'` (e.g. `November 15, 2026`) as `updated=` on Privacy and Terms. No `{MERGE_DAY}` left. The release resets it to the merge day.
@@ -593,5 +606,6 @@ Nothing is tested in isolation: the checks are the site E2E, the build diff and 
 - 2026-11-15 18:52 UTC · Revision: architect resolved Astra MUST-FIX (both claims verified: dev-role.sql keeps anonymized solves; pruning only after successful pulls) in deletion doc "Copies"; Clerk user deleted last; attribution narrowed; Privacy/Terms unchanged. Plan only.
 - 2026-11-15 18:59 UTC · Steps: planner wrote S1 D21 alone (byte-identical), S2 bot run, S3 four site files, S4 deletion doc (9 facts re-read), S5 final Verification + Summary; Verification 1–10 (incl. Fable MISSED asset diff + date reset); Failure modes. Plan only.
 - 2026-11-15 19:01 UTC · S1 D21: `lead` prop removed from Screenshot.tsx; build byte-identical to site-before (diff -r empty), typecheck/lint 0, css hash same.
+- 2026-11-15 19:08 UTC · S2 bot run (seed 44, 400 rounds, 4 places, 4m10s, `$STATE/bot.txt`): = preview; A three, R five, P 90. Plan only.
 
 ## Summary
