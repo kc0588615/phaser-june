@@ -227,7 +227,7 @@ Out:
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -694,7 +694,107 @@ One round, 2026-11-15. The Architecture is edited in place where an item changes
 
 ## Steps
 
+Every step:
+- `STATE=/srv/critter-ai/agent-state/missions/screens-cleanup`. Start with `git fetch origin --prune`.
+- "E2E" = the Definition of done's dev-copy block, verbatim (guard included; never `.env.local`; never print the URL or `cat` the file). One at a time, ≤3 per session, nothing else heavy. Expect ~12 min.
+- After an E2E: `mv "$(ls -1d e2e-artifacts/*-seed7 | tail -1)" $STATE/<name>`. Intermediate runs: `$STATE/e2e-s<n>/`; delete the older `e2e-s*` when writing a new one. Never delete `baseline-e2e/`, `checks-fail-first/`, `glyphs/`, `final-e2e/`.
+- Report check: `node -e 'const r=require(process.argv[1]);console.log(r.checks.length,r.checks.filter(c=>!c.ok).length);for(const c of r.checks)if(!c.ok||/is dropped for a fresh round 1|^two tabs:/.test(c.name))console.log(c.ok,c.name)' <dir>/report.json`.
+- Pre-push runs typecheck + lint, and both cover `tests/`: a test importing a missing export can't be pushed. So unit cases fail first and pass in one step (S2, S3): write them, `npm test > $STATE/unit-fail-first/<name>.txt 2>&1`, record the failure, then write the code.
+- O1 (S4) before D22 (S5): riskier, and its screen comparison then isolates the font change.
+- Stale generated types: `rm -rf .next .next-e2e .test-dist`.
+- Record results as indented bullets under the step; check it off; one Log line; commit + push.
+
+- [ ] S1 · E2E checks first (A16 ×2, A17 ×3), app code untouched
+  - `scripts/e2e.mjs` only.
+  - Refactor (no behaviour change): `async function setUpPage(page)` = `Emulation.setCPUThrottlingRate` (when `CPU_THROTTLE > 1`), `Page.enable`, `Runtime.enable`, `Network.enable`, `Emulation.setDeviceMetricsOverride`, `Emulation.setTouchEmulationEnabled`, both `Page.addScriptToEvaluateOnNewDocument` (how-to/slide-hint keys; the `window.__*` helpers). Page A calls it where those lines are now.
+  - Listener (`browser.on(message => {`, `if (message.sessionId !== sessionId) return;`): console errors + exceptions from a `Set` of session ids (A's; B's once open). `Network.*` branches stay A's only.
+  - A16, right after `check('a save whose witness notes no longer fit the content deals a fresh round, not a resume'`, per Architecture A16 "Fail-first E2E" (`base` read once; per case `session.score = 7` + field deleted; reload; wait for board or "Could not load the animals"; ≤10 s for the save to hold the field; `try/catch` per case). Names:
+    - `a save missing session.trail (a field today's code writes) is dropped for a fresh round 1`
+    - `a save missing session.round.orders (its check throws) is dropped for a fresh round 1`
+  - A17, after the D14 block's closing `}`, before `check('no console errors'`, per Architecture A17 "Fail-first E2E" (seed probe 1..40 on `report.place.key`, like `for (let seed = 1; seed <= 40 && !hit; seed++)`; X from `a`'s suspects, neither mystery, names from `poolSpecies`; `report.twoTabs = { a, b, mysteries, x }`; overwrite only the two `clue-match:*` keys; B = `openPage(browser)` + `setUpPage` + its id in the set; `Page.bringToFront` before driving each page; `fieldJournalText()` on A without a reload; `Target.closeTarget` in `finally`; a thrown error fails all three with its message). Names:
+    - `two tabs: a find in each tab is kept, with the find saved before` (ANDs "no new console error on either page")
+    - `two tabs: a best set in the other tab is kept`
+    - `two tabs: the first tab's Field Journal shows the other tab's find after its own save`
+  - Checks: `npm run typecheck`, `npm run lint`; one E2E. Must show `1584 6`: the 5 new + `no console errors` (A16 case 2's `console.error`) fail; `report.json` written, no `run completed` fail; 1578 pass (proves the refactor). A new check that passes → fix the check, rerun. A fail outside them only on an A10 timing check → rerun once. Save the valid run as `$STATE/checks-fail-first/`.
+  - Record: each failing check + detail; checks added (5) and total; `report.twoTabs`.
+
+- [ ] S2 · A16: a save that can't resume is dropped (+ D22's pool line)
+  - Tests first: `tests/animalBoard/savedGame.test.ts`, header listing the ways `fitsShape` could fail, then Architecture A16 "Unit tests" cases. `npm test > $STATE/unit-fail-first/savedGame.txt 2>&1`; record the failure.
+  - `src/components/animalBoard/savedGame.ts`: private `kindOf`, `holdsKeys`; `export function fitsShape(saved: unknown, fresh: SavedGame['session']): boolean` with the Architecture's doc (structural only; pre-highlight saves dropped).
+  - `src/components/animalBoard/useAnimalSession.ts`:
+    - `isSeed`; `urlSeed` uses it; `const [seed] = useState(() => replay ?? (isSeed(saved?.seed) ? saved.seed : null) ?? Math.floor(Math.random() * 0xffff_fffe) + 1);`.
+    - Load effect → the Architecture's two `try` blocks. First: `const pool = await getJson<CluePool>('/api/clue-game/pool/');` (the "// A pool cached from before citations shipped…" comment, `fetched` and `citations: fetched.citations ?? {}` go), content as today, `first = deal(data, 1, [])`; its `catch` keeps today's `console.error` + "Could not load the animals…". Then `setContent(data)`; `load` built once; second `try` = guard + `animalSessionReducer(null, load)` fresh + `fitsShape` + today's restore + `return`; its `catch` = `clearSavedGame()` + one `console.warn('[AnimalBoard] Dropped a saved game that no longer fits; a new game starts:', error)`; then `dispatch(load)`.
+    - Import `clearSavedGame, fitsShape` from `./savedGame`.
+  - Unchanged: `v: 1`, `animalBoard.ts`, `animalSession.ts`.
+  - Decisions: unit fail-first recorded inside the code step (pre-push typecheck covers `tests/`).
+  - Checks: typecheck, lint, `npm test` (64 + N1; record N1), one E2E → `$STATE/e2e-s2/`. Must show `1584 3`: both A16 checks and every existing resume check pass; only the 3 `two tabs:` fail. A resume check failing = `fitsShape` too strict: fix the rule, never loosen it to array items.
+
+- [ ] S3 · A17: every journal/records write merges into storage
+  - Tests first, `tests/clueGame/journal.test.ts`: a comment listing the ways the merge could fail, then Architecture A17 "Unit tests" (`mergeJournals` ×3, `saveSolve` ×2, `saveRecords` ×1). M7's merge case and the old-journal case untouched. `npm test > $STATE/unit-fail-first/journal.txt 2>&1`; record.
+  - `src/clueGame/journal.ts`: `mergeJournals(local, other)`; `mergeServerJournal` body = fold of `toJournalEntry(entry)` via `mergeJournals`; `saveSolve(stored, tab, species, moves, at, sharp = false)` = `recordSolve(mergeJournals(tab, stored), …)`; `saveRecords(stored, tab, session)` via `updateRecords`; header comment (one merge rule). Untouched (K2): the three key strings, `toEntry`, `parseJournal`, `parseWords`, `parseRecords`.
+  - `src/components/clueGame/useJournal.ts`: `stored(key)`; `journalRef`/`recordsRef` + `showJournal`/`showRecords`; mount read through them (replaces the mount `try`); `record` = read storage → `saveSolve`/`saveRecords` → `save` → `show*`, no state updater, deps `[]`; signed-in effect = `mergeServerJournal(mergeJournals(journalRef.current, parseJournal(stored(JOURNAL_STORAGE_KEY))), saved)` → `save` → `showJournal`, deps `[saved]`. No `storage` listener; callers unchanged.
+  - Checks: typecheck, lint, `npm test` (64 + N1 + N2; record N2; M7's case passes), one E2E → `$STATE/e2e-s3/` (delete `e2e-s2/`). Must show `1584 0`.
+
+- [ ] S4 · O1: cut the data font
+  - List still holds: `git grep -n -w font-data -- src ':!src/styles'` = the Architecture table's 20 lines in 6 files (a new line: add its characters). List: `U+0020,U+002B,U+002E-0039,U+003F,U+0043,U+0061-0062,U+0065-0066,U+0069,U+006C-006F,U+0073-0076,U+00D7,U+2212`.
+  - Sources: `sha256sum $STATE/fonts-original/*` equals `fonts-before.txt` and `git show origin/main:public/fonts/open-runde/<file> | sha256sum`.
+  - Cut both with the Architecture's `pyftsubset` command, `$STATE/fonts-original/<file>` → `public/fonts/open-runde/<file>`.
+  - Record: fontTools version (`uv run --no-project --with 'fonttools[woff]' python -I -c 'import fontTools; print(fontTools.version)'`); `wc -c` of both (< 40,000 together; trial 6,892 + 6,848); each cut cmap = the 31 characters (`uv run --no-project --with 'fonttools[woff]' python -I -c 'import sys; from fontTools.ttLib import TTFont; [print(p, len(m), "".join(sorted(map(chr, m)))) for p in sys.argv[1:] for m in [TTFont(p).getBestCmap()]]' public/fonts/open-runde/OpenRunde-*.woff2`).
+  - `src/styles/globals.css`: both Open Runde `@font-face` get `unicode-range: <list>;`; a comment above them: the files hold only the characters `font-data` draws (in words); a new one needs both files cut again from the full ones (git `9f72f360`, `public/fonts/open-runde/`) with this plan's command, and both ranges updated. `:2-4` comment unchanged.
+  - Glyph proof, `$STATE/glyphs/glyphs.mjs` per Architecture "Glyph proof" (writes `glyphs.html`; `cdp.mjs` and `sharp` by absolute path / `createRequire` from the worktree; loads all four faces; writes 8 PNGs + `compare.json`; exits 1 on any failed condition). Run `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox node $STATE/glyphs/glyphs.mjs`. Must show: 4 orig/cut pairs 0 differing pixels, same dimensions; test ≠ control crop in all 8; `orig-regular` ≠ `orig-bold`; all four `check` true, `status` loaded. Not identical → find the cause (Decision rule); none can be → restore originals + rules, handoff item, go on.
+  - Checks: typecheck, lint; `npm run site:build`, `npm run site:serve` in background, `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:site` (444/444; stop the server); one E2E → `$STATE/e2e-s4/` (delete `e2e-s3/`), `1584 0`; Verification 2's 7 screen pairs vs `baseline-e2e/`, recorded here.
+
+- [ ] S5 · D22 + D23: leftovers out
+  - Guide only, never `git apply`: `/srv/critter-ai/agent-state/missions/critter-connect-audit/audit/area-6/dryrun.patch`.
+  - `src/styles/globals.css`: "/* Clue Match (cm-*, roster-cross: the unrouted 043 game, plus the range map's ping) */" → `/* The range map's ping (RangeMap) */`; delete `@keyframes roster-cross-in`, `cm-shake`, `cm-pop-in`, `cm-countdown` and rules `.roster-cross`, `.cm-shake`, `.cm-pop-in`, `.cm-countdown`; keep `cm-range-ping` (keyframes + rule); reduced-motion `.cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit,` → `.cm-range-ping, .ev-lit,`.
+  - `RangeMap.tsx`: delete `const area = new Intl.NumberFormat(…)`, `caption = true` / `caption?: boolean`, and `{range && caption && (`…figcaption…`)}`. `JournalSheet.tsx`: `<RangeMap speciesId={species.id} name={species.commonName} />`; credit line untouched.
+  - `AnimalCard.tsx`: `AnimalCard` drops `size` → `<SuspectPhoto species={species} />`; `SuspectPhoto` keeps `size = 120`; `TrapCard()` takes nothing, renders no `{children}`, doc drops "`children`: what sits on it (the player's own mark count)"; import `useState, type CSSProperties`.
+  - `FactsWithSources.tsx`: drop `itemClassName`; `<li key={fact.key}>`.
+  - `SpeciesPortrait.tsx`: drop `width = 120`, its type + doc; `photoAt(photo.url, 120)`. `PhotoCredit`: drop `className`; plain `className="text-neutral-7 underline decoration-neutral-5 underline-offset-2 hover:text-neutral-9"`.
+  - `AnimalGame.tsx`: delete `type Pencil = Readonly<Record<string, 'yes' | 'no'>>;`; `import { sharpEye, type AnimalLogEntry, type Pencil } from '@/clueGame/animalBoard';`.
+  - `HOLD_MS`: `src/game/constants.ts` after `SWIPE_THRESHOLD`, the Architecture's doc + `export const HOLD_MS = 450;`. `BoardController.ts`: import from `./constants`; its declaration + doc go (the `:75` doc keeps naming it). `EvidenceGrid.tsx`: import from `@/game/constants`; its declaration + "…the board's tiles use the same (BoardController)." go.
+  - `EvidenceGrid.tsx`: `` className={`ev-missed absolute right-xxs top-px ${fresh ? 'is-fresh' : ''}`} `` → `className="ev-missed is-fresh absolute right-xxs top-px"` (still inside `guess && !called && fresh &&`).
+  - D23: `git rm public/branding/critterconnect-oauth-logo.png public/branding/critterconnect-oauth-logo.prompt.txt`.
+  - Plan: Brief Notes "`SuspectPhoto`'s only caller is `AnimalCard`." → its callers are `AnimalCard` and `AnimalSheets.tsx` (Review corrections).
+  - Checks: typecheck (no caller passed a removed prop), lint, `npm test`, Verification 9 greps, one E2E → `$STATE/e2e-s5/` (delete `e2e-s4/`), `1584 0`; its `05-journal.png` and `11-journal-sources-open.png`: map, no caption, credit unchanged.
+
+- [ ] S6 · S11: `docs/CLUE_MATCH.md` says what is true
+  - First write `$STATE/s11-protected.txt` from `git show origin/main:docs/CLUE_MATCH.md`, one string per line: "The Field Journal lives on the device; when signed in, it also pulls the player's solves saved before 2026-10-01."; "`GET /api/clue-game/journal` (a signed-in player's solves)"; "`profiles`, `clue_match_solves`,"; the full `clue_match_solves has a row per round finished before 2026-10-01 …` sentence; "The journal counts only `solved` rows."; the whole `07_solve_stats.sql` row.
+  - Edit per the Architecture S11 table (rows 7, 19, 24, 47, 53, 63, 67, 89, 90, 91, 92, 93; 55 stays). Re-read each line and the code it cites first; a line an earlier mission made true is skipped. The Resume and "Once a run" bullets use S1's check names.
+  - Record: each final sentence beside the code line it was read against.
+  - Checks: typecheck, lint; Verification 10. No E2E (Markdown only).
+
 ## Verification
+
+Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(git merge-base HEAD origin/main)` (`9f72f360` until the release rebase). ≤3 E2E runs; one heavy job at a time.
+
+1. **Final E2E first.** The dev-copy block, verbatim. Then `mv "$(ls -1d e2e-artifacts/*-seed7 | tail -1)" $STATE/final-e2e` and delete the last `e2e-s*`. Must print `1584/1584 checks passed` (1579 + the count S1 recorded from `checks-fail-first/`; use that if it differs). Report check (Steps) prints `1584 0` and 5 `true` lines (2 `…is dropped for a fresh round 1`, 3 `two tabs:`). Repro: same block, seed 7 = same run.
+2. **Screens.** Look at each pair `baseline-e2e/` vs `final-e2e/`: `01-globe.png`, `02-board.png`, `02c-notes.png`, `02d-field-guide.png`, `04-round-1-end.png`, `05-journal.png`, `08-pencil-bonus-end.png`. Every `font-data` text (clue counter, moves, trail `n/5`, grid `have/size` and `?`, guide numbers, `×N` / `best N moves`, `N animals`, `+points`, stats) has the same glyphs, weight, width, baseline. Record each pair. Then `final-e2e/05-journal.png` and `11-journal-sources-open.png`: range map shown, no caption, credit line ("Range maps: IUCN Red List. Realms: One Earth …") as in baseline.
+3. **Website.** `npm run site:build`; `npm run site:serve` in background; `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:site` → `444/444`; stop the server.
+4. **Gates.** `npm run typecheck`, `npm run lint`, `npm test` exit 0; `npm test` passes 64 + N1 + N2 (S2, S3).
+5. **Rules + save format.** `git diff --exit-code $BASE -- src/clueGame/animalBoard.ts src/clueGame/animalSession.ts` (holds `ANIMAL_RULES.version`); `git diff $BASE -- src/components/animalBoard/savedGame.ts | grep -E '^[-+].*v: 1'` prints nothing.
+6. **K2.** Prints nothing:
+   ```
+   diff <(git show $BASE:src/clueGame/journal.ts | grep -E "_STORAGE_KEY = '") <(grep -E "_STORAGE_KEY = '" src/clueGame/journal.ts)
+   for f in toEntry parseJournal parseWords parseRecords; do diff <(git show $BASE:src/clueGame/journal.ts | awk "/^(export )?function $f\\(/,/^}/") <(awk "/^(export )?function $f\\(/,/^}/" src/clueGame/journal.ts) >/dev/null || echo "K2 FAIL $f"; done
+   ```
+7. **Fonts (K5).** `git diff --stat $BASE -- public/fonts` lists only the two `OpenRunde-*.woff2`; `grep -v '/OpenRunde-' $STATE/fonts-before.txt | awk '{print $1"  "$3}' | sha256sum -c --quiet` prints nothing; `wc -c public/fonts/open-runde/OpenRunde-*.woff2` total < 40,000; S4's cmap command prints 31 for each.
+8. **Glyph proof.** `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox node $STATE/glyphs/glyphs.mjs` exits 0; `compare.json` as S4 says.
+9. **Greps.**
+   ```
+   git grep -n -E 'roster-cross|cm-shake|cm-pop-in|cm-countdown|unrouted 043|Map: IUCN Red List|Range about|caption=\{|before citations shipped|itemClassName|oauth-logo|size=\{size\}|width = 120' -- . ':!plans' ':!docs/research' ':!docs/playtests'   # nothing (no `size = 120`: SuspectPhoto keeps it)
+   git grep -n 'const HOLD_MS' -- . ':!plans'   # one line, src/game/constants.ts (the brief's `-- .` also hits this plan)
+   git grep -n -E 'type Pencil\b' -- src        # one line, src/clueGame/animalBoard.ts
+   git ls-files public/branding                 # the two wordmark SVGs only
+   git grep -c cm-range-ping -- src             # RangeMap.tsx and globals.css
+   ```
+10. **S11.** Both print nothing:
+    ```
+    while IFS= read -r s; do grep -qF -- "$s" docs/CLUE_MATCH.md || echo "MISSING: $s"; done < $STATE/s11-protected.txt
+    diff <(git show $BASE:docs/CLUE_MATCH.md | grep -E '^(Content lives in git|A profile.s `traits`)') <(grep -E '^(Content lives in git|A profile.s `traits`)' docs/CLUE_MATCH.md)
+    ```
+    S6's record lists each corrected sentence beside its code line.
+11. **Release.** Smoke as the Brief's Release bullet (not repeated here). If the rebase changes `scripts/e2e.mjs`, `src/components/`, `src/clueGame/journal.ts` or `public/fonts/`, rerun 1 and 8 on the new base.
 
 ## Code review (Astra)
 
@@ -713,5 +813,6 @@ One round, 2026-11-15. The Architecture is edited in place where an item changes
 - 2026-11-15 13:02 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (A17 overlapping read-merge-write race across tabs; wants serialization + overlapping-save E2E), 2 SHOULD-CONSIDER. Plan only; no checks needed.
 
 - 2026-11-15 13:06 UTC · Revision: architect rejected Astra MUST-FIX (reasons under Decisions), adopted 6 SHOULD-CONSIDER (refs set at write, A16 structural-check wording, highlight note, seed note, A17 E2E key setup). Plan only; no checks needed.
+- 2026-11-15 13:20 UTC · Steps: planner wrote S1–S6 (E2E fail-first; A16; A17; O1 font cut + glyph proof; D22+D23; S11) and 11-point Verification (final 1584/1584). Brief grep `const HOLD_MS` fixed with `':!plans'`. Plan only; no checks needed.
 
 ## Summary
