@@ -2,7 +2,7 @@
 mission: remove-sign-in
 project: critter-connect
 branch: agent/remove-sign-in
-status: active
+status: done
 started: 2026-11-15 15:51 UTC
 ---
 
@@ -747,6 +747,17 @@ Run on the final commit, after the Astra code review's fixes. Use `STATE` as in 
    - [ ] G7: both CI secrets deleted (Release, after smoke).
    - [ ] G8: no saved-game change (V8), no database change, no content build.
 
+**Done 2026-11-15 18:00 UTC** (on `aa59e3a3`; `origin/main` still `f1826f56`, `BASE` = `f1826f56`):
+1. Final E2E (dev copy, guard passed): **1588/1588**, exit 0, first run, no flake. Report check `1588 0`; new checks all `true`: Clerk `0: `, `/login/` `308 /`, journal route `404`, stored journal `{"header":"4 of 76 animals found","n":4,"kept":true}`. Artifact `$STATE/final-e2e/` (seed 7); `e2e-s2/` deleted.
+2. Screens vs `baseline-e2e/`: `01-globe.png` Sign in gone, **Anywhere** at the right edge, wordmark full size, count line wider (Decisions); globe and continent list the same. `04-round-1-end.png`, `05-journal.png` byte-identical (md5). `02-board.png` differs in bytes only: same board, same gems, same layout by eye (sub-pixel animation timing, as S2 measured).
+3. Website: `site:build` ok; `e2e:site` **444/444**, exit 0 (artifact deleted after recording, disk); server stopped.
+4. typecheck, lint exit 0; `npm test` **76/76**; build (CI's dummy `DATABASE_URL`) exit 0, routes: app `/_not-found`, `/api/clue-game/{pool,range,ranges}`, `/api/places`, `/api/places/outline`; pages `/`, `/_app`, `/explore`.
+5. `npm ls … @clerk/*` `(empty)`, exit 1; lock `@clerk/` count 0; `npm audit --omit=dev` `found 0 vulnerabilities`; `/login` redirect grep 1.
+6. Final grep: nothing (exit 1). DEPLOY awk: nothing. `scripts/e2e.mjs`: exactly the 7 lines listed. `next.config.mjs`: 1 line (the redirect's comment).
+7. Schema: non-comment diff nothing; `git diff --stat $BASE -- db` = `db/schema.sql` only (2+/2−).
+8. `src/site`, `deploy/Caddyfile`, `deploy/check.sh`, `.gitignore` diff empty; `animalBoard.ts`/`savedGame.ts` diff empty; storage loop and `export const` diff print nothing.
+9. Acceptance: see Summary (live parts close in the Release).
+
 **Release** (the Release unit, not a Step; critter-connect `deploy` rules in `~/.claude/CLAUDE.md`). Record everything under `## Release`.
 1. Rebase on `origin/main` and re-run Verification 1–8. If the rebase changes `useJournal.ts`, `journal.ts`, `GlobeScreen.tsx`, `_app.tsx`, `next.config.mjs` or `scripts/e2e.mjs`, retake the final E2E on the new base. Push (`--force-with-lease` after a rebase) and open the PR.
 2. CI:
@@ -841,5 +852,22 @@ SHOULD-CONSIDER:
 - 2026-11-15 18:05 UTC: S4 docs/agent files/playtest skill/schema comments de-Clerked, create-test-player.mjs deleted, DEPLOY.md setup steps renumbered. typecheck/lint ok; V6 final grep, DEPLOY awk, V7, V8 clean; e2e.mjs 7 lines, next.config 1; no E2E (no game change).
 - 2026-11-15 18:20 UTC: S5 live-check script at `$STATE/live-check.mjs` (not committed); tried on live: seed run then fresh run both see `clerk.critterconnect.org` (22 req), header `4 of 76`, journal = fixture (profile keeps storage); profile removed, `live-try.json` kept. Plan-only change.
 - 2026-11-15 UTC: Final code review (Astra, `--code origin/main`): APPROVE, MUST-FIX none; 1 SHOULD-CONSIDER (refresh origin/main before PR: Release rebases on fresh origin/main anyway). Plan-only change.
+- 2026-11-15 18:00 UTC: Final Verification on `aa59e3a3`: E2E 1588/1588 (first run, `final-e2e/`), site 444/444, test 76/76, typecheck/lint/build ok, @clerk none, audit 0, greps/diffs clean; screens as expected. Summary written, status done. Plan-only change.
 
 ## Summary
+
+M11 done on the branch; the Release (PR, CI, merge, deploy, live smoke, secrets, handoff item) is the next unit and fills in its parts below.
+
+- **Deleted:** `src/proxy.ts`, `src/pages/login.tsx`, `src/app/api/clue-game/journal/route.ts` (and folder), `.claude/skills/playtest/scripts/create-test-player.mjs` (and folder); `@clerk/nextjs` uninstalled (lock −142 lines: the 4 `@clerk/*` and 8 deps only they used). Names gone: `ClerkProvider`, `SignInButton`, `Show`, `UserButton`, `useAuth`, `mergeServerJournal`, `ServerJournalEntry`, `toJournalEntry`. `_app.tsx` is a fragment; the globe header has no sign-in. `/login` → `/` (308) in `next.config.mjs`. 31 files, +945/−403 (most of the + is this plan).
+- **Merge rule:** M9 branch. `mergeJournals` unchanged (M9's rule, larger `sharpEyes`); no rule difference from Goal 2 to record beyond the Review corrections. M7's server case ported, plus a self-merge case.
+- **`npm audit --omit=dev`:** baseline 0 vulnerabilities, final 0.
+- **Tests:** `npm test` 75 → **76** (M7's server case ported to `mergeJournals`, +1 self-merge case). Website E2E 444/444.
+- **E2E:** baseline 1584/1584 (2nd run; 1st failed one A10 timing check). S1 on unchanged code 1585/1588, as designed: Clerk check **false** (dev key loads `clean-lynx-72.clerk.accounts.dev`), `/login/` **false** (200), journal route **false** (200), stored journal **true** (passes before and after, a guard). S2 1588/1588. Final 1588/1588 (`/srv/critter-ai/agent-state/missions/remove-sign-in/final-e2e/`, seed 7; repro: Verification's dev-copy block).
+- **Screens:** only the globe header changed: Sign in gone, **Anywhere** moved right into its place, the count line is wider and the wordmark shows at full size (same flex cause, Finding 6; expected). Board, round end and journal unchanged.
+- **`check-live-board.mjs`:** comment-only edit (" such as Clerk's," dropped) rather than excluding it from the final grep (Decisions).
+- **`ANIMAL_RULES.version` unchanged:** no saved-game field changed (`animalBoard.ts`, `savedGame.ts` diff empty). No database change. **No production content build needed** (no content touched).
+- **OAuth logo (D23):** already gone (M9); no note.
+- **Account queries:** cut by the Review corrections (M12 and M13 take their own).
+- **For M12**, `git grep -n -i -E 'clerk|sign' -- src/site` still prints: `src/site/config.ts:2` (comment "No Next or Clerk here"), `:45` (Privacy description "keeps if you sign in"); `src/site/pages/Privacy.tsx:9,12,22,25,26,29,35,53,59` (the sign-in and Clerk sections); `src/site/pages/Teachers.tsx:24,115,123,125,126` ("Signing in is optional", "Sign-in is handled by Clerk"); `src/site/shots.ts:40` is a false hit ("signs").
+- **Acceptance:** G1 files, packages, fragment, header ✓ (V1, V2, V5, V6); live: Release. G2 route and server merge gone, `mergeJournals` unchanged, 76 tests ✓ (V4, V6, V8); live 404: Release. G3 `/login/` 308 `/` ✓ (V1, V5); live both hosts: Release. G4 stored journal counted and kept ✓ (V1); live before/after: Release. G5 config, CI, docs, agent files ✓ (V6, S3, S4). G6 handoff item: Release. G7 CI secrets: Release. G8 no saved-game, database or content change ✓ (V8).
+- **Release (next unit):** CI attempts, `live-before.json` vs `live-after.json` and other smoke results, secrets deleted, handoff item number.
