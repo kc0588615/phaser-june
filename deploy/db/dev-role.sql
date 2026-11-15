@@ -26,14 +26,14 @@ ALTER DATABASE phaser_june_dev OWNER TO critter_dev;
 \connect phaser_june_dev
 BEGIN;
 
--- No player identities in the copy; solves stay, anonymous.
-UPDATE clue_match_solves SET player_id = NULL WHERE player_id IS NOT NULL;
-DELETE FROM profiles;
+-- No player tables in the copy. They left prod on 2026-11-15 (M13), but a prod
+-- restored from an older dump has them again, under their old or retired_ names.
+DROP TABLE IF EXISTS retired_clue_match_solves, clue_match_solves, retired_profiles, profiles RESTRICT;
 
 -- critter_dev owns every app object (content builds, range imports, view
 -- refreshes, schema changes). Extension objects (PostGIS) stay postgres's.
--- Its 60 s statement_timeout (above) stops a clue_match_places refresh (90 s to 2.5 min):
--- run that refresh with SET LOCAL statement_timeout = 0 in its transaction.
+-- A clue_match_places refresh took 45 s here (2026-11-15), against the 60 s statement_timeout
+-- above: if it nears that, run it with SET LOCAL statement_timeout = 0 in its transaction.
 DO $$
 DECLARE r record;
 BEGIN

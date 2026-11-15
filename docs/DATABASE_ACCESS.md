@@ -287,31 +287,12 @@ address and user agent, in `docker logs caddy`. The app's own logs are the API r
 error, no IP or player. The Field Journal is in the player's browser; clearing its data for play.critterconnect.org
 deletes it. So for anyone who never had an account, nothing we hold can be found from their email: say so.
 
-**The old rows, until M13 (`agent/db-retire`) retires them:** `profiles` (accounts, keyed by `clerk_user_id`; no
-email) and each account's rows in `clue_match_solves` (`player_id`), all saved until early October 2026 (the newest
-2026-10-01). The accounts that saved results are the owner's own test accounts (owner, 2026-11-14). Rows with no
-`player_id`, rounds played without an account, match no one. For a request about an account:
-
-1. In Clerk's dashboard, find the user id for the requester's email. Once the owner has deleted the production
-   instance, an email can't be matched to a row (the database holds no email): say so, and that M13 deletes them all.
-2. Take a fresh dump: `ssh play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`.
-3. In the interactive shell (`./scripts/db`), find the row and show what is held, then delete in one transaction,
-   solves first: `player_id` is `ON DELETE SET NULL`, so deleting the profile alone keeps every result.
-
-   ```sql
-   SELECT user_id FROM profiles WHERE clerk_user_id = '<clerk user id>';
-   SELECT p.created_at, s.* FROM profiles p LEFT JOIN clue_match_solves s ON s.player_id = p.user_id
-    WHERE p.user_id = '<user_id>' ORDER BY s.solved_at;
-   BEGIN;
-   DELETE FROM clue_match_solves WHERE player_id = '<user_id>';
-   DELETE FROM profiles WHERE user_id = '<user_id>';
-   COMMIT;
-   ```
-
-4. Once that commits, delete the user in Clerk's dashboard: until then it is the only link from the email to the row.
-
-If M13 has renamed them (`retired_clue_match_solves`, `retired_profiles`), run the same statements on those names;
-once it has dropped them, nothing about any player is left in the live database.
+**The old rows are out of the live database.** Until early October 2026 it kept accounts (a Clerk user id; no email)
+and the rounds played with or without one (the newest 2026-10-01); the accounts were the owner's own test accounts
+(owner, 2026-11-14). M13 (`agent/db-retire`) renamed both tables out of the app's reach on 2026-11-15 and dropped them
+on 2026-11-15, live and in the dev copy `phaser_june_dev`, so neither holds anything about any player. Dumps taken
+before the drop still hold them until they age out, by 2027-01-12 (Copies, below). For a request about an
+account, say so, and delete the user in Clerk's dashboard if it is still there.
 
 **Copies.** A dump ages out only while the job that prunes it runs and succeeds. The game server's nightly
 `deploy/backup/pg-backup.sh` deletes daily dumps after 14 days and weekly ones after 56, and nothing on a night its
@@ -322,9 +303,11 @@ failed or killed backup run leaves its `daily/*.dump.partial`, which no job prun
 and the mirror copies. So after a deletion, delete any `*.partial` on the game server
 (`ssh play.critterconnect.org 'find /var/backups/critter-connect -name "*.partial"'`); the next successful run's
 `rsync --delete` drops them from `OFFSITE`. A killed pull can likewise leave `*.part` in the Oracle VPS's
-`agent-state/game-backups/`. A dump copied elsewhere by hand stays until someone deletes it. The scrubbed dev copy `phaser_june_dev` holds the solves as of its last
-refresh with no player (`deploy/db/dev-role.sql`): the account's results stay there, anonymous, until the copy is
-refreshed ([Runbook](#runbook), steps 1–2) or M13 drops the table. These steps never restore or edit a dump.
+`agent-state/game-backups/`. A dump copied elsewhere by hand stays until someone deletes it. These steps never restore or edit a dump.
+If one taken before 2026-11-15 22:21 UTC is ever restored, it brings the two player tables back (and, from
+before 21:23 UTC that day, the app's write grants on them): right after the restore, run `deploy/db/app-role.sql`, which
+takes back every grant but the app's reads, and, on `phaser_june`, the `DROP TABLE IF EXISTS` line of
+`deploy/db/dev-role.sql` (a dev-copy refresh runs it on the copy by itself).
 
 ## Related
 

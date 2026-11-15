@@ -17,13 +17,13 @@ END $$;
 
 GRANT USAGE ON SCHEMA public TO critter_app;
 
+-- Read only. A restored dump brings back the grants it was taken with (one from
+-- before 2026-11-15 21:23 UTC also the old player tables' writes), so take everything back first.
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM critter_app;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM critter_app;
+
 -- Read: the Clue Match pool, the globe's places, range maps.
 GRANT SELECT ON species, species_deduction_clues, species_facts, content_sources, clue_match_places, clue_match_ranges TO critter_app;
-
--- Write: a player's profile on first solve, and each solve.
-GRANT SELECT, INSERT, UPDATE ON profiles TO critter_app;
-GRANT SELECT, INSERT ON clue_match_solves TO critter_app;
-GRANT USAGE ON SEQUENCE clue_match_solves_id_seq TO critter_app;
 
 -- A statement that runs away can't hold a connection for long.
 ALTER ROLE critter_app SET statement_timeout = '15s';

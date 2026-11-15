@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { loadPlaceOutline } from '@/lib/places';
 
-/** GET /api/places/outline?key=country:KEN — the place's outline as a GeoJSON Feature. */
+/** GET /api/places/outline?key=continent:africa — the place's outline as a GeoJSON Feature. */
 export async function GET(request: NextRequest) {
   const key = request.nextUrl.searchParams.get('key') ?? '';
   if (!/^(country|area|continent):[A-Za-z0-9-]{1,80}$/.test(key)) {
