@@ -79,12 +79,7 @@ Look-alike decoys are the animals sharing the most traits, rare ones weighted mo
 
 ## Workflow
 
-1. Edit or add `db/content/animals/<id>-<slug>.json` (a new animal takes the next id; ids never change). A clue or fact on a page not yet in `citations.json` needs its entry in the same commit ([Citations](#citations)).
-2. `npm run content -- preview [name]`: the clues and facts a profile makes, and any problems: `PROBLEM` lines (`checkProfile`, and `checkCitations` errors) and `cite warn` lines (`checkCitations` warnings: a page showing the fallback citation). Aim for 0 of both.
-3. New animal: import its range first (`npm run iucn -- find|import`, see `docs/SHAPEFILE_BEST_PRACTICES.md`), then after a build `npm run content -- ranges` (realms and countries from its IUCN polygon, keyed by `iucnId`) and `npm run content -- photos` (look at the result).
-4. `npm run content -- build` (one transaction; refuses on any `checkCitations` error, prints the warning count), then `npm run content -- check` (also errors on a fact or hand-written clue whose page has no citation).
-5. If the set of animals or their ranges changed, refresh `clue_match_ranges` and `clue_match_places` (docs/CLUE_MATCH.md).
-6. `npm test` validates every profile and the pool; `node scripts/run-typescript.mjs scripts/balance-044.ts` plays seeded rounds; then play `/explore/?seed=1`.
+Adding or changing an animal, step by step and who runs each: [`docs/SHAPEFILE_BEST_PRACTICES.md#adding-or-changing-an-animal`](SHAPEFILE_BEST_PRACTICES.md#adding-or-changing-an-animal).
 
 Copy is for grades 6 to 12: short sentences, no gore, no medical words. Science words stay and get a glossary entry (`src/clueGame/glossary.ts`).
 
