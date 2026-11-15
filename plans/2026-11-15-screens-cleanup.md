@@ -704,7 +704,7 @@ Every step:
 - Stale generated types: `rm -rf .next .next-e2e .test-dist`.
 - Record results as indented bullets under the step; check it off; one Log line; commit + push.
 
-- [ ] S1 · E2E checks first (A16 ×2, A17 ×3), app code untouched
+- [x] S1 · E2E checks first (A16 ×2, A17 ×3), app code untouched
   - `scripts/e2e.mjs` only.
   - Refactor (no behaviour change): `async function setUpPage(page)` = `Emulation.setCPUThrottlingRate` (when `CPU_THROTTLE > 1`), `Page.enable`, `Runtime.enable`, `Network.enable`, `Emulation.setDeviceMetricsOverride`, `Emulation.setTouchEmulationEnabled`, both `Page.addScriptToEvaluateOnNewDocument` (how-to/slide-hint keys; the `window.__*` helpers). Page A calls it where those lines are now.
   - Listener (`browser.on(message => {`, `if (message.sessionId !== sessionId) return;`): console errors + exceptions from a `Set` of session ids (A's; B's once open). `Network.*` branches stay A's only.
@@ -717,6 +717,16 @@ Every step:
     - `two tabs: the first tab's Field Journal shows the other tab's find after its own save`
   - Checks: `npm run typecheck`, `npm run lint`; one E2E. Must show `1584 6`: the 5 new + `no console errors` (A16 case 2's `console.error`) fail; `report.json` written, no `run completed` fail; 1578 pass (proves the refactor). A new check that passes → fix the check, rerun. A fail outside them only on an A10 timing check → rerun once. Save the valid run as `$STATE/checks-fail-first/`.
   - Record: each failing check + detail; checks added (5) and total; `report.twoTabs`.
+  - Done 2026-11-15. `scripts/e2e.mjs` only: `setUpPage(page)` (A's setup, helper literal unchanged); listener keeps console errors/exceptions from `watched` (Set: A, then B), network A's only; `poolSpecies` also carries `className` (X's journal entry). typecheck 0, lint 0.
+  - E2E (dev copy, guard passed) → `$STATE/checks-fail-first/`: `1578/1584`, report check `1584 6`; no `run completed` fail; 1578 pass = refactor kept behaviour. Checks added: 5 (1579 → 1584).
+  - Fails, each as Architecture predicted:
+    - `a save missing session.trail … dropped for a fresh round 1`: resumed, `{"shown":"board","clue":{"roundNo":1,"movesUsed":0,"score":7,"seed":7,"mysteryId":7,…},"saved":{"roundNo":1,"score":7,"holds":false},"newErrors":[]}`.
+    - `a save missing session.round.orders … dropped for a fresh round 1`: `"shown":"load error"`, save kept (score 7, no `orders`), new console error `[AnimalBoard] Failed to load the animals: TypeError: … reading 'every' at roundStillFits`.
+    - `two tabs: a find in each tab is kept…`: storage keys `Okapia johnstoni` (X, unchanged) + `Daubentonia madagascariensis` (A's); B's find gone.
+    - `two tabs: a best set in the other tab is kept`: `{"bestScore":50,"bestStreak":1}` (A's copy overwrote 9999/99).
+    - `two tabs: the first tab's Field Journal…`: `2 of 76 animals identified`.
+    - `no console errors`: the A16 case 2 error above.
+  - `report.twoTabs` = `{"a":1,"b":2,"mysteries":[23,39],"x":29}`.
 
 - [ ] S2 · A16: a save that can't resume is dropped (+ D22's pool line)
   - Tests first: `tests/animalBoard/savedGame.test.ts`, header listing the ways `fitsShape` could fail, then Architecture A16 "Unit tests" cases. `npm test > $STATE/unit-fail-first/savedGame.txt 2>&1`; record the failure.
@@ -814,5 +824,6 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 
 - 2026-11-15 13:06 UTC · Revision: architect rejected Astra MUST-FIX (reasons under Decisions), adopted 6 SHOULD-CONSIDER (refs set at write, A16 structural-check wording, highlight note, seed note, A17 E2E key setup). Plan only; no checks needed.
 - 2026-11-15 13:15 UTC · Steps: planner wrote S1–S6 (E2E fail-first; A16; A17; O1 font cut + glyph proof; D22+D23; S11) and 11-point Verification (final 1584/1584). Brief grep `const HOLD_MS` fixed with `':!plans'`. Plan only; no checks needed.
+- 2026-11-15 13:40 UTC · S1: 5 fail-first E2E checks (A16 ×2, A17 ×3) + `setUpPage` refactor in `scripts/e2e.mjs`; typecheck/lint 0; E2E 1578/1584, exactly the 6 predicted fails → `checks-fail-first/`.
 
 ## Summary
