@@ -587,7 +587,7 @@ Every step:
       - `04-round-1-end.png`, `05-journal.png`, `09-journal-sharp-eye.png`: pixel-identical (sharp diff 0).
       - `02-board.png`: same board, every gem in place; 972 px differ, all 1 px slivers on gem icon top edges (animation-frame sub-pixel timing), no layout change.
 
-- [ ] S3 · CI, deploy and env files, the ESLint guard, and `check-live-board.mjs`'s comment
+- [x] S3 · CI, deploy and env files, the ESLint guard, and `check-live-board.mjs`'s comment
   - `.github/workflows/ci.yml`:
     - "# Typecheck + production build. The build loads route modules but never queries, and needs no Clerk keys." becomes "# Typecheck + production build. The build loads route modules but never queries."
     - "# credentials (docs/DATABASE_ACCESS.md). Next dev needs both keys of Clerk's dev instance." becomes "# credentials (docs/DATABASE_ACCESS.md)."
@@ -616,6 +616,11 @@ Every step:
     - `git diff origin/main -- deploy/Caddyfile deploy/check.sh deploy/deploy.sh` is empty.
     - No E2E: nothing the local game runs changed.
     - Docker isn't on this VPS. CI's `docker build --target caddy` proves the `deps`, `site` and `caddy` stages at the PR, and only the Release deploy proves the `build` stage.
+  - **Done 2026-11-15 17:50 UTC** (`origin/main` still `f1826f56`):
+    - All seven sites edited as quoted; `.env.example` from the shell (`sed -n '5,11p'` showed the blank line, 3 heading lines, 3 Clerk lines; after `sed -i '5,11d'`, `tail -n 2` = Database heading's last line + `DATABASE_URL=…`). `deploy/app.env.example` ends with `DATABASE_URL=…` and one newline.
+    - Numstat (added/deleted): ci.yml 2/4, Dockerfile 2/5, docker-compose.app.yml 2/3, app.env.example 1/6, .env.example 0/7, eslint.config.mjs 2/2, check-live-board.mjs 1/1 (matches the expected shape; diffs read whole).
+    - typecheck, lint exit 0; YAML parse (PyYAML) exit 0; `npm run site:build` exit 0. Guard still fires: `next/link` in `src/site/` → `no-restricted-imports`, "…static HTML: no Next".
+    - Clerk grep (`.github Dockerfile deploy .env.example eslint.config.mjs scripts`, not `scripts/e2e.mjs`) prints nothing; extra (advisor) `NEXT_PUBLIC_` grep on the same paths prints nothing. `deploy/Caddyfile`, `check.sh`, `deploy.sh` diff vs `origin/main` empty. No E2E (nothing the game runs changed).
 
 - [ ] S4 · Docs, agent files, the playtest skill and the schema comments; then the DoD greps
   - `git rm .claude/skills/playtest/scripts/create-test-player.mjs`. The folder holds nothing else.
@@ -813,5 +818,6 @@ Build and release failures, and what catches each:
 - 2026-11-15 UTC: Steps (planner): S1 tests-first red E2E (1585/1588 named fails), S2 atomic src/ + uninstall, S3 CI/deploy/env/ESLint, S4 docs/skill/schema + DoD greps, S5 live-check script; Verification 1588/1588, test 76/76, Release smoke. Plan-only change.
 - 2026-11-15 17:10 UTC: S1 tests first: 4 E2E checks + ported/self-merge unit cases. typecheck/lint ok, `npm test` 76/76 (both cases pass at once), E2E 1585/1588 red as designed (Clerk request, /login 200, journal route 200; stored-journal check passes).
 - 2026-11-15 17:35 UTC: S2 sign-in out of the game: 3 files deleted, `_app` fragment, header/hook/journal.ts edits, `/login` redirect, `@clerk/nextjs` uninstalled (lock −142, +0). typecheck/lint ok, test 76/76, build routes clean, E2E 1588/1588 (4 new checks green); screens: Anywhere shift + full-size wordmark (expected), rest identical.
+- 2026-11-15 17:50 UTC: S3 CI/Dockerfile/compose/env examples/ESLint guard/check-live-board comment de-Clerked. typecheck/lint ok, YAML ok, site:build ok, guard fires, Clerk + NEXT_PUBLIC_ greps clean, deploy scripts untouched; no E2E (no game change).
 
 ## Summary

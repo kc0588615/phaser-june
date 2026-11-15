@@ -7,7 +7,7 @@
 //
 // It passes once, within 30 s of the navigation, the board has held for 2 s on a phone-sized screen: a board canvas
 // of at least 100x100 px, at least one animal row, no error alert, and no failing script or script error from the
-// page's own host (other hosts, such as Clerk's, are ignored). Up to 3 attempts, 10 s apart, each in a new browser.
+// page's own host (other hosts are ignored). Up to 3 attempts, 10 s apart, each in a new browser.
 // It loads one page and plays nothing, so it writes nothing (the game sends no POST).
 //
 // Its contract with the game, so a mission that renames any of these changes this script too:

@@ -1,8 +1,8 @@
 # The web app and its HTTPS front door, as its own stack that joins the
 # database stack's network (reaches Postgres as `db`). From the repo root:
 #   docker compose -f deploy/docker-compose.app.yml --project-directory . up -d --build
-# Needs deploy/app.env (from deploy/app.env.example) and, in .env, APP_DOMAIN,
-# the build-time NEXT_PUBLIC_* values and DB_NETWORK if not postgis_backend.
+# Needs deploy/app.env (from deploy/app.env.example) and, in .env, APP_DOMAIN
+# and DB_NETWORK if not postgis_backend.
 name: critter
 services:
   app:
@@ -10,7 +10,6 @@ services:
       context: .
       target: run
       args:
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
         GIT_COMMIT: ${GIT_COMMIT:-unknown}
     container_name: critter-app
     restart: unless-stopped
