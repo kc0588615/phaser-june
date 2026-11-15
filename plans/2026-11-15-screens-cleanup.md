@@ -224,7 +224,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
+- [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -629,6 +629,24 @@ Nothing else changes: not the content step list (`:59`), the countries sentence 
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE
+
+Checked against the code on `9f72f360`: one `try` around fetch, guard and restore (`useAnimalSession.ts:88-125`); `record` and the signed-in merge write inside state updaters (`useJournal.ts:46-71`); the E2E console listener keys on one `sessionId` (`e2e.mjs:117`). The `mergeJournals` fold equals today's `mergeServerJournal` loop. The two-`try` load keeps the network away from the save. `newAnimalRound`, `newTrail` and the `load` reducer set no `undefined` field, so `fitsShape` passes every save today's code writes. A `?seed=` game still records to the journal (`AnimalGame.tsx:299` isn't gated), so the A17 E2E can use replay seeds. `openPage` returns `targetId` for `Target.closeTarget`.
+
+MUST-FIX: none. The advisor's three conditional points were checked and none holds:
+1. A16 E2E cleanup: after the stale-save check (`e2e.mjs:2233`) the next checks read values already captured, then `goto(BASE/)`; the globe clears the save (`GlobeScreen.tsx:26`). A broken save left by the fail-first run can't cascade.
+2. O1 uses outside the class: `Open Runde` and `--font-data` appear only in `globals.css:55,62,293`, `gui/themes/cc.md` (docs) and `_app.tsx:9` (a comment). No `var(--font-data)` anywhere.
+3. O1 uppercase ancestors: none of the letter sites (`AnimalSheets.tsx:455,514`, `AnimalGame.tsx:187`, `JournalSheet.tsx:56`, `PlaceList.tsx:35`) has an `uppercase` ancestor (`Sheet`'s `detail` slot adds none). The 31-character list holds.
+
+MISSED: none.
+
+SHOULD-CONSIDER:
+1. In `record`, set `journalRef.current` and `recordsRef.current` to what was just written, not only through the sync effect. Otherwise two saves before a re-render, with storage unreadable, lose the first.
+2. A save with an invalid `seed` that otherwise fits resumes under a new random seed (the brief specifies the seed only on the drop path). Record it as intended under Decisions.
+3. `fitsShape` requires `session.highlight`, so a save from before highlights is now dropped, not restored through `restore`'s `highlight ?? []` (which stays, out of scope). That's harmless; say it in the `fitsShape` doc.
+4. A17 setup: `localStorage.clear()` is safe, because the init script sets the how-to and slide-hint keys again on every document (`e2e.mjs:138`). Overwriting only the two `clue-match:*` keys is simpler and leaves the theme key alone; prefer it.
+5. `npm test` collects `tests/**/*.test.ts` recursively (`scripts/run-tests.mjs`), so `tests/animalBoard/savedGame.test.ts` is picked up. `savedGame.ts` imports types only, so esbuild bundles it.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -647,5 +665,6 @@ Nothing else changes: not the content step list (`:59`), the countries sentence 
 
 - 2026-11-15 12:35 UTC · Baseline: M7 merged; greps recorded; fonts snapshot; typecheck/lint 0, unit 64/64, E2E 1579/1579 (dev copy), site 444/444.
 - 2026-11-15 12:54 UTC · Architecture: architect wrote findings + target design (D22, D23, O1 31-char cut ~6.9 KB each, A16 two-try load, A17 mergeJournals fold, 5 failing-first E2E checks → 1584). Plan only, no code; no checks needed.
+- 2026-11-15 13:10 UTC · Fable review: APPROVE, no MUST-FIX (3 conditional points checked: E2E cleanup, other font uses, uppercase ancestors: none hold); 5 SHOULD-CONSIDER. Plan only; no checks needed.
 
 ## Summary
