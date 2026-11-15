@@ -657,6 +657,6 @@ Lead: MUST-FIX 1 is real (`deploy/backup/pg-backup.sh:20-22` leaves `$file.parti
 - 2026-11-15 19:12 UTC · S3 site text: Privacy/Teachers/Terms/config rewritten per Target design (A three, R five, P 90; date Nov 15); DoD grep clean, typecheck/lint 0, test 76/76, css hash same, build diff = 3 pages, site E2E 444/444 (`$STATE/e2e-s3-site`).
 - 2026-11-15 19:13 UTC · S4 deletion doc: 9 facts re-read on `83eef270`, all same; `## Deletion requests` inserted verbatim above `## Related` (46 lines); Verification 7 pass, typecheck/lint 0.
 - 2026-11-15 19:16 UTC · Astra code review: APPROVE_WITH_CHANGES, 1 MUST-FIX (deletion doc's 8-week expiry ignores leftover `.dump.partial` files; verified real) -> step S4b added; 1 SHOULD-CONSIDER (freshness; fetch fine here). Plan only.
-- 2026-11-15 19:25 UTC · S4b: deletion doc Copies limits 8 weeks to finished `*.dump`; leftover `*.partial` (prod count 0) and a killed pull's `*.part` deleted by hand; Verification 7 pass, typecheck/lint 0.
+- 2026-11-15 19:19 UTC · S4b: deletion doc Copies limits 8 weeks to finished `*.dump`; leftover `*.partial` (prod count 0) and a killed pull's `*.part` deleted by hand; Verification 7 pass, typecheck/lint 0.
 
 ## Summary
