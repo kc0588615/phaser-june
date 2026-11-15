@@ -76,6 +76,7 @@ The app is two screens: a globe to pick a continent (`/`) and the game (`/explor
 - Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.
 - If you must test a system in isolation, first write down all the ways it could fail, then write the code.
 - E2E here: `npm run e2e:fresh` (headless Chrome plays globe → continent → game rounds at /explore on its own dev server, beside any `npm run dev`; checks invariants every move; artifact `e2e-artifacts/<run>/report.json` + screenshots, same seed = same run; CI runs it on every PR that changes more than Markdown, against the scrubbed copy `phaser_june_dev`, so a schema change reaches that copy too), and the `playtest` skill for judgment calls (report in `docs/playtests/`). `npm test` keeps only unit tests for failures a playtest can't see (content checks, input/storage parsing, board invariants); game balance is the bot's job.
+- `npm run e2e:fresh` and `npm run e2e:site` take Chrome from `CHROME_PATH` (default `/usr/bin/google-chrome`, which CI has); on the Oracle VPS that is `~/.local/bin/chrome-nosandbox`.
 
 ## Agent skills
 

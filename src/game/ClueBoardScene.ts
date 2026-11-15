@@ -22,7 +22,6 @@ import { makeFaceTextures } from './faceTextures';
 import { makeToyTextures } from './toyTextures';
 import { playAnswerEffect } from './answerEffects';
 import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from './debugBridge';
-import { DEFAULT_RULES } from '@/clueGame/questionMatch';
 import { CLUE_GEMS, HEADING_STEP, doubleOf, rewardToy, walkers, type Heading } from '@/clueGame/animalBoard';
 
 const TRAVEL_VERB: Record<PinExit, string> = { fly: 'flies', swim: 'swims', dig: 'digs', walk: 'walks' };
@@ -40,9 +39,8 @@ export class ClueBoardScene extends Phaser.Scene {
     private seed: number | null = null;
     /** Explode phases so far in this move: 1 for the move's own matches, then each cascade. */
     private chain = 0;
-    /** Plan 044: the pinned animals the player ruled out, and whether this board has animals at all. */
+    /** Plan 044: the pinned animals the player ruled out. */
     private marked = new Set<number>();
-    private animals = false;
     /** Plan 047: whether marked animals walk, and earn reward toys; how and which way each goes; this move's toys and step words. */
     private wander: { toy: boolean } | null = null;
     private double = 0;
@@ -172,7 +170,6 @@ export class ClueBoardScene extends Phaser.Scene {
         this.earned = [];
         this.steps = [];
         this.unscouted.clear();
-        this.animals = pins.length > 0;
         this.controller.resetInput();
         this.view.createTiles(pins, escapes ?? null);
         this.view.createBoard(this.model.getGrid(), this.model.getToys());
@@ -281,13 +278,6 @@ export class ClueBoardScene extends Phaser.Scene {
         }
         sfx.pop(this.chain);
         if (phase.made.length > 0) sfx.toy();
-        // What a toy's clear pays (the same rule as applyMatches): every `perBlast` gems, of the color cleared most.
-        const blasts = phase.groups.filter(group => group.blast);
-        const pooled = Math.floor(blasts.reduce((sum, group) => sum + group.cells.length, 0) / DEFAULT_RULES.perBlast);
-        if (!this.animals && pooled > 0 && phase.fired.length > 0) {
-            const most = blasts.reduce((a, b) => (b.cells.length > a.cells.length ? b : a));
-            this.label(phase.fired[0].cell, `+${pooled} charge${pooled === 1 ? '' : 's'}`, GEM_COLOR[most.gemType] ?? '#ffffff');
-        }
         if (this.chain >= 2) this.callout(`Chain ×${this.chain}!`);
         // Rules 053-1: both swapped gems matched; each clue run shows its bonus (the rules add the same).
         const double = cascade || !this.double ? [] : doubleOf(phase.groups);
@@ -306,7 +296,7 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.emit('gems-matched', {
             groups: phase.groups.map(group => ({ gemType: group.gemType, size: group.cells.length, ...(group.blast ? { blast: true } : {}) })),
             cascade,
-            ...(this.animals ? { touched: phase.touched, released, nearColors: phase.nearColors, from: this.clearedAt(phase) } : {}),
+            released, nearColors: phase.nearColors, from: this.clearedAt(phase),
         });
         return released;
     }
@@ -364,8 +354,8 @@ export class ClueBoardScene extends Phaser.Scene {
     }
 
     /**
-     * Shards of the group's color fly off each cleared cell; bigger matches and chains throw more. Bigger matches call
-     * out their charges. `size` 0: collected notes. Reduced motion: a ring that fades in place instead.
+     * Shards of the group's color fly off each cleared cell; bigger matches and chains throw more. `size` 0: collected
+     * notes. Reduced motion: a ring that fades in place instead.
      */
     private burst(cells: Array<[number, number]>, color: string, size: number): void {
         const { gemSize, offset } = this.layout;
@@ -381,10 +371,7 @@ export class ClueBoardScene extends Phaser.Scene {
             for (const [x, y] of cells) this.sparks.explode(each, offset.x + (x + 0.5) * gemSize, offset.y + (y + 0.5) * gemSize);
         }
 
-        // Only the bigger matches call their charges out (Rules.perMatch: 3, 4, 5 or more); the animal board has no charges.
-        const charges = size >= 5 ? DEFAULT_RULES.perMatch[2] : size === 4 ? DEFAULT_RULES.perMatch[1] : 0;
-        if (size === 0) this.floatLabel(cx, cy, this.animals ? '📓 note!' : '📓 saved', color);
-        else if (charges > 0 && !this.animals) this.floatLabel(cx, cy, `+${charges} charges`, color);
+        if (size === 0) this.floatLabel(cx, cy, '📓 note!', color);
     }
 
     /** A floating label over a cell. */
@@ -423,7 +410,6 @@ export class ClueBoardScene extends Phaser.Scene {
         if (!this.view || this.model.hasAnyValidMove()) return;
         this.model.shuffle();
         this.view.createBoard(this.model.getGrid(), this.model.getToys());
-        EventBus.emit('clue-board-shuffled', undefined);
     }
 
     private handleResize(): void {

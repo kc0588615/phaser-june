@@ -294,16 +294,6 @@ async function main() {
       await page('Page.navigate', { url });
       await waitFor(() => document.readyState === 'complete', `${url} to load`);
     };
-    // The gem legend as shown: each tile's category, question tag and visible text (after React has painted).
-    const readLegend = () => evaluate(async () => {
-      await new Promise(resolve => setTimeout(resolve, 80));
-      return [...document.querySelectorAll('[aria-label="Gem questions"] li[data-category]')]
-        .map(li => ({ category: li.dataset.category, tag: li.dataset.tag || null, text: li.innerText.replace(/\s+/g, ' ').trim() }));
-    });
-    const legendMismatch = (shown, legend) => legend.filter(row => {
-      const tile = shown.find(candidate => candidate.category === row.category);
-      return !tile || tile.tag !== row.tag || (row.text && !tile.text.includes(row.text));
-    }).map(row => ({ want: row, shown: shown.find(candidate => candidate.category === row.category) ?? null }));
     const screenshot = async name => {
       // The dev build's Next badge isn't the game: hide it for the shot (the site uses these, plan 051 §9).
       // Next re-adds a removed <nextjs-portal>, so a style hides it, and goes after the shot.
@@ -456,15 +446,20 @@ async function main() {
     const dLng = (from, to) => ((to - from + 540) % 360) - 180;
     const pageNow = () => evaluate(() => performance.now());
     const globeView = () => evaluate(() => ({ lng: window.__globe.getCenter().lng, zoom: window.__globe.getZoom() }));
-    // Each sample's lng unwrapped across ±180, and its kind: momentum (the map is moving: a gesture or its ease),
-    // spin (not moving, yet lng changed since the sample before) or still.
+    // Each sample's lng unwrapped across ±180, and its kind: momentum (the map is moving: a gesture or its ease, or that
+    // movement's last frame), spin (not moving, yet lng changed since a sample that wasn't moving) or still.
+    // MapLibre applies an ease's last step and ends it in the same frame (camera.ts _renderFrameCallback -> stop() ->
+    // _afterEase sets _moving = false), so the sample after a moving one can read not moving with a changed lng.
     const classify = samples => {
       let shift = 0;
       const unwrapped = samples.map((sample, i) => {
         if (i) shift -= 360 * Math.round((sample.lng - samples[i - 1].lng) / 360);
         return { ...sample, lng: sample.lng + shift };
       });
-      return unwrapped.map((sample, i) => ({ ...sample, kind: sample.moving ? 'momentum' : i && Math.abs(sample.lng - unwrapped[i - 1].lng) >= STILL_DEG ? 'spin' : 'still' }));
+      return unwrapped.map((sample, i) => {
+        const moved = i > 0 && Math.abs(sample.lng - unwrapped[i - 1].lng) >= STILL_DEG;
+        return { ...sample, kind: sample.moving || (moved && samples[i - 1].moving) ? 'momentum' : moved ? 'spin' : 'still' };
+      });
     };
     const watchGlobe = () => evaluate(() => window.__watchGlobe());
     const stopWatchingGlobe = async () => {
@@ -554,15 +549,35 @@ async function main() {
     // A snap would land somewhere else; the eased first step at a few fps moves up to ~0.15°.
     check('the spin comes back where the player left it, at their zoom, easing in', Boolean(spinBack) && spinBack.jumpDeg < 0.5 && spinBack.zoomChange < 1e-6 && easeIn !== null && baseRate.degPerS > 0 && easeIn < 0.4 * baseRate.degPerS, JSON.stringify(spinBack));
 
-    await evaluate(() => document.querySelector('.maplibregl-canvas').focus());
+    await evaluate(() => {
+      document.querySelector('.maplibregl-canvas').focus();
+      // The key's own ease in page time (its movestart/moveend carry the keydown), for the detail below.
+      const map = window.__globe, ease = window.__keyEase = { start: null, end: null, starts: 0, ends: 0 };
+      const onStart = event => { if (event.originalEvent?.type === 'keydown') { ease.starts++; ease.start ??= performance.now(); } };
+      const onEnd = event => { if (event.originalEvent?.type === 'keydown') { ease.ends++; ease.end = performance.now(); } };
+      map.on('movestart', onStart);
+      map.on('moveend', onEnd);
+      window.__keyEaseOff = () => { map.off('movestart', onStart); map.off('moveend', onEnd); };
+    });
     const beforeKey = await globeView();
     const keyAt = await pageNow();
     await key('ArrowLeft', 37);
     await watchGlobe();
     await sleep(1000);
     const keyed = dLng(beforeKey.lng, (await globeView()).lng);
-    const keyReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, keyAt);
-    check('arrow keys move the globe while it spins, then the spin returns', keyed < -5 && Boolean(keyReturn) && inIdleWindow(keyReturn.gap), JSON.stringify({ dLng: keyed.toFixed(1), restMs: keyReturn?.gap, window: IDLE_WINDOW }));
+    const keyWatch = await untilSpin(IDLE_WINDOW[1] + 1000);
+    const keyEase = await evaluate(() => { window.__keyEaseOff(); return window.__keyEase; });
+    const keyReturn = spinReturn(keyWatch.samples, keyAt);
+    // Evidence (plan 2026-11-14-board-e2e, G): the ease and the samples around the first spin sample, in ms after keyAt.
+    const afterKey = t => (typeof t === 'number' ? Math.round(t - keyAt) : null);
+    const firstSpinAt = keyWatch.samples.findIndex(sample => sample.kind === 'spin');
+    const aroundFrom = firstSpinAt < 0 ? Math.max(0, keyWatch.samples.length - 6) : Math.max(0, firstSpinAt - 3);
+    const keyAround = keyWatch.samples.slice(aroundFrom, firstSpinAt < 0 ? undefined : firstSpinAt + 3).map((sample, k) => {
+      const prev = keyWatch.samples[aroundFrom + k - 1];
+      return [afterKey(sample.t), sample.kind, prev ? (sample.lng - prev.lng).toExponential(1) : null];
+    });
+    const keyDetail = { ease: [afterKey(keyEase?.start), afterKey(keyEase?.end)], easeEvents: [keyEase?.starts ?? null, keyEase?.ends ?? null], firstAt: afterKey(keyWatch.samples[0]?.t), n: keyWatch.samples.length, fps: keyWatch.fps, around: keyAround };
+    check('arrow keys move the globe while it spins, then the spin returns', keyed < -5 && Boolean(keyReturn) && inIdleWindow(keyReturn.gap), JSON.stringify({ dLng: keyed.toFixed(1), restMs: keyReturn?.gap, window: IDLE_WINDOW, ...keyDetail }));
 
     // Two fingers spread 60 -> 240 px apart (zoom +2), then hold still.
     const beforePinch = await globeView();
@@ -792,6 +807,7 @@ async function main() {
 
     const journalFinds = new Set();
     let previewChecked = false;
+    let sparkleChecked = false;
     let scoutChecked = false;
     let hintChecked = false;
     let notesChecked = false;
@@ -1466,12 +1482,29 @@ async function main() {
         // A real click on a row that a waiting re-order moves in the DOM (taking a's mark back puts a first, so React re-inserts
         // every other row): the order applies after the click, which still lands on what was pressed.
         const clickWithReorderWaiting = async (where, type) => {
-          await evaluate(async id => { window.__keyMark(id, true); await new Promise(resolve => setTimeout(resolve, 500)); }, a);
+          // The click's spot is measured only once a's mark has re-ordered the rows and every slide has ended (a loaded
+          // machine can still be sliding after 500 ms). If that never happens, the race isn't set up: no click is sent,
+          // a's mark goes back, and the detail says why, so every check fed from here fails.
+          const setup = await evaluate(async ([id, marked]) => {
+            const markAt = performance.now();
+            window.__keyMark(id, true);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const rowEls = () => [...document.querySelectorAll('table[aria-label="Evidence"] tr[data-suspect]')];
+            const atRest = await window.__until(() => window.__rows().join() === marked.join() && rowEls().every(row => row.getAnimations().length === 0), 1000);
+            const settleMs = Math.round(performance.now() - markAt);
+            if (atRest) return { settleMs };
+            const rows = window.__rows(), slides = rowEls().map(row => row.getAnimations().length);
+            window.__keyMark(id, false);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return { failed: true, settleMs, rows, slides };
+          }, [a, [b, c, d, e, a]]);
+          if (setup.failed) return { setup: `rows not [${[b, c, d, e, a]}] at rest 1500 ms after the mark`, ...setup, picked: null, guide: null, pencil: null, tag: null };
           const spot = await evaluate(where => {
             const row = document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + where.id + '"]');
             const el = where.cell ? row.querySelector('td[data-hidden] button') : row.querySelector('button[data-pill]');
             const r = el.getBoundingClientRect();
-            return { x: r.left + (where.cell ? r.width / 2 : 60), y: r.top + r.height / 2, tag: row.querySelector('td[data-hidden]')?.dataset.tag };
+            const x = r.left + (where.cell ? r.width / 2 : 60), y = r.top + r.height / 2;
+            return { x, y, tag: row.querySelector('td[data-hidden]')?.dataset.tag, under: document.elementFromPoint(x, y)?.closest('tr')?.dataset.suspect ?? null };
           }, where);
           await evaluate(id => window.addEventListener('pointerdown', () => window.__keyMark(id, false), { once: true }), a);
           const point = { x: spot.x, y: spot.y };
@@ -1483,10 +1516,11 @@ async function main() {
             page('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', buttons: 0, clickCount: 1 }),
           ]);
           await sleep(800);
-          return evaluate(({ id, tag }) => ({
+          return evaluate(({ id, tag, settleMs, under }) => ({
             rows: window.__rows(), picked: window.__pill(id).getAttribute('aria-pressed'), guide: document.querySelector('[role=dialog] h2')?.textContent ?? null,
             pencil: document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] td[data-tag="' + tag + '"]')?.dataset.pencil ?? null, tag,
-          }), { id: where.id, tag: spot.tag });
+            settleMs, under, pickedId: document.querySelector('table[aria-label="Evidence"] button[data-pill][aria-pressed="true"]')?.closest('tr')?.dataset.suspect ?? null,
+          }), { id: where.id, tag: spot.tag, settleMs: setup.settleMs, under: spot.under });
         };
         const dropPick = id => evaluate(async id => { if (window.__pill(id).getAttribute('aria-pressed') === 'true') window.__pill(id).click(); await new Promise(resolve => setTimeout(resolve, 200)); }, id);
         const mouseName = await clickWithReorderWaiting({ id: c }, 'mouse');
@@ -1494,7 +1528,7 @@ async function main() {
         await dropPick(c);
         const mouseCell = await clickWithReorderWaiting({ id: d, cell: true }, 'mouse');
         check('the sort: a mouse click on a hidden cell that a waiting re-order moves still pencils it', sameList(mouseCell.rows, card) && mouseCell.pencil === 'yes', JSON.stringify(mouseCell));
-        await evaluate(async ({ id, tag }) => {
+        if (!mouseCell.setup) await evaluate(async ({ id, tag }) => {
           for (let i = 0; i < 2; i++) {
             document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] td[data-tag="' + tag + '"] button').click();
             await new Promise(resolve => setTimeout(resolve, 150));
@@ -1745,6 +1779,23 @@ async function main() {
           const move = moves.reduce((best, candidate) => (value(candidate) > value(best) ? candidate : best));
           const expected = scouts(move);
           window.__watchRows();
+          // Evidence (plan board-e2e S3): when each right guess turns right, starts and stops sparkling, read once per mutation batch.
+          const keysOf = selector => [...document.querySelectorAll('table[aria-label="Evidence"] ' + selector)].map(td => `${td.closest('tr').dataset.suspect}:${td.dataset.tag}`);
+          const seen = {};
+          const note = () => {
+            const now = Date.now();
+            const right = new Set(keysOf('[data-guess="right"]'));
+            const lit = new Set(keysOf('[data-guess="right"]:has(.ev-sparkle)'));
+            for (const key of new Set([...right, ...lit, ...Object.keys(seen)])) {
+              const at = (seen[key] ??= { right: null, on: null, off: null });
+              if (right.has(key)) at.right ??= now;
+              if (lit.has(key)) at.on ??= now;
+              else if (at.on !== null) at.off ??= now;
+            }
+          };
+          note();
+          const watch = new MutationObserver(note);
+          watch.observe(document.querySelector('table[aria-label="Evidence"]'), { subtree: true, childList: true, attributes: true, attributeFilter: ['data-guess'] });
           window.__dragStart = Date.now();
           const drag = await cc.drag(move, { input: 'touch', timeoutMs: 30_000 });
           await new Promise(resolve => setTimeout(resolve, 150));
@@ -1756,8 +1807,16 @@ async function main() {
             id: Number(td.closest('tr').dataset.suspect), tag: td.dataset.tag, hidden: td.hasAttribute('data-hidden'),
             yes: td.dataset.yes ?? null, said: td.querySelector('.sr-only')?.textContent ?? null, guess: td.dataset.guess ?? null,
           }));
-          const sparkling = [...grid.querySelectorAll('[data-guess="right"]:has(.ev-sparkle)')].map(td => `${td.closest('tr').dataset.suspect}:${td.dataset.tag}`);
-          return { counted: drag.counted, timedOut: drag.timedOut, blocked: drag.blocked ?? null, pins, view, orders, misses, cells, sparkling, expected, clue: cc.clue() };
+          if (watch.takeRecords().length > 0) note();
+          const readAt = Date.now();
+          watch.disconnect();
+          // A right guess sparkles if it does at the read, or if it sparkled its whole life before it: a slow move can
+          // settle after the sparkle has ended (plan board-e2e, S). A sparkle that is shorter, late or absent still fails.
+          const SPARKLE_MS = 3000; // mirror of .ev-sparkle's ev-sparkle-fade 3s in src/styles/globals.css; change both
+          const lived = Object.keys(seen).filter(key => seen[key].on !== null && seen[key].off !== null && seen[key].off - seen[key].on >= SPARKLE_MS);
+          const sparkling = [...new Set([...keysOf('[data-guess="right"]:has(.ev-sparkle)'), ...lived])];
+          const gemsAt = cc.events(1e6).filter(e => e.name === 'gems-matched' && e.at >= window.__dragStart).map(e => e.at);
+          return { counted: drag.counted, timedOut: drag.timedOut, blocked: drag.blocked ?? null, pins, view, orders, misses, cells, sparkling, expected, clue: cc.clue(), spark: { gemsAt, readAt, seen } };
         });
         if (!result) break;
         moves++;
@@ -1854,7 +1913,15 @@ async function main() {
           return guess && (guess === 'yes') === state.orders.find(order => order.tag === tag).row[state.suspects.indexOf(id)];
         });
         // Older sparkles stay mounted, so look at the cells just called. The end-of-round reveal shows none.
-        if (calledNow.length > 0 && !revealed) check(`round ${n} move ${moves}: a right guess just scouted sparkles`, calledNow.every(key => result.sparkling.includes(key)), JSON.stringify({ sparkling: result.sparkling, calledNow }));
+        // Evidence (plan board-e2e S3): ms from the move's first clear; phases = every clear of the move.
+        const sparkleTimes = ({ gemsAt, readAt, seen }, keys, settledAt) => {
+          const rel = t => (t == null || gemsAt[0] == null ? null : t - gemsAt[0]);
+          return { phases: gemsAt.map(rel), ms: Object.fromEntries(keys.map(key => [key, { right: rel(seen[key]?.right), on: rel(seen[key]?.on), off: rel(seen[key]?.off), read: rel(readAt), settled: rel(settledAt) }])) };
+        };
+        if (calledNow.length > 0 && !revealed) {
+          sparkleChecked = true;
+          check(`round ${n} move ${moves}: a right guess just scouted sparkles`, calledNow.every(key => result.sparkling.includes(key)), JSON.stringify({ sparkling: result.sparkling, calledNow, ...sparkleTimes(result.spark, calledNow, rest.settledAt) }));
+        }
         if (calledNow.length > 0 && !calledShot) { calledShot = true; await screenshot('03-called-it.png'); }
         if (!notesChecked && state.notes > 0) {
           notesChecked = true;
@@ -1995,6 +2062,7 @@ async function main() {
       const ak = pagingShot?.shots.arrowsKeepFocus;
       check('field guide: signs arrows keep focus: from the pause button, ArrowRight twice shows the next animal each time and focus stays in the sheet', Boolean(ak && ak.length === 3 && ak[0].on === 'pause' && ak.every(at => at.inSheet) && new Set(ak.map(at => at.name)).size === 3), JSON.stringify(ak ?? null)); }
     check('the release preview was checked at least once', previewChecked);
+    check('a right guess\'s sparkle was checked at least once', sparkleChecked);
     check('the scouting preview was checked at least once', scoutChecked);
     check('the idle hint was checked at least once', hintChecked);
     report.sortSaw = sortSaw;

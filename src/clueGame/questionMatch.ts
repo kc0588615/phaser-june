@@ -1,8 +1,7 @@
 // The questions the animal board (animalBoard.ts) asks, from plan 041's Question Match: the five question
 // categories and the trait prefixes each asks about, each question's full, short and column text, the Animal
 // type the content builds (questionMatchContent.ts), the book that looks animals up, poolFor and likeness.
-// Rules, RULES_041 and DEFAULT_RULES are the 041 and 043 rule sets, read now only by the board's "+N charges"
-// labels (ClueBoardScene.ts). Pure: no DOM, no Phaser.
+// Pure: no DOM, no Phaser.
 import type { ContinentKey } from '@/clueGame/regions';
 import { REGIONS } from '@/clueGame/regions';
 
@@ -54,78 +53,6 @@ export interface Animal {
   /** Every tag on its clues, trait tags and open ones like digging_claws (plan 044: what its field guide records). */
   tags?: readonly string[];
 }
-
-export type FamilyTreeCost = 'match' | 'charges' | 'one-of-each';
-
-export interface Rules {
-  /** Names the rule set (clue_match_solves.rules_version, rounds saved before 2026-10-01). */
-  version: string;
-  moves: number;
-  candidates: number;
-  /**
-   * How a family tree step is earned: a match of `match` gems or more ('match'), `charges` charges of any
-   * color ('charges'), or one charge of every color ('one-of-each').
-   */
-  familyTree: { cost: FamilyTreeCost; match: number; charges: number };
-  /** A round's other animals: closest relatives first, then (when on) the look-alikes, sharing the most traits with the mystery. */
-  lookAlikes: boolean;
-  /** Ask a color's questions automatically when there's no choice: enough charges for all of them (see autoAsk). */
-  autoAsk: boolean;
-  /** Also offer questions that can't cross anything out (every animal standing shares the answer), as Guess Who does. */
-  offerUseless: boolean;
-  /** Rules 043: a match asks its color's lead question at once (see leadQuestions); charges are never held or chosen. */
-  askOnMatch: boolean;
-  /** Which question leads a color: the best split ('best'), or one dealt at random per round from the useful ones ('dealt'). */
-  lead: 'best' | 'dealt';
-  /** Charges a question costs. */
-  questionCost: number;
-  /** Charges for a match of 3, 4 and 5 or more. */
-  perMatch: [three: number, four: number, fivePlus: number];
-  /** Gems a toy clears outside any match (all colors together) that earn one charge, of the color it cleared most. */
-  perBlast: number;
-  points: {
-    solved: number; moveLeft: number; standing: number; firstTry: number;
-    wrongGuess: number; wrongGuessMoves: number; streakStep: number; streakMax: number;
-  };
-}
-
-/**
- * The charges game with toys on the board (plan 041, part 13): 12 look-alike animals keep random tapping from
- * solving nearly every round now that toys make the board worth 4 moves of play. Kept for the balance bot.
- */
-export const RULES_041: Rules = {
-  version: '041-5',
-  moves: 4,
-  candidates: 12,
-  // One charge of every color per step: a set to collect ("I still need a Range charge"), so the family tree
-  // pushes players to match every kind of clue.
-  familyTree: { cost: 'one-of-each', match: 4, charges: 8 },
-  lookAlikes: true,
-  autoAsk: true,
-  offerUseless: false,
-  askOnMatch: false,
-  lead: 'dealt',
-  questionCost: 1,
-  perMatch: [1, 2, 3],
-  perBlast: 3,
-  points: { solved: 50, moveLeft: 10, standing: 10, firstTry: 25, wrongGuess: 30, wrongGuessMoves: 2, streakStep: 10, streakMax: 100 },
-};
-
-/**
- * Plan 043, part 0: each color leads with one question, dealt per round and shown in the legend under the board;
- * a color's charges ask it as soon as they cover it (2 charges), on a 7x7 board with 5 moves. A match of 5 or more
- * in a line reveals the next family tree step: at 4, big matches on 7x7 solved rounds through the tree and
- * questions stopped mattering. Bot numbers: plans/043, part 0.
- */
-export const DEFAULT_RULES: Rules = {
-  ...RULES_041,
-  version: '043-0',
-  moves: 5,
-  familyTree: { cost: 'match', match: 5, charges: 8 },
-  askOnMatch: true,
-  lead: 'dealt',
-  questionCost: 2,
-};
 
 const QUESTION_TEXT: Record<string, string> = {
   'size:tiny': 'Is it tiny (under 100 g)?', 'size:small': 'Is it small (100 g to 2 kg)?', 'size:medium': 'Is it medium-sized (2 to 30 kg)?',

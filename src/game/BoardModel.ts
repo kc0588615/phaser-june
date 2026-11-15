@@ -7,8 +7,8 @@
 // (its grid value is ignored), never matches, can't be swapped, isn't cleared by
 // toys and moves only when the rules step it (plan 047); gems fall past it. Each
 // phase reports the tiles it touched (a run, or a cleared gem, right next to them);
-// the rules decide what that does. With no pins, every behavior is the one the tests
-// pin for 041/043.
+// the rules decide what that does. With no pins it is a plain match-3 board, which is
+// how its tests drive it.
 import { GEM_TYPES, type GemType } from './constants';
 import { mulberry32, shuffled } from '@/lib/seededRng';
 
