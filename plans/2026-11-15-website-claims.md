@@ -599,6 +599,8 @@ Run on the final commit (S5), and again by the release session after its rebase 
    - The full new Privacy text, and each changed Teachers and Terms sentence old → new (from `text-*.txt` and `text-*-before.txt`).
    - Wording deviations from the brief: Target design (a)–(e). Also Fable SC 2: Privacy bullet 3 ("Nothing about how you play is kept in our database") sits above deviation (b)'s "Rounds played without one were saved too" (now vs then). And the deletion doc's deviations (about 8 weeks; copies only while the jobs run; dev copy; Clerk deleted last; attribution; Caddy clause) and its length against the brief's 15–25 lines (now 50, after S4b), with the reason. Also S4b (Astra code-review MUST-FIX 1): "about 8 weeks" covers finished `*.dump` files only, and leftover `*.partial`/`*.part` files are deleted by hand.
    - The deletion section's outline; site E2E runs (baseline 444/444, S3, final) with artifact paths; review rounds: none (owner pre-approved, 2026-11-14). The release adds CI and smoke results.
+
+**Release:** PR #82 merged (`416eadd6`), deployed; CI `check` + `e2e` pass; smoke: codes = pre-merge, `/` unchanged, 3 changed pages = merge build. No production content build needed.
    - No production content build needed (no `db/content` change).
    - For the owner: Clerk's production instance still holds former users' emails until he deletes it (Fable SC 3); Caddy logs IP and user agent to `docker logs caddy` on a 502 (Architecture Notes); H20 (4 result-less profiles); `deploy/backup/pg-backup.sh` could remove its `$file.partial` on failure (a trap) or prune `*.partial`, which would make the deletion doc's hand check unneeded (a `deploy/` change, out of scope). Astra code review's SHOULD-CONSIDER (freshness): the fetch worked here, and the release rebases on a fresh fetch.
    - For M13: "are being deleted" stays true until the last weekly dump holding the rows ages out (56 days after the drop), and until its two kept dumps (`game-backups/kept/`), any leftover `*.partial`/`*.part` backup files, and the dev copy's rows go; then it should read "were deleted". The deletion section's table names (and W4/W5 dates) change when M13 renames the tables, and its old-rows part goes when M13 drops them. `db/schema.sql:91`'s comment is off (4 of 7 profiles hold no result).
@@ -638,6 +640,14 @@ Lead: MUST-FIX 1 is real (`deploy/backup/pg-backup.sh:20-22` leaves `$file.parti
 
 ## Release
 
+- Rebase on fresh `origin/main` (`83eef270`, unmoved): no-op. Dates stay November 15, 2026 (merge day UTC). Verification 1–8 re-run on `50f11b12`: typecheck/lint 0, test 76/76, CSS `site.f7f956df00.css`, build diff = 3 pages, DoD grep empty, Verification 7 pass, page text = S5's, site E2E **444/444, 20 screenshots, report `444 0`** → `$STATE/final-e2e-site/`.
+- PR #82 (https://github.com/kc0588615/phaser-june/pull/82). CI run 43752356522: `check` pass (2m55s), `e2e` pass (11m1s).
+- Pre-merge baseline (`$STATE/premerge/codes.txt`, `index.html`): apex `/`, `/teachers/`, `/privacy/`, `/terms/` 200, `/nope/` 404; play `/`, `/explore/` 200; live pages = `site-before`.
+- Merge commit `416eadd6` (2026-11-15 19:37 UTC). Deploy (`$STATE/deploy.log`) last line: `deploy critter-connect: live at https://critterconnect.org`.
+- Smoke: `version.txt` = `416eadd6`; status codes = pre-merge (`$STATE/premerge/codes-after.txt`); `/` byte-identical to pre-merge; `/teachers/`, `/privacy/`, `/terms/` byte-identical to `out/site` built from the merge tree (branch tree = `416eadd6` tree).
+
+Result: done
+
 ## Decisions
 
 - **Baseline row counts (7 profiles / 188 solves vs the brief's 3 / 177): continue, don't stop the Privacy part.** The stop rule exists to catch something still writing; no row is newer than 2026-10-01 04:24 UTC (profiles 2026-09-26), so nothing writes. The owner's "3" matches the 3 profiles that hold results; the other 4 hold only a Clerk id. The extra rows don't change any page sentence. Deletion doc must not say "3 profiles"/"177"; it gives no counts (or today's) and attributes "owner's test accounts" to the owner. Non-blocking FYI handoff item H20 asks him to confirm the 4 result-less profiles are his.
@@ -659,6 +669,7 @@ Lead: MUST-FIX 1 is real (`deploy/backup/pg-backup.sh:20-22` leaves `$file.parti
 - 2026-11-15 19:16 UTC · Astra code review: APPROVE_WITH_CHANGES, 1 MUST-FIX (deletion doc's 8-week expiry ignores leftover `.dump.partial` files; verified real) -> step S4b added; 1 SHOULD-CONSIDER (freshness; fetch fine here). Plan only.
 - 2026-11-15 19:19 UTC · S4b: deletion doc Copies limits 8 weeks to finished `*.dump`; leftover `*.partial` (prod count 0) and a killed pull's `*.part` deleted by hand; Verification 7 pass, typecheck/lint 0.
 - 2026-11-15 19:27 UTC · S5 final Verification on `50f11b12` (base `83eef270`): typecheck/lint 0, test 76/76, css hash same, build diff = 3 pages, DoD grep clean, site E2E 444/444 (`$STATE/final-e2e-site`); Summary written; status done.
+- 2026-11-15 19:40 UTC · Release: rebase no-op, Verification re-run green (444/444), PR #82 CI pass, merged `416eadd6`, deployed, smoke pass (codes, `/` unchanged, 3 pages = merge build).
 
 ## Summary
 
