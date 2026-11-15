@@ -797,11 +797,26 @@ Every step:
     - E2E (dev copy, guard passed) → `$STATE/e2e-s5/` (`e2e-s4/` deleted): `1584/1584`, report check `1584 0`, 5 `true` (2 A16, 3 A17).
     - `05-journal.png`, `11-journal-sources-open.png` vs S4's: 0 px differ (780×1688, sharp). By eye: range map shown, no caption; JournalSheet's only diff is the `RangeMap` call, so the credit line is unchanged.
 
-- [ ] S6 · S11: `docs/CLUE_MATCH.md` says what is true
+- [x] S6 · S11: `docs/CLUE_MATCH.md` says what is true
   - First write `$STATE/s11-protected.txt` from `git show origin/main:docs/CLUE_MATCH.md`, one string per line: "The Field Journal lives on the device; when signed in, it also pulls the player's solves saved before 2026-10-01."; "`GET /api/clue-game/journal` (a signed-in player's solves)"; "`profiles`, `clue_match_solves`,"; the full `clue_match_solves has a row per round finished before 2026-10-01 …` sentence; "The journal counts only `solved` rows."; the whole `07_solve_stats.sql` row.
   - Edit per the Architecture S11 table (rows 7, 19, 24, 47, 53, 63, 67, 89, 90, 91, 92, 93; 55 stays). Re-read each line and the code it cites first; a line an earlier mission made true is skipped. The Resume and "Once a run" bullets use S1's check names.
   - Record: each final sentence beside the code line it was read against.
   - Checks: typecheck, lint; Verification 10. No E2E (Markdown only).
+  - Done 2026-11-15. `$STATE/s11-protected.txt` written (6 strings, all found on `origin/main`). Doc unchanged on the branch before (`git diff origin/main` empty); every row's "Now" text found as quoted, none made true by an earlier mission. Lines now on this branch, each beside the code read:
+    - `:7` "Each animal you've found lights up its range on the globe, with an emoji marker, tinted by group: green for amphibians and reptiles, amber for mammals, blue for birds." ← `Globe.tsx:1-5` header; `classColor` `places.ts:39-51` (AVES `#38bdf8`).
+    - `:19` savedGame row + "a save that no longer fits today's code (a field missing, or its check throws) is dropped for a fresh round 1" ← `useAnimalSession.ts:118-121` (`fitsShape`, the try).
+    - `:24` + "`GET /api/clue-game/ranges?species=<ids>` (the globe's ranges)", placed before the journal clause (kept contiguous) ← `src/app/api/clue-game/ranges/route.ts:8`, `Globe.tsx:164`.
+    - `:47` "The board reports each explode phase's matches (`gems-matched`, …), each settled move (`clue-board-settled`), taps and holds on an animal's tile, nudges, animals that walk off and what to announce, all typed in `src/game/EventBus.ts`; React owns the rules and the state." ← `EventBus.ts:5-20` board→page lines (`current-scene-ready` not named: scene start, not a report).
+    - `:53` "or hold a hidden cell of an animal not ruled out to highlight it purple (that color's gems glow next to its card; holding the question's own gem lights all of that color; the rules never read it)" ← `EvidenceGrid.tsx:18-20` header.
+    - `:55` left: `questionMatch.ts` has no `newRound`/`chargesEarned`/`DEFAULT_RULES`; `gems.ts` gone from table and `src/`; no "Only continents" line.
+    - `:63` "in the field guide and the Field Journal" ← only `<GlossaryText` sites `AnimalSheets.tsx:266`, `JournalSheet.tsx:72`.
+    - `:67` "SVG paths for the journal's range map" ← only `<RangeMap` `JournalSheet.tsx:69`.
+    - `:89` "(the name sheet shows; a right name still finds it, with one star)" ← `nameIt` `animalBoard.ts:436-447`; `e2e.mjs:1969`. No Sharp eye parenthetical: nobody ruled out → `scorePencils` returns null (`animalBoard.ts:478`), so one star only.
+    - `:90` + "a save missing a field today's code writes, or whose check throws, is dropped for a fresh round 1, with no console error" ← `e2e.mjs:2251-2252` names; `newErrors.length === 0` in each check (`:2295`).
+    - `:91` + "two tabs keep each other's finds and bests" ← `e2e.mjs:2543` names.
+    - `:92` "`E2E_BASE_URL`, `E2E_SEED`, `E2E_RESUME_SEED`, `E2E_ROUNDS`, `E2E_PLACE`, `E2E_CPU_THROTTLE` and `CHROME_PATH` change it." ← `e2e.mjs:14` header; code reads the same six `E2E_*` (`rg process.env`), `CHROME_PATH` read by `scripts/cdp.mjs`.
+    - `:93` "careful, novice, expert, reader, guesser, random and oracle players" ← `balance-044.ts:249`.
+    - Untouched: `:3`, `:10`, `:51`, `:59`, `:61`, `:83`, `:94`. `git diff --numstat origin/main -- docs/CLUE_MATCH.md` `12 12`, hunks exactly the 12 rows. Verification 10 both print nothing. typecheck 0, lint 0.
 
 ## Verification
 
@@ -860,5 +875,6 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 - 2026-11-15 14:10 UTC · S3: A17 `mergeJournals`/`saveSolve`/`saveRecords` + `useJournal` merges into storage at save; unit fail-first then 75/75; typecheck/lint 0; E2E 1584/1584 → `e2e-s3/`.
 - 2026-11-15 14:44 UTC · S4: Open Runde cut to 31 chars (154,604 → 6,892; 162,468 → 6,848; fontTools 4.68.0) + `unicode-range`; glyph proof ok (4 pairs 0 px); typecheck/lint 0; site 444/444; E2E 1583 → rerun 1584/1584 (A10 timing flake) → `e2e-s4/`; 7 screen pairs: font-data text identical.
 - 2026-11-15 15:01 UTC · S5: D22 leftovers out (4 CSS animations, RangeMap caption, 5 dead props, dup `Pencil`/`HOLD_MS`, always-true `is-fresh`) + D23 OAuth logo `git rm`; typecheck/lint 0, unit 75/75, greps clean; E2E 1584/1584 → `e2e-s5/`; journal screens 0 px vs S4.
+- 2026-11-15 15:05 UTC · S6: S11 `docs/CLUE_MATCH.md` 12 lines corrected against code (sign-in lines + Content step list untouched); Verification 10 clean; typecheck/lint 0. Markdown only, no E2E.
 
 ## Summary
