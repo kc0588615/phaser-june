@@ -223,7 +223,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -249,6 +249,384 @@ Base: `origin/main` `9f72f360` (PR #79 merge), branch at `5850bcbd`. State folde
 
 ## Architecture
 
+I read every site on `agent/screens-cleanup`, which is `origin/main` `9f72f360` (fetched 2026-11-15) plus this plan. All quotes come from that tree. Ranked by impact: A17 (finds and bests lost without a sign), A16 (a deploy can strand a tab), O1 (about 303 KB on every first visit), S11 (the guide agents start from is wrong), then D22 and D23 (dead code and files, nothing a player sees).
+
+### Where the brief is wrong or has moved
+
+1. The Notes line "`SuspectPhoto`'s only caller is `AnimalCard`" is wrong; the Review corrections already say so. `AnimalSheets.tsx:212,659` pass `size={330}` and `:414` passes `size={120}`. The Verification grep must not contain `size = 120`.
+2. `font-data` also draws at `text-xxs` (10 px): `FactsWithSources.tsx:64` `{i + 1}.` sits inside `<ol className="… text-xxs …">` (`:57`). So the glyph proof covers 10, 12, 14 and 16 px.
+3. In cc, `font-medium` is weight 700 (`--weight-ui-medium: 700`, `globals.css:185`) and `font-heavy` is 800. So all medium and heavy `font-data` text draws from the Bold file, and the Regular file draws only weight-400 text. The playing screen uses both files (`AnimalGame.tsx:457` regular, `:459` heavy).
+4. A16 case 1 (`session.trail` deleted) does not crash the playing screen today. `AnimalGame.tsx:422-457` reads `trail` only behind `trail ?` / `trail &&`. The save resumes without a word (no hearts, score 7). It throws only later: at the round-end card (`AnimalSheets.tsx:728` `trail.over`) or in `nextRound` (`useAnimalSession.ts:272` `current.trail.over`). The new check still fails on today's code (score 7 ≠ 0, and the save still lacks `trail`), so it is a valid fail-first check.
+5. A16 case 2 (`session.round.orders` deleted) today: `roundStillFits` throws inside the load's one `try`. The catch logs `console.error('[AnimalBoard] Failed to load the animals:', …)` and shows "Could not load the animals…". In the fail-first run this also fails the final "no console errors" check. That failure is expected.
+6. A17's "neither page logged a console error" can't be a check on its own, because it passes on today's code (Decision rule: a new check that passes today is wrong). It is ANDed into the journal check instead.
+7. S11: M7 already removed `gems.ts` from the table. `questionMatch.ts` has no `newRound`, `chargesEarned` or `DEFAULT_RULES`, so the "earlier games" line stays. The file has no "Only continents become sightings…" line. `clue-board-shuffled` is gone from `EventBus.ts`.
+8. O1 facts, from a trial cut in `/tmp` with fontTools 4.68.0, the brief's command and the list below:
+   - Sizes: Regular 6,892 B and Bold 6,848 B (13,740 B together, down from 317,072).
+   - Each cut file has 48 glyphs; `'*'` keeps the glyphs other features need.
+   - The name table keeps IDs 0–17 ("Copyright 2023 Laurids Kern"). The originals have no licence entry (ID 13) either.
+   - The hhea and OS/2 metrics are unchanged.
+   - The originals have GSUB `aalt case frac locl ordn zero` and GPOS `kern`, and no `tnum`. The cut's GSUB drops `locl`, because no listed glyph has a local form. This is harmless, and the pixel proof checks it.
+   - Both weights have U+00D7 and U+2212.
+   - The outlines are CFF, so the hints live in the charstrings, and the subsetter keeps them by default.
+
+### D22 · the screens' leftovers
+
+**Findings** (all confirmed; only line numbers moved). These break KISS (dead code that every reader has to rule out) and DRY (`Pencil`, `HOLD_MS`):
+- **CSS.** `globals.css:462` "/* Clue Match (cm-*, roster-cross: the unrouted 043 game, plus the range map's ping) */".
+  - Keyframes to delete: `roster-cross-in` 463-467, `cm-shake` 469-475, `cm-pop-in` 476-479, `cm-countdown` 484-487.
+  - Rules to delete: `.roster-cross` 468, `.cm-shake` 488, `.cm-pop-in` 489, `.cm-countdown` 490.
+  - `cm-range-ping` stays: keyframes 480-483, rule 491.
+  - The reduced-motion list at `:654` starts `.cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit, …`. `.cm-countdown` was never in it.
+- **RangeMap.** `RangeMap.tsx:9` `const area = new Intl.NumberFormat(…)`; `:11` `caption = true` / `caption?: boolean`; `:49-54` `{range && caption && (` with its figcaption ("Range about … km²", "Map: IUCN Red List"). The only caller, `JournalSheet.tsx:69`, passes `caption={false}`. The credit at `JournalSheet.tsx:99` ("Range maps: IUCN Red List. Realms: One Earth …", M10's) stays.
+- **Cache fallback.** `useAnimalSession.ts:89-91`: the comment, `getJson<Omit<CluePool, 'citations'> & Partial<Pick<CluePool, 'citations'>>>` and `{ ...fetched, citations: fetched.citations ?? {} }`. `poolFromRows` always sets `citations` (`pool.ts:86-110`).
+- **Props no caller passes:**
+  - `AnimalCard`'s `size` (`AnimalCard.tsx:22-23`, passed on at `:28`).
+  - `TrapCard({ children }: { children?: ReactNode })` (`:40-47`), its doc's "`children`: what sits on it (the player's own mark count)", and `type ReactNode` in the `:7` import.
+  - `FactsWithSources`'s `itemClassName` (`:16`, `:21`, and `:42` `<li key={fact.key} className={itemClassName}>`).
+  - `SpeciesPortrait`'s `width = 120` (`:6`, its doc at `:10-11`, and `:19` `photoAt(photo.url, width)`).
+  - `PhotoCredit`'s `className = ''` (`:26`, `:28`).
+  - The Baseline greps show that no caller passes any of them.
+- **Duplicates and a condition that is always true:**
+  - `AnimalGame.tsx:39` `type Pencil = Readonly<Record<string, 'yes' | 'no'>>;` repeats `animalBoard.ts:428`.
+  - `HOLD_MS` is declared twice. `EvidenceGrid.tsx:48-49` has it under the comment "…the board's tiles use the same (BoardController)." and uses it at `:127`. `BoardController.ts:55-56` has `export const HOLD_MS = 450;` (nothing imports it), uses it at `:138` and names it in a doc at `:75`.
+  - `EvidenceGrid.tsx:437`: inside `guess && !called && fresh &&`, `` className={`ev-missed absolute right-xxs top-px ${fresh ? 'is-fresh' : ''}`} `` always adds `is-fresh`.
+
+**Target.** Exactly the brief's list. The dry-run patch matches it, except that it predates M7.
+- **CSS.** Delete the four keyframes and four rules. The comment becomes `/* The range map's ping (RangeMap) */`. The list becomes `.cm-range-ping, .ev-lit, …`.
+- **RangeMap.** Delete `area`, the prop and the figcaption; `<figure className="m-0">` and its svg stay. JournalSheet: `<RangeMap speciesId={species.id} name={species.commonName} />`.
+- **useAnimalSession.** `const pool = await getJson<CluePool>('/api/clue-game/pool/');`, inside A16's load `try`.
+- **AnimalCard.**
+  - Drop `size`, so the call is `<SuspectPhoto species={species} />`.
+  - `TrapCard()` takes no children, and its doc ends at "…read as a sixth animal)."
+  - The import becomes `useState, type CSSProperties`.
+  - `SuspectPhoto` keeps `size = 120`.
+- **FactsWithSources.** Drop `itemClassName`; the item is `<li key={fact.key}>`.
+- **SpeciesPortrait.** Drop `width`; the image uses `photoAt(photo.url, 120)`.
+- **PhotoCredit.** Drop `className`; the link's `className` becomes a plain string.
+- **AnimalGame.** Delete the local type and import it: `import { sharpEye, type AnimalLogEntry, type Pencil } from '@/clueGame/animalBoard';`.
+- **`HOLD_MS`.**
+  - Declare it once in `src/game/constants.ts`, after `SWIPE_THRESHOLD`: `/** How long a press on an animal lasts before it is a long press (its field guide), in ms: the board's tiles (BoardController) and the grid's rows (EvidenceGrid). */ export const HOLD_MS = 450;`
+  - `BoardController.ts:18` imports it from `./constants`, and `EvidenceGrid.tsx:34` from `@/game/constants`.
+  - Both old declarations and EvidenceGrid's comment go.
+- **EvidenceGrid `:437`.** `className="ev-missed is-fresh absolute right-xxs top-px"`.
+
+### D23 · the OAuth logo
+
+**Findings.** `git ls-files public/branding` lists the two wordmark SVGs plus `critterconnect-oauth-logo.png` and `.prompt.txt`.
+- Nothing outside `plans/` names `oauth-logo`.
+- `deploy/check.sh` names no branding file.
+- The site build copies only the two wordmarks and the favicon (`scripts/site.mjs:91`).
+- The owner's Q13 answer: nothing outside the repo loads the logo.
+
+**Target.** `git rm` the two files. No doc names them, so no doc edit. Release smoke: both answer 404 on `play.`, and the two wordmarks answer 200.
+
+### O1 · the data font
+
+**Findings.** `globals.css:54-67` has two `@font-face` rules for "Open Runde": Regular at 400, Bold at `700 800`, `font-display: swap`, no `unicode-range`. `--font-data` is at `:293`.
+- Only `globals.css:56,63` name the files.
+- The canvas never draws Open Runde.
+- `src/site` has no `font-data`.
+
+**The character list.** I took the 20 `font-data` lines in components (`git grep -n -w font-data -- src ':!src/styles'`). For each one I read the JSX children and traced every value passed in: GameMenu's `stats`, `Stat`'s callers, the pencil-bonus formatter. In the table, R means weight 400 (Regular file) and B means 700/800 (Bold file).
+
+| Site | Text drawn | Size, file | Characters |
+|---|---|---|---|
+| `AnimalGame.tsx:187` | `Clue {index + 1} of {facts.length}` (the Pause icon is an svg) | xs, R | `C l u e o f`, space, digits |
+| `AnimalGame.tsx:457` | `{inTrail}/{rules.trailRounds}` | xs, R | digits, `/` |
+| `AnimalGame.tsx:459` | `{round?.movesLeft ?? 0}` ("move(s)" is a sibling span, not font-data) | m, B | digits |
+| `AnimalSheets.tsx:122` | guide number `{i + 1}` | xs, R | digits |
+| `AnimalSheets.tsx:378` | `{page + 1}/{pages.length}` (inside LABEL: medium, uppercase, but no letters) | xs, B | digits, `/` |
+| `AnimalSheets.tsx:422` | `{round.notes.length}` in the Sheet title (`text-m font-medium`) | m, B | digits |
+| `AnimalSheets.tsx:455` | `{note.fits} of {count}` | xs, B | digits, space, `o f` |
+| `AnimalSheets.tsx:514` | GameMenu `stats` values from `AnimalGame.tsx:519`: `${inTrail} of ${trailRounds}`, `trailNo`, `score` | xs, B | digits, space, `o f` |
+| `AnimalSheets.tsx:554` | `{round.suspects.indexOf(id) + 1}` (its button is `font-medium`) | s, B | digits |
+| `AnimalSheets.tsx:644` | `+{end.points}`; points are never below 0, because a name's −50 cap nets a find's 50-point star to 0 (`animalBoard.ts:451-453,532-537`) | m, B | `+`, digits |
+| `AnimalSheets.tsx:651` | `{round.movesLeft}/{round.rules.moves}` | m, B | digits, `/` |
+| `AnimalSheets.tsx:714` | `{notes.length}` (`normal-case`) | xs, B | digits |
+| `AnimalSheets.tsx:752` | `Stat` values: `${called}/${guesses.length}` (`:670`); the pencil bonus as `−N` (U+2212) or `+N` (`:671`); `${trail.finds}/${trail.rounds}` (`:735`); `session.score` (`:736`) | m, B | digits, `/ + −` |
+| `AnimalSheets.tsx:767` | `2` | s, R | digits |
+| `AnimalSheets.tsx:808` | how-to step `{i + 1}` | xs, B | digits |
+| `EvidenceGrid.tsx:319` | `?` while reviewing, else `${have}/${size}` | xs, B | digits, `/ ?` |
+| `EvidenceGrid.tsx:417` | `?`. The cell uses font-data only when there's no guess; a guess's ✓/✗ is `text-m font-regular` | s, R | `?` |
+| `FactsWithSources.tsx:64` | `{i + 1}.` | xxs, R | digits, `.` |
+| `JournalSheet.tsx:56` | `×{timesSolved}`, then `best {bestMoves} move` plus `s` | xs, R | `× b e s t m o v`, space, digits |
+| `PlaceList.tsx:35` | `{speciesIds.length} animals` | xs, R | `a n i m l s`, space, digits |
+
+Some facts that bound the list:
+- Every number is `String(n)` of an integer ≥ 0: no locale formatting, and no ASCII `-` (scores, points and moves are never negative).
+- No `uppercase` ancestor holds a `font-data` element with letters.
+
+**The union** is 31 characters: space, `+ . / 0-9 ?`, `C a b e f i l m n o s t u v`, `×` (U+00D7) and `−` (U+2212). That is the brief's list from `af4b0453`, unchanged.
+
+The space must stay in for a second reason. CSS Fonts takes the "first available font", whose metrics set a line's height and baseline, to be the first face whose `unicode-range` includes U+0020. Without the space, every `font-data` line box would take the fallback font's metrics.
+
+**List** (one string for `--unicodes=` and both `unicode-range`s): `U+0020,U+002B,U+002E-0039,U+003F,U+0043,U+0061-0062,U+0065-0066,U+0069,U+006C-006F,U+0073-0076,U+00D7,U+2212`
+
+**The cut.**
+- Cut each file from `fonts-original/`, which equals `git show 9f72f360:public/fonts/open-runde/<file>`. First check its sha256 against `fonts-before.txt`.
+- Command: `uvx --from 'fonttools[woff]' pyftsubset <original> --unicodes='<list>' --layout-features='*' --name-IDs='*' --name-languages='*' --flavor=woff2 --output-file=public/fonts/open-runde/<file>`
+- `'*'` keeps `kern` and every other feature's glyphs. The font has no `tnum`, so `tabular-nums` does nothing, today or after.
+- Record `uvx --from 'fonttools[woff]' fonttools --version` and both sizes.
+
+**CSS.** Both rules get `unicode-range: <list>;`. A comment above them says three things:
+- the two files hold only the characters `font-data` draws, named in words;
+- a new character in `font-data` needs both files cut again from the full ones (in git at `9f72f360`, `public/fonts/open-runde/`) with this plan's command;
+- both ranges must then be updated.
+
+The comment at `:2-4` stays.
+
+**Glyph proof.** It lives outside the repo, in `/srv/critter-ai/agent-state/missions/screens-cleanup/glyphs/`.
+- **The page.** `glyphs.mjs` writes `glyphs.html`, which embeds the four files as `data:font/woff2;base64,` URLs (no server, and no file:// font CORS).
+  - Four families: `orig-regular` and `cut-regular` (weight 400), `orig-bold` and `cut-bold` (`700 800`).
+  - The two cut families carry `globals.css`'s final `unicode-range`, so a character missing from the range shows up as a difference.
+  - The page takes `?face=<family>&theme=light|dark`.
+  - It draws a control block in `-apple-system, BlinkMacSystemFont, sans-serif` alone.
+  - It then draws the test block in `"<face>", -apple-system, BlinkMacSystemFont, sans-serif`, the `--font-data` stack, so a face that fails to load falls back exactly like the control.
+- **What each block holds.**
+  - The 31 characters as one run, plus the real strings: `Clue 2 of 4`, `3 of 5`, `12/20`, `?`, `×3`, `best 1 move`, `best 12 moves`, `40 animals`, `+120`, `−24`, `+0`, `1.`, `30/30`.
+  - Sizes 10, 12, 14 and 16 px, with line heights 14, 16, 20 and 24.
+  - Letter-spacing −0.01em, and −0.04em as in the grid.
+  - Weights 400 for Regular, 700 and 800 for Bold.
+  - `font-variant-numeric: tabular-nums`.
+  - cc's light and dark text and background colors.
+  - No text on the page names the face, so whole screenshots can be compared.
+- **Rendering.** The harness drives Chrome with `startBrowser`/`openPage` from the worktree's `scripts/cdp.mjs`, imported by absolute path, with `CHROME_PATH=~/.local/bin/chrome-nosandbox`. It renders 390×844 at DPR 2, as the E2E does.
+  - Before each screenshot it runs `await document.fonts.ready`.
+  - For all four families it then requires `document.fonts.check('16px "<family>"')` to be true **and** each `FontFace` to have `status === 'loaded'`. `check` alone is true for a family that has no face at all.
+- **Comparison.** Use `sharp`, loaded from the worktree's `node_modules` with `createRequire` and not added to `package.json`. Compare decoded raw RGBA:
+  1. `orig-X-<theme>` against `cut-X-<theme>`, for X in {regular, bold} and both themes: same dimensions and 0 differing pixels (4 pairs).
+  2. In every Open Runde render, the test block's crop (`getBoundingClientRect` × DPR) differs from the control block's crop, so a render that fell back can't pass.
+  3. A deliberately wrong pair, `orig-regular` against `orig-bold` in the same theme, differs, so the comparison can see a font change.
+- **Saved.** The page, the harness, 8 screenshots and `compare.json` (fontTools version, the list, sizes, pixel-diff counts, each family's check and status, the command). If (1) fails, find the cause (a feature, a table or hinting) before going on, as the Decision rule says.
+
+### A16 · a saved game that can't resume
+
+**Findings.** These break fail-fast: a broken save is never dropped.
+- `savedGame.ts:27` `return saved?.v === 1 ? saved : null;` is the only check when the save is read.
+- `useAnimalSession.ts:47-48` reads `saved` once, then sets `seed = replay ?? saved?.seed ?? random`, so a saved seed that isn't an integer is used as is.
+- `useAnimalSession.ts:88-125` wraps everything in one `try`: the fetch, the content, the guard, the restore and the fresh deal. The guard is `:109-110`: `saved.requested === requested && saved.session.round.rules.version === ANIMAL_RULES.version && roundStillFits(book, saved.session.round)`. The `catch` (`:122-125`) only logs and sets "Could not load the animals…".
+- So a save whose guard throws strands the tab: every reload reads it again. A save that passes the guard but lacks a field restores and breaks later (item 4 above).
+- No code checks the save's shape. `clearSavedGame` has one caller, `GlobeScreen.tsx:26`.
+
+**Target.**
+
+`savedGame.ts` gets one pure query, plus a private helper:
+```ts
+const kindOf = (value: unknown) => (value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value);
+/** `saved` is an object that holds every key `fresh` holds with a defined value, each of the same JSON kind
+ *  (null on either side matches anything; arrays aren't looked inside). */
+function holdsKeys(saved: unknown, fresh: object): boolean { … }
+/** Whether a saved session has every field today's code writes: the session, its round, the round's rules and the
+ *  trail, each held against a fresh round 1's (`book` aside). Catches a field added without a rules version bump
+ *  (the grid's row order, 2026-11-04). */
+export function fitsShape(saved: unknown, fresh: SavedGame['session']): boolean
+// = holdsKeys(saved, fresh) && holdsKeys(saved.round, fresh.round) && holdsKeys(saved.round.rules, fresh.round.rules)
+//   && holdsKeys(saved.trail, fresh.trail), reading saved's nested values with optional access
+```
+- Only those four objects are compared. A generic recursion would also compare `pencil` and `headings`, whose keys are data; a fresh round that ever pre-filled them would make valid saves fail.
+- If one of the four is null or missing in the save, the save fails: it can't hold keys.
+- Every save today's code writes passes. JSON keeps `null` (`place`, `lostBy`, `named`, `pencilBonus`, `end`), and no rule ever sets a session, round, rules or trail field to `undefined`.
+
+`useAnimalSession.ts` changes in two places.
+
+**The seed.** `const isSeed = (value: unknown): value is number => Number.isInteger(value) && (value as number) > 0 && (value as number) <= 0xffff_ffff;`. It replaces `urlSeed`'s inline test, and the seed becomes `useState(() => replay ?? (isSeed(saved?.seed) ? saved.seed : null) ?? <random as today>)`.
+
+**The load effect.** Two `try` blocks, so the network can never drop a save:
+```ts
+let data: Content, first: Dealt;
+try {                                   // the network and the content; never touches the save
+  const pool = await getJson<CluePool>('/api/clue-game/pool/');
+  …animals, the cancelled check, continent, ids, book, sets: unchanged…
+  if (sets.size === 0) { setLoadError('Not enough animals that can be told apart yet.'); return; }
+  data = { pool, animals, book, continent, sets };
+  first = deal(data, 1, []);            // once, before the guard: deal advances rng.current, and a dropped save plays this deal
+} catch (error) {
+  console.error('[AnimalBoard] Failed to load the animals:', error);
+  if (!cancelled) setLoadError('Could not load the animals. Check the connection and reload.');
+  return;
+}
+setContent(data);
+const load = { type: 'load' as const, book: data.book, ...first, trail: newTrail(ANIMAL_RULES) };
+if (saved) {
+  try {                                 // only the guard, the shape check and the restore
+    if (saved.requested === requested && saved.session.round.rules.version === ANIMAL_RULES.version && roundStillFits(data.book, saved.session.round)) {
+      const { book: _book, ...fresh } = animalSessionReducer(null, load)!;
+      if (!fitsShape(saved.session, fresh)) throw new Error("a field today's code writes is missing");
+      …today's restore, unchanged: rng.current reset, setBoard, setRowOrder, setRecordedRound, dispatch restore with data.book…
+      return;
+    }
+  } catch (error) {
+    clearSavedGame();
+    console.warn('[AnimalBoard] Dropped a saved game that no longer fits; a new game starts:', error);
+  }
+}
+dispatch(load);
+```
+- The fresh session comes from the pure reducer, `animalSessionReducer(null, load)`, which is an existing interface. Its shape is today's by construction, and the `load` object literal isn't written twice.
+- `deal` stays in the load `try`. If it throws ("No clue deck…"), the player sees the load error, as today.
+- A save from another continent or rules version, or one where `roundStillFits` is false, is passed over without a word and not cleared, as today; the new game's save replaces it.
+- A drop clears the save at once, warns once and plays `first`. A failed pool load and "Not enough animals" never reach the save.
+- The restore is setters and a dispatch, which don't throw, and it runs after both checks. So a drop never follows half a restore (a reset rng or a set board).
+- `SavedGame`'s `v: 1`, `ANIMAL_RULES.version`, `animalBoard.ts` and `animalSession.ts` are unchanged. No error boundary.
+
+**Fail-first E2E.** In `scripts/e2e.mjs`, right after `:2233`, "a save whose witness notes no longer fit…":
+- Read the save once into `base`: the unplayed round 1 the stale-save check just dealt. Both cases start from `base`, so on today's code the second case doesn't inherit the first one's broken save.
+- **Setup per case.** The two cases are: delete `session.trail`; delete `session.round.orders`. For each one:
+  - Write `base` back with `session.score = 7` and that field deleted.
+  - Note `report.consoleErrors.length`.
+  - `Page.reload`.
+  - Wait for the board **or** the text "Could not load the animals", so today's case 2 fails without a 60 s timeout.
+  - Then give the save up to 10 s to hold the field again.
+  - Wrap it all in `try/catch`: an error fails that case's check, with the message as its detail.
+- **One check per case**, for example `a save missing session.trail (a field today's code writes) is dropped for a fresh round 1`. It passes when all of these hold:
+  - `roundNo` is 1, `movesUsed` 0 and `score` 0;
+  - `seed`, `mysteryId` and `suspects` equal `base`'s (the same deal, which proves round 1 was dealt once);
+  - the stored save is round 1's, with the field back and `score` 0;
+  - no new console error appeared.
+- That adds 2 checks. Today case 1 resumes (score 7, and the save lacks `trail`), so it fails. Case 2 shows the load error and logs a console.error, so it fails too.
+
+**Unit tests** go in `tests/animalBoard/savedGame.test.ts`, with the ways it could fail listed in its header first.
+- **Building a fresh session.** As `animalBoard.test.ts` does: `contentPool` → `makeBook` → `newAnimalRound` for an Africa set → `animalSessionReducer(null, { type: 'load', … })`. Then strip `book` and round-trip it through JSON.
+- **Cases:**
+  - The fresh session fits itself.
+  - Removing any key of the session, the round, the rules or the trail fails; loop over every key.
+  - Changing a value's kind fails (a number to a string, an array to an object).
+  - An extra key fits.
+  - A saved `end: {…}` against a fresh `null` fits, and a saved `named: null` against a fresh object fits.
+  - A saved `history: [1,2,3]` against a fresh `[]` fits.
+  - `round: null` fails.
+
+### A17 · two tabs
+
+**Findings.** This is a data-loss bug, plus a DRY gap: the merge rule is written only inside `mergeServerJournal`.
+- `useJournal.ts:28-35` reads both keys once, on mount.
+- `:55-71` `record` writes `recordSolve(previous, …)` and `updateRecords(previous, session)` from the tab's own copy, inside `setJournal`/`setRecords` updater functions, which React may run twice.
+- The signed-in merge (`:46-53`) also writes from `previous`.
+- So tab A's save overwrites tab B's find and best.
+- `journal.ts:65-82` writes the merge rule inline. `updateRecords` (`:132-134`) has one caller.
+- Nothing listens for another tab's writes.
+
+**Target, in `journal.ts`.** Pure functions. K2 is untouched: the three keys and the bodies of `parseJournal`, `parseWords` and `parseRecords` stay character for character.
+- **`export function mergeJournals(local: Journal, other: Journal): Journal`.** It takes every animal in either journal; an animal found in only one journal is taken as it is. For an animal in both:
+  - `timesSolved` is the larger and `bestMoves` the lower.
+  - `firstSolvedAt` is the earlier and `lastSolvedAt` the later; ISO strings compare as text, as today.
+  - `scientificName` and `commonName` come from `local`.
+  - `className` is `local.className ?? other.className`, kept only when truthy.
+  - `sharpEyes` is the larger, left out when 0.
+  - This is exactly `mergeServerJournal`'s rule today (`:69-78`).
+- **`mergeServerJournal`.** Its body becomes `entries.reduce((merged, entry) => mergeJournals(merged, { [entry.scientificName]: toJournalEntry(entry) }), journal)`. `toJournalEntry` keeps the entry's `scientificName, commonName, timesSolved, bestMoves, firstSolvedAt, lastSolvedAt`, plus `className` when truthy. It folds one entry at a time, as today's loop does, so duplicate entries behave the same. M7's case (`journal.test.ts:37-85`) passes unchanged; `deepEqual` ignores key order.
+- **`export function saveSolve(stored, tab, species, moves, at, sharp = false): Journal`** returns `recordSolve(mergeJournals(tab, stored), species, moves, at, sharp)`.
+- **`export function saveRecords(stored, tab, session): Records`** returns `updateRecords({ bestScore: Math.max(stored.bestScore, tab.bestScore), bestStreak: Math.max(stored.bestStreak, tab.bestStreak) }, session)`. It reuses `updateRecords`.
+- The header comment adds that `mergeJournals` is the one merge rule (two tabs, and the server).
+
+**Target, in `useJournal.ts`.** The hook only reads, calls those functions, writes and sets its state:
+- `function stored(key: string): string | null` reads `localStorage.getItem` and returns `null` when that throws. `parse*(null)` is empty, so the tab's copy then stands alone. The mount read uses it too, replacing the mount `try`: `setJournal(parseJournal(stored(JOURNAL_STORAGE_KEY)))`, and the same for records. `save` is unchanged: a failed write, and play goes on.
+- `journalRef` and `recordsRef` hold the tab's copy, synced by an effect: the `sessionRef` pattern at `useAnimalSession.ts:53-54`. They are read outside any updater.
+- **`record`** runs `const journal = saveSolve(parseJournal(stored(JOURNAL_STORAGE_KEY)), journalRef.current, species, moves, new Date().toISOString(), sharp); save(JOURNAL_STORAGE_KEY, journal); setJournal(journal);`, then the same with `saveRecords(parseRecords(stored(RECORDS_STORAGE_KEY)), recordsRef.current, session)`. Its deps stay `[]`.
+- **The signed-in effect**, until M11 removes it: `const next = mergeServerJournal(mergeJournals(journalRef.current, parseJournal(stored(JOURNAL_STORAGE_KEY))), saved); save(…); setJournal(next);` with deps `[saved]`. A `journal` dep would loop, because every merge sets a new object.
+- No `storage` listener. The callers (`AnimalGame.tsx:198`, `GlobeScreen.tsx:22`) don't change.
+
+**Fail-first E2E.** It goes on its own page loads, after the D14 block (`:2476`) and before "no console errors".
+- **Refactor first** (DRY; no behaviour change). Move page A's setup into `async function setUpPage(page)`, called for A and then for B. The setup is: `Page.enable`, `Runtime.enable`, `Network.enable`, the two `Emulation` calls, the CPU throttle and both `addScriptToEvaluateOnNewDocument` sources (`:113`, `:132-291`).
+- **The listener** (`:117-131`) takes console errors and exceptions from a `Set` of session ids: A's, plus B's once B is open. Network events stay A's only, because the network check slices A's `requests`.
+- **Seed probe**, like the AmphibiaWeb probe (`:2379-2401`).
+  - On A, for seed 1 to 40, load `/explore/?seed=<s>&place=<report.place.key>` and read `__cc.clue()` (`mysteryId`, `suspects`), until two seeds `a` and `b` deal different mysteries.
+  - X is a suspect of `a`'s round that is neither mystery. Suspects always have clues, so the journal counts X. X's names come from `poolSpecies`.
+  - Record `report.twoTabs = { a, b, mysteries, x }`.
+- **Setup.** On A: `localStorage.clear()`.
+  - Set `clue-match:journal:v1` to X alone: `timesSolved` 2, `bestMoves` 12, fixed past ISO dates, and its `className`.
+  - Set `clue-match:records:v1` to `{"bestScore":10,"bestStreak":1}`.
+  - Note `report.consoleErrors.length`.
+- **Play.**
+  - A loads `?seed=a`; wait until the board is ready.
+  - Open B with `openPage(browser)`, add its session id to the set, run `setUpPage`, and load `?seed=b`.
+  - When B's board is ready, run `Page.bringToFront` on B and `__nameIt(B's mystery)`. Wait for the round-end card, then 1 s.
+  - From B: `localStorage.setItem('clue-match:records:v1', '{"bestScore":9999,"bestStreak":99}')`.
+  - Run `Page.bringToFront` on A and `__nameIt(A's mystery)`. Wait for the round-end card, then 1 s.
+  - Read storage, and run `fieldJournalText()` on A.
+  - Close B with `Target.closeTarget`, in a `finally`.
+- **Checks** (3, each failing today):
+  1. `two tabs: a find in each tab is kept, with the find saved before`. The journal holds exactly X, A's animal and B's. X matches what was set, field for field. A's and B's animals have `timesSolved` 1. Neither page logged a new console error.
+  2. `two tabs: a best set in the other tab is kept`. The records are `{ bestScore: 9999, bestStreak: 99 }`.
+  3. `two tabs: the first tab's Field Journal shows the other tab's find after its own save`. It reads `3 of …`.
+- On today's code, storage ends as `{X, A}`, the records as `{50, 1}`, and A's journal reads "2 of": all three fail.
+- New E2E checks in total: 5, so the count goes from 1579 to 1584.
+
+**Unit tests** go in `tests/clueGame/journal.test.ts`, with the ways it could fail listed in a comment first.
+- **`mergeJournals`:**
+  - an animal on one side only, each side in turn;
+  - an animal on both sides, covering each field: count, best, first and last dates, names from `local`, class from `local` or else `other`, `sharpEyes` as the larger either way and absent when neither has one;
+  - both journals empty.
+- **`saveSolve`:**
+  - storage holds another tab's find, the tab's copy is stale, and a third animal is found: all three are kept;
+  - the same animal found in both tabs counts 2.
+- **`saveRecords`:** storage 300/6, tab 10/1 and session 50/1 give 300/6.
+- M7's merge case and the old-journal case stay unchanged.
+
+### S11 · `docs/CLUE_MATCH.md`
+
+Lines are from `9f72f360`. The sign-in lines stay word for word:
+- the second sentence of `:10`;
+- `:24`'s "`GET /api/clue-game/journal` (a signed-in player's solves)";
+- in `:67`: "`profiles`, `clue_match_solves`,", the `clue_match_solves` sentence, and "The journal counts only `solved` rows.";
+- the `07_solve_stats.sql` row at `:83`.
+
+| Line | Now | Read against | Change |
+|---|---|---|---|
+| 7 | "Animals you've found glow on the globe where you found them: green for amphibians and reptiles, amber for mammals." | `Globe.tsx:1-5`; `classColor`, `places.ts:39-51` | Each found animal's range lights up the globe, with an emoji marker, tinted by group (green for amphibians and reptiles, amber for mammals, blue for birds) |
+| 19 | the `savedGame.ts` row | A16 | add: a save that no longer fits today's code (a field missing, or its check throws) is dropped for a fresh round 1 |
+| 24 | the Data row | `ranges/route.ts:8`, `Globe.tsx:164` | add `GET /api/clue-game/ranges?species=<ids>` (the globe's ranges); the journal clause stays |
+| 47 | "The board only reports matches (`gems-matched`, …). React owns everything else." | the board → page events in `EventBus.ts:5-20,35-80`: `current-scene-ready`, `gems-matched`, `clue-board-settled`, `clue-board-tile`, `clue-board-tile-hold`, `clue-board-nudge`, `clue-board-walked`, `clue-board-announce` | The board reports each explode phase's matches (keep the `gems-matched` detail), each settled move, taps and holds on an animal's tile, nudges, animals that walk off and what to announce, all typed in `src/game/EventBus.ts`; React owns the rules and the state. The rest of the paragraph stays |
+| 53 | "or hold any answer cell to highlight it purple (its column's gem glows; the rules never read it)" | `EvidenceGrid.tsx:18-20` | or hold a hidden cell of an animal not ruled out to highlight it purple (that color's gems glow next to its card; holding the question's own gem lights all of that color; the rules never read it) |
+| 55 | "The earlier games … are deleted from the code" | `questionMatch.ts` has none of the old games' rules | leave it |
+| 63 | "in the field guide and on the reveal card" | `GlossaryText` appears only at `AnimalSheets.tsx:266` (the field guide) and `JournalSheet.tsx:72` | "in the field guide and the Field Journal" |
+| 67 | "simplified ranges as SVG paths for the reveal card" | the only `<RangeMap` is `JournalSheet.tsx:69` | "for the journal's range map" |
+| 89 | "(the name sheet shows; lost even if named right)" | `nameIt`, `animalBoard.ts:436-447`; `e2e.mjs:1961` "out of moves, a right name finds it, with one star (two with a Sharp eye, plan 054)" | "(the name sheet shows; a right name still finds it, with one star)" |
+| 90 | the Resume bullet | the new A16 checks | add: a save missing a field today's code writes, or whose check throws, is dropped for a fresh round 1, with no console error |
+| 91 | the "Once a run" bullet | the new A17 checks | add: two tabs keep each other's finds and bests |
+| 92 | "`E2E_PLACE`, `E2E_SEED`, `E2E_ROUNDS` change it." | `e2e.mjs:14` | name all seven: `E2E_BASE_URL`, `E2E_SEED`, `E2E_RESUME_SEED`, `E2E_ROUNDS`, `E2E_PLACE`, `E2E_CPU_THROTTLE`, `CHROME_PATH` |
+| 93 | "(careful, reader, guesser, random and oracle players; …)" | `balance-044.ts:249` | careful, novice, expert, reader, guesser, random and oracle |
+
+Nothing else changes: not the content step list (`:59`), the countries sentence (`:61`) or the paper pointers (`:3`, `:51`).
+
+### Tests-first order
+
+1. **E2E.** The `setUpPage` refactor plus the 2 A16 checks and the 3 A17 checks, with nothing else changed. Run it once in the dev-copy block and save `checks-fail-first/`. Expected: those 5 fail, plus "no console errors" (A16 case 2's console.error), and the other 1578 pass, which proves the refactor changes nothing.
+2. **Unit cases** for the journal and `savedGame`: write them, see them fail (the exports don't exist yet) and record that.
+3. **Code.**
+   - A16: `savedGame.ts` and `useAnimalSession.ts`, including D22's pool line.
+   - A17: `journal.ts` and `useJournal.ts`.
+   - Then the unit tests and the E2E pass.
+4. **D22, D23, O1 and S11** add no checks. They are guarded by typecheck, the existing E2E, the screen comparison and the glyph proof.
+
+### Risks and failure modes
+
+- **`fitsShape` too strict.** An existing resume check fails ("a reload resumes the round…"). The rule only asks for keys that `newAnimalRound` and the `load` reducer always set. If it trips, a rule step wrote `undefined` or changed a kind. Fix the rule as the Decision rule says, and never loosen it to array items.
+- **Still unguarded.** Array items, and the save's `board` and `rowOrder`, which go to the Phaser scene and `useRowOrder`. A change there without a version bump can still break a resumed tab. This is a note for the owner; there's no error boundary, by his choice.
+- **Not atomic.** Two tabs saving within the same few milliseconds can still lose one find: localStorage has no transactions. A save happens once per round end; accept it.
+- **No removal.** The merge can't remove anything: a stale tab adds back finds cleared from storage by hand. No screen removes finds; accept it.
+- **Background tabs.** They throttle rAF and timers. So bring each page to the front before driving it, close B in `finally`, and wrap each new check so a timeout fails only that check.
+- **O1.** A later `font-data` string with a new character draws it in the fallback font. The comment says what to do, and the E2E doesn't read fonts. A false pass of the glyph proof is closed by the loaded-status check, the control block and the deliberately wrong pair.
+
+### Notes, not edits (Decision rule: delete only what the Goal names)
+
+- `useWordsLearned.ts` caches `words` per page load and writes `[...current, term]`: the same one-tab overwrite, for `clue-match:words:v1`.
+- `updateRecords` is left with one caller, `saveRecords`.
+- `globals.css:2` says "both OFL-1.1", but there are three fonts (K5's note).
+- `EventBus.ts:10` calls `clue-board-announce` "what a keyboard action did", but the scene also announces matches (`ClueBoardScene.ts:109,122`).
+- `photoAt(…, 120)` is written in three places: `useAnimalSession.ts:185`, `SuspectPhoto`'s default and `SpeciesPortrait`.
+- The `npm test` lines in `docs/CLUE_MATCH.md:94` and `AGENTS.md` ("storage parsing") will now also cover the journal merge and the save's shape.
+
+### Rejected alternatives
+
+- **A generic recursive `fitsShape`.** It would compare maps keyed by data (`pencil`, `headings`), and valid saves would fail once a fresh round pre-filled them.
+- **An error boundary that clears the save.** React logs a caught error with `console.error`, and the boundary could loop on a bug in a fresh game (the owner's call).
+- **A `storage` listener.** The owner chose the merge at save time, and a listener is one more moving part.
+- **Merging inside the `setJournal` updater.** React may run an updater twice, so storage would be read and written twice.
+- **Hard-coded seeds for the two-tab check.** The mysteries depend on the content, which changes.
+- **A character list per weight.** One list keeps one `unicode-range` and one rule for cutting again.
+- **Serving the proof page over HTTP, or loading its fonts from file:// URLs.** Data URLs need no server and avoid the file:// font CORS block.
+
 ## Architecture review (Fable)
 
 ## Architecture review (Astra)
@@ -268,5 +646,6 @@ Base: `origin/main` `9f72f360` (PR #79 merge), branch at `5850bcbd`. State folde
 ## Log
 
 - 2026-11-15 12:35 UTC · Baseline: M7 merged; greps recorded; fonts snapshot; typecheck/lint 0, unit 64/64, E2E 1579/1579 (dev copy), site 444/444.
+- 2026-11-15 13:05 UTC · Architecture: architect wrote findings + target design (D22, D23, O1 31-char cut ~6.9 KB each, A16 two-try load, A17 mergeJournals fold, 5 failing-first E2E checks → 1584). Plan only, no code; no checks needed.
 
 ## Summary
