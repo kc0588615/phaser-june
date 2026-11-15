@@ -852,6 +852,16 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. Refresh `origin/main` before opening the PR. Fetch was blocked by the read-only filesystem; remote freshness remains unverified.
+
+(SC1: the review ran in a read-only sandbox; this session fetched `origin/main` before it (tip `9f72f360`, the plan's BASE), and the release rebases on a fresh fetch anyway.)
+
 ## Release
 
 ## Decisions
@@ -876,5 +886,6 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 - 2026-11-15 14:44 UTC · S4: Open Runde cut to 31 chars (154,604 → 6,892; 162,468 → 6,848; fontTools 4.68.0) + `unicode-range`; glyph proof ok (4 pairs 0 px); typecheck/lint 0; site 444/444; E2E 1583 → rerun 1584/1584 (A10 timing flake) → `e2e-s4/`; 7 screen pairs: font-data text identical.
 - 2026-11-15 15:01 UTC · S5: D22 leftovers out (4 CSS animations, RangeMap caption, 5 dead props, dup `Pencil`/`HOLD_MS`, always-true `is-fresh`) + D23 OAuth logo `git rm`; typecheck/lint 0, unit 75/75, greps clean; E2E 1584/1584 → `e2e-s5/`; journal screens 0 px vs S4.
 - 2026-11-15 15:05 UTC · S6: S11 `docs/CLUE_MATCH.md` 12 lines corrected against code (sign-in lines + Content step list untouched); Verification 10 clean; typecheck/lint 0. Markdown only, no E2E.
+- 2026-11-15 15:08 UTC · Code review (Astra): APPROVE, no MUST-FIX; 1 SHOULD-CONSIDER (refresh origin/main before PR: done at release). Plan only; no checks needed.
 
 ## Summary
