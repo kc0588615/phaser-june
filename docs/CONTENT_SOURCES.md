@@ -133,6 +133,14 @@ Per source (the guidance each `cite` follows, and its licence):
 
 **Wikipedia share-alike:** facts reworded from a Wikipedia article are adaptations under CC BY-SA 4.0, so they carry its share-alike terms; the citation names the licence.
 
+**Map data** (database tables the realms, countries and maps come from, not `db/content/`):
+
+- One Earth bioregions (realms): CC BY-NC 4.0 (https://www.oneearth.org/datasets/), cited as One Earth asks: One Earth Bioregions Framework, One Earth. 2023. Los Angeles, CA. oneearth.org
+- Natural Earth (countries, basemaps): public domain (https://www.naturalearthdata.com/about/terms-of-use/).
+- IUCN range maps: under the IUCN Red List Terms of Use (https://www.iucnredlist.org/terms/terms-of-use).
+
+Which licence covers which item of `db/content/`, and the no-money condition: [`CONTENT_LICENSE.md`](../CONTENT_LICENSE.md).
+
 **What `checkCitations` (preview, build, `npm test`) and `validatePool` (`check`) report:**
 
 - **Error:** a clue or fact page with no `citations.json` entry; an `amphibiaweb` or `wikipedia` page whose citation isn't complete (`FULL_CITATION_KEYS`: their licences require attribution, so no fallback); a bad `accessed`, `archive`, placeholder or a `cite` with its own "Accessed". In the pool (`check`): a fact or hand-written clue with no source URL or no citation.
