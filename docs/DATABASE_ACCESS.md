@@ -37,7 +37,6 @@ Windows / QGIS
 | 55432 | WSL loopback | Agent/raw PostgreSQL SSH tunnel |
 | 5433 | Windows loopback | Separate QGIS/Windows tunnel |
 | 22 | Allowed by host UFW; provider firewall separate | Key-only SSH and tunnel transport |
-| 8000 | UFW allows only the owner's home IP; host network, so UFW applies (verified 2026-09-26) | Existing server `postgres-mcp`; WSL agents use the SSH tunnel instead |
 
 Repository deployment config sets PgBouncer to **transaction mode**. Do not
 depend on connection-wide `SET`, `LISTEN`/`NOTIFY`, session advisory locks, or
