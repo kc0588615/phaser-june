@@ -194,7 +194,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -202,6 +202,29 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+From `agent/remove-sign-in` at `45cf474f` (= `origin/main` `f1826f56`, fetched 2026-11-15 16:00 UTC).
+
+- **What merged first:** `src/app/api/clue-game/solves/` gone (M6; `src/app/api/clue-game/` holds `journal pool range ranges`); `src/clueGame/journal.ts` has no `Sighting` (M7). Both pass.
+- **Merge branch (Review corrections):** `export function mergeJournals(local: Journal, other: Journal): Journal` exists (`src/clueGame/journal.ts:67`, M9), and `saveSolve` calls it (`:107`). So the **M9 branch applies**: keep `mergeJournals` as is; delete `mergeServerJournal`, `toJournalEntry` (its only helper, `:88`) and `ServerJournalEntry`; port M7's case; add one idempotence case.
+  - M7's case today: `tests/clueGame/journal.test.ts` "saved solves merge in: the larger count, the lower best, the earliest and latest dates, the local names, class and badges" (calls `mergeServerJournal` twice: once against `expected`, once more for "Safe to repeat"). Server entries carry `speciesId` and `placeKeys`, which `toJournalEntry` drops.
+  - Existing `mergeJournals` cases (3): one-side-only, both-sides field rule, two empty.
+- **OAuth logo (D23):** `public/branding/` holds only `critterconnect-logo.svg` and `critterconnect-logo-light.svg`; `critterconnect-oauth-logo.png` is gone (M9). No Summary note needed.
+- **Fixture:** `tests/clueGame/old-journal.json` exists (M7), so no new fixture.
+- **Packages:** `npm audit --omit=dev`: `found 0 vulnerabilities`. `npm ls --omit=dev --package-lock-only @clerk/nextjs @clerk/backend @clerk/shared @clerk/react`: `@clerk/nextjs@7.7.8` → `@clerk/backend@3.16.8`, `@clerk/react@6.14.4`, `@clerk/shared@4.29.2`. `grep -c '"node_modules/@clerk/' package-lock.json`: 5.
+- **Account queries:** cut (Review corrections).
+- **Checks:** `npm ci` ok; `npm run typecheck` exit 0; `npm run lint` exit 0; `npm test` **75/75** pass (6 journal cases, 1 of them the server merge).
+- **Baseline E2E** (dev copy `phaser_june_dev`, guard passed): first run 1583/1584, the one failure the timing check "field guide: signs in pages turn on their own, a tap pauses them, another resumes and moves on" (`"turned":false`; audit A10 kind, outside this mission's checks); rerun once per the decision rules: **1584/1584**. Artifact `/srv/critter-ai/agent-state/missions/remove-sign-in/baseline-e2e/` (seed 7). The dev-copy env file names four Clerk vars (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`; names only read), so the no-Clerk-request check should fail on the unchanged code.
+
+### Fresh greps (D3 roots)
+
+- R1 `git grep -l "@clerk/nextjs" -- src`: 6 files, as Notes: journal route, `useJournal.ts`, `GlobeScreen.tsx`, `_app.tsx`, `login.tsx`, `proxy.ts`.
+- R1 `git grep -l -i clerk -- . ':!plans' ':!package-lock.json' ':!docs/research' ':!docs/playtests'`: 30 files: `.claude/skills/playtest/SKILL.md`, `.claude/skills/playtest/scripts/create-test-player.mjs`, `.env.example`, `.github/workflows/ci.yml`, `.gitignore`, `AGENTS.md`, `CODING_STANDARDS.md`, `Dockerfile`, `README.md`, `db/schema.sql`, `deploy/app.env.example`, `deploy/docker-compose.app.yml`, `docs/DATABASE_ACCESS.md`, `docs/DEPLOY.md`, `eslint.config.mjs`, `package.json`, **`scripts/check-live-board.mjs`**, the 6 `src/` files, `src/site/config.ts`, `src/site/pages/Privacy.tsx`, `src/site/pages/Teachers.tsx`.
+- R22 journal route: one caller, `src/components/clueGame/useJournal.ts:52` (`getJson<{ entries: ServerJournalEntry[] }>('/api/clue-game/journal/')`); other hits are docs (`AGENTS.md:56`, `README.md:25`, `docs/CLUE_MATCH.md:24`, `docs/DRIZZLE_ORM_GUIDE.md:20`) and comments (`journal.ts:48`, `proxy.ts:3`).
+- R22 `/login` links: `git grep -n -E "['\"\`(]/login" -- src` gives 0 hits.
+- `git grep -c -i clerk -- scripts/e2e.mjs`: no hit.
+- **Final grep** (Definition of done, on the unchanged tree): 97 lines in 24 files (saved: `/srv/critter-ai/agent-state/missions/remove-sign-in/baseline-final-grep.txt`): `.claude/skills/playtest/SKILL.md` 4, `create-test-player.mjs` 9, `.env.example` 4, `ci.yml` 4, `AGENTS.md` 5, `CODING_STANDARDS.md` 1, `Dockerfile` 3, `README.md` 3, `deploy/app.env.example` 4, `deploy/docker-compose.app.yml` 1, `docs/CLUE_MATCH.md` 2, `docs/DATABASE_ACCESS.md` 5, `docs/DRIZZLE_ORM_GUIDE.md` 2, `eslint.config.mjs` 2, `package.json` 1, `scripts/check-live-board.mjs` 1, journal route 9, `journal.ts` 6, `useJournal.ts` 10, `GlobeScreen.tsx` 6, `_app.tsx` 3, `login.tsx` 2, `proxy.ts` 3, `tests/clueGame/journal.test.ts` 7.
+- **Against the inventory:** one new file, `scripts/check-live-board.mjs` (M5, `cb92bcf3`), and it isn't a reader: its comment at `:10` says "page's own host (other hosts, such as Clerk's, are ignored)". It's outside Goal, but the final grep doesn't exclude it, so the comment needs " such as Clerk's," dropped for that check to pass (architect to decide). `CONTEXT.md`'s Journal line ("Signing in only merges in the finds an account saved before October 2026; nothing new is saved there.") doesn't match the final grep's pattern but is a Goal site. `docs/CLUE_MATCH.md:67` still has "The journal counts only `solved` rows." (Review corrections: delete). No new reader of Clerk or of the journal route.
 
 ## Architecture
 
@@ -222,5 +245,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-15 16:25 UTC: Baseline. Prereqs (M6, M7) pass; M9 branch (`mergeJournals` exists). typecheck/lint ok, `npm test` 75/75, E2E 1584/1584 (2nd run; 1st failed one A10 timing check). Greps recorded; one new hit, a comment in `scripts/check-live-board.mjs`.
 
 ## Summary
