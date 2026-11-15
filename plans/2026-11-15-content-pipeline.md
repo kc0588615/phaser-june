@@ -168,7 +168,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -409,6 +409,18 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. **Preserve identity constraints when profiles replace `species`.** [S12](/srv/critter-ai/worktrees/content-pipeline/plans/2026-11-15-content-pipeline.md:242) accepts unchecked identities. Require valid, non-null IDs and uniqueness of both `id` and `iucnId` before computation or writes. Duplicate IDs merge unrelated geometries; duplicate IUCN IDs can falsely satisfy the two-animal country rule. Existing `checkProfile` does not check uniqueness across profiles. This violates fail-fast requirements.
+
+2. **Define regeneration for existing animals’ range changes.** The [existing-profile workflow](/srv/critter-ai/worktrees/content-pipeline/plans/2026-11-15-content-pipeline.md:59) skips `ranges`, even when an animal’s range changes. An imported geometry or `iucnId` change must trigger regeneration across all profiles before validation and release. Refreshing views alone leaves committed country/realm clues stale, potentially inconsistent with displayed maps.
+
+SHOULD-CONSIDER:
+
+1. Explicitly require the owner’s WSL content build to use the same merged commit deployed to the app, keeping profiles and bundled citations aligned.
+
 ## Revision notes
 
 ## Steps
@@ -428,5 +440,6 @@ SHOULD-CONSIDER:
 - 2026-11-15 06:42 UTC Baseline: D13 in; greps as expected; live pool 76/2478/491/261 without rspb.2017.1347; ranges baseline empty diff in 65 s (run 2 of 8, after a 60 s timeout on run 1); content check 0/0; tests 64/64; e2e:fresh 1579/1579.
 - 2026-11-15 06:59 UTC Architecture: architect wrote findings + target design (S12 query from profiles JSON param, read-only tx + 15min cap, MATERIALIZED country CTEs; scratch temp-table check for RUS/FRA/ocean/ATA rules; licence/doc texts). No code changed, no DB runs.
 - 2026-11-15 07:07 UTC Fable review: APPROVE_WITH_CHANGES; 1 MUST-FIX (CONTENT_LICENSE.md wording interprets: other-source-key row, cite-lines rule), 3 MISSED, 5 SHOULD-CONSIDER; three read-only greps checked (comment-only DoD passable, no test asserts Terms/Journal text, no stale `ranges` doc line outside replaced sections). No code changed, no DB runs.
+- 2026-11-15 07:09 UTC Astra review: APPROVE_WITH_CHANGES; 2 MUST-FIX (profile id/iucnId uniqueness before ranges; regen ranges when an existing animal's range/iucnId changes), 1 SHOULD-CONSIDER (owner content build from merged commit). No code changed.
 
 ## Summary
