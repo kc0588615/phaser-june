@@ -226,7 +226,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -416,13 +416,16 @@ const kindOf = (value: unknown) => (value === null ? 'null' : Array.isArray(valu
 /** `saved` is an object that holds every key `fresh` holds with a defined value, each of the same JSON kind
  *  (null on either side matches anything; arrays aren't looked inside). */
 function holdsKeys(saved: unknown, fresh: object): boolean { … }
-/** Whether a saved session has every field today's code writes: the session, its round, the round's rules and the
- *  trail, each held against a fresh round 1's (`book` aside). Catches a field added without a rules version bump
- *  (the grid's row order, 2026-11-04). */
+/** Whether a saved session is structurally compatible with today's code: the session, its round, the round's rules
+ *  and the trail each hold every key a fresh round 1's holds (`book` aside), of the same JSON kind. Catches a field
+ *  added without a rules version bump (the grid's row order, 2026-11-04). Not a full validation: values inside
+ *  arrays and maps, `board` and `rowOrder` aren't checked. A save from before highlights (no `session.highlight`)
+ *  is dropped, so `restore`'s `highlight ?? []` is no longer reached from a load (it stays: out of scope). */
 export function fitsShape(saved: unknown, fresh: SavedGame['session']): boolean
 // = holdsKeys(saved, fresh) && holdsKeys(saved.round, fresh.round) && holdsKeys(saved.round.rules, fresh.round.rules)
 //   && holdsKeys(saved.trail, fresh.trail), reading saved's nested values with optional access
 ```
+- A16 is a structural compatibility check (top-level keys and their kinds in four objects), not complete save validation; what stays unchecked is under Risks, "Still unguarded".
 - Only those four objects are compared. A generic recursion would also compare `pencil` and `headings`, whose keys are data; a fresh round that ever pre-filled them would make valid saves fail.
 - If one of the four is null or missing in the save, the save fails: it can't hold keys.
 - Every save today's code writes passes. JSON keeps `null` (`place`, `lostBy`, `named`, `pencilBonus`, `end`), and no rule ever sets a session, round, rules or trail field to `undefined`.
@@ -430,6 +433,7 @@ export function fitsShape(saved: unknown, fresh: SavedGame['session']): boolean
 `useAnimalSession.ts` changes in two places.
 
 **The seed.** `const isSeed = (value: unknown): value is number => Number.isInteger(value) && (value as number) > 0 && (value as number) <= 0xffff_ffff;`. It replaces `urlSeed`'s inline test, and the seed becomes `useState(() => replay ?? (isSeed(saved?.seed) ? saved.seed : null) ?? <random as today>)`.
+- A save with an invalid seed that otherwise fits still resumes, under the new random seed. That is intended (record it under Decisions): the restored round comes from the save, the seed only shapes later rounds (`rng` is reset from `seed` and the round number, and later `boardSeed`s hash it), and the next save writes the new seed (`useAnimalSession.ts:165`).
 
 **The load effect.** Two `try` blocks, so the network can never drop a save:
 ```ts
@@ -520,11 +524,18 @@ dispatch(load);
 - The header comment adds that `mergeJournals` is the one merge rule (two tabs, and the server).
 
 **Target, in `useJournal.ts`.** The hook only reads, calls those functions, writes and sets its state:
-- `function stored(key: string): string | null` reads `localStorage.getItem` and returns `null` when that throws. `parse*(null)` is empty, so the tab's copy then stands alone. The mount read uses it too, replacing the mount `try`: `setJournal(parseJournal(stored(JOURNAL_STORAGE_KEY)))`, and the same for records. `save` is unchanged: a failed write, and play goes on.
-- `journalRef` and `recordsRef` hold the tab's copy, synced by an effect: the `sessionRef` pattern at `useAnimalSession.ts:53-54`. They are read outside any updater.
-- **`record`** runs `const journal = saveSolve(parseJournal(stored(JOURNAL_STORAGE_KEY)), journalRef.current, species, moves, new Date().toISOString(), sharp); save(JOURNAL_STORAGE_KEY, journal); setJournal(journal);`, then the same with `saveRecords(parseRecords(stored(RECORDS_STORAGE_KEY)), recordsRef.current, session)`. Its deps stay `[]`.
-- **The signed-in effect**, until M11 removes it: `const next = mergeServerJournal(mergeJournals(journalRef.current, parseJournal(stored(JOURNAL_STORAGE_KEY))), saved); save(…); setJournal(next);` with deps `[saved]`. A `journal` dep would loop, because every merge sets a new object.
+- `function stored(key: string): string | null` reads `localStorage.getItem` and returns `null` when that throws. `parse*(null)` is empty, so the tab's copy then stands alone. The mount read uses it too, replacing the mount `try`: `showJournal(parseJournal(stored(JOURNAL_STORAGE_KEY)))`, and the same for records with `showRecords`. `save` is unchanged: a failed write, and play goes on.
+- `journalRef` and `recordsRef` hold the tab's copy and are read outside any updater. They change at the same moment as the state, through one helper per key inside the hook: `showJournal(next)` sets `journalRef.current = next` and calls `setJournal(next)`; `showRecords` does the same for the records. The mount read, `record` and the signed-in merge all use them. There is no sync effect, so a second save before a re-render builds on the first one (this matters when storage can't be read).
+- **`record`** runs `const journal = saveSolve(parseJournal(stored(JOURNAL_STORAGE_KEY)), journalRef.current, species, moves, new Date().toISOString(), sharp); save(JOURNAL_STORAGE_KEY, journal); showJournal(journal);`, then the same with `saveRecords(parseRecords(stored(RECORDS_STORAGE_KEY)), recordsRef.current, session)` and `showRecords`. Its deps stay `[]`.
+- **The signed-in effect**, until M11 removes it: `const next = mergeServerJournal(mergeJournals(journalRef.current, parseJournal(stored(JOURNAL_STORAGE_KEY))), saved); save(…); showJournal(next);` with deps `[saved]`. A `journal` dep would loop, because every merge sets a new object.
 - No `storage` listener. The callers (`AnimalGame.tsx:198`, `GlobeScreen.tsx:22`) don't change.
+
+**What the merge guarantees, and what it doesn't.** This is the owner's design (merge at save time, Goal 5), and the plan states its limit instead of overclaiming it.
+- A save never drops a find or a best that this tab's storage holds when it reads, or that the tab's own copy holds. The read, the merge and the write of each key run back to back in one task, with nothing awaited.
+- What's left is two tabs whose saves start within the time the browser takes to pass one tab's write to the other. Chromium keeps a copy of localStorage in each renderer process and sends writes to the others asynchronously. The HTML Standard leaves locking across processes undefined, and tells authors to assume there is none.
+- Saves are rare: one per found round, by a player who drives one tab at a time. The only automatic save is the signed-in merge (once per mount, after a fetch), and M11 removes it.
+- A lost race heals itself. The losing tab still has its find in its copy, so its next save puts it back, since every field merges by max/min. The find is lost for good only if that tab closes or reloads before it saves again, or if both tabs found the same animal (it then counts once).
+- Serializing saves across tabs is rejected: see Rejected alternatives and Revision notes R1.
 
 **Fail-first E2E.** It goes on its own page loads, after the D14 block (`:2476`) and before "no console errors".
 - **Refactor first** (DRY; no behaviour change). Move page A's setup into `async function setUpPage(page)`, called for A and then for B. The setup is: `Page.enable`, `Runtime.enable`, `Network.enable`, the two `Emulation` calls, the CPU throttle and both `addScriptToEvaluateOnNewDocument` sources (`:113`, `:132-291`).
@@ -533,7 +544,7 @@ dispatch(load);
   - On A, for seed 1 to 40, load `/explore/?seed=<s>&place=<report.place.key>` and read `__cc.clue()` (`mysteryId`, `suspects`), until two seeds `a` and `b` deal different mysteries.
   - X is a suspect of `a`'s round that is neither mystery. Suspects always have clues, so the journal counts X. X's names come from `poolSpecies`.
   - Record `report.twoTabs = { a, b, mysteries, x }`.
-- **Setup.** On A: `localStorage.clear()`.
+- **Setup.** On A, overwrite only the two `clue-match:*` keys, with no `localStorage.clear()`, so the theme and other keys stay. Overwriting the journal key is enough to make it hold X alone.
   - Set `clue-match:journal:v1` to X alone: `timesSolved` 2, `bestMoves` 12, fixed past ISO dates, and its `className`.
   - Set `clue-match:records:v1` to `{"bestScore":10,"bestStreak":1}`.
   - Note `report.consoleErrors.length`.
@@ -603,7 +614,7 @@ Nothing else changes: not the content step list (`:59`), the countries sentence 
 
 - **`fitsShape` too strict.** An existing resume check fails ("a reload resumes the round…"). The rule only asks for keys that `newAnimalRound` and the `load` reducer always set. If it trips, a rule step wrote `undefined` or changed a kind. Fix the rule as the Decision rule says, and never loosen it to array items.
 - **Still unguarded.** Array items, and the save's `board` and `rowOrder`, which go to the Phaser scene and `useRowOrder`. A change there without a version bump can still break a resumed tab. This is a note for the owner; there's no error boundary, by his choice.
-- **Not atomic.** Two tabs saving within the same few milliseconds can still lose one find: localStorage has no transactions. A save happens once per round end; accept it.
+- **Not serialized across tabs.** Two tabs whose saves start within the browser's cross-process delay can still overwrite each other. The losing tab's next save restores the loss (A17, "What the merge guarantees"). Accepted (Revision notes R1).
 - **No removal.** The merge can't remove anything: a stale tab adds back finds cleared from storage by hand. No screen removes finds; accept it.
 - **Background tabs.** They throttle rAF and timers. So bring each page to the front before driving it, close B in `finally`, and wrap each new check so a timeout fails only that check.
 - **O1.** A later `font-data` string with a new character draws it in the fallback font. The comment says what to do, and the E2E doesn't read fonts. A false pass of the glyph proof is closed by the loaded-status check, the control block and the deliberately wrong pair.
@@ -623,6 +634,9 @@ Nothing else changes: not the content step list (`:59`), the countries sentence 
 - **An error boundary that clears the save.** React logs a caught error with `console.error`, and the boundary could loop on a bug in a fresh game (the owner's call).
 - **A `storage` listener.** The owner chose the merge at save time, and a listener is one more moving part.
 - **Merging inside the `setJournal` updater.** React may run an updater twice, so storage would be read and written twice.
+- **A Web Lock (`navigator.locks.request`) around each read–merge–write.** It doesn't close the window. The write travels to other renderers on the storage channel, the lock grant on another, and nothing orders the two, so the next holder can still read the old value. It also makes `record` async, and needs a fallback where `navigator.locks` is missing: it exists only in secure contexts, not on a plain-http LAN dev URL.
+- **IndexedDB, whose transactions do serialize.** It would move the journal off K2's keys and parsers.
+- **An overlapping-save E2E.** CDP can't schedule an overlap across two renderer processes unless it pauses one page in the debugger between its read and its write (a breakpoint in a dev bundle). Even then, a pass with a lock would still depend on IPC timing. It would be flaky, or it would test a moment no player can produce.
 - **Hard-coded seeds for the two-tab check.** The mysteries depend on the content, which changes.
 - **A character list per weight.** One list keeps one `unicode-range` and one rule for cutting again.
 - **Serving the proof page over HTTP, or loading its fonts from file:// URLs.** Data URLs need no server and avoid the file:// font CORS block.
@@ -662,6 +676,22 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+One round, 2026-11-15. The Architecture is edited in place where an item changes it.
+
+- **R1 · Astra MUST-FIX 1 (serialize read–merge–write across tabs; add an overlapping-save E2E): rejected, with A17's guarantee now stated exactly.** The lead can copy this reason under Decisions:
+  - **The owner chose the design.** The brief says merge at save time, with no `storage` listener (Goal 5, Notes), and the repo `AGENTS.md` says "prefer simplicity … ask before adding complexity". The plan meets Goal 5 as written: every write merges into what storage holds at that moment.
+  - **A Web Lock doesn't close the window.** Chromium keeps a copy of localStorage in each renderer process and sends writes on asynchronously. The lock grant comes on a separate channel, so the next lock holder can still read the old value. The HTML Standard tells authors to assume localStorage has no locking across processes. Only a transactional store (IndexedDB) would close it, and that breaks K2.
+  - **The window is already tiny and heals itself.** Each key's read, merge and write run in one synchronous task. Saves happen once per found round, by a player driving one tab at a time. The losing tab keeps its find in its copy, and its next save restores it.
+  - **A lock costs more than it gains.** `record` would become async, with its state set after the lock, and it would need a fallback where `navigator.locks` is missing (insecure contexts).
+  - **The E2E can't be deterministic.** An overlap across two renderer processes can't be scheduled without a debugger breakpoint in a dev bundle, and a pass with a lock would still depend on IPC timing. The sequential two-tab E2E stays: it is the brief's scenario, and it fails first on today's code.
+  - **What changed in the plan:** A17 now has "What the merge guarantees, and what it doesn't"; the Risks bullet is now "Not serialized across tabs"; and Rejected alternatives list the Web Lock, IndexedDB and the overlapping-save E2E. For the Summary: tell the owner that cross-tab serialization is a later choice for him, like the `storage` listener.
+- **Fable SC1 / Astra SC1 (refs authoritative at write time): adopted.** `showJournal` and `showRecords` set the ref and the state together, in the mount read, `record` and the signed-in merge. The sync effect is gone.
+- **Fable SC2 (a save with an invalid seed that otherwise fits resumes under a new seed): adopted** as a note in A16's "The seed"; record it under Decisions.
+- **Fable SC3 (`fitsShape` drops a save from before highlights): adopted** in `fitsShape`'s doc. `restore`'s `highlight ?? []` stays, because it is out of scope.
+- **Fable SC4 (overwrite only the two `clue-match:*` keys in the A17 setup): adopted.** The setup no longer calls `localStorage.clear()`.
+- **Fable SC5 (`npm test` collects `tests/animalBoard/`; `savedGame.ts` imports types only): no change needed.** It confirms the plan.
+- **Astra SC2 (call A16 a structural compatibility check): adopted** in `fitsShape`'s doc and in an A16 Target bullet that points to Risks, "Still unguarded".
+
 ## Steps
 
 ## Verification
@@ -672,11 +702,16 @@ SHOULD-CONSIDER:
 
 ## Decisions
 
+- 2026-11-15 · Astra MUST-FIX 1 (serialize cross-tab read–merge–write + overlapping-save E2E) rejected: owner chose merge at save time, no `storage` listener; a Web Lock doesn't close the window (Chromium propagates localStorage writes across renderers async, apart from lock grant); only IndexedDB would, which breaks K2; window is one sync task per found round and the losing tab restores its find at next save; overlap E2E can't be deterministic. Cross-tab serialization left as a later owner choice (Revision notes R1).
+- 2026-11-15 · A save with an invalid seed that otherwise fits resumes under a new random seed (brief names the seed only on the drop path) (Fable SC2).
+
 ## Log
 
 - 2026-11-15 12:35 UTC · Baseline: M7 merged; greps recorded; fonts snapshot; typecheck/lint 0, unit 64/64, E2E 1579/1579 (dev copy), site 444/444.
 - 2026-11-15 12:54 UTC · Architecture: architect wrote findings + target design (D22, D23, O1 31-char cut ~6.9 KB each, A16 two-try load, A17 mergeJournals fold, 5 failing-first E2E checks → 1584). Plan only, no code; no checks needed.
 - 2026-11-15 12:59 UTC · Fable review: APPROVE, no MUST-FIX (3 conditional points checked: E2E cleanup, other font uses, uppercase ancestors: none hold); 5 SHOULD-CONSIDER. Plan only; no checks needed.
 - 2026-11-15 13:02 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (A17 overlapping read-merge-write race across tabs; wants serialization + overlapping-save E2E), 2 SHOULD-CONSIDER. Plan only; no checks needed.
+
+- 2026-11-15 13:06 UTC · Revision: architect rejected Astra MUST-FIX (reasons under Decisions), adopted 6 SHOULD-CONSIDER (refs set at write, A16 structural-check wording, highlight note, seed note, A17 E2E key setup). Plan only; no checks needed.
 
 ## Summary
