@@ -1,6 +1,6 @@
 # Deploying Critter Connect on the VPS
 
-The game runs on the Hetzner server in Docker, next to its database, and `deploy/deploy.sh` deploys it ([Start and update](#start-and-update)). Steps marked **owner** need the server, a password or the Clerk dashboard.
+The game runs on the Hetzner server in Docker, next to its database, and `deploy/deploy.sh` deploys it ([Start and update](#start-and-update)). Steps marked **owner** need the server or a password.
 
 ## What runs where
 
@@ -16,8 +16,7 @@ Two Compose projects run there: `critter` (`critter-app`, `caddy`) from `/opt/cr
 ## One-time setup
 
 1. **Owner. DNS:** an A record for the app domain (for example `play.critterconnect.org`) pointing to the VPS.
-2. **Owner. Clerk production instance:** create it in the Clerk dashboard, add the domain and the DNS records Clerk lists, and set the sign-in URL to `/login`. Copy the `pk_live_...` and `sk_live_...` keys. The development keys in `.env.local` stop working on a real domain and have strict limits.
-3. **Database role.** `deploy/db/app-role.sql` gives the app its own role, `critter_app`, with only the grants the running app needs. It was applied on 2026-09-25, without a login. **Owner:** give it a password, in psql so the password stays out of shell history:
+2. **Database role.** `deploy/db/app-role.sql` gives the app its own role, `critter_app`, with only the grants the running app needs. It was applied on 2026-09-25, without a login. **Owner:** give it a password, in psql so the password stays out of shell history:
 
    ```sh
    docker exec -it postgis psql -U postgres -d phaser_june
@@ -25,10 +24,10 @@ Two Compose projects run there: `critter` (`critter-app`, `caddy`) from `/opt/cr
    \password critter_app
    ```
 
-4. **Owner. Settings on the VPS** (repo checked out at `/opt/critter-connect`):
-   - `.env` (app stack, `/opt/critter-connect/.env`): `APP_DOMAIN` and the build-time `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`.
-   - `deploy/app.env` (runtime): copy `deploy/app.env.example` and fill in `DATABASE_URL` (the `critter_app` password), `CLERK_SECRET_KEY` and the public values. `chmod 600 deploy/app.env`.
-5. **Ports 80 and 443.** Caddy needs them to get and renew its certificate. If certbot renews the PgBouncer certificate in standalone mode on port 80, add hooks so it doesn't collide with Caddy: `--pre-hook "docker stop caddy" --post-hook "docker start caddy"` in `/etc/letsencrypt/renewal/<DB_DOMAIN>.conf`.
+3. **Owner. Settings on the VPS** (repo checked out at `/opt/critter-connect`):
+   - `.env` (app stack, `/opt/critter-connect/.env`): `APP_DOMAIN`.
+   - `deploy/app.env` (runtime): copy `deploy/app.env.example` and fill in `DATABASE_URL` (the `critter_app` password). `chmod 600 deploy/app.env`.
+4. **Ports 80 and 443.** Caddy needs them to get and renew its certificate. If certbot renews the PgBouncer certificate in standalone mode on port 80, add hooks so it doesn't collide with Caddy: `--pre-hook "docker stop caddy" --post-hook "docker start caddy"` in `/etc/letsencrypt/renewal/<DB_DOMAIN>.conf`.
 
 ## Start and update
 
@@ -46,7 +45,7 @@ Roll back with `git revert <commit>` on `main` (`-m 1` for a merge), push, then 
 
 ## The website
 
-critterconnect.org is a static site (plan 051): `src/site/` rendered to HTML by `npm run site:build` into `out/site/` (no Next, Clerk or other framework script). Preview with `npm run site:serve` (http://localhost:3101), test with `npm run e2e:site`.
+critterconnect.org is a static site (plan 051): `src/site/` rendered to HTML by `npm run site:build` into `out/site/` (no Next or other framework script). Preview with `npm run site:serve` (http://localhost:3101), test with `npm run e2e:site`.
 
 - **Image.** The `Dockerfile`'s `site` stage builds it, and the `caddy` stage copies `deploy/Caddyfile` and the files (to `/srv/site`) into Caddy's image. A deploy rebuilds that image, and `up -d` recreates `caddy` only when the Caddyfile or the site changed. Nothing is bind-mounted: edit the Caddyfile in the repo and deploy.
 - **Hosts** (`deploy/Caddyfile`):
@@ -94,17 +93,17 @@ Written 2026-11-15 from the repo's files; not tried on a scratch server. Each st
 1. **Server:** Docker and its compose plugin; a 2 GB `/swapfile` in fstab, for the Next build; SSH with keys only and `unattended-upgrades` ([Hardening status](#hardening-status-2026-09-26)); UFW allowing 22, 80, 443 and 6432; the Hetzner Cloud firewall allowing 22 (also from the Oracle VPS, `170.9.239.99`), 80, 443 over IPv4 and IPv6, and 6432.
 2. **DNS:** `play`, the apex and `www` ([The website](#the-website)), and `DB_DOMAIN` (`.env.vps.example`), pointed at the new server.
 3. **Deploy keys:** the public halves of `~/.ssh/critter-deploy` (WSL and the Oracle VPS) in root's `authorized_keys`, then `ssh-keygen -R play.critterconnect.org` on both machines, which would refuse the new host key.
-4. **PgBouncer's certificate:** `certbot certonly --standalone -d <DB_DOMAIN>` before Caddy holds port 80, then [setup step 5](#one-time-setup)'s hooks.
+4. **PgBouncer's certificate:** `certbot certonly --standalone -d <DB_DOMAIN>` before Caddy holds port 80, then [setup step 4](#one-time-setup)'s hooks.
    - PgBouncer must read `fullchain.pem` and `privkey.pem` as real, readable files at `/etc/pgbouncer/certs`, and be restarted after each renewal.
    - The repo's mount of `live/<DB_DOMAIN>` alone gives neither (its files are symlinks into root-only `archive/`), so do what the server's copy does (not confirmed: see the header of `docker-compose.yml`).
 5. **Database stack:** a folder named `/opt/postgis` (the name makes the `postgis_backend` network `deploy/docker-compose.app.yml` joins) with the repo's `docker-compose.yml`, `init/`, and `.env.vps.example` filled in as `.env`. `PGDATA_PATH` must exist and be writable by UID 999. Then `docker compose up -d` there.
-6. **Restore:** in psql as `postgres`, `CREATE ROLE critter_app NOLOGIN;` (the dump holds no roles, and `critter_app` is the only one it grants to). Then `pg_restore` the newest dump into `phaser_june` as the [restore drill](#backups) does, from `/var/backups/critter-connect` or the Oracle VPS's copy. Then `deploy/db/app-role.sql`, then the password as in [setup step 3](#one-time-setup).
+6. **Restore:** in psql as `postgres`, `CREATE ROLE critter_app NOLOGIN;` (the dump holds no roles, and `critter_app` is the only one it grants to). Then `pg_restore` the newest dump into `phaser_june` as the [restore drill](#backups) does, from `/var/backups/critter-connect` or the Oracle VPS's copy. Then `deploy/db/app-role.sql`, then the password as in [setup step 2](#one-time-setup).
 7. **The scrubbed copy `phaser_june_dev`** (not in the dump), in this order:
    1. [The runbook](DATABASE_ACCESS.md#runbook)'s steps 1 and 2. `dev-role.sql` creates `critter_dev` without a login and closes `phaser_june` to PUBLIC, which the restore left open (no database-level grants without `--create`).
    2. In psql as `postgres`: `ALTER ROLE critter_dev LOGIN;` then `\password critter_dev`. Last, so the role never logs in while prod is open.
    3. The password into both copies: the Oracle VPS's dev-copy file and CI's `E2E_DATABASE_URL` ([database access](DATABASE_ACCESS.md#agents-on-the-oracle-vps)).
    4. The runbook's step 4 checks; CI's next `e2e` run proves the secret. Its step 3 is already in the repo's `docker-compose.yml`.
-8. **The app:** clone the repo to `/opt/critter-connect` on `main`, write `.env` and `deploy/app.env` ([setup step 4](#one-time-setup)), then deploy ([Start and update](#start-and-update)). On a first deploy there are no containers for `:previous`, and the passing check tags the first `:verified` images.
+8. **The app:** clone the repo to `/opt/critter-connect` on `main`, write `.env` and `deploy/app.env` ([setup step 3](#one-time-setup)), then deploy ([Start and update](#start-and-update)). On a first deploy there are no containers for `:previous`, and the passing check tags the first `:verified` images.
 9. **Backups:** the cron line ([Backups](#backups)).
 
 ## Hardening status (2026-09-26)
@@ -125,4 +124,3 @@ Owner reports, not re-tested by an agent; each row is from 2026-09-26 unless it 
 
 1. Update QGIS's saved database password from `.env.local` (see [database access](DATABASE_ACCESS.md#windowsqgis)).
 2. Change the exposed SSH key passphrase interactively: `ssh-keygen -p -f ~/.ssh/hetzner-vps`. Also update the Windows key copy at `D:\VPS\new_hetzner_keys_ssh\id_ed25519`, then delete `hetzner ssh key passphrase.txt`. Keep passphrases out of chat and command arguments.
-3. Sign up on play.critterconnect.org to test Clerk production sign-in; moot once mission M11 (remove-sign-in) removes sign-in.

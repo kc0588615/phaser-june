@@ -16,10 +16,10 @@ export default defineConfig([
         },
     },
     {
-        // Everything the website bundles stays free of Next and Clerk.
+        // Everything the website bundles stays free of Next.
         files: ["src/site/**", "src/components/Wordmark.tsx", "src/lib/theme.ts", "src/lib/contentProfiles.ts"],
         rules: {
-            "no-restricted-imports": ["error", { patterns: [{ group: ["next", "next/*", "@clerk/*"], message: "The website (src/site) is static HTML: no Next or Clerk." }] }],
+            "no-restricted-imports": ["error", { patterns: [{ group: ["next", "next/*"], message: "The website (src/site) is static HTML: no Next." }] }],
         },
     },
     { files: ["src/site/**"], rules: nextRulesOff },

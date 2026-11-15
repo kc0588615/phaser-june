@@ -1,7 +1,7 @@
-// The Field Journal: animals this player has identified, kept on their device.
-// Keyed by scientific name so it survives database id changes. Nothing is saved to the
-// server now; mergeServerJournal folds in the solves an account saved before 2026-10-01.
-// mergeJournals is the one merge rule: for another tab's saves (saveSolve) and for the server's solves.
+// The Field Journal: animals this player has identified, kept on their device only.
+// Keyed by scientific name so it survives database id changes.
+// mergeJournals is the one merge rule: for another tab's saves (saveSolve), and later for a journal
+// moved from another device by QR code or link.
 
 export const JOURNAL_STORAGE_KEY = 'clue-match:journal:v1';
 
@@ -15,7 +15,7 @@ export interface JournalEntry {
   lastSolvedAt: string;
   /** e.g. 'MAMMALIA'. Kept with each find; no screen reads it. */
   className?: string | null;
-  /** Plan 054: Sharp eye badges, finds by name with a big pencil bonus. On this device only (the server keeps no badges). */
+  /** Plan 054: Sharp eye badges, finds by name with a big pencil bonus. On this device only. */
   sharpEyes?: number;
 }
 
@@ -45,20 +45,6 @@ export function recordSolve(
   };
 }
 
-/** One animal the signed-in player solved, from their saved solves (GET /api/clue-game/journal). */
-export interface ServerJournalEntry {
-  speciesId: number;
-  scientificName: string;
-  commonName: string;
-  className: string | null;
-  timesSolved: number;
-  bestMoves: number;
-  firstSolvedAt: string;
-  lastSolvedAt: string;
-  /** Globe places it was solved in. The route still sends them; the device has ignored them since sightings went (2026-11). */
-  placeKeys: string[];
-}
-
 /**
  * Every animal in either journal. For one in both: the larger count, the lower best, the earliest
  * and latest dates, `local`'s names, `local`'s class or else `other`'s, and the larger Sharp eye count.
@@ -83,16 +69,6 @@ export function mergeJournals(local: Journal, other: Journal): Journal {
     };
   }
   return merged;
-}
-
-function toJournalEntry(entry: ServerJournalEntry): JournalEntry {
-  const { scientificName, commonName, timesSolved, bestMoves, firstSolvedAt, lastSolvedAt, className } = entry;
-  return { scientificName, commonName, timesSolved, bestMoves, firstSolvedAt, lastSolvedAt, ...(className ? { className } : {}) };
-}
-
-/** The device's journal plus what the player solved while signed in elsewhere (mergeJournals' rule, one entry at a time). */
-export function mergeServerJournal(journal: Journal, entries: readonly ServerJournalEntry[]): Journal {
-  return entries.reduce((merged, entry) => mergeJournals(merged, { [entry.scientificName]: toJournalEntry(entry) }), journal);
 }
 
 /** The journal to save for a find: what storage holds now merged with this tab's copy, then the find recorded once. */

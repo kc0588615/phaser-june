@@ -188,8 +188,7 @@ run nightly; take a fresh dump (`deploy/backup/pg-backup.sh` on the server) befo
 schema change or bulk write.
 
 CI's e2e job connects to the copy below as `critter_dev` (GitHub secret
-`E2E_DATABASE_URL`, plus Clerk's dev instance keys `E2E_CLERK_PUBLISHABLE_KEY` and
-`E2E_CLERK_SECRET_KEY`), so a schema change the app reads must reach `phaser_june_dev`
+`E2E_DATABASE_URL`), so a schema change the app reads must reach `phaser_june_dev`
 too, or that job goes red. The refresh steps are below.
 
 The rest of this section describes the scrubbed copy they used before: role
@@ -202,9 +201,6 @@ Its settings (the Oracle box's `.env.local` before 2026-11-01, now the dev-copy 
 
 ```text
 DATABASE_URL=postgres://critter_dev:<password>@db.critterconnect.org:6432/phaser_june_dev?sslmode=require
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...   # Clerk dev instance
-CLERK_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=...
 ```
 
 The role's login was set 2026-10-18. Its password is in the Oracle VPS's

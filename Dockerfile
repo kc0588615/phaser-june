@@ -1,7 +1,6 @@
 # Critter Connect web app (Next.js) and the website's Caddy image. Built and run on the VPS next to the
 # database: docker compose -f deploy/docker-compose.app.yml --project-directory . up -d --build
-# (docs/DEPLOY.md). NEXT_PUBLIC_* values are baked into the browser bundle at
-# build time, so they are build args; server secrets come in at run time.
+# (docs/DEPLOY.md). Settings come in at run time (deploy/app.env).
 
 FROM node:24-bookworm-slim AS deps
 WORKDIR /app
@@ -11,12 +10,10 @@ RUN npm ci
 COPY . .
 
 FROM deps AS build
-ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-ARG NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login
 # The build loads route modules but never queries; the real URL comes at run time.
 RUN DATABASE_URL=postgres://build@127.0.0.1:1/build npm run build
 
-# The website (plan 051 §10): static files for critterconnect.org. No Clerk key or database needed.
+# The website (plan 051 §10): static files for critterconnect.org. No database needed.
 FROM deps AS site
 RUN npm run site:build
 
