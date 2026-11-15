@@ -275,6 +275,53 @@ rotation. Obtain it privately from `.env.local`'s `DATABASE_URL`; URL-decode
 the password component if percent-encoded. See the hardening status for SSH
 key passphrase tasks affecting both WSL and Windows copies.
 
+## Deletion requests
+
+Requests arrive at `privacy@critterconnect.org`, a Namecheap mail forward that reaches the owner (owner, 2026-11-14).
+Agents can't read that mailbox; the owner answers and runs these steps.
+
+**What the game keeps about a player now: nothing that names them.** No accounts, names or emails. The game's code
+sends only GET requests (`src/lib/getJson.ts`). `deploy/Caddyfile` has no `log` directive, so Caddy writes no access
+log; it still logs a request it can't pass to the app (a 502 while a deploy restarts it, say) with the client's IP
+address and user agent, in `docker logs caddy`. The app's own logs are the API routes' `console.error` lines: an
+error, no IP or player. The Field Journal is in the player's browser; clearing its data for play.critterconnect.org
+deletes it. So for anyone who never had an account, nothing we hold can be found from their email: say so.
+
+**The old rows, until M13 (`agent/db-retire`) retires them:** `profiles` (accounts, keyed by `clerk_user_id`; no
+email) and each account's rows in `clue_match_solves` (`player_id`), all saved until early October 2026 (the newest
+2026-10-01). The accounts that saved results are the owner's own test accounts (owner, 2026-11-14). Rows with no
+`player_id`, rounds played without an account, match no one. For a request about an account:
+
+1. In Clerk's dashboard, find the user id for the requester's email. Once the owner has deleted the production
+   instance, an email can't be matched to a row (the database holds no email): say so, and that M13 deletes them all.
+2. Take a fresh dump: `ssh play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`.
+3. In the interactive shell (`./scripts/db`), find the row and show what is held, then delete in one transaction,
+   solves first: `player_id` is `ON DELETE SET NULL`, so deleting the profile alone keeps every result.
+
+   ```sql
+   SELECT user_id FROM profiles WHERE clerk_user_id = '<clerk user id>';
+   SELECT p.created_at, s.* FROM profiles p LEFT JOIN clue_match_solves s ON s.player_id = p.user_id
+    WHERE p.user_id = '<user_id>' ORDER BY s.solved_at;
+   BEGIN;
+   DELETE FROM clue_match_solves WHERE player_id = '<user_id>';
+   DELETE FROM profiles WHERE user_id = '<user_id>';
+   COMMIT;
+   ```
+
+4. Once that commits, delete the user in Clerk's dashboard: until then it is the only link from the email to the row.
+
+If M13 has renamed them (`retired_clue_match_solves`, `retired_profiles`), run the same statements on those names;
+once it has dropped them, nothing about any player is left in the live database.
+
+**Copies.** A dump ages out only while the job that prunes it runs and succeeds. The game server's nightly
+`deploy/backup/pg-backup.sh` deletes daily dumps after 14 days and weekly ones after 56, and nothing on a night its
+dump fails; an `OFFSITE` mirror, if set, follows only when that run's `rsync --delete` succeeds. The Oracle VPS's
+`/srv/critter-ai/ops/bin/game-backup-pull` keeps the newest 3 and drops older ones only when it copies a new one. So,
+while those jobs run, the account is in none of their dumps about 8 weeks after the deletion; a dump copied elsewhere
+by hand stays until someone deletes it. The scrubbed dev copy `phaser_june_dev` holds the solves as of its last
+refresh with no player (`deploy/db/dev-role.sql`): the account's results stay there, anonymous, until the copy is
+refreshed ([Runbook](#runbook), steps 1–2) or M13 drops the table. These steps never restore or edit a dump.
+
 ## Related
 
 - `AGENTS.md` — authoritative agent policy

@@ -529,7 +529,7 @@ Every step:
     - Site E2E `444/444 checks passed, 20 screenshots` → `$STATE/e2e-s3-site/`, report check `444 0`. Viewed teachers 1440 light / 390 dark, privacy 390 dark, terms 1440 dark: Student privacy is one list, no columns/`h3`; Privacy sections in brief order; Terms "Playing fair"; no overflow; rest as baseline.
     - Note: `pkill -f 'http.server 3101'` inside the same Bash call matches its own shell (exit 144); run it as a separate call.
 
-- [ ] S4 · `docs/DATABASE_ACCESS.md` `## Deletion requests` (Finding 6, revised Target design)
+- [x] S4 · `docs/DATABASE_ACCESS.md` `## Deletion requests` (Finding 6, revised Target design)
   - Re-read each fact first, on the then-current base (if `origin/main` moved, read `git show origin/main:<file>`). Record each fact as same or changed, with `file:line`:
     1. Only `fetch` in `src/` is `src/lib/getJson.ts` (`git grep -n "fetch(" -- src`). Every `src/app/api/**/route.ts` exports `GET` only: `git grep -n -E "export (async )?function (POST|PUT|PATCH|DELETE)" -- src/app` prints nothing.
     2. `grep -nw log deploy/Caddyfile` prints nothing.
@@ -544,6 +544,17 @@ Every step:
   - Insert the Target design's block (as revised) verbatim, just above `## Related`. No row counts.
   - Checks: Verification 7 passes; record the section's line count. `npm run typecheck`, `npm run lint` exit 0. Markdown only: no build or E2E.
   - Commit doc + plan.
+  - Results (2026-11-15, base `83eef270`, `origin/main` unmoved). Facts, all same:
+    1. Only fetch `src/lib/getJson.ts:8`; the 5 `src/app/api/**/route.ts` export `GET` only (pool:11, range:13, ranges:14, places/outline:5, places:9); no POST/PUT/PATCH/DELETE.
+    2. `grep -nw log deploy/Caddyfile`: nothing.
+    3. Only `console.error('[API …] Error:', error)` in the 5 routes (pool:15, range:25, ranges:33, places/outline:15, places:13); none in `src/lib`.
+    4. `db/schema.sql:92-97` profiles(user_id, clerk_user_id, created_at, updated_at), no email; `:104` `player_id uuid REFERENCES profiles(user_id) ON DELETE SET NULL`; `:115` solved_at; `REFERENCES profiles` count 1.
+    5. `deploy/backup/pg-backup.sh:9` `set -euo pipefail`; dump+verify `:20-22` before prune `:25` (+14) / `:26` (+56); `:28` `rsync -a --delete` to OFFSITE.
+    6. `ops/bin/game-backup-pull:9` KEEP=3; `:31` exits when newest already held; prune `:38` only after verified copy `:33-37`.
+    7. `deploy/db/dev-role.sql:30-31` nulls player_id, deletes profiles; solves kept.
+    8. No db-retire plan on `origin/main`: brief names `retired_clue_match_solves`, `retired_profiles` (both in brief).
+    9. `### Runbook` `docs/DATABASE_ACCESS.md:214`, the only Runbook heading; steps 1 (copy prod) and 2 (`dev-role.sql`) = refresh.
+  - Block copied from plan lines 291-336 (sed, not retyped) above `## Related`: `docs/DATABASE_ACCESS.md:278-323` = 46 lines + 1 blank (numstat `47 0`); diff vs plan block empty. Verification 7: one heading, `## Related` next (`:325`), schema names and brief names present. typecheck 0, lint 0. Markdown only: no build/E2E.
 
 - [ ] S5 · Final Verification and Summary
   - Runs only once `## Code review (Astra)` is recorded and every fix step it added (inserted above S5) is checked. If it's still empty, that review is this session's unit (CLAUDE.md, "Final code review"); leave S5 unchecked.
@@ -617,5 +628,6 @@ Nothing is tested in isolation: the checks are the site E2E, the build diff and 
 - 2026-11-15 19:01 UTC · S1 D21: `lead` prop removed from Screenshot.tsx; build byte-identical to site-before (diff -r empty), typecheck/lint 0, css hash same.
 - 2026-11-15 19:08 UTC · S2 bot run (seed 44, 400 rounds, 4 places, 4m10s, `$STATE/bot.txt`): = preview; A three, R five, P 90. Plan only.
 - 2026-11-15 19:12 UTC · S3 site text: Privacy/Teachers/Terms/config rewritten per Target design (A three, R five, P 90; date Nov 15); DoD grep clean, typecheck/lint 0, test 76/76, css hash same, build diff = 3 pages, site E2E 444/444 (`$STATE/e2e-s3-site`).
+- 2026-11-15 19:13 UTC · S4 deletion doc: 9 facts re-read on `83eef270`, all same; `## Deletion requests` inserted verbatim above `## Related` (46 lines); Verification 7 pass, typecheck/lint 0.
 
 ## Summary
