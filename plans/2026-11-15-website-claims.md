@@ -142,7 +142,7 @@ Each changed page's `updated` date is the merge day (UTC, in the `November 20, 2
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -150,6 +150,18 @@ Each changed page's `updated` date is the merge day (UTC, in the `November 20, 2
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+Run 2026-11-15 ~18:25 UTC on `origin/main` = `83eef270` (Merge #81, remove-sign-in); live `version.txt` = `83eef270`. Branch = origin/main + plan only. No install/migrate needed (node_modules current; mission touches no DB).
+
+- **M11 merged:** `git grep -n "@clerk/" origin/main -- src package.json`: nothing. Live `/explore/` HTML: 0 `clerk.critterconnect.org`. Pass.
+- **Checks:** typecheck 0, lint 0, `npm test` **76/76**. Site build 0.
+- **Baseline site E2E:** **444/444 checks**, 20 screenshots, artifact `/srv/critter-ai/agent-state/missions/website-claims/baseline-e2e-site/`. Game E2E not run (brief: nothing the game bundles changes; CI runs it).
+- **Live pages vs local build:** `/`, `/teachers/`, `/privacy/`, `/terms/` all **byte-identical** to `out/site` of `83eef270`. So release smoke = byte-identical compare. Baseline build saved as `…/website-claims/site-before/` (D21 proof).
+- **D21 greps:** `<Screenshot` = 10 lines (Home 6, Teachers 4), none with `lead`. `git grep -w lead -- src/site` = only `Screenshot.tsx:10,16`. As audit says.
+- **S6 grep (DoD regex) hits on origin/main:** `Screenshot.tsx:8,10`; `config.ts:2` ("No Next or Clerk here"), `config.ts:45` (description "keeps if you sign in"); `Privacy.tsx:9,12,22,25,26,29,35,47,53,60` (intro, both sign-in headings, Clerk item + link `https://clerk.com/legal/privacy`, account ID, "map servers", under-13, delete); `Teachers.tsx:24` (FAQ "Signing in is optional"), `:87` (find-rate "matches without reasoning"), `:115,123,125,126` (two `h3` columns, Clerk); `Terms.tsx:16` ("Your account").
+- **What M10/M11 left:** M11 changed none of the Goal 2–5 sentences: Privacy (`updated="November 6, 2026"`), Teachers privacy section/FAQ/find rate, config description + header comment all as the brief quotes. Terms: M10's date `updated="November 15, 2026"` and One Earth sentence present; "Your account" section still has both account lines verbatim → Goal 4 applies (section → "Playing fair", date → merge day).
+- **Outside hosts (loads):** code: every fetch is same-origin `getJson` (`/api/places/`, `/api/places/outline/`, `/api/clue-game/pool|range|ranges/`); MapLibre style sources are local GeoJSON (`/assets/clue-match/world-land.geojson`), worker via `import.meta.url`, no glyphs/sprite; fonts `@font-face` `/fonts/…`; Phaser `load.svg` `/assets/evidence/`, `load.image(pin.photo)` = DB photo URL (`BoardView.ts:198`, CORS note `ClueBoardScene.ts:69`); `<img>` photo via `photoAt(species.photo.url)` (`AnimalCard.tsx:18`, `SpeciesPortrait.tsx:17`); `_document.tsx`/`Layout.tsx` scripts inline, links local. Live pool GET: 76 species, `thumb.wikimedia.org` 72, `upload.wikimedia.org` 2, 2 no photo. Live HTML `src=`/`href=` external: play `/`, `/explore/` none; apex pages only `href` links (commons.wikimedia.org file pages, play., canonical, Privacy's `clerk.com/legal/privacy` link) — links, not loads. **Only outside load host: Wikimedia Commons (thumb./upload.).**
+- **Old rows (live, read-only):** `profiles`: **7** rows, created 2025-10-21 → 2026-09-26. `clue_match_solves`: **188** rows: 23 with `player_id` (max 2026-09-30 05:56 UTC), 165 without (max **2026-10-01 04:24 UTC**). Per profile: 3 profiles hold the 23 player rows (15, 7, 1); 4 profiles (2025-10-21/22/24, 2026-07-18) hold none. By month: Sep 2026 161 anon + 23 player; Oct 2026 4 anon. No row after 2026-10-01 → nothing writes. Brief expected 3 / 177: see Decisions.
 
 ## Architecture
 
@@ -169,6 +181,12 @@ Each changed page's `updated` date is the merge day (UTC, in the `November 20, 2
 
 ## Decisions
 
+- **Baseline row counts (7 profiles / 188 solves vs the brief's 3 / 177): continue, don't stop the Privacy part.** The stop rule exists to catch something still writing; no row is newer than 2026-10-01 04:24 UTC (profiles 2026-09-26), so nothing writes. The owner's "3" matches the 3 profiles that hold results; the other 4 hold only a Clerk id. The extra rows don't change any page sentence. Deletion doc must not say "3 profiles"/"177"; it gives no counts (or today's) and attributes "owner's test accounts" to the owner. Non-blocking FYI handoff item H20 asks him to confirm the 4 result-less profiles are his.
+- **Month wording:** overall `max(solved_at)` = 2026-10-01 → Decision rule gives **"until early October 2026"** (heading, section, "Deleting your data", deletion doc). Account-linked rows end 2026-09-30. Architect to confirm wording.
+- **Note for architect:** 165 of the old rows have no `player_id` (anonymous rounds, saved plan 041 → 2026-10-01, `db/schema.sql:100-101`); they hold no identifier (no IP/name column). Brief's "results of rounds played with an account were saved" is true but leaves those out; any added sentence is a wording change bounded by the Decision rules.
+
 ## Log
+
+- 2026-11-15 18:27 UTC · Baseline on `83eef270`: M11 live, typecheck/lint 0, test 76/76, site E2E 444/444, live pages = build, hosts = Wikimedia only, old rows 7/188 (max 2026-10-01; nothing writes; H20 FYI).
 
 ## Summary
