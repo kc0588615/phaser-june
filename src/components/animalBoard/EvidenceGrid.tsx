@@ -31,7 +31,7 @@ import { clueFace } from '@/clueGame/clueFaces';
 import type { PoolSpecies } from '@/clueGame/pool';
 import { CATEGORY_LABELS, categoryOf, columnLabel } from '@/clueGame/questionMatch';
 import { suspectOrder } from '@/clueGame/suspectOrder';
-import { GEM_TEXT_COLOR, type GemType } from '@/game/constants';
+import { GEM_TEXT_COLOR, HOLD_MS, type GemType } from '@/game/constants';
 import { LARGE, SMALL } from '@/lib/motion';
 import { AnimalCard, TrapCard } from './AnimalCard';
 import { CategoryMark } from './CategoryMark';
@@ -45,8 +45,6 @@ const flashStyle = (gems: readonly GemType[]): CSSProperties => {
   const colors = gems.map(gem => GEM_TEXT_COLOR[gem] ?? 'gray');
   return { '--flash': `linear-gradient(90deg, ${(colors.length === 1 ? [colors[0], colors[0]] : colors).join(', ')})` } as CSSProperties;
 };
-/** A press this long on an animal's row is a long press (its field guide); the board's tiles use the same (BoardController). */
-const HOLD_MS = 450;
 /** Holding an answer cell this long highlights it: longer than a name's hold, so a slow tap never highlights by mistake. */
 const HIGHLIGHT_MS = 1000;
 /** After the mystery's row reaches the Camera row, how long its match shows before `onLanded`. */
@@ -434,7 +432,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
                     {called && fresh && <span aria-hidden="true" className="ev-sparkle" />}
                     {!done && <motion.span aria-hidden="true" className={`relative inline-block ${yes ? 'text-color-1' : 'text-neutral-7'} ${fresh ? 'ev-flash' : ''}`} style={fresh ? flashStyle([order.gem]) : undefined} initial={review ? false : { scale: 1.6 }} animate={{ scale: 1 }} transition={LARGE}>{yes ? '✓' : '✗'}</motion.span>}
                     <span className="sr-only">{yes ? 'yes' : 'no'}{guess && (called ? ', you called it' : `, you guessed ${guess}`)}</span>
-                    {guess && !called && fresh && <span aria-hidden="true" className={`ev-missed absolute right-xxs top-px ${fresh ? 'is-fresh' : ''}`}>{guess === 'yes' ? '✓' : '✗'}</span>}
+                    {guess && !called && fresh && <span aria-hidden="true" className="ev-missed is-fresh absolute right-xxs top-px">{guess === 'yes' ? '✓' : '✗'}</span>}
                   </td>
                 );
               })}

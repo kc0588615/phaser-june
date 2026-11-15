@@ -10,7 +10,7 @@ import Head from 'next/head';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Heart, Menu, NotebookPen, Pause } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
-import { sharpEye, type AnimalLogEntry } from '@/clueGame/animalBoard';
+import { sharpEye, type AnimalLogEntry, type Pencil } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import { CONTINENT_NAMES } from '@/clueGame/regions';
 import { EventBus, type BoardKey } from '@/game/EventBus';
@@ -36,7 +36,6 @@ function onBoardKey(event: React.KeyboardEvent): void {
   EventBus.emit('clue-board-key', { key: event.key as BoardKey, shift: event.shiftKey });
 }
 
-type Pencil = Readonly<Record<string, 'yes' | 'no'>>;
 const NO_REVEAL: ReadonlySet<string> = new Set();
 /** How long a just-scouted guess sparkles (or shows crossed out) in the grid; the sparkle runs 3 s. */
 const REVEAL_MS = 3100;

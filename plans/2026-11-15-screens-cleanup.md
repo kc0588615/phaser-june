@@ -186,7 +186,7 @@ Out:
 - **What merged first.** M2, M6 (server cleanup), M1 (Next.js) and M3 (agent files; `origin/main` was `af4b0453` when this was written), then M4 (toolchain: it deletes `npm run clean`), M7 (rules cleanup), M8 (board and E2E), M10 (content pipeline) and M5 (deploy and CI). M10's brief says M9 merges before it; the queue runs M10 first, so expect its journal credit line and its `docs/CLUE_MATCH.md` edits. Re-read every site on a fresh `origin/main`.
 - **Checked at `af4b0453`:**
   - The only `<RangeMap` passes `caption={false}`.
-  - `SuspectPhoto`'s only caller is `AnimalCard`.
+  - `SuspectPhoto`'s callers are `AnimalCard` and `AnimalSheets.tsx` (Review corrections).
   - `type Pencil` is exported at `animalBoard.ts:428`.
   - `HOLD_MS` is in `BoardController.ts` (exported, imported nowhere) and `EvidenceGrid.tsx`.
   - The canvas never draws in Open Runde (the board uses Patrick Hand, Arial and the emoji font), and the website draws no `font-data` text, though its stylesheet imports `globals.css` and its build copies `public/fonts` whole. Neither host serves `/fonts/` with an immutable cache.
@@ -817,7 +817,7 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
    ```
    git grep -n -E 'roster-cross|cm-shake|cm-pop-in|cm-countdown|unrouted 043|Map: IUCN Red List|Range about|caption=\{|before citations shipped|itemClassName|oauth-logo|size=\{size\}|width = 120' -- . ':!plans' ':!docs/research' ':!docs/playtests'   # nothing (no `size = 120`: SuspectPhoto keeps it)
    git grep -n 'const HOLD_MS' -- . ':!plans'   # one line, src/game/constants.ts (the brief's `-- .` also hits this plan)
-   git grep -n -E 'type Pencil\b' -- src        # one line, src/clueGame/animalBoard.ts
+   git grep -n -E '^(export )?type Pencil\b' -- src   # one line, src/clueGame/animalBoard.ts (anchored: the brief's `type Pencil\b` also hits AnimalGame's `type Pencil` import)
    git ls-files public/branding                 # the two wordmark SVGs only
    git grep -c cm-range-ping -- src             # RangeMap.tsx and globals.css
    ```
@@ -837,6 +837,7 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 
 - 2026-11-15 · Astra MUST-FIX 1 (serialize cross-tab read–merge–write + overlapping-save E2E) rejected: owner chose merge at save time, no `storage` listener; a Web Lock doesn't close the window (Chromium propagates localStorage writes across renderers async, apart from lock grant); only IndexedDB would, which breaks K2; window is one sync task per found round and the losing tab restores its find at next save; overlap E2E can't be deterministic. Cross-tab serialization left as a later owner choice (Revision notes R1).
 - 2026-11-15 · A save with an invalid seed that otherwise fits resumes under a new random seed (brief names the seed only on the drop path) (Fable SC2).
+- 2026-11-15 · Verification 9's `type Pencil\b` grep anchored to declarations (`^(export )?type Pencil\b`): the brief's own import `type Pencil` in `AnimalGame.tsx` matches the unanchored one (as `const HOLD_MS` got `':!plans'`).
 - 2026-11-15 · S2/S3 unit fail-first recorded inside the code step, not a separate commit: pre-push typecheck covers `tests/`, so a test importing a missing export can't be pushed alone.
 
 ## Log

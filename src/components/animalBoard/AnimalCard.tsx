@@ -4,7 +4,7 @@
 // width; the look lives in globals.css (`.animal-card`). The mystery's card while
 // playing is a camera-trap frame with no photo (`TrapCard`): a photo, even blurred,
 // would let a player match it to a suspect without reading a clue.
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { Camera } from 'lucide-react';
 import type { PoolSpecies } from '@/clueGame/pool';
 import { photoAt, speciesBadge } from '@/clueGame/speciesInfo';
@@ -19,13 +19,13 @@ export function SuspectPhoto({ species, size = 120 }: { species: PoolSpecies | u
 }
 
 /** `number`: the animal's number this round (also picks its tilt). */
-export function AnimalCard({ species, number, size, marked = false, picked = false }: {
-  species: PoolSpecies | undefined; number?: number; size?: number; marked?: boolean; picked?: boolean;
+export function AnimalCard({ species, number, marked = false, picked = false }: {
+  species: PoolSpecies | undefined; number?: number; marked?: boolean; picked?: boolean;
 }) {
   const tilt = number === undefined ? 0 : CARD_TILTS[number % CARD_TILTS.length];
   return (
     <span className={`animal-card ${marked ? 'is-out' : ''} ${picked ? 'is-picked' : ''}`} style={{ '--tilt': `${tilt}deg` } as CSSProperties} aria-hidden="true">
-      <span className="animal-card-photo"><SuspectPhoto species={species} size={size} /></span>
+      <span className="animal-card-photo"><SuspectPhoto species={species} /></span>
       <i className="animal-card-pin" />
       {marked && (
         <svg className="animal-card-x" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -37,12 +37,11 @@ export function AnimalCard({ species, number, size, marked = false, picked = fal
   );
 }
 
-/** The mystery's card while playing: a camera-trap frame with a camera, not a "?" (a "?" card read as a sixth animal). `children`: what sits on it (the player's own mark count). */
-export function TrapCard({ children }: { children?: ReactNode }) {
+/** The mystery's card while playing: a camera-trap frame with a camera, not a "?" (a "?" card read as a sixth animal). */
+export function TrapCard() {
   return (
     <span className="trap-card">
       <Camera className="h-1/2 w-1/2" aria-hidden="true" />
-      {children}
     </span>
   );
 }
