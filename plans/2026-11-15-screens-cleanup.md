@@ -225,7 +225,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -649,6 +649,17 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. **A17 still permits cross-tab data loss.** Two tabs can read the same stored journal or records, merge independently, then overwrite each other. The Architecture section acknowledges this race, but it contradicts A17’s guarantee. Serialize read–merge–write operations across tabs, including signed-in merges. Add an overlapping-save E2E; the proposed sequential test cannot expose this failure.
+
+SHOULD-CONSIDER:
+
+1. Make the in-memory journal and records authoritative immediately after each save. Effect-delayed synchronization can lose consecutive updates when storage is unavailable.
+2. Describe A16 as structural compatibility checking, not complete save validation: nested values, board data and row order remain unchecked.
+
 ## Revision notes
 
 ## Steps
@@ -666,5 +677,6 @@ SHOULD-CONSIDER:
 - 2026-11-15 12:35 UTC · Baseline: M7 merged; greps recorded; fonts snapshot; typecheck/lint 0, unit 64/64, E2E 1579/1579 (dev copy), site 444/444.
 - 2026-11-15 12:54 UTC · Architecture: architect wrote findings + target design (D22, D23, O1 31-char cut ~6.9 KB each, A16 two-try load, A17 mergeJournals fold, 5 failing-first E2E checks → 1584). Plan only, no code; no checks needed.
 - 2026-11-15 12:59 UTC · Fable review: APPROVE, no MUST-FIX (3 conditional points checked: E2E cleanup, other font uses, uppercase ancestors: none hold); 5 SHOULD-CONSIDER. Plan only; no checks needed.
+- 2026-11-15 13:02 UTC · Astra review: APPROVE_WITH_CHANGES, 1 MUST-FIX (A17 overlapping read-merge-write race across tabs; wants serialization + overlapping-save E2E), 2 SHOULD-CONSIDER. Plan only; no checks needed.
 
 ## Summary
