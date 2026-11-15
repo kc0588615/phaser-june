@@ -446,15 +446,20 @@ async function main() {
     const dLng = (from, to) => ((to - from + 540) % 360) - 180;
     const pageNow = () => evaluate(() => performance.now());
     const globeView = () => evaluate(() => ({ lng: window.__globe.getCenter().lng, zoom: window.__globe.getZoom() }));
-    // Each sample's lng unwrapped across ±180, and its kind: momentum (the map is moving: a gesture or its ease),
-    // spin (not moving, yet lng changed since the sample before) or still.
+    // Each sample's lng unwrapped across ±180, and its kind: momentum (the map is moving: a gesture or its ease, or that
+    // movement's last frame), spin (not moving, yet lng changed since a sample that wasn't moving) or still.
+    // MapLibre applies an ease's last step and ends it in the same frame (camera.ts _renderFrameCallback -> stop() ->
+    // _afterEase sets _moving = false), so the sample after a moving one can read not moving with a changed lng.
     const classify = samples => {
       let shift = 0;
       const unwrapped = samples.map((sample, i) => {
         if (i) shift -= 360 * Math.round((sample.lng - samples[i - 1].lng) / 360);
         return { ...sample, lng: sample.lng + shift };
       });
-      return unwrapped.map((sample, i) => ({ ...sample, kind: sample.moving ? 'momentum' : i && Math.abs(sample.lng - unwrapped[i - 1].lng) >= STILL_DEG ? 'spin' : 'still' }));
+      return unwrapped.map((sample, i) => {
+        const moved = i > 0 && Math.abs(sample.lng - unwrapped[i - 1].lng) >= STILL_DEG;
+        return { ...sample, kind: sample.moving || (moved && samples[i - 1].moving) ? 'momentum' : moved ? 'spin' : 'still' };
+      });
     };
     const watchGlobe = () => evaluate(() => window.__watchGlobe());
     const stopWatchingGlobe = async () => {
@@ -802,6 +807,7 @@ async function main() {
 
     const journalFinds = new Set();
     let previewChecked = false;
+    let sparkleChecked = false;
     let scoutChecked = false;
     let hintChecked = false;
     let notesChecked = false;
@@ -1438,28 +1444,21 @@ async function main() {
         await closeAndUnmark(b, c);
         await sleep(300);
         // A press that lands while the rows are still sliding: the row stops under the finger, and lifting finishes the move.
-        const slideTry = await evaluate(async ([a, c]) => {
+        const midPress = await evaluate(async ([a, c]) => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
           const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
           const rowOf = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"]');
           const top = id => rowOf(id).getBoundingClientRect().top;
-          const r1 = value => Math.round(value * 10) / 10;
-          // Evidence (plan board-e2e S3): each missed try's frames, [ms since the mark, top(c), c's animations].
-          const misses = [];
-          let press = null;
-          for (let tries = 0; tries < 5 && !press; tries++) {
+          for (let tries = 0; tries < 5; tries++) {
             const from = top(c);
             const to = from - (rowOf(c).getBoundingClientRect().height + 2); // the slot above: a's sinking lifts c one row
             window.__keyMark(a, true);
-            const markAt = performance.now();
-            const shown = [];
             let mid = false;
             for (const end = Date.now() + 300; Date.now() < end && !mid;) {
               await frame();
               mid = top(c) < from - 1 && top(c) > to + 1;
-              shown.push([Math.round(performance.now() - markAt), r1(top(c)), rowOf(c).getAnimations().map(slide => [slide.playState[0], Math.round(slide.currentTime ?? -1)])]);
             }
-            if (!mid) { misses.push(shown); window.__keyMark(a, false); await wait(600); continue; }
+            if (!mid) { window.__keyMark(a, false); await wait(600); continue; }
             const pill = window.__pill(c);
             const box = pill.getBoundingClientRect();
             const at = (type, x, y) => pill.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' }));
@@ -1475,84 +1474,37 @@ async function main() {
             const rows = window.__rows();
             window.__keyMark(a, false);
             await wait(600);
-            press = { tries, from, to, pressedAt, drift: Math.max(...tops.map(value => Math.abs(value - pressedAt))), after, rows, back: top(c) };
+            return { tries, from, to, pressedAt, drift: Math.max(...tops.map(value => Math.abs(value - pressedAt))), after, rows, back: top(c) };
           }
-          // Evidence (plan board-e2e S3), not asserted: the same try sampled per task, pressing at the first per-task mid-way.
-          // search: [ms since mark, frames, top(c), c's slide currentTime]; log, from the press to its second frame:
-          // [ms since press, frames since, top(c), pending, playState, currentTime], then top(c) alone.
-          const task = () => new Promise(resolve => setTimeout(resolve, 0));
-          let frames = 0, ticking = true;
-          const tick = () => { frames++; if (ticking) requestAnimationFrame(tick); };
-          requestAnimationFrame(tick);
-          let probe;
-          try {
-            const from = top(c);
-            const to = from - (rowOf(c).getBoundingClientRect().height + 2);
-            const since = t0 => Math.round(performance.now() - t0);
-            window.__keyMark(a, true);
-            const markAt = performance.now();
-            const search = [];
-            let slide = null, animAt = null, midAt = null;
-            for (const end = markAt + 1500; performance.now() < end;) {
-              await task();
-              const now = rowOf(c).getAnimations()[0] ?? null;
-              if (now && !slide) { slide = now; animAt = since(markAt); }
-              const t = top(c);
-              search.push([since(markAt), frames, r1(t), now ? Math.round(now.currentTime ?? -1) : null]);
-              if (t < from - 1 && t > to + 1) { midAt = since(markAt); break; }
-              if (slide && (!now || slide.playState === 'finished')) break;
-            }
-            probe = { found: midAt !== null, from, to, animAt, midAt, search };
-            if (probe.found) {
-              const pill = window.__pill(c);
-              const box = pill.getBoundingClientRect();
-              const at = (type, x, y) => pill.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' }));
-              const [x, y] = [box.left + 60, box.top + box.height / 2];
-              const held = slide;
-              const log = [];
-              const pressAt = performance.now();
-              const f0 = frames;
-              at('pointerdown', x, y);
-              const pressedAt = top(c);
-              const sample = () => log.push(frames - f0 <= 2 ? [since(pressAt), frames - f0, r1(top(c)), held.pending, held.playState, Math.round(held.currentTime ?? -1)] : r1(top(c)));
-              sample();
-              const tops = [];
-              for (const end = Date.now() + 350; Date.now() < end;) { await task(); tops.push(top(c)); sample(); }
-              at('pointerup', x, y);
-              await wait(700);
-              const after = top(c);
-              const dialog = Boolean(document.querySelector('[role=dialog]'));
-              [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
-              const rows = window.__rows();
-              window.__keyMark(a, false);
-              await wait(600);
-              Object.assign(probe, { pressedAt, drift: Math.max(...tops.map(value => Math.abs(value - pressedAt))), after, dialog, rows, back: top(c), log });
-            } else {
-              window.__keyMark(a, false);
-              await wait(600);
-            }
-          } catch (error) {
-            probe = { error: String(error) };
-            window.__keyMark(a, false);
-            await wait(600);
-          } finally {
-            ticking = false;
-          }
-          return { press, misses, probe };
+          return null;
         }, [a, c]);
-        const midPress = slideTry.press;
-        const { misses, probe } = slideTry;
-        console.log('row-slide probe (evidence, not asserted):', JSON.stringify(probe));
-        check('the sort: a press during a row\'s slide stops it under the finger, and lifting finishes the move', Boolean(midPress) && midPress.drift <= 1 && Math.abs(midPress.after - midPress.to) <= 1 && sameList(midPress.rows, [b, c, d, e, a]) && Math.abs(midPress.back - midPress.from) <= 1, JSON.stringify(midPress ?? { misses, probe }));
+        check('the sort: a press during a row\'s slide stops it under the finger, and lifting finishes the move', Boolean(midPress) && midPress.drift <= 1 && Math.abs(midPress.after - midPress.to) <= 1 && sameList(midPress.rows, [b, c, d, e, a]) && Math.abs(midPress.back - midPress.from) <= 1, JSON.stringify(midPress));
         // A real click on a row that a waiting re-order moves in the DOM (taking a's mark back puts a first, so React re-inserts
         // every other row): the order applies after the click, which still lands on what was pressed.
         const clickWithReorderWaiting = async (where, type) => {
-          await evaluate(async id => { window.__keyMark(id, true); await new Promise(resolve => setTimeout(resolve, 500)); }, a);
+          // The click's spot is measured only once a's mark has re-ordered the rows and every slide has ended (a loaded
+          // machine can still be sliding after 500 ms). If that never happens, the race isn't set up: no click is sent,
+          // a's mark goes back, and the detail says why, so every check fed from here fails.
+          const setup = await evaluate(async ([id, marked]) => {
+            const markAt = performance.now();
+            window.__keyMark(id, true);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const rowEls = () => [...document.querySelectorAll('table[aria-label="Evidence"] tr[data-suspect]')];
+            const atRest = await window.__until(() => window.__rows().join() === marked.join() && rowEls().every(row => row.getAnimations().length === 0), 1000);
+            const settleMs = Math.round(performance.now() - markAt);
+            if (atRest) return { settleMs };
+            const rows = window.__rows(), slides = rowEls().map(row => row.getAnimations().length);
+            window.__keyMark(id, false);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return { failed: true, settleMs, rows, slides };
+          }, [a, [b, c, d, e, a]]);
+          if (setup.failed) return { setup: `rows not [${[b, c, d, e, a]}] at rest 1500 ms after the mark`, ...setup, picked: null, guide: null, pencil: null, tag: null };
           const spot = await evaluate(where => {
             const row = document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + where.id + '"]');
             const el = where.cell ? row.querySelector('td[data-hidden] button') : row.querySelector('button[data-pill]');
             const r = el.getBoundingClientRect();
-            return { x: r.left + (where.cell ? r.width / 2 : 60), y: r.top + r.height / 2, tag: row.querySelector('td[data-hidden]')?.dataset.tag };
+            const x = r.left + (where.cell ? r.width / 2 : 60), y = r.top + r.height / 2;
+            return { x, y, tag: row.querySelector('td[data-hidden]')?.dataset.tag, under: document.elementFromPoint(x, y)?.closest('tr')?.dataset.suspect ?? null };
           }, where);
           await evaluate(id => window.addEventListener('pointerdown', () => window.__keyMark(id, false), { once: true }), a);
           const point = { x: spot.x, y: spot.y };
@@ -1564,10 +1516,11 @@ async function main() {
             page('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', buttons: 0, clickCount: 1 }),
           ]);
           await sleep(800);
-          return evaluate(({ id, tag }) => ({
+          return evaluate(({ id, tag, settleMs, under }) => ({
             rows: window.__rows(), picked: window.__pill(id).getAttribute('aria-pressed'), guide: document.querySelector('[role=dialog] h2')?.textContent ?? null,
             pencil: document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] td[data-tag="' + tag + '"]')?.dataset.pencil ?? null, tag,
-          }), { id: where.id, tag: spot.tag });
+            settleMs, under, pickedId: document.querySelector('table[aria-label="Evidence"] button[data-pill][aria-pressed="true"]')?.closest('tr')?.dataset.suspect ?? null,
+          }), { id: where.id, tag: spot.tag, settleMs: setup.settleMs, under: spot.under });
         };
         const dropPick = id => evaluate(async id => { if (window.__pill(id).getAttribute('aria-pressed') === 'true') window.__pill(id).click(); await new Promise(resolve => setTimeout(resolve, 200)); }, id);
         const mouseName = await clickWithReorderWaiting({ id: c }, 'mouse');
@@ -1575,7 +1528,7 @@ async function main() {
         await dropPick(c);
         const mouseCell = await clickWithReorderWaiting({ id: d, cell: true }, 'mouse');
         check('the sort: a mouse click on a hidden cell that a waiting re-order moves still pencils it', sameList(mouseCell.rows, card) && mouseCell.pencil === 'yes', JSON.stringify(mouseCell));
-        await evaluate(async ({ id, tag }) => {
+        if (!mouseCell.setup) await evaluate(async ({ id, tag }) => {
           for (let i = 0; i < 2; i++) {
             document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] td[data-tag="' + tag + '"] button').click();
             await new Promise(resolve => setTimeout(resolve, 150));
@@ -1854,10 +1807,14 @@ async function main() {
             id: Number(td.closest('tr').dataset.suspect), tag: td.dataset.tag, hidden: td.hasAttribute('data-hidden'),
             yes: td.dataset.yes ?? null, said: td.querySelector('.sr-only')?.textContent ?? null, guess: td.dataset.guess ?? null,
           }));
-          const sparkling = [...grid.querySelectorAll('[data-guess="right"]:has(.ev-sparkle)')].map(td => `${td.closest('tr').dataset.suspect}:${td.dataset.tag}`);
           if (watch.takeRecords().length > 0) note();
           const readAt = Date.now();
           watch.disconnect();
+          // A right guess sparkles if it does at the read, or if it sparkled its whole life before it: a slow move can
+          // settle after the sparkle has ended (plan board-e2e, S). A sparkle that is shorter, late or absent still fails.
+          const SPARKLE_MS = 3000; // mirror of .ev-sparkle's ev-sparkle-fade 3s in src/styles/globals.css; change both
+          const lived = Object.keys(seen).filter(key => seen[key].on !== null && seen[key].off !== null && seen[key].off - seen[key].on >= SPARKLE_MS);
+          const sparkling = [...new Set([...keysOf('[data-guess="right"]:has(.ev-sparkle)'), ...lived])];
           const gemsAt = cc.events(1e6).filter(e => e.name === 'gems-matched' && e.at >= window.__dragStart).map(e => e.at);
           return { counted: drag.counted, timedOut: drag.timedOut, blocked: drag.blocked ?? null, pins, view, orders, misses, cells, sparkling, expected, clue: cc.clue(), spark: { gemsAt, readAt, seen } };
         });
@@ -1961,7 +1918,10 @@ async function main() {
           const rel = t => (t == null || gemsAt[0] == null ? null : t - gemsAt[0]);
           return { phases: gemsAt.map(rel), ms: Object.fromEntries(keys.map(key => [key, { right: rel(seen[key]?.right), on: rel(seen[key]?.on), off: rel(seen[key]?.off), read: rel(readAt), settled: rel(settledAt) }])) };
         };
-        if (calledNow.length > 0 && !revealed) check(`round ${n} move ${moves}: a right guess just scouted sparkles`, calledNow.every(key => result.sparkling.includes(key)), JSON.stringify({ sparkling: result.sparkling, calledNow, ...sparkleTimes(result.spark, calledNow, rest.settledAt) }));
+        if (calledNow.length > 0 && !revealed) {
+          sparkleChecked = true;
+          check(`round ${n} move ${moves}: a right guess just scouted sparkles`, calledNow.every(key => result.sparkling.includes(key)), JSON.stringify({ sparkling: result.sparkling, calledNow, ...sparkleTimes(result.spark, calledNow, rest.settledAt) }));
+        }
         if (calledNow.length > 0 && !calledShot) { calledShot = true; await screenshot('03-called-it.png'); }
         if (!notesChecked && state.notes > 0) {
           notesChecked = true;
@@ -2102,6 +2062,7 @@ async function main() {
       const ak = pagingShot?.shots.arrowsKeepFocus;
       check('field guide: signs arrows keep focus: from the pause button, ArrowRight twice shows the next animal each time and focus stays in the sheet', Boolean(ak && ak.length === 3 && ak[0].on === 'pause' && ak.every(at => at.inSheet) && new Set(ak.map(at => at.name)).size === 3), JSON.stringify(ak ?? null)); }
     check('the release preview was checked at least once', previewChecked);
+    check('a right guess\'s sparkle was checked at least once', sparkleChecked);
     check('the scouting preview was checked at least once', scoutChecked);
     check('the idle hint was checked at least once', hintChecked);
     report.sortSaw = sortSaw;
