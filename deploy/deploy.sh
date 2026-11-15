@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy origin/main to the VPS: pull, rebuild the app and caddy containers, wait for healthy, check the live hosts.
+# Deploy origin/main to the VPS: pull, rebuild the app and caddy images, keep the last good ones as :previous, restart, wait for healthy, clean up old images and cache, check the live hosts and the board, then mark the live images :verified.
 # Usage: npm run deploy   (push first; env DEPLOY_HOST, default root@play.critterconnect.org)
 # SSH uses ~/.ssh/critter-deploy (no passphrase, set in ~/.ssh/config), so no one has to unlock anything.
 set -euo pipefail
@@ -32,6 +32,27 @@ echo "deploying $(git log --oneline -1)"
 export GIT_COMMIT=$(git rev-parse HEAD)
 compose="docker compose -f deploy/docker-compose.app.yml --project-directory ."
 $compose build -q
+# keep_previous <container>: before up replaces the image <container> runs, keep that image as <image>:previous (the
+# hand rollback, docs/DEPLOY.md) if it is the last one that passed every check (<image>:verified, tagged at the end of
+# deploy.sh) and it is up (healthy, or running if it has no health check). Otherwise the old :previous stays, so failed
+# deploys can't push the last good image out. No container (a first deploy) or a same-commit redeploy changes nothing;
+# a failed build never gets here (set -e). The first deploy to find no :verified takes the running image as verified.
+keep_previous() {
+  local state old name
+  state=$(docker inspect "$1" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' 2>/dev/null) || return 0
+  case $state in healthy|running) ;; *) echo "$1 is $state: its :previous stays"; return 0 ;; esac
+  old=$(docker inspect "$1" --format '{{.Image}}')
+  name=$(docker inspect "$1" --format '{{.Config.Image}}'); name=${name%:*}
+  [ "$old" != "$(docker image inspect "$name" --format '{{.Id}}')" ] || return 0
+  docker image inspect "$name:verified" >/dev/null 2>&1 || docker tag "$old" "$name:verified"
+  if [ "$old" != "$(docker image inspect "$name:verified" --format '{{.Id}}')" ]; then
+    echo "$1 runs ${old:7:12}, which never passed deploy/check.sh: $name:previous stays"; return 0
+  fi
+  docker tag "$old" "$name:previous"
+  echo "$name:previous is ${old:7:12}"
+}
+keep_previous critter-app
+keep_previous caddy
 $compose up -d
 for _ in $(seq 1 30); do
   status=$(docker inspect critter-app --format '{{.State.Health.Status}}')
@@ -42,6 +63,13 @@ echo "critter-app: $status"
 [ "$status" = healthy ]
 # The website's files live in the caddy image (plan 051 §10): fail if the running caddy predates them.
 docker exec caddy test -f /srv/site/index.html || { echo "caddy has no /srv/site/index.html: is the caddy image built from this checkout?" >&2; exit 1; }
+# Housekeeping, now that the new version is live, so a failure only warns. Untagged images only: never -a, which would
+# take the :previous and :verified images and the base images. Build cache unused for 7 days: recent npm ci layers stay.
+tidy() { "$@" || echo "warning: $* failed (ignored)" >&2 || true; }
+tidy docker image prune -f
+tidy docker builder prune -af --filter until=168h
+tidy df -h /
+tidy docker system df
 REMOTE
 
 # What the server just built: check.sh fails unless the live game reports this commit.
@@ -49,3 +77,14 @@ EXPECT_COMMIT=$(ssh -o BatchMode=yes "$HOST" git -C /opt/critter-connect rev-par
 export EXPECT_COMMIT
 # All three hosts, then the board check: a browser opens the live game (needs node and Chrome, docs/DEPLOY.md).
 bash "$(dirname "$0")/check.sh"
+# Every check passed (set -e ends the deploy at check.sh otherwise): tag the live images <image>:verified, the mark
+# keep_previous reads on the next deploy. The deploy is live and checked by now, so a failure here only warns.
+ssh -o BatchMode=yes "$HOST" bash -s <<'VERIFIED' || echo "warning: the live images weren't tagged :verified; the next deploy keeps today's :previous" >&2
+set -euo pipefail
+for c in critter-app caddy; do
+  id=$(docker inspect "$c" --format '{{.Image}}')
+  name=$(docker inspect "$c" --format '{{.Config.Image}}'); name=${name%:*}
+  docker tag "$id" "$name:verified"
+  echo "$name:verified is ${id:7:12}"
+done
+VERIFIED
