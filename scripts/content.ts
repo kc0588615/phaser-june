@@ -70,6 +70,20 @@ const REALM_TAG: Record<string, string> = {
   IndoMalay: 'realm:indomalayan', Australasia: 'realm:australasian', Oceania: 'realm:oceanian', Antarctic: 'realm:antarctic',
 };
 
+/** Refuses unless every profile passes checkProfile and checkCitations and no two share an id or an iucnId
+ *  (species' keys, and the range query's). One line: `run` prints only the first. */
+function assertProfilesReady(profiles: readonly AnimalProfile[]): void {
+  const problems = profiles.flatMap(profile => [...checkProfile(profile, sources), ...checkCitations(profile, sources, citedPages).errors].map(problem => `${profile.commonName}: ${problem}`));
+  for (const key of ['id', 'iucnId'] as const) {
+    const first = new Map<number, string>();
+    for (const profile of profiles) {
+      if (first.has(profile[key])) problems.push(`${profile.commonName}: ${key} ${profile[key]} is ${first.get(profile[key])}'s too`);
+      else first.set(profile[key], profile.commonName);
+    }
+  }
+  if (problems.length) throw new Error(`Fix the profiles first: ${problems.join('; ')}`);
+}
+
 run(async () => {
   const [mode, filter] = process.argv.slice(2);
   if (!['build', 'check', 'ranges', 'photos', 'preview'].includes(mode)) throw new Error('Choose build, check, ranges, photos or preview.');
@@ -114,9 +128,11 @@ run(async () => {
     }
 
     if (mode === 'ranges') {
+      const entries = await readProfiles();
+      assertProfilesReady(entries.map(({ profile }) => profile)); // before the query: it keys ranges on id and iucnId
       const rows = await sql.unsafe<Array<{ species_id: number; realms: string[] | null; countries: Array<{ code: string; name: string }> }>>(RANGES_SQL);
       const bySpecies = new Map(rows.map(row => [row.species_id, row]));
-      for (const { file, profile } of await readProfiles()) {
+      for (const { file, profile } of entries) {
         const row = bySpecies.get(profile.id);
         if (!row) { console.log(`  no range map: ${profile.commonName}`); continue; }
         const range = { realms: (row.realms ?? []).map(realm => REALM_TAG[realm] ?? `realm:${realm.toLowerCase()}`), countries: row.countries };
@@ -127,10 +143,8 @@ run(async () => {
     }
 
     const profiles = (await readProfiles()).map(entry => entry.profile);
-    const citations = profiles.map(profile => ({ profile, ...checkCitations(profile, sources, citedPages) }));
-    const problems = citations.flatMap(({ profile, errors }) => [...checkProfile(profile, sources), ...errors].map(problem => `${profile.commonName}: ${problem}`));
-    if (problems.length) throw new Error(`Fix the profiles first:\n${problems.join('\n')}`);
-    console.log(`${citations.reduce((sum, { warnings }) => sum + warnings.length, 0)} citation warnings (see preview).`);
+    assertProfilesReady(profiles);
+    console.log(`${profiles.reduce((sum, profile) => sum + checkCitations(profile, sources, citedPages).warnings.length, 0)} citation warnings (see preview).`);
     const rows = contentRowsFromProfiles(profiles);
     await sql.begin(async tx => {
       await tx.unsafe('DELETE FROM species_facts');
