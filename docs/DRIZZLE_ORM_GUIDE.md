@@ -12,12 +12,11 @@ The app only reads. No code in `src/` writes to the database.
 
 ## Queries
 
-Every query is raw SQL: `db.execute<Row>(sql\`…\`)`, with `sql` from `drizzle-orm`. There are 9:
+Every query is raw SQL: `db.execute<Row>(sql\`…\`)`, with `sql` from `drizzle-orm`. There are 8:
 - `src/lib/places.ts`: the places, their animals, one place's outline.
 - `src/lib/cluePool.ts`: species, clues, facts (the round pool).
 - `src/app/api/clue-game/range/route.ts`: one animal's range.
 - `src/app/api/clue-game/ranges/route.ts`: several animals' ranges (globe).
-- `src/app/api/clue-game/journal/route.ts`: the signed-in player's past solves.
 
 ```typescript
 import { sql } from 'drizzle-orm';
@@ -29,7 +28,7 @@ const [row] = await db.execute<{ geojson: string }>(sql`
 
 - `${value}` is sent as a bind parameter. A list: `sql.join(ids.map(id => sql\`${id}\`), sql\`, \`)`. Never put input into `sql.raw`.
 - postgres.js's own `sql` tag binds values the same way. Drizzle stays because the code already uses it and it keeps typed inserts available (owner, 2026-11-13), not because it is safer.
-- `Row` is a cast, not a check: keep it in step with `db/schema.sql`. postgres.js returns `count`, `bigint` and `numeric` as strings: cast in SQL (`count(*)::int`, journal route) or type them `string | number` and convert (range route).
+- `Row` is a cast, not a check: keep it in step with `db/schema.sql`. postgres.js returns `count`, `bigint` and `numeric` as strings: cast in SQL (`count(*)::int`) or type them `string | number` and convert (range route).
 - Routes wrap queries in `try/catch`, log `[API /path] Error:` and answer 500 JSON.
 - Scripts get their own client from `scripts/connect.ts`. `scripts/content.ts` wraps it with `drizzle(sql)` to reuse `buildCluePool`.
 

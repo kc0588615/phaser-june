@@ -7,7 +7,6 @@ Guidance for coding agents in this repo. Keep instructions short; prefer facts o
 - Runtime: TypeScript (Next.js)
 - ORM: Drizzle (migrated from Prisma, which was migrated from Supabase)
 - Database: PostgreSQL with PostGIS on Hetzner VPS, accessed via PgBouncer with TLS
-- Auth: Clerk
 - Hosting: Hetzner VPS (game at play.critterconnect.org, website at critterconnect.org, database/services); local `npm run dev` in WSL for development
 - Docs: `README.md`, `docs/` (Markdown)
 
@@ -45,17 +44,16 @@ GitHub `origin` is the hub between the owner's WSL clone and the agents' Oracle 
 - Build + serve: `npm run build && npm run serve`
 - Typecheck: `npm run typecheck`
 - Lint: `npm run lint` (eslint + cc theme check `scripts/check-theme.mjs`; must exit 0; `react-hooks/set-state-in-effect` is off by design, see `eslint.config.mjs`)
-- Env (`.env.local`): `DATABASE_URL`, Clerk keys.
+- Env (`.env.local`): `DATABASE_URL`.
 
 ## Where Things Live
-The app is two screens: a globe to pick a continent (`/`) and the game (`/explore`, optional `?place=` and `?seed=`; `/clue-match` redirects). Guide: `docs/CLUE_MATCH.md` (its Rules section: the current rules in short); terms: `CONTEXT.md`; design and decisions: `plans/044-animal-board.md` and the frozen 044-0 paper `docs/ANIMAL_BOARD_PAPER.md`.
+The app is two screens: a globe to pick a continent (`/`) and the game (`/explore`, optional `?place=` and `?seed=`; `/clue-match` and `/login` redirect). Guide: `docs/CLUE_MATCH.md` (its Rules section: the current rules in short); terms: `CONTEXT.md`; design and decisions: `plans/044-animal-board.md` and the frozen 044-0 paper `docs/ANIMAL_BOARD_PAPER.md`.
 - Globe: `src/pages/index.tsx` -> `src/components/globe/` (`GlobeScreen` shell, `Globe` MapLibre globe, `PlaceList`, `PlaceCard` animals + play). `globeSpin.ts`: the slow spin pauses on any input, resumes after 3 s idle, holds while a place is picked; dev builds expose the map as `window.__globe` for e2e. Data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`, `clue_match_places` view). Pure helpers `src/clueGame/places.ts`.
 - Game UI: `src/pages/explore.tsx` -> `src/components/animalBoard/` (`AnimalGame` shell, `useAnimalSession` state + board wiring, `EvidenceGrid`, `AnimalSheets`, `useShownOrders` gem flight). Shared pieces in `src/components/clueGame/` (`Sheet` drawer, `JournalSheet`, `useJournal` on-device journal, `PhaserGame` board host, `GlossaryText`, `RangeMap`). Client GETs share `src/lib/getJson.ts` (cached per page load).
 - Rules (pure): `src/clueGame/` (`animalBoard` round rules, `animalSession` trail/score/streak, `questionMatch` questions + book, `questionMatchContent` content -> rules data, `signs` sign vocabulary + checks, `regions`; plus glossary, journal, speciesInfo, worldMap, and the content checks traits, deduction, validatePool). Balance bot (gameplay sim, rule experiments): `scripts/balance-044.ts`.
 - Board: `src/game/` (flat). `main.ts` boots `ClueBoardScene.ts` (loads gem SVGs, reports matches). `BoardModel.ts` rules incl. toys (pure), `BoardView.ts` sprites + animation, `toyTextures.ts`, `sfx.ts` (synth sounds, off by default), `BoardController.ts` swipe/tap/keyboard swaps, cascade loop. React <-> Phaser via typed `EventBus.ts` (its `EventPayloads` map lists the events); the screens also import `sfx.ts` and `debugBridge.ts` directly. Dev bridge `window.__cc` (`debugBridge.ts`).
-- Data: `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `/api/clue-game/range`, `/api/clue-game/ranges` (globe), `GET /api/clue-game/journal` (signed-in journal sync). One client, `src/db/index.ts` (Drizzle over postgres.js, no models); every query is raw SQL (`docs/DRIZZLE_ORM_GUIDE.md`). Schema baseline `db/schema.sql` (no migration history; change the DB, then update the file). Scripts connect via `scripts/connect.ts`, except `scripts/db` (psql) and `scripts/import-natural-earth.mjs`.
-- Website (critterconnect.org, plan 051): `src/site/` (pages, `Layout`, `config.ts`, shots) -> static HTML via `npm run site:build` (`scripts/site.mjs`, out/site), preview `npm run site:serve` (:3101), test `npm run e2e:site`. No Next or Clerk there (ESLint guard). Served from the caddy image (`Dockerfile` stage `caddy`, `deploy/Caddyfile`); `deploy/check.sh` checks both hosts. Guide `docs/DEPLOY.md#the-website`.
-- Auth: Clerk (`src/pages/_app.tsx`, `src/proxy.ts`). Nothing creates `profiles` rows now; the journal route reads the ones saved before 2026-10-01.
+- Data: `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `/api/clue-game/range`, `/api/clue-game/ranges` (globe). One client, `src/db/index.ts` (Drizzle over postgres.js, no models); every query is raw SQL (`docs/DRIZZLE_ORM_GUIDE.md`). Schema baseline `db/schema.sql` (no migration history; change the DB, then update the file). Scripts connect via `scripts/connect.ts`, except `scripts/db` (psql) and `scripts/import-natural-earth.mjs`.
+- Website (critterconnect.org, plan 051): `src/site/` (pages, `Layout`, `config.ts`, shots) -> static HTML via `npm run site:build` (`scripts/site.mjs`, out/site), preview `npm run site:serve` (:3101), test `npm run e2e:site`. No Next there (ESLint guard). Served from the caddy image (`Dockerfile` stage `caddy`, `deploy/Caddyfile`); `deploy/check.sh` checks both hosts. Guide `docs/DEPLOY.md#the-website`.
 - Content: profiles in `db/content/animals/*.json`, tiered sources `db/content/sources.json`, page citations `db/content/citations.json` (guide `docs/CONTENT_SOURCES.md#citations`). `npm run content -- preview|build|check|ranges|photos`; never hand-edit content rows. New animal's range: `npm run iucn -- find|import` (IUCN shapefiles in `~/data/iucn/shp`). Practice SQL: `db/analysis/clue-match/`. The game never takes money (no ads, donations or paid version), because most of its sources allow non-commercial use only (`CONTENT_LICENSE.md`).
 
 ## Docs Map

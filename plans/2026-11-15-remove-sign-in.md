@@ -622,7 +622,7 @@ Every step:
     - typecheck, lint exit 0; YAML parse (PyYAML) exit 0; `npm run site:build` exit 0. Guard still fires: `next/link` in `src/site/` → `no-restricted-imports`, "…static HTML: no Next".
     - Clerk grep (`.github Dockerfile deploy .env.example eslint.config.mjs scripts`, not `scripts/e2e.mjs`) prints nothing; extra (advisor) `NEXT_PUBLIC_` grep on the same paths prints nothing. `deploy/Caddyfile`, `check.sh`, `deploy.sh` diff vs `origin/main` empty. No E2E (nothing the game runs changed).
 
-- [ ] S4 · Docs, agent files, the playtest skill and the schema comments; then the DoD greps
+- [x] S4 · Docs, agent files, the playtest skill and the schema comments; then the DoD greps
   - `git rm .claude/skills/playtest/scripts/create-test-player.mjs`. The folder holds nothing else.
   - `.claude/skills/playtest/SKILL.md`: delete the Preflight bullet from "- Signing in is optional and saves nothing (…)" through "  If the account is gone (`form_identifier_not_found`), run `node .claude/skills/playtest/scripts/create-test-player.mjs` from the repo root.", including its code block. The `npm run e2e:fresh` bullet is then followed by one blank line and `## 2. Globe (`/`)`. Nothing else in the skill changes.
   - `AGENTS.md`:
@@ -665,6 +665,14 @@ Every step:
     - `git grep -n 'setup step' -- docs` shows 4, 2 and 3. Step 4 is Ports 80 and 443 (the hooks), step 2 the Database role (the password), step 3 the Settings on the VPS.
     - `git ls-files .claude/skills/playtest/scripts` prints nothing.
     - No E2E: Markdown, comments and a script nothing runs.
+  - **Done 2026-11-15 18:05 UTC** (`origin/main` still `f1826f56`):
+    - Every site edited as quoted, by a script that fails unless each anchor occurs exactly once; `create-test-player.mjs` removed with `git rm` (folder gone, `git ls-files` empty). DEPLOY.md links renumbered in order 3→2, 4→3, 5→4; `db.execute` count was 8 before "There are 8:".
+    - Numstat (added/deleted): SKILL.md 0/15, AGENTS.md 4/6, CODING_STANDARDS.md 1/1, CONTEXT.md 1/1, README.md 3/3, db/schema.sql 2/2, CLUE_MATCH.md 3/3, DATABASE_ACCESS.md 1/5, DEPLOY.md 10/12, DRIZZLE_ORM_GUIDE.md 2/3, create-test-player.mjs deleted; diffs read whole.
+    - typecheck, lint exit 0.
+    - V6 final grep prints nothing; DEPLOY awk prints nothing; the final grep's full pattern on DEPLOY.md alone (lower-cased) prints nothing, the First deploy section included. `scripts/e2e.mjs`: exactly 7 lines (the expected ones); `next.config.mjs`: exactly 1 (the redirect comment).
+    - V7: schema diff comments only, `db` stat lists only `db/schema.sql`. V8: `src/site`, Caddyfile, check.sh, .gitignore, animalBoard.ts, savedGame.ts diff empty; S2's storage loop and `export const` diff print nothing.
+    - `setup step` links: 4 (line 96, Ports hooks), 2 (100, Database role password), 3 (106, Settings). No other "One-time setup" reference besides the heading.
+    - Extra (advisor): wider grep (`signing in|signs? in|sign(ed|ing)? out|log ?in|oauth|NEXT_PUBLIC|pk_|sk_|clk`) hits only DB-role logins, the `/login` redirect and its AGENTS.md mention, Caddyfile's `@game` matcher (out of scope), `/login*` in DEPLOY.md's website table (true: Caddy still forwards it) and e2e's "field guide: signs in pages" (unrelated): nothing to change. `.agents` has no Clerk or create-test-player. DEPLOY.md's Rebuild from nothing has no Clerk step.
 
 - [ ] S5 · The live-check script (outside the repo, never committed), tried on today's live site
   - Write `$STATE/live-check.mjs`, per DoD Release "The live-check script":
@@ -819,5 +827,6 @@ Build and release failures, and what catches each:
 - 2026-11-15 17:10 UTC: S1 tests first: 4 E2E checks + ported/self-merge unit cases. typecheck/lint ok, `npm test` 76/76 (both cases pass at once), E2E 1585/1588 red as designed (Clerk request, /login 200, journal route 200; stored-journal check passes).
 - 2026-11-15 17:35 UTC: S2 sign-in out of the game: 3 files deleted, `_app` fragment, header/hook/journal.ts edits, `/login` redirect, `@clerk/nextjs` uninstalled (lock −142, +0). typecheck/lint ok, test 76/76, build routes clean, E2E 1588/1588 (4 new checks green); screens: Anywhere shift + full-size wordmark (expected), rest identical.
 - 2026-11-15 17:50 UTC: S3 CI/Dockerfile/compose/env examples/ESLint guard/check-live-board comment de-Clerked. typecheck/lint ok, YAML ok, site:build ok, guard fires, Clerk + NEXT_PUBLIC_ greps clean, deploy scripts untouched; no E2E (no game change).
+- 2026-11-15 18:05 UTC: S4 docs/agent files/playtest skill/schema comments de-Clerked, create-test-player.mjs deleted, DEPLOY.md setup steps renumbered. typecheck/lint ok; V6 final grep, DEPLOY awk, V7, V8 clean; e2e.mjs 7 lines, next.config 1; no E2E (no game change).
 
 ## Summary

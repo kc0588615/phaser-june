@@ -88,7 +88,7 @@ CREATE TABLE habitat_colormap (
 
 -- Players ---------------------------------------------------------------------
 
--- One row per signed-in player (a Clerk user) who saved a round before 2026-10-01; nothing adds rows now (the journal route reads them).
+-- One row per signed-in player (a Clerk user) who saved a round before 2026-10-01; nothing adds rows now (nothing reads them now).
 CREATE TABLE profiles (
   user_id        uuid PRIMARY KEY,
   clerk_user_id  text,
@@ -98,7 +98,7 @@ CREATE TABLE profiles (
 CREATE UNIQUE INDEX uq_profiles_clerk_user_id ON profiles (clerk_user_id);
 
 -- One row per round finished before 2026-10-01, solved or lost; nothing writes here now. For analysis with SQL
--- (db/analysis/clue-match/07_solve_stats.sql) and the journal route. Anonymous play has no player_id.
+-- (db/analysis/clue-match/07_solve_stats.sql). Anonymous play has no player_id.
 CREATE TABLE clue_match_solves (
   id               bigserial PRIMARY KEY,
   player_id        uuid REFERENCES profiles(user_id) ON DELETE SET NULL,

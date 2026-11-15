@@ -2,7 +2,7 @@
 
 An educational animal game for grades 6–12. Pick a continent on a globe, then find the animal the camera saw among five look-alikes pinned on a small board: match gems to fill clue orders that answer yes/no questions, set off the toys big matches leave, rule look-alikes out in the evidence grid and release them from the board. Every animal you find glows on the globe and goes in your Field Journal; the round-end card shows its family tree and field notes with their sources, and the journal shows its range map.
 
-Next.js 16 (pages + API routes), Phaser 4 (the board), MapLibre GL (the globe), Drizzle + PostgreSQL/PostGIS (content, ranges, places), Clerk (sign-in).
+Next.js 16 (pages + API routes), Phaser 4 (the board), MapLibre GL (the globe), Drizzle + PostgreSQL/PostGIS (content, ranges, places).
 
 ## Run it
 
@@ -14,7 +14,7 @@ npm run e2e:fresh    # headless Chrome plays the dev build on its own server; ar
 npm run typecheck && npm run lint
 ```
 
-`.env.local` needs `DATABASE_URL` and Clerk keys.
+`.env.local` needs `DATABASE_URL`.
 
 ## Where things are
 
@@ -22,7 +22,7 @@ npm run typecheck && npm run lint
 - `src/pages/explore.tsx` → `src/components/animalBoard/`: the game screen (rules in `src/clueGame/animalBoard.ts`, `animalSession.ts` and `questionMatch.ts`); pieces it shares with the journal are in `src/components/clueGame/`.
 - `src/clueGame/`: the game's rules as pure, tested TypeScript.
 - `src/game/`: the Phaser board (model, view, input), talking to React only through `EventBus.ts`.
-- `src/app/api/`: `places`, `places/outline`, `clue-game/pool`, `clue-game/range`, `clue-game/ranges`, `clue-game/journal`.
+- `src/app/api/`: `places`, `places/outline`, `clue-game/pool`, `clue-game/range`, `clue-game/ranges`.
 - `src/db/index.ts`: the database client (Drizzle over postgres.js; queries are raw SQL).
 - `db/schema.sql`: the database schema (tables and views); `db/content/`: the animal profiles and their sources (`npm run content`); `db/analysis/clue-match/`: read-only SQL exercises.
 

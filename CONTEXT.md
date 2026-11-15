@@ -137,7 +137,7 @@ A round's rating: one for a find, more for finding with moves to spare.
 Finds in a row; a lost round ends it.
 
 **Journal**:
-The player's record of the animals they've found or named, kept on the device. Signing in only merges in the finds an account saved before October 2026; nothing new is saved there.
+The player's record of the animals they've found or named, kept on the device only.
 _Avoid_: collection, log, album
 
 **Source**:

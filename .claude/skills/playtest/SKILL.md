@@ -13,21 +13,6 @@ Drive the dev build like a player through the chrome-devtools MCP (set up per ma
 - In a git worktree (a variant fork): `cp -al ~/phaser-june/node_modules node_modules` (hard links; Turbopack rejects a symlinked `node_modules`), copy `.env.local`, serve with `./node_modules/.bin/next dev -p 8090`, and e2e with `E2E_BASE_URL=http://localhost:8090 npm run e2e`.
 - Stale CSS: a `globals.css` edit that doesn't show after an `ignoreCache` reload (`getComputedStyle(document.documentElement)` still has the old value) means Turbopack missed it, typically after `git stash`/checkout. Restarting alone doesn't clear it: `pkill -f '[n]ext dev'` (brackets stop it matching its own shell), `rm -rf .next/dev` (not `.next`, which holds the prod build), `npm run dev`. To compare against a baseline commit, use a worktree (above), not a stash.
 - `npm run e2e:fresh` (own server, beside :8080): run it in the background instead of under `timeout`. A `WARN load` line at the start means something else is eating CPU (often a stray headless Chrome), so expect false timeouts.
-- Signing in is optional and saves nothing (the journal only merges an account's solves from before 2026-10-01). Google OAuth is blocked in the automated Chrome and Clerk sign-up hits a CAPTCHA; email-code sign-in has neither. `+clerk_test` addresses take code `424242` in Clerk dev instances. Run on any page, then reload:
-
-  ```js
-  async () => {
-    const C = window.Clerk;
-    let si = await C.client.signIn.create({ identifier: 'playtest+clerk_test@example.com' });
-    const f = si.supportedFirstFactors.find(x => x.strategy === 'email_code');
-    await si.prepareFirstFactor({ strategy: 'email_code', emailAddressId: f.emailAddressId });
-    si = await si.attemptFirstFactor({ strategy: 'email_code', code: '424242' });
-    await C.setActive({ session: si.createdSessionId });
-    return C.user?.id;
-  }
-  ```
-
-  If the account is gone (`form_identifier_not_found`), run `node .claude/skills/playtest/scripts/create-test-player.mjs` from the repo root.
 
 ## 2. Globe (`/`)
 
