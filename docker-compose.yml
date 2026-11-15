@@ -1,3 +1,13 @@
+# The database stack (PostGIS and PgBouncer), as the repo's reference copy. The server runs its own copy,
+# /opt/postgis/docker-compose.yml with /opt/postgis/.env (compose project `postgis`, so its network is the
+# postgis_backend that deploy/docker-compose.app.yml joins). No deploy touches that copy: deploy/deploy.sh runs
+# deploy/docker-compose.app.yml only. The two are not compared by an agent: see handoff H16 (the owner compares them).
+# A change reaches the server by hand: take a fresh dump (deploy/backup/pg-backup.sh on the server), make the same
+# edit in /opt/postgis/docker-compose.yml, then run `docker compose up -d --no-deps <service>` there
+# (docs/DATABASE_ACCESS.md#runbook, step 3).
+# PgBouncer's certificate mount below doesn't work as written on a fresh server: certbot's live/<DB_DOMAIN> files are
+# symlinks into ../../archive/, outside the mount. How the server's copy reads them, and what restarts PgBouncer after
+# a renewal, is the owner's to say: see handoff H17.
 services:
   # PostgreSQL + PostGIS
   db:
@@ -25,7 +35,7 @@ services:
 
   # Connection pooler (public, with TLS)
   pgbouncer:
-    image: edoburu/pgbouncer
+    image: edoburu/pgbouncer@sha256:85d1e38593617af1b5f7f285e97d407e56c29939683cc7cfe4c8f6dc19f1268b  # what the server ran on 2026-11-15; no tag has this digest now
     container_name: pgbouncer
     restart: unless-stopped
     depends_on:
