@@ -1,13 +1,14 @@
 # The database stack (PostGIS and PgBouncer), as the repo's reference copy. The server runs its own copy,
 # /opt/postgis/docker-compose.yml with /opt/postgis/.env (compose project `postgis`, so its network is the
 # postgis_backend that deploy/docker-compose.app.yml joins). No deploy touches that copy: deploy/deploy.sh runs
-# deploy/docker-compose.app.yml only. The two are not compared by an agent: see handoff H16 (the owner compares them).
+# deploy/docker-compose.app.yml only. Agents can't read the server's copy (it holds a hardcoded password); the owner
+# compared the two on 2026-11-15 and this file was made to match it, except that this one takes the password from
+# .env and pins PgBouncer's image by digest (the server's copy names it without one).
 # A change reaches the server by hand: take a fresh dump (deploy/backup/pg-backup.sh on the server), make the same
 # edit in /opt/postgis/docker-compose.yml, then run `docker compose up -d --no-deps <service>` there
 # (docs/DATABASE_ACCESS.md#runbook, step 3).
-# PgBouncer's certificate mount below doesn't work as written on a fresh server: certbot's live/<DB_DOMAIN> files are
-# symlinks into ../../archive/, outside the mount. How the server's copy reads them, and what restarts PgBouncer after
-# a renewal, is the owner's to say: see handoff H17.
+# PgBouncer reads its certificate from /opt/postgis/certs, plain copies that a certbot renewal hook refreshes before
+# restarting it: docs/DEPLOY.md, One-time setup step 4.
 services:
   # PostgreSQL + PostGIS
   db:
@@ -18,9 +19,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-phaser_june}
+    shm_size: 1g
     volumes:
-      # Production: use Hetzner Volume path (must exist + be writable by UID 999)
-      - ${PGDATA_PATH:-./pgdata}:/var/lib/postgresql/data
+      # Named Docker volume, as on the server (compose project `postgis`, so Docker names it postgis_pgdata)
+      - pgdata:/var/lib/postgresql/data
       # Init scripts run ONCE on first start (empty data dir). Extensions only.
       - ./init:/docker-entrypoint-initdb.d:ro
     expose:
@@ -59,10 +61,14 @@ services:
     ports:
       - "6432:6432"
     volumes:
-      # Mount Let's Encrypt certs (created by certbot on host)
-      - /etc/letsencrypt/live/${DB_DOMAIN:-db.critterconnect.org}:/etc/pgbouncer/certs:ro
+      # Plain copies of certbot's files (live/ holds only symlinks into root-only archive/); the renewal hook
+      # /etc/letsencrypt/renewal-hooks/post/restart-pgbouncer.sh refreshes them (docs/DEPLOY.md, setup step 4)
+      - /opt/postgis/certs:/etc/pgbouncer/certs:ro
     networks:
       - backend
+
+volumes:
+  pgdata:
 
 networks:
   backend:
