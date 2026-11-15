@@ -165,7 +165,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -173,6 +173,25 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+At `94049996` (= `origin/main` `aabc91d5` + mission start), 2026-11-15 06:20-06:42 UTC. State folder `S=/srv/critter-ai/agent-state/missions/content-pipeline`.
+
+- **What merged first:** `loadPlaces` (`src/lib/places.ts:15`) reads `FROM clue_match_places WHERE kind = 'continent'`: D13 is in, S12 goes ahead.
+- **Fresh greps** (full output `$S/baseline-greps.txt`):
+  - `git grep -n "rspb.2017.1347" -- .`: `db/content/citations.json:389,391`, `plans/2026-11-07-fact-sources.md:539,689`, and this plan. `-- db/content/animals`: nothing (exit 1). As expected.
+  - `git grep -n -E "kind = 'country'" -- src scripts`: one line, `scripts/content.ts:64` (the range query). As expected.
+  - `-w clue_match_places -- src scripts`: `scripts/content.ts:64`, `src/app/api/places/route.ts:6` (comment), `src/clueGame/places.ts:2` (comment), `src/lib/places.ts:1` (comment), `:15` (continents), `:36` (outline by key).
+  - `FROM species\b|JOIN species\b -- scripts`: `scripts/content.ts:44`.
+  - `content -- ranges|RANGES_SQL -- .github .githooks tests`: nothing.
+  - `CONTENT_SOURCES|SHAPEFILE_BEST_PRACTICES` (no plans, no research): `AGENTS.md:59,63,65`, `README.md:32,34`, `db/schema.sql:10,18`, `docs/CLUE_MATCH.md:25,59,67`, `docs/CONTENT_SOURCES.md:84`, `docs/SHAPEFILE_BEST_PRACTICES.md:3`, `src/clueGame/citations.ts:3`, `src/clueGame/traits.ts:3`. (No `docs/_sidebar.md` hits any more.)
+  - `CONTENT_SOURCES.md#`: `AGENTS.md:59` (`#citations`), `docs/CLUE_MATCH.md:67` (`#signs`), `plans/040-more-animals-per-place.md:70` (`#research-access`).
+  - `non-?commercial|terms of use|redistribut`: `docs/SHAPEFILE_BEST_PRACTICES.md:7`, `docs/research/2026-11-07-amphibiaweb-wayback.md:11`, the three fonts' `OFL.txt`. Same as the audit.
+- **Live pool** (`play.critterconnect.org/api/clue-game/pool/`, 200): species 76, clues 2478, facts 491, citations 261; `rspb.2017.1347` not among them. Sorted keys: `$S/pool-citations-before.txt` (261 lines). Live `version.txt` `aabc91d5`. `citations.json` holds 262 entries.
+- **Range tool, unchanged:** run 1 (06:26 UTC) failed after 60.6 s, "canceling statement due to statement timeout": the dev role's `ALTER ROLE critter_dev SET statement_timeout = '60s'` (`deploy/db/dev-role.sql:16`). Run 2 (06:27 UTC): the same query with only `sql.begin` + `SET LOCAL statement_timeout = '15min'` around it (uncommitted, `git checkout -- scripts/content.ts` right after): exit 0, **65.1 s**, `git diff --stat db/content/animals` empty, 0 "no range map" lines (`$S/ranges-before-timeout15.txt`; run 1: `$S/ranges-before.txt`). Dev copy's content isn't stale. **2 of the 8 `ranges` runs used.**
+- **Profiles at baseline:** 76 profiles, 83 realm tags, 414 country tags over 77 countries; none without realms; no countries: Darwin Frog, Livingstone's Flying Fox, Hispaniolan Solenodon (as the brief says).
+- **Content check** (dev copy, 0.8 s): `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts.` / `0 errors, 0 warnings.` (`$S/content-check-before.txt`).
+- **Install / typecheck / lint / tests:** `npm ci` ok; `rm -rf .next .next-e2e .test-dist`; `npm run typecheck` exit 0; `npm run lint` exit 0; `npm test` **64/64 pass**. No migrations (no migration history; the mission changes no database object).
+- **Baseline E2E** (dev copy, `CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:fresh`, 06:28 UTC, 12 m 41 s): **1579/1579 checks passed**, seed 7. Artifact `$S/baseline-e2e/` (`report.json`, screenshots, `run.log`).
 
 ## Architecture
 
@@ -192,6 +211,10 @@ Out:
 
 ## Decisions
 
+- 2026-11-15 Baseline: today's `ranges` can't finish on the dev copy (60 s role timeout), so the baseline's diff comes from the unchanged SQL with only the brief's `SET LOCAL statement_timeout = '15min'` transaction added. That's the wrapper Goal 3 asks for anyway, so it confirms the need. Both runs count toward the eight.
+
 ## Log
+
+- 2026-11-15 06:42 UTC Baseline: D13 in; greps as expected; live pool 76/2478/491/261 without rspb.2017.1347; ranges baseline empty diff in 65 s (run 2 of 8, after a 60 s timeout on run 1); content check 0/0; tests 64/64; e2e:fresh 1579/1579.
 
 ## Summary
