@@ -222,7 +222,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -230,6 +230,22 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+Base: `origin/main` `9f72f360` (PR #79 merge), branch at `5850bcbd`. State folder `/srv/critter-ai/agent-state/missions/screens-cleanup/`. No migration step: the repo has no migration history (`db/schema.sql` baseline) and this mission changes no DB.
+
+- **M7 merged:** `src/clueGame/journal.ts` has no `Sighting`; `mergeServerJournal(journal: Journal, entries: readonly ServerJournalEntry[])` (line 65), no `placeFor`. Goes ahead.
+- **Gates:** `npm ci` ok; `npm run typecheck` 0; `npm run lint` 0; `npm test` **64/64** pass.
+- **Baseline E2E** (dev-copy block, guard passed): **1579/1579** checks, seed 7 (rounds: Hairy Frog found, Hirola lost, Golden-rumped Sengi found, African Forest Elephant found). Artifact `…/screens-cleanup/baseline-e2e/` (O1 "before" screenshots).
+- **Website:** `npm run site:build` ok; `e2e:site` against `site:serve` **444/444**, 20 screenshots.
+- **Fonts:** `fonts-before.txt` (sha256 + bytes, all 12 files under `public/fonts/`); originals in `fonts-original/` (Regular 154,604 B `da42a035…`, Bold 162,468 B `9a64eabe…`). Full originals are in git at `9f72f360`.
+- **Fresh greps** (full output: `…/screens-cleanup/baseline-greps.txt`). No new reader of a name this mission deletes.
+  - D22: `roster-cross|cm-shake|cm-pop-in|cm-countdown` outside `globals.css` (and `plans/`): 0 hits. `cm-[a-z]` in src/scripts/tests/.claude: only `RangeMap.tsx:43` (`cm-range-ping`) and `globals.css` 469–491, 654. Reduced-motion list at `globals.css:654` holds `.cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross`.
+  - D22 callers (`<AnimalCard|TrapCard|FactsWithSources|SpeciesPortrait|PhotoCredit|RangeMap|SuspectPhoto`): 15 lines. `AnimalCard.tsx:28` passes `size={size}` to `SuspectPhoto`; `AnimalSheets.tsx:212,659` pass `size={330}`, `:414` `size={120}` (so `SuspectPhoto` keeps `size`, per Review corrections). Both `<AnimalCard` calls (`EvidenceGrid.tsx:262,393`) pass no `size`; both `<TrapCard />` (`EvidenceGrid.tsx:193`, `AnimalSheets.tsx:765`) no children; `<FactsWithSources` at `AnimalSheets.tsx:716`, `JournalSheet.tsx:71`; `<SpeciesPortrait` only `JournalSheet.tsx:51` (className, no width); `<PhotoCredit` at `AnimalSheets.tsx:215,660`, `JournalSheet.tsx:77` (no className); only `<RangeMap` `JournalSheet.tsx:69` with `caption={false}`.
+  - D22 other sites: fallback comment at `useAnimalSession.ts:89`; `RangeMap.tsx:11` `caption = true`, `:49` `{range && caption && (`; `FactsWithSources.tsx:16,21,42` `itemClassName`; `type Pencil` at `animalBoard.ts:428` (export) and `AnimalGame.tsx:39`. `HOLD_MS -w` (excl. plans): 5 lines, `EvidenceGrid.tsx:49,127`, `BoardController.ts:56,75,138` (same as audit).
+  - D23: `oauth-logo` (excl. plans) 0 hits; `deploy/check.sh` names no branding; `git ls-files public/branding`: two wordmark SVGs + the PNG and `.prompt.txt`; `/branding/` in code only `Wordmark.tsx:7,9` and `scripts/site.mjs:91` (wordmarks + favicon).
+  - O1: `font-data` in components: 20 lines in 6 files (`AnimalGame.tsx` 187/457/459, `AnimalSheets.tsx` 122/378/422/455/514/554/644/651/714/752/767/808, `EvidenceGrid.tsx` 319/417, `FactsWithSources.tsx:64`, `JournalSheet.tsx:56`, `PlaceList.tsx:35`), plus `--font-data` at `globals.css:293`; `src/site` 0. `OpenRunde` named only at `globals.css:56,63`. Character list is derived in Architecture.
+  - A16: `cc:explore:game` only in `savedGame.ts:7` and `scripts/e2e.mjs`; `clearSavedGame` only `GlobeScreen.tsx:13,26`; no `ErrorBoundary|componentDidCatch|getDerivedStateFromError` in src.
+  - A17: `JOURNAL_STORAGE_KEY|RECORDS_STORAGE_KEY` read/written only in `useJournal.ts` (30, 31, 50, 63, 68); `useJournal` callers `AnimalGame.tsx:198`, `GlobeScreen.tsx:22`; `clue-match:journal` in scripts only the E2E (one tab); no `storage`/`StorageEvent`/`BroadcastChannel` listener anywhere.
 
 ## Architecture
 
@@ -250,5 +266,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-15 12:35 UTC · Baseline: M7 merged; greps recorded; fonts snapshot; typecheck/lint 0, unit 64/64, E2E 1579/1579 (dev copy), site 444/444.
 
 ## Summary
