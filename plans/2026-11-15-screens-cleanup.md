@@ -2,7 +2,7 @@
 mission: screens-cleanup
 project: critter-connect
 branch: agent/screens-cleanup
-status: active
+status: done
 started: 2026-11-15 12:15 UTC
 ---
 
@@ -850,6 +850,20 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
     S6's record lists each corrected sentence beside its code line.
 11. **Release.** Smoke as the Brief's Release bullet (not repeated here). If the rebase changes `scripts/e2e.mjs`, `src/components/`, `src/clueGame/journal.ts` or `public/fonts/`, rerun 1 and 8 on the new base.
 
+### Verification results (2026-11-15, `e9b172ad` on BASE `9f72f360`; `origin/main` still `9f72f360`)
+
+1. E2E (dev copy, guard passed), first run: `1584/1584 checks passed`; report check `1584 0` + 5 `true` (2 `…dropped for a fresh round 1`, 3 `two tabs:`). Same seed-7 rounds as baseline (Hairy Frog found, Hirola lost, Golden-rumped Sengi found, African Forest Elephant found). Artifact `$STATE/final-e2e/` (`e2e-s5/` deleted). Repro: the dev-copy block, seed 7.
+2. Screens, baseline vs final (sharp, decoded pixels): `02-board`, `02d-field-guide`, `04-round-1-end`, `05-journal`, `11-journal-sources-open` 0 px. `01-globe` 20,902 px, rows 198–749 only (the globe's spin); the `N animals` list below it 0 px. `02c-notes` top bar (`1/5`, moves) 0 px; `n/20` cells: `6/20`, `3/20` 0 px, last `3/20` differs only in blue tint, `0/20` 61 px at its left edge next to the "On camera" card's highlight (both mid-transition; tiles mid-walk too). Same glyphs/weight/width/baseline by eye at 2×. `08-pencil-bonus-end` top bar + pencil stats (`1/1`, `+24`) 0 px; the `+74 points` pop is timing (baseline caught it mid-pop), as in S4. `11-journal-sources-open`: map shown, no caption; credit unchanged (0 px vs baseline).
+3. `site:build` 0; `e2e:site` **444/444** (server stopped).
+4. typecheck 0, lint 0, `npm test` **75/75** (64 + N1 5 + N2 6).
+5. Rules files: no diff vs BASE; `v: 1` grep prints nothing.
+6. K2: prints nothing.
+7. Fonts: `--stat` only the two `OpenRunde-*.woff2` (154,604 → 6,892; 162,468 → 6,848); other files' sha256 = `fonts-before.txt`; total 13,740 < 40,000; cmap 31 each (` +./0123456789?Cabefilmnostuv×−`).
+8. Glyph proof exit 0, `compare.json` `ok: true` ("all conditions hold"), fontTools 4.68.0.
+9. Grep 1 nothing; `const HOLD_MS` one line `src/game/constants.ts:38`; `type Pencil` one line `animalBoard.ts:428`; `public/branding` = the two wordmark SVGs; `cm-range-ping` `RangeMap.tsx` 1, `globals.css` 3.
+10. Both print nothing.
+11. Release: next unit.
+
 ## Code review (Astra)
 
 VERDICT: APPROVE
@@ -887,5 +901,22 @@ SHOULD-CONSIDER:
 - 2026-11-15 15:01 UTC · S5: D22 leftovers out (4 CSS animations, RangeMap caption, 5 dead props, dup `Pencil`/`HOLD_MS`, always-true `is-fresh`) + D23 OAuth logo `git rm`; typecheck/lint 0, unit 75/75, greps clean; E2E 1584/1584 → `e2e-s5/`; journal screens 0 px vs S4.
 - 2026-11-15 15:05 UTC · S6: S11 `docs/CLUE_MATCH.md` 12 lines corrected against code (sign-in lines + Content step list untouched); Verification 10 clean; typecheck/lint 0. Markdown only, no E2E.
 - 2026-11-15 15:08 UTC · Code review (Astra): APPROVE, no MUST-FIX; 1 SHOULD-CONSIDER (refresh origin/main before PR: done at release). Plan only; no checks needed.
+- 2026-11-15 15:30 UTC · Final Verification: E2E 1584/1584 first run → `final-e2e/`; site 444/444; typecheck/lint 0; unit 75/75; glyph proof ok; screens, K2, K5, rules, greps, S11 clean. Summary written, status done.
 
 ## Summary
+
+Mission M9 (screens cleanup), done on branch `agent/screens-cleanup`, base `origin/main` `9f72f360`. Nothing a player sees changes, except that a broken save now starts a new game and two tabs no longer lose each other's finds.
+
+- **Deleted (D22, D23):**
+  - Files: `public/branding/critterconnect-oauth-logo.png`, `public/branding/critterconnect-oauth-logo.prompt.txt` (git history keeps them; the two wordmark SVGs stay).
+  - CSS (`globals.css`): rules `.roster-cross`, `.cm-shake`, `.cm-pop-in`, `.cm-countdown` + keyframes `roster-cross-in`, `cm-shake`, `cm-pop-in`, `cm-countdown`; reduced-motion list now `.cm-range-ping, .ev-lit, …` (`.cm-countdown` was never in it); comment → `/* The range map's ping (RangeMap) */`. `cm-range-ping` kept.
+  - Props: `RangeMap` `caption` (+ figcaption "Range about … km²" / "Map: IUCN Red List", `Intl.NumberFormat`), `JournalSheet`'s `caption={false}`; `AnimalCard` `size`; `TrapCard` `children` (+ `ReactNode` import); `FactsWithSources` `itemClassName`; `SpeciesPortrait` `width`; `PhotoCredit` `className`. `SuspectPhoto` keeps `size` (`AnimalSheets` passes it).
+  - Dups: `type Pencil` in `AnimalGame.tsx` (imported from `animalBoard`); `HOLD_MS` declared once in `src/game/constants.ts` (450, unchanged); always-true `is-fresh` ternary; the pool's pre-citations fallback.
+- **O1 data font:** 31 chars ` +./0123456789?Cabefilmnostuv×−` (U+0020,U+002B,U+002E-0039,U+003F,U+0043,U+0061-0062,U+0065-0066,U+0069,U+006C-006F,U+0073-0076,U+00D7,U+2212). Regular 154,604 → 6,892 B; Bold 162,468 → 6,848 B (fontTools 4.68.0, `pyftsubset … --layout-features='*' --name-IDs='*'`), cut from the originals at `9f72f360`; both `@font-face` rules get the same `unicode-range`. Glyph proof (`$STATE/glyphs/`): 4 orig/cut pairs 0 differing px, light + dark, `text-xs/s/m`, `tabular-nums`. Screens baseline vs final: every `font-data` text identical (Verification results 2); the only diffs are the globe's spin and animation timing.
+- **A16 (saved game):** a save that no longer fits today's code (a field missing, or its check throws) is dropped (`fitsShape` + two `try` blocks in `useAnimalSession`) and a fresh round 1 starts. E2E checks: failed first (resumed with `trail` missing; "Could not load the animals" + console error with `orders` missing), now pass.
+- **A17 (two tabs):** journal and bests merge into storage at save time (`mergeJournals`, `saveSolve`, `saveRecords`; `useJournal` reads storage before each write; no `storage` listener, as the owner chose). 3 E2E checks: failed first (B's find lost, best 9999 overwritten by 50, journal `2 of 76`), now pass (`3 of 76`, 9999/99). Astra's MUST-FIX (cross-tab locking) rejected, reasons under Decisions; serializing across tabs is left as a later owner choice.
+- **Counts:** unit 64 → 75 (savedGame 5, journal 6; both failed first on missing exports). E2E 1579 → 1584 (5 new checks; fail-first run 1578/1584 with exactly the predicted 6 fails, `$STATE/checks-fail-first/`); final **1584/1584** first run, `$STATE/final-e2e/`. Site 444/444.
+- **`ANIMAL_RULES.version` unchanged**, and so is `SavedGame` `v: 1`: no rule and no save field changed, so existing saves still resume. Only saves that already couldn't resume are dropped.
+- **No production content build needed:** no content, DB or schema change.
+- **S11 `docs/CLUE_MATCH.md`:** 12 lines corrected against code (S6 lists each). Left for M11 (sign-in), word for word: `:10` "No sign-in needed… when signed in, it also pulls the player's solves saved before 2026-10-01", the Data row's `GET /api/clue-game/journal`, the Database paragraph's `profiles`, `clue_match_solves` and its "row per round finished before 2026-10-01" sentence, "The journal counts only `solved` rows.", and the `07_solve_stats.sql` row.
+- **Smoke:** pending the release unit (`## Release`).
