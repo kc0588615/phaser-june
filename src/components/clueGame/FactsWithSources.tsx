@@ -13,12 +13,11 @@ function hostOf(url: string): string {
   return new URL(url).hostname.replace(/^www\./, '');
 }
 
-export function FactsWithSources({ facts, citations, className = '', itemClassName = '' }: {
+export function FactsWithSources({ facts, citations, className = '' }: {
   facts: readonly SourcedFact[];
   citations: Readonly<Record<string, Citation>>;
   /** The fact list's classes (its bullets, size, gap). */
   className?: string;
-  itemClassName?: string;
 }) {
   const id = useId();
   const sources = useRef<HTMLDetailsElement>(null);
@@ -39,7 +38,7 @@ export function FactsWithSources({ facts, citations, className = '', itemClassNa
         {facts.map((fact, i) => {
           const n = marks[i];
           return (
-            <li key={fact.key} className={itemClassName}>
+            <li key={fact.key}>
               {fact.text}
               {n !== null && (
                 // Zero line height: the number doesn't push its line apart. The after: box widens the tap target without moving layout.

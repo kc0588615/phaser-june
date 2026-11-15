@@ -15,7 +15,7 @@ import type { BoardKey } from './EventBus';
 import type { BoardView, TilePreview } from './BoardView';
 import { sfx } from './sfx';
 import type { BoardLayout } from './squareLayout';
-import { GRID_COLS, GRID_ROWS, SWIPE_THRESHOLD } from './constants';
+import { GRID_COLS, GRID_ROWS, HOLD_MS, SWIPE_THRESHOLD } from './constants';
 
 export interface BoardHooks {
     /**
@@ -52,8 +52,6 @@ const ARROWS: Partial<Record<BoardKey, [dx: number, dy: number]>> = {
 };
 const WAYS: Record<string, string> = { '-1,0': 'left', '1,0': 'right', '0,-1': 'up', '0,1': 'down' };
 
-/** How long a press on an animal tile lasts before it's a long press (its field guide), in ms. */
-export const HOLD_MS = 450;
 /** How long the board waits with no input before the idle hint, in ms (owner, 2026-10-13: longer than the genre's ~5 s, since players stop to read the grid). */
 export const HINT_MS = 8000;
 

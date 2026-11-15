@@ -66,7 +66,7 @@ export function JournalSheet({ pool, journal, records, onClose }: { pool: CluePo
                     </a>
                   )}
                 </p>
-                <div className="mt-xs"><RangeMap speciesId={species.id} name={species.commonName} caption={false} /></div>
+                <div className="mt-xs"><RangeMap speciesId={species.id} name={species.commonName} /></div>
                 {pool && (
                   <FactsWithSources
                     facts={keyFacts(pool, species.id).slice(0, LEARNED_FACTS).map(fact => ({ key: fact.text, text: <GlossaryText text={fact.text} />, source: fact.source }))}

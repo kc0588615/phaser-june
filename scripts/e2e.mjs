@@ -110,18 +110,21 @@ async function main() {
   const { browser, close } = await startBrowser();
   try {
     const { sessionId, page, evaluate, waitFor } = await openPage(browser);
-    if (CPU_THROTTLE > 1) await page('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE });
 
     // Every request the page makes to the app, in order (the network check slices it per load).
     const requests = [];
+    // Console errors and exceptions from every page the run opens (the two-tab check adds its second); network events from the first only.
+    const watched = new Set([sessionId]);
     browser.on(message => {
-      if (message.sessionId !== sessionId) return;
+      if (!watched.has(message.sessionId)) return;
       const { method, params } = message;
       if (method === 'Runtime.consoleAPICalled' && params.type === 'error') {
         report.consoleErrors.push(params.args.map(arg => arg.value ?? arg.description ?? '').join(' ').slice(0, 300));
       } else if (method === 'Runtime.exceptionThrown') {
         report.consoleErrors.push((params.exceptionDetails.exception?.description ?? params.exceptionDetails.text).slice(0, 300));
-      } else if (method === 'Network.responseReceived' && params.response.url.startsWith(BASE) && params.response.status >= 400) {
+      }
+      if (message.sessionId !== sessionId) return;
+      if (method === 'Network.responseReceived' && params.response.url.startsWith(BASE) && params.response.status >= 400) {
         report.failedRequests.push(`${params.response.status} ${params.response.url}`);
       } else if (method === 'Network.loadingFailed' && !params.canceled) {
         report.failedRequests.push(`${params.errorText} (${params.type})`);
@@ -129,15 +132,18 @@ async function main() {
         requests.push(params.request.url);
       }
     });
-    await page('Page.enable');
-    await page('Runtime.enable');
-    await page('Network.enable');
-    await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
-    await page('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
-    // A returning player: skip the how-to-play dialog.
-    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v5', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
-    // Plan 045: an animal's name in the grid takes a drag of its photo (rule out / back in) and a long press (its field guide).
-    await page('Page.addScriptToEvaluateOnNewDocument', { source: `
+    // Every page's setup: the first, and the second tab the two-tab check opens.
+    const setUpPage = async page => {
+      if (CPU_THROTTLE > 1) await page('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE });
+      await page('Page.enable');
+      await page('Runtime.enable');
+      await page('Network.enable');
+      await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+      await page('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+      // A returning player: skip the how-to-play dialog.
+      await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v5', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
+      // Plan 045: an animal's name in the grid takes a drag of its photo (rule out / back in) and a long press (its field guide).
+      await page('Page.addScriptToEvaluateOnNewDocument', { source: `
       window.__pill = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] button[data-pill]');
       window.__slidePill = async (id, distance, from = 10) => {
         const pill = window.__pill(id);
@@ -289,6 +295,8 @@ async function main() {
         return { degPerS: dLng / s, pxPerS: (x0 - map.project(anchor).x) / s, zoom: map.getZoom() };
       };
     ` });
+    };
+    await setUpPage(page);
 
     const goto = async url => {
       await page('Page.navigate', { url });
@@ -719,7 +727,7 @@ async function main() {
       const open = {};
       for (const clue of pool.clues) for (const tag of clue.compareTags) if (!tag.includes(':')) (open[clue.speciesId] ??= new Set()).add(tag);
       return {
-        species: pool.species.map(s => [s.id, { name: s.commonName, scientificName: s.scientificName, family: s.family, genus: s.genus }]),
+        species: pool.species.map(s => [s.id, { name: s.commonName, scientificName: s.scientificName, className: s.className, family: s.family, genus: s.genus }]),
         open: Object.entries(open).map(([id, tags]) => [Number(id), [...tags]]),
       };
     });
@@ -2231,6 +2239,58 @@ async function main() {
     await waitFor(boardReady, 'the board after a stale save', 60_000);
     const afterStale = await evaluate(() => { const clue = window.__cc.clue(); return { end: clue.end, movesUsed: clue.movesUsed, roundNo: clue.roundNo, seed: clue.seed }; });
     check('a save whose witness notes no longer fit the content deals a fresh round, not a resume', afterStale.end === null && afterStale.movesUsed === 0 && afterStale.roundNo === 1 && afterStale.seed === staleSeed, JSON.stringify({ ...afterStale, staleSeed }));
+    // Audit A16: a save today's code can't resume (a field it writes is gone, or the guard throws on it) is dropped, and
+    // round 1 is dealt from its seed, once. Both cases start from the fresh round 1 the stale save just dealt; each sets
+    // score 7 so a resume can't pass for a fresh deal.
+    const freshSave = await waitFor(seed => {
+      const saved = JSON.parse(sessionStorage.getItem('cc:explore:game') ?? 'null');
+      return saved?.seed === seed && saved.session.roundNo === 1 && saved.session.end === null && saved.session.round.movesUsed === 0
+        && !saved.session.round.notesLeft.some(note => note.tags.includes('tree_dweller')) && saved;
+    }, 'the fresh round 1 save', 10_000, staleSeed).catch(() => null);
+    const brokenSaves = [
+      ['trail', 'a save missing session.trail (a field today\'s code writes) is dropped for a fresh round 1'],
+      ['round.orders', 'a save missing session.round.orders (its check throws) is dropped for a fresh round 1'],
+    ];
+    for (const [field, name] of brokenSaves) {
+      let ok = false, detail = '';
+      const errorsBefore = report.consoleErrors.length;
+      try {
+        if (!freshSave) throw new Error('no fresh round 1 save to start from');
+        await evaluate(({ base, field }) => {
+          const saved = structuredClone(base);
+          saved.session.score = 7;
+          const keys = field.split('.');
+          delete keys.slice(0, -1).reduce((at, key) => at[key], saved.session)[keys.at(-1)];
+          sessionStorage.setItem('cc:explore:game', JSON.stringify(saved));
+        }, { base: freshSave, field });
+        await page('Page.reload');
+        await waitFor(() => document.readyState === 'complete', 'the reload');
+        const shown = await waitFor(() => (window.__cc?.clue?.() && window.__cc.state().ready && 'board') || (document.body.innerText.includes('Could not load the animals') && 'load error'), 'the board or the load error', 30_000);
+        const holds = field => {
+          const saved = JSON.parse(sessionStorage.getItem('cc:explore:game') ?? 'null');
+          return saved?.session && field.split('.').reduce((at, key) => at?.[key], saved.session) !== undefined;
+        };
+        await waitFor(holds, 'the save to hold the field again', 10_000, field).catch(() => null);
+        const after = await evaluate(field => {
+          const clue = window.__cc?.clue?.() ?? null;
+          const saved = JSON.parse(sessionStorage.getItem('cc:explore:game') ?? 'null');
+          return {
+            clue: clue && { roundNo: clue.roundNo, movesUsed: clue.movesUsed, score: clue.score, seed: clue.seed, mysteryId: clue.mysteryId, suspects: clue.suspects },
+            saved: saved?.session ? { roundNo: saved.session.roundNo, score: saved.session.score, holds: field.split('.').reduce((at, key) => at?.[key], saved.session) !== undefined } : null,
+          };
+        }, field);
+        const newErrors = report.consoleErrors.slice(errorsBefore);
+        const { clue } = after;
+        ok = shown === 'board' && clue?.roundNo === 1 && clue.movesUsed === 0 && clue.score === 0 && clue.seed === freshSave.seed
+          && clue.mysteryId === freshSave.session.round.mysteryId && sameList(clue.suspects, freshSave.session.round.suspects)
+          && after.saved?.roundNo === 1 && after.saved.score === 0 && after.saved.holds && newErrors.length === 0;
+        detail = JSON.stringify({ shown, ...after, newErrors: newErrors.slice(0, 2) });
+      } catch (error) {
+        const text = await evaluate(() => document.body?.innerText.slice(0, 200) ?? '').catch(() => '');
+        detail = JSON.stringify({ error: error.message, text, newErrors: report.consoleErrors.slice(errorsBefore, errorsBefore + 2) });
+      }
+      check(name, ok, detail);
+    }
     const solves = raw => Object.values(JSON.parse(raw ?? '{}')).find(entry => entry.commonName === mysteryName)?.timesSolved ?? 0;
     check('the resumed round, named right, is written to the journal once', ended.end?.outcome === 'found' && solves(ended.journal) === solves(journalBefore) + 1, JSON.stringify({ mysteryName, before: solves(journalBefore), after: solves(ended.journal), outcome: ended.end?.outcome }));
     check('a reload on the round-end card resumes it without writing the journal again', Boolean(ended.end) && JSON.stringify(afterEnd.end) === JSON.stringify(ended.end) && afterEnd.journal === ended.journal, JSON.stringify({ ended: ended.end?.outcome ?? null, after: afterEnd.end?.outcome ?? null, sameJournal: afterEnd.journal === ended.journal }));
@@ -2474,6 +2534,79 @@ async function main() {
       });
       if ((afterFind[foundName]?.timesSolved ?? 0) !== (oldJournal[foundName]?.timesSolved ?? 0) + 1) changed.push(`${foundName} (found): timesSolved ${oldJournal[foundName]?.timesSolved ?? 0} -> ${afterFind[foundName]?.timesSolved}`);
       check('after a find, every old journal entry is kept unchanged (the find counted once)', changed.length === 0, JSON.stringify({ found: foundName, changed }));
+    }
+
+    // Audit A17: two tabs share localStorage, and each saves the journal and the bests. A save merges into what storage
+    // holds, so a find saved before, the other tab's find and a best set in the other tab are all kept. The seeds are
+    // probed (the mysteries follow the content): `a` is seed 1, `b` the first seed with another mystery.
+    {
+      const names = ['two tabs: a find in each tab is kept, with the find saved before', 'two tabs: a best set in the other tab is kept', 'two tabs: the first tab\'s Field Journal shows the other tab\'s find after its own save'];
+      const results = names.map(() => ({ ok: false, detail: '' }));
+      const errorsBefore = report.consoleErrors.length;
+      let second = null;
+      try {
+        const at = seed => `${BASE}/explore/?seed=${seed}&place=${encodeURIComponent(report.place.key)}`;
+        let a = null, b = null;
+        for (let seed = 1; seed <= 40 && !b; seed++) {
+          await goto(at(seed));
+          const { mysteryId, suspects } = await waitFor(() => window.__cc?.clue?.() ?? null, 'a dealt round', 60_000);
+          if (!a) a = { seed, mysteryId, suspects };
+          else if (mysteryId !== a.mysteryId) b = { seed, mysteryId };
+        }
+        if (!b) throw new Error(`no seed in 2..40 deals a mystery other than seed 1's`);
+        const xId = a.suspects.find(id => id !== a.mysteryId && id !== b.mysteryId);
+        const xSpecies = poolSpecies.get(xId);
+        const x = {
+          scientificName: xSpecies.scientificName, commonName: xSpecies.name, timesSolved: 2, bestMoves: 12,
+          firstSolvedAt: '2026-10-02T08:00:00.000Z', lastSolvedAt: '2026-10-09T08:00:00.000Z', ...(xSpecies.className ? { className: xSpecies.className } : {}),
+        };
+        report.twoTabs = { a: a.seed, b: b.seed, mysteries: [a.mysteryId, b.mysteryId], x: xId };
+        await evaluate(x => {
+          localStorage.setItem('clue-match:journal:v1', JSON.stringify({ [x.scientificName]: x }));
+          localStorage.setItem('clue-match:records:v1', JSON.stringify({ bestScore: 10, bestStreak: 1 }));
+        }, x);
+        await goto(at(a.seed));
+        await waitFor(boardReady, 'tab A\'s board', 60_000);
+        await sleep(1500);
+        // Tab B: its own page, set up as A, its console watched too.
+        second = await openPage(browser);
+        watched.add(second.sessionId);
+        await setUpPage(second.page);
+        await second.page('Page.bringToFront');
+        await second.page('Page.navigate', { url: at(b.seed) });
+        await second.waitFor(() => document.readyState === 'complete' && document.visibilityState === 'visible', 'tab B to load in front');
+        await second.waitFor(boardReady, 'tab B\'s board', 60_000);
+        await sleep(1500);
+        await second.evaluate(id => window.__nameIt(id), b.mysteryId);
+        await second.waitFor(selector => document.querySelector(selector) && true, 'tab B\'s round-end card', 10_000, CARD);
+        await sleep(1000);
+        // A best set in tab B after its find.
+        await second.evaluate(() => localStorage.setItem('clue-match:records:v1', JSON.stringify({ bestScore: 9999, bestStreak: 99 })));
+        await page('Page.bringToFront');
+        await waitFor(() => document.visibilityState === 'visible', 'tab A in front', 10_000);
+        await evaluate(id => window.__nameIt(id), a.mysteryId);
+        await waitFor(selector => document.querySelector(selector) && true, 'tab A\'s round-end card', 10_000, CARD);
+        await sleep(1000);
+        const stored = await evaluate(() => ({ journal: JSON.parse(localStorage.getItem('clue-match:journal:v1') ?? '{}'), records: JSON.parse(localStorage.getItem('clue-match:records:v1') ?? 'null') }));
+        const listed = await fieldJournalText();
+        const newErrors = report.consoleErrors.slice(errorsBefore);
+        const nameA = poolSpecies.get(a.mysteryId).scientificName, nameB = poolSpecies.get(b.mysteryId).scientificName;
+        const keys = Object.keys(stored.journal);
+        const xStored = stored.journal[x.scientificName];
+        const xKept = Boolean(xStored) && Object.keys(xStored).length === Object.keys(x).length && Object.entries(x).every(([field, value]) => xStored[field] === value);
+        results[0] = {
+          ok: keys.length === 3 && xKept && stored.journal[nameA]?.timesSolved === 1 && stored.journal[nameB]?.timesSolved === 1 && newErrors.length === 0,
+          detail: JSON.stringify({ keys, x: xStored ?? null, a: stored.journal[nameA]?.timesSolved ?? null, b: stored.journal[nameB]?.timesSolved ?? null, newErrors: newErrors.slice(0, 2) }),
+        };
+        results[1] = { ok: stored.records?.bestScore === 9999 && stored.records?.bestStreak === 99, detail: JSON.stringify(stored.records) };
+        results[2] = { ok: listed.startsWith('3 of'), detail: listed };
+      } catch (error) {
+        const detail = JSON.stringify({ error: error.message, twoTabs: report.twoTabs ?? null, newErrors: report.consoleErrors.slice(errorsBefore, errorsBefore + 2) });
+        for (const result of results) result.detail = detail;
+      } finally {
+        if (second) await browser.send('Target.closeTarget', { targetId: second.targetId }).catch(() => {});
+      }
+      names.forEach((name, i) => check(name, results[i].ok, results[i].detail));
     }
 
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));

@@ -6,9 +6,7 @@ import { getJson } from '@/lib/getJson';
 /** Ranges smaller than this get a ring so they show up on a world map. */
 const SMALL_RANGE_KM2 = 200_000;
 
-const area = new Intl.NumberFormat('en', { maximumSignificantDigits: 2 });
-
-export function RangeMap({ speciesId, name, caption = true }: { speciesId: number; name: string; caption?: boolean }) {
+export function RangeMap({ speciesId, name }: { speciesId: number; name: string }) {
   // undefined while loading; null when there's no map for this species.
   const [range, setRange] = useState<SpeciesRange | null | undefined>(undefined);
   useEffect(() => {
@@ -46,12 +44,6 @@ export function RangeMap({ speciesId, name, caption = true }: { speciesId: numbe
           </>
         )}
       </svg>
-      {range && caption && (
-        <figcaption className="mt-xxs flex justify-between text-xxs text-neutral-7">
-          <span>Range about {area.format(range.areaKm2)} km²</span>
-          <span>Map: IUCN Red List</span>
-        </figcaption>
-      )}
     </figure>
   );
 }

@@ -4,7 +4,10 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { NO_RECORDS, mergeServerJournal, parseJournal, parseRecords, parseWords, recordSolve, type Journal, type ServerJournalEntry } from '@/clueGame/journal';
+import {
+  NO_RECORDS, mergeJournals, mergeServerJournal, parseJournal, parseRecords, parseWords, recordSolve, saveRecords, saveSolve,
+  type Journal, type JournalEntry, type ServerJournalEntry,
+} from '@/clueGame/journal';
 
 const frog = { scientificName: 'Rhinoderma darwinii', commonName: 'Darwin Frog' };
 
@@ -82,6 +85,76 @@ test('saved solves merge in: the larger count, the lower best, the earliest and 
   assert.deepEqual(merged, expected);
   // Safe to repeat: merging the same solves again changes nothing.
   assert.deepEqual(mergeServerJournal(merged, server), expected);
+});
+
+// Two tabs share localStorage, and each save merges the tab's copy into what storage holds then (A17).
+// Ways the merge could fail: an animal on one side only is dropped; a field takes the wrong side (count, best,
+// first or last date, names, class, Sharp eye badges); a badge field appears from nowhere; the stored journal is
+// read but its finds lost when the tab's copy is stale; a find made in both tabs counts once; a best saved by
+// another tab is lowered by a tab or session that never reached it.
+const entry = (scientificName: string, fields: Partial<JournalEntry> = {}): JournalEntry => ({
+  scientificName, commonName: scientificName, timesSolved: 1, bestMoves: 10,
+  firstSolvedAt: '2026-11-01T10:00:00.000Z', lastSolvedAt: '2026-11-01T10:00:00.000Z', ...fields,
+});
+
+test('mergeJournals: an animal in one journal only is taken as it is, from either side', () => {
+  const frogEntry = entry('Rhinoderma darwinii', { className: 'AMPHIBIA', sharpEyes: 2 });
+  const okapi = entry('Okapia johnstoni', { timesSolved: 3 });
+  assert.deepEqual(mergeJournals({ [frogEntry.scientificName]: frogEntry }, {}), { [frogEntry.scientificName]: frogEntry });
+  assert.deepEqual(mergeJournals({}, { [okapi.scientificName]: okapi }), { [okapi.scientificName]: okapi });
+  assert.deepEqual(mergeJournals({ [frogEntry.scientificName]: frogEntry }, { [okapi.scientificName]: okapi }), { [frogEntry.scientificName]: frogEntry, [okapi.scientificName]: okapi });
+});
+
+test('mergeJournals: an animal in both takes each field from the side that wins it', () => {
+  const name = 'Rhinoderma darwinii';
+  // Each field's winner alternates sides, so a rule that takes one side whole can't pass.
+  const local = entry(name, { commonName: 'Darwin Frog', timesSolved: 2, bestMoves: 20, firstSolvedAt: '2026-09-01T10:00:00.000Z', lastSolvedAt: '2026-09-02T10:00:00.000Z', sharpEyes: 1 });
+  const other = entry(name, { commonName: "Darwin's frog", timesSolved: 5, bestMoves: 8, firstSolvedAt: '2026-09-05T10:00:00.000Z', lastSolvedAt: '2026-09-30T10:00:00.000Z', className: 'AMPHIBIA', sharpEyes: 4 });
+  assert.deepEqual(mergeJournals({ [name]: local }, { [name]: other })[name], {
+    scientificName: name, commonName: 'Darwin Frog', timesSolved: 5, bestMoves: 8,
+    firstSolvedAt: '2026-09-01T10:00:00.000Z', lastSolvedAt: '2026-09-30T10:00:00.000Z', className: 'AMPHIBIA', sharpEyes: 4,
+  });
+  // The other way round: local's class wins over other's, local's larger badge count stays, local's names stay.
+  assert.deepEqual(mergeJournals({ [name]: { ...other, className: 'Amphibia' } }, { [name]: local })[name], {
+    scientificName: name, commonName: "Darwin's frog", timesSolved: 5, bestMoves: 8,
+    firstSolvedAt: '2026-09-01T10:00:00.000Z', lastSolvedAt: '2026-09-30T10:00:00.000Z', className: 'Amphibia', sharpEyes: 4,
+  });
+  // Neither has a badge or a class: neither field appears.
+  const plain = mergeJournals({ [name]: entry(name) }, { [name]: entry(name, { timesSolved: 2 }) })[name];
+  assert.equal('sharpEyes' in plain, false);
+  assert.equal('className' in plain, false);
+  assert.equal(plain.timesSolved, 2);
+});
+
+test('mergeJournals: two empty journals merge to an empty one', () => {
+  assert.deepEqual(mergeJournals({}, {}), {});
+});
+
+test("saveSolve: another tab's find in storage is kept when this tab's copy is stale, and the new find is added", () => {
+  const okapi = entry('Okapia johnstoni', { timesSolved: 2, bestMoves: 12 });
+  const tiger = entry('Panthera tigris');
+  const stored: Journal = { [okapi.scientificName]: okapi, [tiger.scientificName]: tiger };
+  const tab: Journal = { [okapi.scientificName]: okapi };
+  const at = '2026-11-15T12:00:00.000Z';
+  const saved = saveSolve(stored, tab, frog, 7, at);
+  assert.deepEqual(Object.keys(saved).sort(), ['Okapia johnstoni', 'Panthera tigris', 'Rhinoderma darwinii']);
+  assert.deepEqual(saved[okapi.scientificName], okapi);
+  assert.deepEqual(saved[tiger.scientificName], tiger);
+  assert.deepEqual(saved[frog.scientificName], { ...frog, timesSolved: 1, bestMoves: 7, firstSolvedAt: at, lastSolvedAt: at });
+});
+
+test('saveSolve: the same animal found in both tabs counts both finds', () => {
+  const first = saveSolve({}, {}, frog, 9, '2026-11-15T12:00:00.000Z');
+  // The other tab never read the first find; it finds the frog too, then saves.
+  const second = saveSolve(first, {}, frog, 6, '2026-11-15T12:05:00.000Z', true);
+  assert.deepEqual(second[frog.scientificName], {
+    ...frog, timesSolved: 2, bestMoves: 6, firstSolvedAt: '2026-11-15T12:00:00.000Z', lastSolvedAt: '2026-11-15T12:05:00.000Z', sharpEyes: 1,
+  });
+});
+
+test('saveRecords: a higher best stored by another tab is kept against a lower tab and session', () => {
+  assert.deepEqual(saveRecords({ bestScore: 300, bestStreak: 6 }, { bestScore: 10, bestStreak: 1 }, { score: 50, streak: 1 }), { bestScore: 300, bestStreak: 6 });
+  assert.deepEqual(saveRecords(NO_RECORDS, { bestScore: 10, bestStreak: 4 }, { score: 50, streak: 1 }), { bestScore: 50, bestStreak: 4 });
 });
 
 test('bad or missing words storage is an empty list', () => {

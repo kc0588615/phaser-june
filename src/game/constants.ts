@@ -34,3 +34,5 @@ export const TWEEN_DURATION_LAYOUT_UPDATE = 150;
 
 /** Fraction of a gem a swipe must cover to swap toward its neighbor. */
 export const SWIPE_THRESHOLD = 0.3;
+/** How long a press on an animal lasts before it is a long press (its field guide), in ms: the board's tiles (BoardController) and the grid's rows (EvidenceGrid). */
+export const HOLD_MS = 450;
