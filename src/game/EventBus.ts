@@ -3,10 +3,9 @@
 // the events typed in `EventPayloads`:
 //
 //   board -> page  'current-scene-ready'  the board scene started (send setup)
-//   page  -> board 'clue-board-setup'     build a seeded board from these colors
+//   page  -> board 'clue-board-setup'     a round's board: seed, gem colors, pinned animals (plan 044)
 //   page  -> board 'clue-board-lock'      stop or resume accepting moves
 //   board -> page  'gems-matched'         groups cleared in one explode phase
-//   board -> page  'clue-board-shuffled'  no moves were left, so it reshuffled
 //   page  -> board 'clue-board-key'       a key pressed on the focused board
 //   board -> page  'clue-board-announce'  what a keyboard action did, for screen readers
 //   page  -> board 'clue-board-marks'     the pinned animals the player ruled out (plan 044)
@@ -37,11 +36,11 @@ export interface EventPayloads {
     'current-scene-ready': Phaser.Scene;
     /**
      * Every group cleared in one explode phase (the player's move or a cascade); `blast`: gems a toy cleared outside any
-     * match. `touched`: pinned animals with a cleared gem next to them; `released`: the marked ones among them, unpinned.
+     * match. `released`: the marked animals the phase's clear released.
      * `from`: where each color cleared, in page (client) pixels, for the gem that flies to the evidence grid (plan 044).
      */
     'gems-matched': {
-        groups: Array<{ gemType: GemType; size: number; blast?: boolean }>; cascade: boolean; touched?: number[]; released?: number[];
+        groups: Array<{ gemType: GemType; size: number; blast?: boolean }>; cascade: boolean; released?: number[];
         /** Plan 045: each touched animal with the gem colors cleared next to it (scouting). */
         nearColors?: Array<[number, GemType[]]>;
         from?: Array<{ gemType: GemType; x: number; y: number }>;
@@ -57,7 +56,6 @@ export interface EventPayloads {
         /** Rules 053-1: the gems a double adds to each clue order it hits (the board calls it out). */
         double?: number };
     'clue-board-lock': { locked: boolean };
-    'clue-board-shuffled': undefined;
     /** Arrows move the cursor; with Shift they swap its gem that way; Escape drops a tapped gem. */
     'clue-board-key': { key: BoardKey; shift: boolean };
     'clue-board-announce': string;

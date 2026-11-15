@@ -294,16 +294,6 @@ async function main() {
       await page('Page.navigate', { url });
       await waitFor(() => document.readyState === 'complete', `${url} to load`);
     };
-    // The gem legend as shown: each tile's category, question tag and visible text (after React has painted).
-    const readLegend = () => evaluate(async () => {
-      await new Promise(resolve => setTimeout(resolve, 80));
-      return [...document.querySelectorAll('[aria-label="Gem questions"] li[data-category]')]
-        .map(li => ({ category: li.dataset.category, tag: li.dataset.tag || null, text: li.innerText.replace(/\s+/g, ' ').trim() }));
-    });
-    const legendMismatch = (shown, legend) => legend.filter(row => {
-      const tile = shown.find(candidate => candidate.category === row.category);
-      return !tile || tile.tag !== row.tag || (row.text && !tile.text.includes(row.text));
-    }).map(row => ({ want: row, shown: shown.find(candidate => candidate.category === row.category) ?? null }));
     const screenshot = async name => {
       // The dev build's Next badge isn't the game: hide it for the shot (the site uses these, plan 051 §9).
       // Next re-adds a removed <nextjs-portal>, so a style hides it, and goes after the shot.

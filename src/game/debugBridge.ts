@@ -52,7 +52,7 @@ const enabled = process.env.NODE_ENV !== 'production' && typeof window !== 'unde
 const MAX_EVENTS = 200;
 // Every EventBus event; a Record so a new event missing here fails typecheck.
 const LOGGED: Record<keyof EventPayloads, true> = {
-  'current-scene-ready': true, 'gems-matched': true, 'clue-board-setup': true, 'clue-board-lock': true, 'clue-board-shuffled': true,
+  'current-scene-ready': true, 'gems-matched': true, 'clue-board-setup': true, 'clue-board-lock': true,
   'clue-board-key': true, 'clue-board-announce': true, 'clue-board-marks': true, 'clue-board-settled': true,
   'clue-board-select': true, 'clue-board-tile': true, 'clue-board-tile-hold': true, 'clue-board-unscouted': true,
   'clue-board-nudge': true, 'clue-board-answer': true, 'clue-board-walked': true, 'clue-board-highlight': true,

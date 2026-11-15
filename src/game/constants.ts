@@ -1,4 +1,4 @@
-// Board constants shared by the model (BackendPuzzle), view (BoardView) and
+// Board constants shared by the model (BoardModel), view (BoardView) and
 // input (BoardController).
 
 /** Gem color keys. The game uses six: four clue gems, the pebble and the rare witness gem (src/clueGame/animalBoard.ts). A key names the gem, not its look: 'black' draws a grey pebble. */
