@@ -556,6 +556,13 @@ Every step:
     9. `### Runbook` `docs/DATABASE_ACCESS.md:214`, the only Runbook heading; steps 1 (copy prod) and 2 (`dev-role.sql`) = refresh.
   - Block copied from plan lines 291-336 (sed, not retyped) above `## Related`: `docs/DATABASE_ACCESS.md:278-323` = 46 lines + 1 blank (numstat `47 0`); diff vs plan block empty. Verification 7: one heading, `## Related` next (`:325`), schema names and brief names present. typecheck 0, lint 0. Markdown only: no build/E2E.
 
+- [ ] S4b · Astra code-review MUST-FIX 1: abandoned `.dump.partial` files in the deletion doc's **Copies** paragraph
+  - Re-read `deploy/backup/pg-backup.sh` on the then-current base (`:20-22` writes `$file.partial`, `mv` only after `pg_restore --list` passes; `:25-26` prune `*.dump` only; `:28` `rsync -a --delete` mirrors the whole dir). If it changed, write what is true then.
+  - Read-only, light: `ssh play.critterconnect.org 'ls -la /var/backups/critter-connect/daily /var/backups/critter-connect/weekly | grep -c partial'` and record the count (no file names or contents in the plan). If any exist, add a handoff item for the owner to delete them (deleting files on prod is his); don't delete them yourself.
+  - Edit `docs/DATABASE_ACCESS.md` `## Deletion requests` → **Copies** only, minimal: limit the "about 8 weeks" claim to completed `*.dump` files; add that a failed run leaves `daily/*.dump.partial`, which no job prunes and an `OFFSITE` mirror copies, so a deletion request also checks the game server's `daily/` (and OFFSITE) for `*.partial` and deletes them by hand. Pull's `.part` files are removed on failure (`game-backup-pull:33,36`): no change there. No change to the backup script (out of scope; note it for the owner in the Summary as a possible fix: prune or remove `*.partial`).
+  - Checks: Verification 7 passes; `git diff --stat origin/main` still only the Verification 5 list; `npm run typecheck`, `npm run lint` exit 0. Markdown only: no build/E2E.
+  - Commit doc + plan.
+
 - [ ] S5 · Final Verification and Summary
   - Runs only once `## Code review (Astra)` is recorded and every fix step it added (inserted above S5) is checked. If it's still empty, that review is this session's unit (CLAUDE.md, "Final code review"); leave S5 unchecked.
   - Run all of Verification on the final commit; artifact `$STATE/final-e2e-site/`; then delete `$STATE/e2e-s*`.
@@ -609,6 +616,20 @@ Nothing is tested in isolation: the checks are the site E2E, the build diff and 
 
 ## Code review (Astra)
 
+`astra-review --code origin/main` on `f925e4e7` (base `83eef270`), exit 0:
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. [docs/DATABASE_ACCESS.md:320](../docs/DATABASE_ACCESS.md): Eight-week expiry claim overlooks abandoned `.dump.partial` backups. Interrupted or failed backups leave these files; pruning matches only `*.dump`, and OFFSITE mirrors the leftovers. Account data can therefore persist indefinitely despite subsequent successful runs. Qualify the claim to completed, rotated dumps and document leftover partial backups.
+
+SHOULD-CONSIDER:
+
+- Refresh `origin/main` before PR; fetch was blocked by the read-only filesystem, so remote freshness is unverified.
+
+Lead: MUST-FIX 1 is real (`deploy/backup/pg-backup.sh:20-22` leaves `$file.partial` when `pg_dump` or `pg_restore --list` fails under `set -e`; `:25-26` prune only `*.dump`; `:28` mirrors it to OFFSITE). Fix step S4b added. SHOULD-CONSIDER: `git fetch origin --prune` worked in this session (`origin/main` = `83eef270`); the release rebases on a fresh fetch anyway. Goes in the Summary.
+
 ## Release
 
 ## Decisions
@@ -629,5 +650,6 @@ Nothing is tested in isolation: the checks are the site E2E, the build diff and 
 - 2026-11-15 19:08 UTC · S2 bot run (seed 44, 400 rounds, 4 places, 4m10s, `$STATE/bot.txt`): = preview; A three, R five, P 90. Plan only.
 - 2026-11-15 19:12 UTC · S3 site text: Privacy/Teachers/Terms/config rewritten per Target design (A three, R five, P 90; date Nov 15); DoD grep clean, typecheck/lint 0, test 76/76, css hash same, build diff = 3 pages, site E2E 444/444 (`$STATE/e2e-s3-site`).
 - 2026-11-15 19:13 UTC · S4 deletion doc: 9 facts re-read on `83eef270`, all same; `## Deletion requests` inserted verbatim above `## Related` (46 lines); Verification 7 pass, typecheck/lint 0.
+- 2026-11-15 19:16 UTC · Astra code review: APPROVE_WITH_CHANGES, 1 MUST-FIX (deletion doc's 8-week expiry ignores leftover `.dump.partial` files; verified real) -> step S4b added; 1 SHOULD-CONSIDER (freshness; fetch fine here). Plan only.
 
 ## Summary
