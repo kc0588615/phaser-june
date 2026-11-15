@@ -37,6 +37,20 @@ jobs:
       # Its Caddy image (Docker isn't on the agents' VPS, so CI proves it): the Caddyfile is valid and the site is in.
       - run: docker build --target caddy -t cc-caddy .
       - run: docker run --rm -e APP_DOMAIN=play.critterconnect.org cc-caddy sh -c 'caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile && test -f /srv/site/index.html'
+      # The website in a browser (scripts/e2e-site.mjs), on the out/site built above; Chrome is the runner's
+      # /usr/bin/google-chrome. In `check` on purpose: the release waits for this job.
+      - name: Website browser test
+        run: |
+          mkdir -p e2e-artifacts
+          npm run site:serve > e2e-artifacts/site-serve.log 2>&1 &
+          timeout 30 bash -c 'until curl -fs -o /dev/null http://127.0.0.1:3101/; do sleep 1; done'
+          npm run e2e:site
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-site
+          path: e2e-artifacts/
+          retention-days: 7
       # Typecheck + production build. The build loads route modules but never queries, and needs no Clerk keys.
       - run: npm run build
         env:

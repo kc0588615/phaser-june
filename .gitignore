@@ -34,6 +34,7 @@ yarn-error.log*
 .env
 .env*.local
 clerk-live.env
+deploy/app.env
 
 # typescript
 *.tsbuildinfo

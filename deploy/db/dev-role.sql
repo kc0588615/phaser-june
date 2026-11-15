@@ -17,7 +17,7 @@ ALTER ROLE critter_dev SET statement_timeout = '60s';
 
 -- Close prod to PUBLIC, after granting every role that connects today (all the
 -- login roles there are, 2026-10-18): critter_app (live app, straight to the db
--- container) and postgres (superuser: PgBouncer auth_user, QGIS, postgres-mcp,
+-- container) and postgres (superuser: PgBouncer auth_user, QGIS,
 -- WSL agents, backups).
 GRANT CONNECT ON DATABASE phaser_june TO critter_app, postgres;
 REVOKE CONNECT ON DATABASE phaser_june FROM PUBLIC;
