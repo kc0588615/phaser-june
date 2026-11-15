@@ -144,7 +144,7 @@ Each changed page's `updated` date is the merge day (UTC, in the `November 20, 2
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: consult the advisor (Fable 5.2) on the Architecture section
+- [x] Fable review: consult the advisor (Fable 5.2) on the Architecture section
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -381,6 +381,25 @@ M13 adds its W4/W5 dates to the "If M13 has renamed them" paragraph (its brief, 
 
 ## Architecture review (Fable)
 
+2026-11-15. I checked the advisor's points against the code on `83eef270`.
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX: none. Both of its conditional checks came back clean:
+1. **`./scripts/db` transaction.** With no args, `./scripts/db` opens an interactive psql (`scripts/db:2-3`), so `BEGIN; DELETE; DELETE; COMMIT;` runs on one connection. No pool mode is set anywhere in the repo, so PgBouncer uses its default, session mode. In either session or transaction mode, an explicit transaction stays on one server connection. `./scripts/db -1 -f file.sql` also works.
+2. **Pinned strings outside `src/site`.** A grep of `deploy/check.sh`, `scripts/` (including `e2e-site.mjs` and `site.mjs`), `.github/` and `src/` outside the site found none of the removed strings ("your account", "sign in", "signing in", "clerk.com", the old description, "matches without reasoning"). Nothing fails after the text changes.
+
+MISSED (for the planner's Steps and Verification; none needs an architect revision):
+1. **The home page and assets stay the same bytes after the text edits.** The release smoke wants `/` byte-identical to its pre-merge record, and `/site/*` is served immutable. Add a Verification line: after all edits, `diff -rq site-before out/site` lists only `teachers/`, `privacy/`, `terms/`, plus any file that carries the Privacy description. If `index.html` or a CSS or JS asset differs, explain it before release.
+2. **`{MERGE_DAY}` is a placeholder.** The implementing commit writes a real date (that session's UTC day) on Privacy and Terms. The release step resets both to the merge's UTC day before the final Verification.
+
+SHOULD-CONSIDER:
+1. **"All from the owner's own test accounts".** The owner said that about 3 profiles and 177 solves; the baseline found 7 and 188, and H20 is still open. Word the doc so it attributes only what he said, e.g. "the owner's own test accounts (owner, 2026-11-14; 4 result-less profiles unconfirmed, H20)", or update it when H20 is answered.
+2. **Privacy bullet 3 against deviation (b).** "Nothing about how you play is kept in our database" now sits just above "Rounds played without one were saved too … are being deleted". It reads as now versus then, but list the pair in the Summary's deviations for the owner.
+3. **Clerk's production instance still holds former users' emails** until the owner deletes it. The page drops Clerk, as the brief says. Put this in the Summary as a note for the owner, not as a page edit.
+4. **Doc length.** About 40 lines against the brief's 15 to 25. Record the overrun in Decisions (the SQL block and the Caddy clause the brief asks for), or trim the dev-copy clause.
+5. **The doc's step 3.** Say "the interactive shell (`./scripts/db`)", so the owner knows where to paste the block and can read the `SELECT` output before running the `DELETE`s. Keep deviation (d)'s wording unless a simpler one satisfies the month rule in all four places.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -403,5 +422,6 @@ M13 adds its W4/W5 dates to the "If M13 has renamed them" paragraph (its brief, 
 
 - 2026-11-15 18:27 UTC · Baseline on `83eef270`: M11 live, typecheck/lint 0, test 76/76, site E2E 444/444, live pages = build, hosts = Wikimedia only, old rows 7/188 (max 2026-10-01; nothing writes; H20 FYI).
 - 2026-11-15 18:45 UTC · Architecture: architect wrote findings + exact text for Screenshot/config/Privacy/Teachers/Terms + deletion doc; "until early October 2026" confirmed; new risk: Caddy logs IP on 502 (wording avoids "nothing else"); trial bot careful 96–98%, random 20%, autoguess 28–37%. Plan only, no code.
+- 2026-11-15 19:05 UTC · Fable review: APPROVE_WITH_CHANGES, MUST-FIX none (scripts/db txn ok; no pinned strings outside src/site); 2 MISSED for Steps (asset diff, real date); 5 SHOULD-CONSIDER. Plan only.
 
 ## Summary
