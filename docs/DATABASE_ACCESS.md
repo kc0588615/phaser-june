@@ -317,8 +317,12 @@ once it has dropped them, nothing about any player is left in the live database.
 `deploy/backup/pg-backup.sh` deletes daily dumps after 14 days and weekly ones after 56, and nothing on a night its
 dump fails; an `OFFSITE` mirror, if set, follows only when that run's `rsync --delete` succeeds. The Oracle VPS's
 `/srv/critter-ai/ops/bin/game-backup-pull` keeps the newest 3 and drops older ones only when it copies a new one. So,
-while those jobs run, the account is in none of their dumps about 8 weeks after the deletion; a dump copied elsewhere
-by hand stays until someone deletes it. The scrubbed dev copy `phaser_june_dev` holds the solves as of its last
+while those jobs run, the account is in none of their finished `*.dump` files about 8 weeks after the deletion. A
+failed or killed backup run leaves its `daily/*.dump.partial`, which no job prunes (both prunes match `*.dump` only)
+and the mirror copies. So after a deletion, delete any `*.partial` on the game server
+(`ssh play.critterconnect.org 'find /var/backups/critter-connect -name "*.partial"'`); the next successful run's
+`rsync --delete` drops them from `OFFSITE`. A killed pull can likewise leave `*.part` in the Oracle VPS's
+`agent-state/game-backups/`. A dump copied elsewhere by hand stays until someone deletes it. The scrubbed dev copy `phaser_june_dev` holds the solves as of its last
 refresh with no player (`deploy/db/dev-role.sql`): the account's results stay there, anonymous, until the copy is
 refreshed ([Runbook](#runbook), steps 1–2) or M13 drops the table. These steps never restore or edit a dump.
 
