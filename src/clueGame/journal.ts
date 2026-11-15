@@ -1,6 +1,7 @@
 // The Field Journal: animals this player has identified, kept on their device.
 // Keyed by scientific name so it survives database id changes. Nothing is saved to the
 // server now; mergeServerJournal folds in the solves an account saved before 2026-10-01.
+// mergeJournals is the one merge rule: for another tab's saves (saveSolve) and for the server's solves.
 
 export const JOURNAL_STORAGE_KEY = 'clue-match:journal:v1';
 
@@ -59,26 +60,51 @@ export interface ServerJournalEntry {
 }
 
 /**
- * The device's journal plus what the player solved while signed in elsewhere:
- * the larger count, the lower best, the earliest and latest dates. Safe to repeat.
+ * Every animal in either journal. For one in both: the larger count, the lower best, the earliest
+ * and latest dates, `local`'s names, `local`'s class or else `other`'s, and the larger Sharp eye count.
+ * Never drops a find, and safe to repeat.
  */
-export function mergeServerJournal(journal: Journal, entries: readonly ServerJournalEntry[]): Journal {
-  const merged: Journal = { ...journal };
-  for (const entry of entries) {
-    const local = merged[entry.scientificName];
-    const className = local?.className ?? entry.className;
-    merged[entry.scientificName] = {
-      scientificName: entry.scientificName,
-      commonName: local?.commonName ?? entry.commonName,
-      timesSolved: Math.max(local?.timesSolved ?? 0, entry.timesSolved),
-      bestMoves: Math.min(local?.bestMoves ?? Infinity, entry.bestMoves),
-      firstSolvedAt: local && local.firstSolvedAt < entry.firstSolvedAt ? local.firstSolvedAt : entry.firstSolvedAt,
-      lastSolvedAt: local && local.lastSolvedAt > entry.lastSolvedAt ? local.lastSolvedAt : entry.lastSolvedAt,
+export function mergeJournals(local: Journal, other: Journal): Journal {
+  const merged: Journal = { ...other, ...local };
+  for (const [name, theirs] of Object.entries(other)) {
+    const ours = local[name];
+    if (!ours) continue;
+    const className = ours.className ?? theirs.className;
+    const sharpEyes = Math.max(ours.sharpEyes ?? 0, theirs.sharpEyes ?? 0);
+    merged[name] = {
+      scientificName: ours.scientificName,
+      commonName: ours.commonName,
+      timesSolved: Math.max(ours.timesSolved, theirs.timesSolved),
+      bestMoves: Math.min(ours.bestMoves, theirs.bestMoves),
+      firstSolvedAt: ours.firstSolvedAt < theirs.firstSolvedAt ? ours.firstSolvedAt : theirs.firstSolvedAt,
+      lastSolvedAt: ours.lastSolvedAt > theirs.lastSolvedAt ? ours.lastSolvedAt : theirs.lastSolvedAt,
       ...(className ? { className } : {}),
-      ...(local?.sharpEyes ? { sharpEyes: local.sharpEyes } : {}),
+      ...(sharpEyes ? { sharpEyes } : {}),
     };
   }
   return merged;
+}
+
+function toJournalEntry(entry: ServerJournalEntry): JournalEntry {
+  const { scientificName, commonName, timesSolved, bestMoves, firstSolvedAt, lastSolvedAt, className } = entry;
+  return { scientificName, commonName, timesSolved, bestMoves, firstSolvedAt, lastSolvedAt, ...(className ? { className } : {}) };
+}
+
+/** The device's journal plus what the player solved while signed in elsewhere (mergeJournals' rule, one entry at a time). */
+export function mergeServerJournal(journal: Journal, entries: readonly ServerJournalEntry[]): Journal {
+  return entries.reduce((merged, entry) => mergeJournals(merged, { [entry.scientificName]: toJournalEntry(entry) }), journal);
+}
+
+/** The journal to save for a find: what storage holds now merged with this tab's copy, then the find recorded once. */
+export function saveSolve(
+  stored: Journal,
+  tab: Journal,
+  species: { scientificName: string; commonName: string; className?: string | null },
+  moves: number,
+  at: string,
+  sharp = false,
+): Journal {
+  return recordSolve(mergeJournals(tab, stored), species, moves, at, sharp);
 }
 
 /** A stored entry with only JournalEntry's fields, or null when one it needs is missing or wrong. Old and unknown fields (sightings, before 2026-11) are left out; a bad badge count or class drops that field, not the animal. */
@@ -131,6 +157,11 @@ export const NO_RECORDS: Records = { bestScore: 0, bestStreak: 0 };
 
 export function updateRecords(records: Records, session: { score: number; streak: number }): Records {
   return { bestScore: Math.max(records.bestScore, session.score), bestStreak: Math.max(records.bestStreak, session.streak) };
+}
+
+/** The bests to save: the largest of what storage holds now, this tab's copy and the session. */
+export function saveRecords(stored: Records, tab: Records, session: { score: number; streak: number }): Records {
+  return updateRecords({ bestScore: Math.max(stored.bestScore, tab.bestScore), bestStreak: Math.max(stored.bestStreak, tab.bestStreak) }, session);
 }
 
 export function parseRecords(raw: string | null): Records {

@@ -743,11 +743,15 @@ Every step:
   - typecheck 0, lint 0, `npm test` 69/69 (64 + N1 = 5).
   - E2E (dev copy, guard passed) → `$STATE/e2e-s2/`: `1581/1584`, report check `1584 3`, only the 3 `two tabs:` fail. Both A16 checks pass (`trail`: board, score 0, seed 7, mystery 7, same suspects, save holds field; `orders`: same, no load error). Every resume check passes ("a reload resumes the round…" 27/27, board, stale-save, journal once, round-end card); `no console errors` passes (0).
 
-- [ ] S3 · A17: every journal/records write merges into storage
+- [x] S3 · A17: every journal/records write merges into storage
   - Tests first, `tests/clueGame/journal.test.ts`: a comment listing the ways the merge could fail, then Architecture A17 "Unit tests" (`mergeJournals` ×3, `saveSolve` ×2, `saveRecords` ×1). M7's merge case and the old-journal case untouched. `npm test > $STATE/unit-fail-first/journal.txt 2>&1`; record.
   - `src/clueGame/journal.ts`: `mergeJournals(local, other)`; `mergeServerJournal` body = fold of `toJournalEntry(entry)` via `mergeJournals`; `saveSolve(stored, tab, species, moves, at, sharp = false)` = `recordSolve(mergeJournals(tab, stored), …)`; `saveRecords(stored, tab, session)` via `updateRecords`; header comment (one merge rule). Untouched (K2): the three key strings, `toEntry`, `parseJournal`, `parseWords`, `parseRecords`.
   - `src/components/clueGame/useJournal.ts`: `stored(key)`; `journalRef`/`recordsRef` + `showJournal`/`showRecords`; mount read through them (replaces the mount `try`); `record` = read storage → `saveSolve`/`saveRecords` → `save` → `show*`, no state updater, deps `[]`; signed-in effect = `mergeServerJournal(mergeJournals(journalRef.current, parseJournal(stored(JOURNAL_STORAGE_KEY))), saved)` → `save` → `showJournal`, deps `[saved]`. No `storage` listener; callers unchanged.
   - Checks: typecheck, lint, `npm test` (64 + N1 + N2; record N2; M7's case passes), one E2E → `$STATE/e2e-s3/` (delete `e2e-s2/`). Must show `1584 0`.
+  - Done 2026-11-15. Unit fail-first: 6 cases in `tests/clueGame/journal.test.ts` (failure list comment; `mergeJournals` ×3 with each field's winner on alternating sides, `sharpEyes` from `other` included; `saveSolve` ×2; `saveRecords` ×1) → `$STATE/unit-fail-first/journal.txt`: esbuild `No matching export … for import "mergeJournals"` / `saveRecords` / `saveSolve`, exit 1.
+  - Code: `journal.ts` `mergeJournals`, private `toJournalEntry`, `mergeServerJournal` = fold via `mergeJournals`, `saveSolve`, `saveRecords`, header line. `useJournal.ts` `stored(key)`, `journalRef`/`recordsRef`, `showJournal`/`showRecords` (`useCallback(…, [])`, so `record`'s deps are `[showJournal, showRecords]`, stable, not literally `[]`), no state updaters, no listener. K2 check (Verification 6) prints nothing.
+  - typecheck 0, lint 0, `npm test` 75/75 (64 + N1 5 + N2 6); M7's merge case passes unchanged.
+  - E2E (dev copy, guard passed) → `$STATE/e2e-s3/` (`e2e-s2/` deleted): `1584/1584`, report check `1584 0`. Two tabs: storage `Okapia johnstoni` (X, unchanged) + `Equus grevyi` (B) + `Daubentonia madagascariensis` (A), each 1; records 9999/99; A's journal `3 of 76 animals identified`; no new console errors. `report.twoTabs` `{"a":1,"b":2,"mysteries":[23,39],"x":29}`.
 
 - [ ] S4 · O1: cut the data font
   - List still holds: `git grep -n -w font-data -- src ':!src/styles'` = the Architecture table's 20 lines in 6 files (a new line: add its characters). List: `U+0020,U+002B,U+002E-0039,U+003F,U+0043,U+0061-0062,U+0065-0066,U+0069,U+006C-006F,U+0073-0076,U+00D7,U+2212`.
@@ -831,5 +835,6 @@ Final commit, after the Astra code review's fixes. `STATE` as in Steps; `BASE=$(
 - 2026-11-15 13:15 UTC · Steps: planner wrote S1–S6 (E2E fail-first; A16; A17; O1 font cut + glyph proof; D22+D23; S11) and 11-point Verification (final 1584/1584). Brief grep `const HOLD_MS` fixed with `':!plans'`. Plan only; no checks needed.
 - 2026-11-15 13:36 UTC · S1: 5 fail-first E2E checks (A16 ×2, A17 ×3) + `setUpPage` refactor in `scripts/e2e.mjs`; typecheck/lint 0; E2E 1578/1584, exactly the 6 predicted fails → `checks-fail-first/`.
 - 2026-11-15 13:54 UTC · S2: A16 `fitsShape` + two-`try` load + `isSeed`, D22 pool line; unit fail-first then 69/69; typecheck/lint 0; E2E 1581/1584 (only 3 `two tabs:` fail, as planned) → `e2e-s2/`.
+- 2026-11-15 14:10 UTC · S3: A17 `mergeJournals`/`saveSolve`/`saveRecords` + `useJournal` merges into storage at save; unit fail-first then 75/75; typecheck/lint 0; E2E 1584/1584 → `e2e-s3/`.
 
 ## Summary
