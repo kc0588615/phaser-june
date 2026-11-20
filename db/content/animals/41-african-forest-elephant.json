@@ -189,10 +189,6 @@
         "name": "Cameroon"
       },
       {
-        "code": "CAF",
-        "name": "Central African Rep."
-      },
-      {
         "code": "COG",
         "name": "Congo"
       },
@@ -223,10 +219,6 @@
       {
         "code": "NGA",
         "name": "Nigeria"
-      },
-      {
-        "code": "TGO",
-        "name": "Togo"
       }
     ]
   },
