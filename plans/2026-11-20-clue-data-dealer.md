@@ -978,6 +978,54 @@ dev() { ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.loca
   - **Owner:** Opus. **Files:** `docs/CLUE_MATCH.md` (`:51` `"053-1"` → `"055-1"`, verify `:61` and `:67`), `docs/ANIMAL_BOARD_PAPER.md:38` (append dated `055-1` note verbatim from Target design), `docs/CONTENT_SOURCES.md` (`:24`, `:56`, `:59`), `docs/SHAPEFILE_BEST_PRACTICES.md:35`. (`CONTEXT.md` unchanged.)
   - **Acceptance:** docs match final code; `rg -n "presence 1-3|IN \(1, 2, 3\)|2 to 30 kg|30 to 300 kg|055-0" docs db scripts src` finds no stale hit (outside frozen historical prose); typecheck and lint pass.
 
+- [ ] **S17 · Code review fix: diet wording alignment, Blanding's/Axolotl/Salamander diets, Yangtze turtle note (Opus)**
+  - **Owner:** Opus. **Origin:** Astra MUST-FIX 1 & 2, Fable MUST-FIX 1.
+  - **Files:** `src/clueGame/questionMatch.ts` (`QUESTION_TEXT`, `SHORT_TEXT` for `diet:meat` and `diet:mixed`), `src/clueGame/profiles.ts` (`DIET_TEXT` for `meat` and `mixed`), `db/content/animals/01-blandings-turtle.json`, `db/content/animals/74-axolotl.json`, `db/content/animals/62-chinese-giant-salamander.json`, `db/content/animals/18-yangtze-giant-softshell-turtle.json`.
+  - **Scope:**
+    - Align `diet:meat` and `diet:mixed` exclusion wording with `diet:insects` (invertebrates, not just bugs):
+      - `QUESTION_TEXT['diet:meat']`: `'Is it a meat-eater (only other animals, and not mostly bugs or other small animals without backbones)?'`
+      - `QUESTION_TEXT['diet:mixed']`: `'Does it eat both plants and animals (and not mostly bugs or other small animals without backbones)?'`
+      - `SHORT_TEXT['diet:meat']`: `'Only other animals (not mostly bugs or small invertebrates)?'`
+      - `SHORT_TEXT['diet:mixed']`: `'Plants and animals (not mostly bugs or small invertebrates)?'`
+      - `DIET_TEXT.meat`: `'It eats only other animals (not mostly insects or other small invertebrates).'`
+      - `DIET_TEXT.mixed`: `'It eats both plants and animals (not mostly insects or other small invertebrates).'`
+      - Keep `COLUMN_LABEL` (`Only meat`, `Mostly bugs`, `Plants & animals`) unchanged.
+    - `01-blandings-turtle.json`: set `traits.diet.value` to `"insects"` and `note` to `"Half its food is crustaceans, including crayfish. It also eats insects, snails, fish, frogs and water plants."` (`source: "adw"`).
+    - `74-axolotl.json`: remove `traits.diet` (ADW lists molluscs, fishes, arthropods, and conspecifics without proportions; unrecorded per `docs/CONTENT_SOURCES.md:66`).
+    - `62-chinese-giant-salamander.json`: remove `traits.diet` (ADW lists crabs, frogs, water shrews, fish, other invertebrates, and 27% conspecifics without overall invertebrate-vs-vertebrate proportions, while its profile fact cites freshwater crabs as most common food; unrecorded per `docs/CONTENT_SOURCES.md:66`).
+    - `18-yangtze-giant-softshell-turtle.json`: reword `clues[4].text` from `"The last known female died at a zoo in China in 2019, aged over 90."` to `"The last known female died at a zoo in 2019, aged over 90."` (same `ngo` source, so removing `CHN` via `notPresent` no longer leaves `"China"` unblanked beside East Asia = No).
+  - **Acceptance:** `npm run typecheck`, `npm run lint`, `npm test` (incl. `glossary.test.ts` verifying `invertebrates` in all `DIET_TEXT` entries), `npm run content -- preview` (0 problems, 0 `signProblems`), and live read-only `npm run content -- check` (0 errors, 0 warnings) pass; diet counts across 76 profiles are plants 24, meat 7, insects 26, mixed 16, unrecorded 3 (`11`, `62`, `74`); Yangtze turtle notes contain no `"China"`.
+
+- [ ] **S18 · Code review fix: reject ISO aliases in `notPresent`, add `LSO`/`MLI`/`BEN`/`GIN`, clarify doc (Opus)**
+  - **Owner:** Opus. **Origin:** Astra MUST-FIX 3 & 4, Fable SHOULD-CONSIDER 1.
+  - **Files:** `src/clueGame/regions.ts`, `src/clueGame/profiles.ts`, `tests/clueGame/content.test.ts`, `db/content/animals/57-aardvark.json`, `db/content/animals/65-african-wild-dog.json`, `docs/CONTENT_SOURCES.md:25`.
+  - **Tests first** (`tests/clueGame/content.test.ts`), seen failing before `src/` edits:
+    - `checkProfile` rejects ISO alias codes in `redList.notPresent` (test `SSD` → error names `SDS`, and `ESH` → error names `SAH`);
+    - `SDS` remains accepted and removes South Sudan (`SDS`) from `presentCountries` and country clues.
+  - **Scope:**
+    - Export a pure helper from `src/clueGame/regions.ts` (e.g. `isoAliasTarget(code: string): string | null`) exposing `ISO_ALIASES`, and fail loudly in `checkProfile` (`src/clueGame/profiles.ts`) when a `notPresent` code is an ISO alias (`redList.notPresent[i]: "SSD" is an ISO alias; use Natural Earth code "SDS"`).
+    - `57-aardvark.json`: add `{ "code": "LSO", "status": "uncertain" }` to `redList.notPresent` (IUCN `41504/21286437` marks Lesotho Presence Uncertain, and aardvark's presence-1 polygon covers 30,107 km² of `LSO`, currently hidden only by `HAVING count(*) >= 2`).
+    - `65-african-wild-dog.json`: add `{ "code": "MLI", "status": "possibly-extinct" }`, `{ "code": "BEN", "status": "extinct" }`, and `{ "code": "GIN", "status": "uncertain" }` to `redList.notPresent` (verbatim from IUCN `12436/221299510`; `BEN` and `GIN` overlap its presence-1 polygons).
+    - `docs/CONTENT_SOURCES.md:25`: clarify that `redList.notPresent` uses Natural Earth 3-letter codes (ISO aliases like `SSD`/`ESH` are rejected by `checkProfile`) and lists countries present in `range.countries` (or overlapping its range polygons) whose IUCN assessment marks them extinct, possibly extinct, or presence uncertain.
+  - **Acceptance:** new tests fail first then pass; `typecheck`, `lint`, `test`, `content -- preview` (0 problems), and live read-only `content -- check` (0 errors, 0 warnings) pass.
+
+- [ ] **S19 · Code review fix: `balance-044.ts --deals` playable-place threshold, empty guard, exported tags (Opus)**
+  - **Owner:** Opus. **Origin:** Astra MUST-FIX 5, Fable SHOULD-CONSIDER 5.
+  - **Files:** `src/clueGame/questionMatch.ts`, `scripts/balance-044.ts`.
+  - **Scope:**
+    - Export `FIXED_QUESTION_TAGS: readonly string[] = Object.keys(QUESTION_TEXT)` from `src/clueGame/questionMatch.ts`, and use it directly in `scripts/balance-044.ts` instead of regex-parsing `questionMatch.ts` source.
+    - Import `MIN_PLACE_ANIMALS` from `@/clueGame/places` in `scripts/balance-044.ts`: in `reportDeals`, skip non-null places whose `pool.length < MIN_PLACE_ANIMALS` (logging that they fall back to Anywhere, matching the live game), and handle `sets.length === 0` gracefully without throwing at `sets.reduce(...)` or histogram formatting.
+  - **Acceptance:** `typecheck`, `lint`, `test` pass; lead verifies `--deals --places oceania` and `--deals --places europe` both exit 0 with clear fallback note (0 local sets, no crash) and default `--deals` runs cleanly.
+
+- [ ] **S20 · Refresh `phaser_june_dev` content build and post-review `--deals` / balance bot measurements (lead)**
+  - **Owner:** lead. **Origin:** Astra SHOULD-CONSIDER 2 (keep `phaser_june_dev` and plan measurements in sync with S17–S19 before final Verification).
+  - **Scope:**
+    1. Inside `dev`: run `npm run content -- build`, then `npm run content -- check` (verify 76 playable, 0 errors, diet counts `plants 24 / meat 7 / insects 26 / mixed 16 / unrecorded 3`).
+    2. Re-run `node scripts/run-typescript.mjs scripts/balance-044.ts --deals > $S/deals-after.txt` twice (verify identical fingerprint and check all Goal 4 targets, including birth decks and timing).
+    3. Re-run `node scripts/run-typescript.mjs scripts/balance-044.ts --places world,africa,asia,north-america,south-america --rounds 400 --seed 44 > $S/balance-after.txt` and V10 diff against `$S/balance-before.txt`.
+    4. Update `## Measurements (after, rules 055-1)` in the plan with the post-review tables and target check.
+  - **Acceptance:** dev DB updated cleanly (live `phaser_june` untouched); all Goal 4 targets and V10 balance check pass (or any >3 pt delta explained).
+
 ## Verification
 
 *After all Steps are checked, run Final code review (`## Code review (Astra)` and `## Code review (Fable)`, plus lead rulings and any accepted MUST-FIX steps) per `~/.gemini/mission-lead.md`. Once code review is resolved, run this full Verification one heavy job at a time from `/srv/critter-ai/worktrees/clue-data-dealer` (with `S` and `dev()` defined as at the top of Steps).*
@@ -1000,11 +1048,11 @@ npm run content -- check
 ```
 - `Pool: 76 playable of 76 species … 0 errors, 0 warnings`. Proves deployed code works before the owner's steps.
 
-**V4 · Dev copy, after S11's build**
+**V4 · Dev copy, after S11/S20's build**
 ```bash
 dev npm run content -- check
 ```
-- 76 playable, `0 errors`; dev pool diet counts match plants 24 / meat 9 / insects 25 / mixed 17 / unrecorded 1.
+- 76 playable, `0 errors`; dev pool diet counts match plants 24 / meat 7 / insects 26 / mixed 16 / unrecorded 3 (`11`, `62`, `74`).
 
 **V5 · E2E (verifiable final artifact)**
 ```bash
@@ -1046,8 +1094,8 @@ join <(f $S/balance-before.txt) <(f $S/balance-after.txt) | awk '{d=$3-$2; print
 - Log records failing-first test names for S4, S7, S8, S10 (and S15 if run).
 
 **V12 · Summary completeness (before setting `status: done`)**
-- Every changed answer (animal, question, old → new, source): 12 diet values, Goliath frog unrecorded, 4 region flips, IDN → IDP changes (`17`, `27`, `67`).
-- Everything kept and why: devil/wild dog carve-out, aye-aye, giant armadillo, 5 newly-`mixed` animals with plant signs, `birth:live` = 0, Astra MUST-FIX #3 objection.
+- Every changed answer (animal, question, old → new, source): 13 diet values (`01` → insects + 12 from S7), 3 diets unrecorded (`11`, `62`, `74`), 4 region flips, IDN → IDP changes (`17`, `27`, `67`), and Yangtze turtle (`18`) note wording fix.
+- Everything kept and why: devil/wild dog carve-out, aye-aye, giant armadillo, 6 newly-`mixed` animals with diet signs (`35`, `60`, `40`, `71` incl. `bromeliad_eater`, `34`, and `33` Ethiopian wolf `rodent_hunter`), `birth:live` = 0, Astra architecture MUST-FIX #3 objection, `signs.ts` `fruit_eater` + `diet:insects` note, `e2e.mjs` `idn:` post-build assumption, and CI E2E runtime watch.
 - Shapefile-vs-IUCN disagreement table, out-of-scope follow-ups (incl. missing trait records), and owner's exact post-release steps.
 
 **Release smoke (during Release unit, after `deploy critter-connect`)**
@@ -1147,19 +1195,77 @@ V10 comparison (`balance-before.txt` vs `balance-after.txt`): **PASS (exit 0)** 
 
 ## Code review (Astra)
 
+*Reviewed 2026-11-20 by Astra (Codex GPT-6.2-Astra · xhigh) on `origin/main...HEAD` (`0837540a...1a89efb1`); saved output: `/srv/critter-ai/agent-state/missions/clue-data-dealer/tasks/astra-code-review.md`.*
+
+```
+VERDICT: REJECT
+
+MUST-FIX:
+
+1. src/clueGame/questionMatch.ts:63 — North America deck `1,2,8,74,75` scores both Blanding’s turtle and the axolotl “No” for mostly eating small invertebrates. Blanding’s diet is half crustaceans plus additional insects and snails, which warrants “Yes.” The axolotl’s cited source gives no proportions, so the new authoring rule calls for leaving its diet unrecorded. (ADW Emydoidea_blandingii, Ambystoma_mexicanum)
+2. src/clueGame/questionMatch.ts:62 — The meat question excludes only “mostly bugs.” An echidna eating mostly earthworms fits both that wording and the invertebrate question, yet the game requires opposite answers. Use the same prey definition in both questions and their guide text.
+3. src/clueGame/profiles.ts:235 — Replacing the cheetah’s `SDS` exclusion with the valid ISO alias `SSD` passes validation and leaves South Sudan in its country clue. Use a canonical code for filtering and duplicate detection, or reject aliases explicitly.
+4. db/content/animals/65-african-wild-dog.json:17 — The exclusions omit Mali, which the cited assessment marks possibly extinct. The aardvark likewise omits Lesotho, marked uncertain. Both can enter clues on a future range refresh despite the new requirement to retain these exclusions independently of current map coverage. (IUCN 12436/221299510, 41504/21286437)
+5. scripts/balance-044.ts:255 — `--deals --places oceania` reports five local decks players cannot draw because the game falls back to Anywhere. `--deals --places europe` finds zero decks and throws at line 316. Apply the playable-place threshold and handle an empty report.
+
+SHOULD-CONSIDER:
+
+1. Add a regression case for `fruit_eater` alongside `diet:insects`. The new diet rule permits occasional fruit, but `signProblems` rejects that combination. (src/clueGame/signs.ts:21)
+2. Rerun the guarded E2E and balance checks after the diet fixes. All 103 unit tests passed at `agent/clue-data-dealer@1a89efb1`. The recorded E2E predates the final dealer optimization. The read-only checkout prevented fetching, so `origin/main` freshness beyond `0837540a` is unverified.
+```
+
 ## Code review (Fable)
+
+*Reviewed 2026-11-20 by Fable 5.2 · high (`claude-task`) on `origin/main...HEAD` (`0837540a...1a89efb1`); saved output: `/srv/critter-ai/agent-state/missions/clue-data-dealer/tasks/20261120-112751-fable-5-2-high.md`.*
+
+```
+VERDICT: APPROVE_WITH_CHANGES — origin/main...HEAD at 1a89efb1 (base 0837540a), one MUST-FIX. No files changed; tree clean.
+
+MUST-FIX:
+
+1. db/content/animals/18-yangtze-giant-softshell-turtle.json:100 (cause: src/clueGame/questionMatchContent.ts:117) — a witness note now shows "China" while East Asia answers no.
+   - Note blanks come from the filtered country list, so `notPresent: CHN` stops "China" being blanked.
+   - Before: "died at a zoo in ____ in 2019", East Asia yes. After: "died at a zoo in China in 2019", East Asia no.
+   - It's the only note text that changes across all 76 profiles, and it takes effect at the owner's content build.
+   - Fix: reword the note to drop "in China" (same source). Blanking `notPresent` names in code won't work for the pool door, which only sees the filtered tags.
+
+SHOULD-CONSIDER:
+
+1. src/clueGame/profiles.ts:340 — an ISO alias code in `notPresent` passes `checkProfile` but is silently ignored (`regionOfCountry` accepts SSD, ESH, PSE, ALA, XKX, while `range.countries` carries Natural Earth codes SDS, SAH, …). Reject alias codes, test first.
+2. scripts/e2e.mjs:2722 — the `idn:` checks hard-code the post-build data (ids, `country:idp`, Oceania list); four fail against any DB without the view swap and build (e.g. WSL against live until handoff steps run). Say so in the handoff item and Summary.
+3. db/content/animals/33-ethiopian-wolf.json:108 — the wolf keeps its `rodent_hunter` sign beside a "no" on "Only meat" (a sixth case beside the five plant signs). The Andean bear also has `bromeliad_eater`, not just `fruit_eater`.
+4. Plan `## Decisions`, bullets 1 and 3 are stale: they still say the Goliath frog stays `meat` and the split is `> 130°E`. Mark them superseded before the Summary.
+5. scripts/balance-044.ts:237 — `fixedQuestions()` parses `questionMatch.ts` source with a regex. Exporting the tag list is simpler and less brittle.
+6. CI E2E time — the new header checks and six Anywhere loads (three at 4× CPU) add to a job capped at 15 minutes. Watch the first PR run.
+```
+
+### Lead rulings (code review)
+
+- **Astra MUST-FIX 1 (Blanding's turtle & axolotl diets):** **Accepted → S17.** Direct ADW checks confirm Blanding's turtle (`01`) eats half crustaceans + insects + snails (>50% invertebrates → `insects`, note updated to say crustaceans including crayfish) and Axolotl (`74`) lists invertebrates and fish with no proportions (omit `traits.diet`). Audited all 26 `meat`/`mixed` animals for consistency: Chinese giant salamander (`62`) also lists crabs, frogs, water shrews, fish, other invertebrates, and 27% conspecifics with no overall invert-vs-vert split (and its profile fact cites freshwater crabs as most common food), so omit `traits.diet` on `62` too; all other 7 `meat` and 16 `mixed` animals verified consistent.
+- **Astra MUST-FIX 2 (`diet:meat` / `diet:mixed` exclude only `"mostly bugs"`):** **Accepted → S17.** Align `QUESTION_TEXT`, `SHORT_TEXT`, and `DIET_TEXT` for `diet:meat` and `diet:mixed` with `diet:insects` (`bugs or other small animals without backbones` / `bugs or small invertebrates` / `insects or other small invertebrates`); keep 54 px `COLUMN_LABEL` compact.
+- **Astra MUST-FIX 3 & Fable SHOULD-CONSIDER 1 (ISO aliases in `notPresent`):** **Accepted → S18.** Export ISO alias lookup from `regions.ts` and fail loudly in `checkProfile` naming the Natural Earth code to use (tests first for `SSD` → `SDS`, `ESH` → `SAH`).
+- **Astra MUST-FIX 4 (`MLI` on wild dog, `LSO` on aardvark):** **Accepted → S18.** Verified on `phaser_june_dev` that aardvark's presence-1 polygon overlaps 30,107 km² of Lesotho (`LSO`, hidden today only by `HAVING count(*) >= 2`) and wild dog overlaps Benin (`BEN`, 2,829 km²) and Guinea (`GIN`, 4 km²). Add `LSO` (`uncertain`) to `57-aardvark.json` and `MLI` (`possibly-extinct`), `BEN` (`extinct`), `GIN` (`uncertain`) to `65-african-wild-dog.json` (all verbatim from the cited IUCN assessments), and clarify `docs/CONTENT_SOURCES.md:25` so `notPresent` covers range-map / polygon countries rather than every historical extinct country globally.
+- **Astra MUST-FIX 5 & Fable SHOULD-CONSIDER 5 (`balance-044.ts --deals` threshold, empty guard, regex):** **Accepted → S19.** Apply `MIN_PLACE_ANIMALS` in `reportDeals`, handle empty `sets` without throwing, and export `FIXED_QUESTION_TAGS` from `questionMatch.ts`.
+- **Fable MUST-FIX 1 (Yangtze turtle witness note un-blanks `"China"`):** **Accepted → S17.** Reword `18-yangtze-giant-softshell-turtle.json` `clues[4]` to `"The last known female died at a zoo in 2019, aged over 90."` (same `ngo` source).
+- **Astra SHOULD-CONSIDER 1 (`signs.ts:21` `fruit_eater` + `diet:insects`):** **Noted for Summary (no rule change).** `signs.ts` intentionally rejects `fruit_eater` on `diet:insects` so a child isn't misled on "Mostly bugs", and 0 profiles hit it; document for future content authors and roadmap part 2.
+- **Astra SHOULD-CONSIDER 2 (rerun dev build, `--deals`, balance bot, and E2E after review fixes):** **Accepted → S20 + Verification.** Rebuild `phaser_june_dev` and refresh `--deals`/balance bot in S20; full guarded `e2e:fresh` runs in Verification V5.
+- **Fable SHOULD-CONSIDER 2 (`e2e.mjs` `idn:` checks assume post-build DB):** **Accepted → Summary & owner handoff.**
+- **Fable SHOULD-CONSIDER 3 (`33` Ethiopian wolf `rodent_hunter` + `71` Andean bear `bromeliad_eater`):** **Accepted → Summary (V12 updated).**
+- **Fable SHOULD-CONSIDER 4 (stale `## Decisions` bullets 1 & 3):** **Accepted → updated below in this commit.**
+- **Fable SHOULD-CONSIDER 6 (CI E2E 15-min timeout):** **Accepted → Summary & Release watch.**
 
 ## Release
 
 ## Decisions
 
-- (lead) Goal 1 diet wording = Option 1A′: keep "only" for plants/meat and "mostly" for insects (4-step partition order); 12 value edits + 3 source/note cleanups; keep Tasmanian devil (48), African wild dog (65), and Goliath frog (11) as `meat`. Avoids breaking existing `mixed` profiles (Chimpanzee, Pig-nosed Turtle) and preserves single-sign deduction.
+- (lead) Goal 1 diet wording = Option 1A′: keep "only" for plants/meat and "mostly" for insects (4-step partition order); 12 value edits + 3 source/note cleanups; keep Tasmanian devil (48), African wild dog (65), and Goliath frog (11) as `meat`. Avoids breaking existing `mixed` profiles (Chimpanzee, Pig-nosed Turtle) and preserves single-sign deduction. *(Goliath frog `11` superseded by Revision below → unrecorded; code review S17 also moves `01` to `insects` and leaves `62`/`74` unrecorded.)*
 - (lead) Goal 2 bin edges = Option 2B with weight-only size column labels (`<100 g`, `0.1–2 kg`, `>2–30 kg`, `>30–300 kg`, `>300 kg`) + soft-hyphenated `South\u00adern Africa`: headless Chrome measured named Medium/Large headers clipping at 54–56 px (while gem faces already show XS/S/M/L/XL); 0 profile moves; fix young/lifespan/activity labels and enforce in E2E.
-- (lead) Goal 3 regions & presence = Option 3B (`IDP` centroid `> 130°E` in both SQL copies + `regions.ts`) + Option 3P-A (`presence IN (1, 2)` in `RANGES_SQL` and both views) + Option 3P-C (`redList.notPresent` filtered via shared `presentCountries(profile)` in both `profiles.ts` and `questionMatchContent.ts`). Lead will update `phaser_june_dev` views/ranges/rows (guarded) for E2E verification; live DB untouched. Owner handoff runs read-only `content -- ranges` before view SQL and `content -- build` (shrinks globe/rounds mismatch window to ~1 min and verifies map parity first).
+- (lead) Goal 3 regions & presence = Option 3B (`IDP` centroid `> 130°E` in both SQL copies + `regions.ts`) + Option 3P-A (`presence IN (1, 2)` in `RANGES_SQL` and both views) + Option 3P-C (`redList.notPresent` filtered via shared `presentCountries(profile)` in both `profiles.ts` and `questionMatchContent.ts`). Lead will update `phaser_june_dev` views/ranges/rows (guarded) for E2E verification; live DB untouched. Owner handoff runs read-only `content -- ranges` before view SQL and `content -- build` (shrinks globe/rounds mismatch window to ~1 min and verifies map parity first). *(Boundary `> 130°E` superseded by Revision below → Lydekker's Line `> 133.2°E` or `> 130°E` & `lat > -3.5°`.)*
 - (lead) Goal 4 dealer = Option 4C (two-stage `questionGroups` + `dealClues` region cap & category diversity, preserving `fullTable`), `ANIMAL_RULES.version = '055-1'`, `--deals` flag in `balance-044.ts`, with pre-set numeric targets (birth ≥ 5, life ≥ 35, region ≤ 75, >1 region forced-only, 4-cat ≥ 60, worst < 20 ms).
 - (lead) Revision rulings (2026-11-20): accepted 17 of 18 Fable/Astra items (zero-downtime `*_new` view swap; Lydekker's Line IDN split `>133.2°E` or `>130°E & lat>-3.5°`; Goliath frog diet unrecorded + aligned `SHORT_TEXT`/`DIET_TEXT`; `EvidenceGrid.tsx:414` hidden-cell `aria-label` via `order.short`; `roundStillFits` continent check; `notPresent` validated via `regionOfCountry` independent of `HAVING >= 2`; measure `dealClues` without branch-and-bound first; E2E globe-vs-rounds assertion + SQL drift test + separate `birth:eggs`/`birth:live` counts). Rejected Astra MUST-FIX #3 (`presence uncertain` region answers): brief explicitly requires dropping IUCN `presence uncertain` countries (aardvark SDN, Sunda pangolin CHN) as part of confirmed extant range; adding uncertain-region skip tags across `deduction.ts` violates KISS and leaves threshold-omitted borders unchanged.
 - (lead) S3 throttled E2E probe design (2026-11-20): running full `e2e:fresh` with `E2E_CPU_THROTTLE=4 E2E_ROUNDS=1` on untouched baseline code took ~16 min and failed 15 unrelated checks (4 multi-round `sortSaw` assertions impossible in 1 round + 11 animation/slide wall-clock timing checks broken by global 4x throttle on 2-CPU ARM), while `anywhereLoad` completed cleanly (`median: 4111 ms`, 0 console errors, 0 failed requests). Accepted S3's baseline measurement and updated S5/S13/V5 so `scripts/e2e.mjs` toggles `Emulation.setCPUThrottlingRate({ rate: 4 })` only around the 3 throttled Anywhere load measurements inside the normal passing `e2e:fresh` run (`report.anywhereLoad.throttled`).
 - (lead) S14 timing gate triggers S15 (2026-11-20): `--deals` met every content/diversity target and Anywhere load (`217.1 ms`, `205–236 ms` vs `<= 351 ms`), and V10 balance check passed (`exit 0`, all 35 Found rates within ±3 pts), but worst-deck `dealClues` time (`28.6 ms` on `S055`; `21.5–28.6 ms` across 4 runs) exceeded the `< 20 ms` target. Leaving S15 unchecked so Opus adds the lossless branch-and-bound cut-off next session while preserving fingerprint `1798229f`.
+- (lead) Final code review rulings (2026-11-20): accepted all 6 MUST-FIX items across Astra (`REJECT`, 5 MUST-FIX) and Fable (`APPROVE_WITH_CHANGES`, 1 MUST-FIX) plus 5 SHOULD-CONSIDER items as S17–S20, including full consistency audit of all 26 `meat`/`mixed` animals (`01` Blanding's → `insects`; `74` Axolotl and `62` Chinese giant salamander → unrecorded) and `phaser_june_dev` polygon check confirming `57` Aardvark overlaps 30,107 km² of `LSO` (`uncertain`) and `65` Wild Dog overlaps `BEN`/`GIN`. Kept `signs.ts` `NOT_PLANTS` unchanged (Astra SC 1 noted for Summary).
 
 ## Log
 
@@ -1185,5 +1291,6 @@ V10 comparison (`balance-before.txt` vs `balance-after.txt`): **PASS (exit 0)** 
 - 2026-11-20 11:09 UTC: S14 done (lead). Ran `--deals` (twice + 3 timing repeats; `$S/deals-after.txt`) and 5-place balance bot (`--rounds 400 --seed 44`; `$S/balance-after.txt`) with V10 diff. Dealt-slot table (rules `055-1`, fingerprint `1798229f` identical across runs): 104 sets / 416 slots, 104/104 separation, birth 7 decks (`birth:eggs` 7, `birth:live` 0; target ≥ 5), life-cycle 50 slots (target ≥ 35), region 74 slots (target ≤ 75; `0:48, 1:46, 2:5, 3:2, 4:3`, 10 forced >1-region decks, 0 avoidable), 4-category 68 decks (target ≥ 60), Anywhere load 217.1 ms (205–236 ms; target ≤ 351 ms), worst deck **28.6 ms (`S055`)** (`21.5–28.6 ms` across 4 runs; misses `< 20 ms` → S15 stays unchecked). Balance bot V10: PASS (exit 0; all 35 `(place, player)` Found rates within ±3 pts; `careful` 0 to +1, `asia/reader` 89→86% and `africa/reader` 94→91%). Plan-only commit.
 - 2026-11-20 11:17 UTC: S15 done (Opus → lead review). Added lossless branch-and-bound cut-off and per-split precomputation (`CATEGORY_BIT`, `bitCount`, `compareRanks`) to `dealClues` (`src/clueGame/animalBoard.ts`), keeping `questionGroups`/`fullTable`/`tellsApart`/`pickSuspectSet` unchanged. Failing-first unit test `055-1: the dealer deals what a search of every deck deals` (`tests/clueGame/animalBoard.test.ts`, comparing `dealClues` against independent brute-force reference `dealByBruteForce` across all synthetic cases and all 6 real `PLACES`) caught intentionally too-tight bound `splitMix + 0` (`africa: deck for 1,2,3,4,5` deck mismatch, 102/103) before real bound `splitMix + Math.min(count, unionCategories)` passed 103/103. Verified `npm run typecheck`, `npm run lint`, and `npm test` (103/103) PASS; refreshed `$S/deals-after.txt` and confirmed exact match against S14 output on all lines except timing (fingerprint `1798229f` identical across runs; `dealClues` 80.7–97.5 ms total, worst deck **6.2 ms `S055` / 7.8 ms `S017`** vs `< 20 ms`, Anywhere load **131.5–135.2 ms** vs `<= 351 ms`). All Goal 4 targets now PASS.
 - 2026-11-20 11:21 UTC: S16 done (Opus → lead review). Updated `docs/CLUE_MATCH.md:51` and `docs/ANIMAL_BOARD_PAPER.md:3` (`053-1` → `055-1`), appended the verbatim `055-1` dealer note to `docs/ANIMAL_BOARD_PAPER.md:38`, verified `docs/CLUE_MATCH.md:61,67`, `docs/CONTENT_SOURCES.md:25,57,60,66`, and `docs/SHAPEFILE_BEST_PRACTICES.md:35` match final code (`CONTEXT.md` unchanged), and updated `presence IN (1, 2, 3)` → `IN (1, 2)` in practice SQL (`db/analysis/clue-match/04_realm_shares.sql`, `06_ranges_for_qgis.sql`). Stale-text grep across `docs db scripts src` returns only frozen historical reports under `docs/research/`. Verified `npm run typecheck`, `npm run lint`, and `npm test` (103/103) PASS.
+- 2026-11-20 11:41 UTC: Final code review done (Astra + Fable → lead rulings). Astra (`origin/main...HEAD` `1a89efb1`): `REJECT` (5 MUST-FIX: Blanding's turtle/axolotl diets, `diet:meat`/`mixed` "mostly bugs" wording mismatch, ISO alias `SSD` bypassing `notPresent` check, `MLI`/`LSO` missing from `notPresent`, `balance-044.ts --deals` threshold & empty crash; 2 SHOULD-CONSIDER). Fable: `APPROVE_WITH_CHANGES` (1 MUST-FIX: Yangtze turtle witness note un-blanks `"China"` beside East Asia = No; 6 SHOULD-CONSIDER). Verified all claims directly against ADW, vault notes, and `phaser_june_dev` polygons; accepted all 6 MUST-FIX items (plus consistency audit adding Chinese giant salamander `62` unrecorded diet) and scheduled S17–S20 before Verification. Plan-only commit.
 
 ## Summary
