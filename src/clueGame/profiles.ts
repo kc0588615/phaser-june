@@ -160,10 +160,10 @@ const SIZE_TEXT: Record<Size, string> = {
 };
 
 const DIET_TEXT: Record<Diet, string> = {
-  plants: 'It eats plants.',
-  meat: 'It eats other animals.',
-  insects: 'It eats insects and other small invertebrates.',
-  mixed: 'It eats both plants and animals.',
+  plants: 'It eats only plants.',
+  meat: 'It eats only other animals (not mostly bugs).',
+  insects: 'It mostly eats insects and other small invertebrates, like worms, snails or crayfish.',
+  mixed: 'It eats both plants and animals (not mostly bugs).',
 };
 
 const ACTIVITY_TEXT: Record<Activity, string> = {

@@ -37,9 +37,9 @@
       "source": "adw"
     },
     "diet": {
-      "value": "meat",
-      "note": "It eats worms, insects, crustaceans and small fish.",
-      "source": "adw"
+      "value": "insects",
+      "note": "It mostly eats invertebrates, like worms, insects and crustaceans, plus some small fish.",
+      "source": "amphibiaweb"
     },
     "trees": {
       "value": "no",

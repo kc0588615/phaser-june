@@ -31,9 +31,9 @@
       "source": "adw"
     },
     "diet": {
-      "value": "meat",
-      "note": "Fish, snails and worms, crunched with a strong hooked beak.",
-      "source": "adw"
+      "value": "mixed",
+      "note": "Fruit is what it eats most often, followed by insects, other plant matter, crabs and molluscs.",
+      "source": "iucn"
     },
     "activity": {
       "value": "night",

@@ -56,11 +56,13 @@ Trait values (templates in `profiles.ts`):
 | size | tiny < 100 g, small 100 g to 2 kg, medium over 2 up to 30 kg, large over 30 up to 300 kg, huge over 300 kg (an animal's typical adult weight decides) |
 | lifespan | short < 5 years, medium 5 to 20, long > 20 (longest known, zoo records included) |
 | young | one (1 or 2 per litter or clutch), few (3 to 10), many (> 10) |
-| diet | plants, meat, insects (and other small invertebrates), mixed |
+| diet | plants, meat, insects (mostly insects and other small invertebrates), mixed (first match in the order below) |
 | activity | day, night, twilight, any |
 | social | alone, pairs, groups |
 | covering | fur, spines, scales, armor, shell, skin (mostly bare) |
 | trees | yes, no (only `yes` is ever asked: "Does it live in trees?"; `no` records the answer) |
+
+`diet` is the first of these that fits: 1. **plants** when sources name no animal food (for a plant-eater, any animal food a source names counts); 2. **insects** when sources say it eats mostly small animals without backbones (insects, worms, snails, crayfish and other invertebrates); 3. **meat** when sources name no plant food (grass or other plant bits a meat-eater swallows in small amounts don't count; plant food it seeks out, like fruit or nectar, does); 4. otherwise **mixed**. Leave `diet` unrecorded when sources list both invertebrates and vertebrates without proportions, so `insects` vs `meat` can't be settled.
 
 `trees` (plan 055; rules written before the research, `docs/research/2026-11-07-moves-and-signs.md` §2): **yes** when it spends most of its active life up in trees: it feeds and rests or sleeps there, and comes down rarely. The source must say "arboreal", "lives in trees", "spends most of its time in the canopy" or the like. **No** when a source says it lives mostly on the ground, underground or in water; an animal that climbs but lives mostly on the ground is a no (with a quote) or no record. Its `note` uses only ground, branch or burrow words (no habitat, water, diet, size, day/night, social or birth words), because it shows whenever its own question isn't dealt.
 

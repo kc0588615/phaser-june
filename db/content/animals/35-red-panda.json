@@ -40,8 +40,8 @@
       "source": "adw"
     },
     "diet": {
-      "value": "plants",
-      "note": "It also eats berries, blossoms and bird eggs.",
+      "value": "mixed",
+      "note": "Bamboo leaves are most of its food; it also eats berries, blossoms and bird eggs.",
       "source": "adw"
     },
     "activity": {

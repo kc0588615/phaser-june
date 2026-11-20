@@ -32,7 +32,8 @@
     },
     "diet": {
       "value": "plants",
-      "source": "britannica"
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_abingdonii.html"
     },
     "trees": {
       "value": "no",

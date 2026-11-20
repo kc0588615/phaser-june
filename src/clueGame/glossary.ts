@@ -59,6 +59,7 @@ const ENTRIES: Array<[string, string, string?]> = [
   ['Herbivore', 'Eats only plants.'],
   ['Carnivore', 'Eats other animals.', 'carnivore|carnivorous'],
   ['Insectivore', 'Mostly eats insects.'],
+  ['Invertebrate', 'An animal without a backbone, like an insect, worm, snail or crayfish.', 'invertebrates?'],
   ['Herbivory', 'Eating plants.'],
   ['Seed dispersal', 'Carrying seeds to new places, often by eating fruit.'],
   ['Ecosystem engineer', 'An animal that reshapes its habitat in ways that help other living things.', 'ecosystem engineers?'],
