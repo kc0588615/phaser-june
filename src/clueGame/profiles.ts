@@ -7,7 +7,7 @@
 import type { SpeciesClueCategory } from '@/clueGame/categories';
 import { renderCitation, type CitationSource, type CitedPage } from '@/clueGame/citations';
 import type { ContentRows } from '@/clueGame/pool';
-import { regionOfCountry } from '@/clueGame/regions';
+import { isoAliasTarget, regionOfCountry } from '@/clueGame/regions';
 import { signProblems } from '@/clueGame/signs';
 import { FAMILY_NAMES, ORDER_NAMES } from '@/clueGame/speciesInfo';
 import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, prefixOf } from '@/clueGame/traits';
@@ -337,7 +337,10 @@ export function checkProfile(profile: AnimalProfile, sources: readonly Pick<Cont
   // Codes needn't be in range.countries: the range maps keep a country only while 2+ animals share it (HAVING count(*) >= 2).
   const seen = new Set<string>();
   for (const [i, { code, status }] of (profile.redList?.notPresent ?? []).entries()) {
-    if (!/^[A-Z]{3}$/.test(code) || regionOfCountry(code) === null) problems.push(`redList.notPresent[${i}]: "${code}" is not a known 3-letter uppercase country code`);
+    // An ISO alias resolves in regions.ts but never matches range.countries (Natural Earth codes), so it would drop nothing.
+    const alias = isoAliasTarget(code);
+    if (alias) problems.push(`redList.notPresent[${i}]: "${code}" is an ISO alias; use Natural Earth code "${alias}"`);
+    else if (!/^[A-Z]{3}$/.test(code) || regionOfCountry(code) === null) problems.push(`redList.notPresent[${i}]: "${code}" is not a known 3-letter uppercase country code`);
     if (!NOT_PRESENT_STATUSES.includes(status)) problems.push(`redList.notPresent[${i}]: status must be one of ${NOT_PRESENT_STATUSES.join(', ')}`);
     if (seen.has(code)) problems.push(`redList.notPresent[${i}]: "${code}" is listed twice`);
     seen.add(code);

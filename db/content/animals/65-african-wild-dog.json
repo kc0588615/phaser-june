@@ -42,6 +42,18 @@
       {
         "code": "TCD",
         "status": "uncertain"
+      },
+      {
+        "code": "MLI",
+        "status": "possibly-extinct"
+      },
+      {
+        "code": "BEN",
+        "status": "extinct"
+      },
+      {
+        "code": "GIN",
+        "status": "uncertain"
       }
     ]
   },

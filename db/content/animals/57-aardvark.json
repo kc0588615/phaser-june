@@ -18,6 +18,10 @@
       {
         "code": "SDN",
         "status": "uncertain"
+      },
+      {
+        "code": "LSO",
+        "status": "uncertain"
       }
     ]
   },

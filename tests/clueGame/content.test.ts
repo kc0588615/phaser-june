@@ -110,6 +110,27 @@ describe('redList.notPresent', () => {
     });
   }
 
+  // ISO aliases resolve in regions.ts but never match range.countries (Natural Earth codes), so they'd drop nothing.
+  for (const [alias, naturalEarth] of [['SSD', 'SDS'], ['ESH', 'SAH']]) {
+    test(`checkProfile rejects ISO alias ${alias}, naming Natural Earth ${naturalEarth}`, () => {
+      const problems = notPresentProblems(withNotPresent('Yangtze Giant Softshell Turtle', [{ code: alias, status: 'uncertain' }]));
+      assert.equal(problems.length, 1);
+      assert.ok(problems[0].includes(`"${naturalEarth}"`), problems[0]);
+    });
+  }
+
+  test('checkProfile accepts SDS, which leaves presentCountries and the country clue', () => {
+    const aardvark = withNotPresent('Aardvark', [{ code: 'SDN', status: 'uncertain' }, { code: 'SDS', status: 'uncertain' }]);
+    assert.deepEqual(checkProfile(aardvark, sources), []);
+    assert.ok(byName('Aardvark').range!.countries.some(country => country.code === 'SDS'), 'Aardvark maps South Sudan');
+    assert.ok(!presentCountries(aardvark).some(country => country.code === 'SDS'));
+    // A short range so the clue names every country (past 6 it shows "and N more countries").
+    aardvark.range!.countries = byName('Aardvark').range!.countries.filter(country => ['ETH', 'SDS', 'KEN'].includes(country.code));
+    assert.equal(aardvark.range!.countries.length, 3);
+    const names = aardvark.range!.countries.filter(country => country.code !== 'SDS').map(country => country.name);
+    assert.deepEqual(countryClue(aardvark), { ...countryClue(byName('Aardvark'))!, text: `It lives in ${names.join(' and ')}.`, tags: aardvark.range!.countries.filter(country => country.code !== 'SDS').map(country => `country:${country.code.toLowerCase()}`) });
+  });
+
   test('presentCountries drops the listed codes, keeps the order, and is empty without a range', () => {
     const countries = [{ code: 'AGO', name: 'Angola' }, { code: 'SDN', name: 'Sudan' }, { code: 'BWA', name: 'Botswana' }, { code: 'TCD', name: 'Chad' }];
     const redList = { notPresent: [{ code: 'TCD', status: 'uncertain' as const }, { code: 'SDN', status: 'extinct' as const }] } as AnimalProfile['redList'];

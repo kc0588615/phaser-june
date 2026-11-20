@@ -299,6 +299,11 @@ for (const [alpha3, alpha2, region, name] of COUNTRY_REGIONS) {
 }
 for (const [iso, naturalEarth] of Object.entries(ISO_ALIASES)) BY_CODE.set(iso, BY_CODE.get(naturalEarth)!);
 
+/** The Natural Earth code an ISO alpha-3 alias stands for (SSD -> 'SDS'), or null when the code isn't an alias. */
+export function isoAliasTarget(code: string): string | null {
+  return Object.hasOwn(ISO_ALIASES, code) ? ISO_ALIASES[code] : null;
+}
+
 /** The region key for an ISO alpha-3 or alpha-2 country code (or a Natural Earth adm0_a3), or null when unknown. */
 export function regionOfCountry(code: string): string | null {
   return BY_CODE.get(code.toUpperCase())?.region ?? null;
