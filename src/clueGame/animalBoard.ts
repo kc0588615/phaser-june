@@ -131,6 +131,23 @@ function* cartesianProduct<T>(lists: readonly (readonly T[])[], picked: T[] = []
   for (const item of lists[picked.length]) yield* cartesianProduct(lists, [...picked, item]);
 }
 
+/** One bit per question category, so a deck's categories count without a Set. */
+const CATEGORY_BIT = Object.fromEntries([...new Set(Object.values(PREFIX_CATEGORY))].map((category, i) => [category, 1 << i]));
+
+function bitCount(mask: number): number {
+  let count = 0;
+  for (let rest = mask; rest; rest &= rest - 1) count++;
+  return count;
+}
+
+/** How a deck ranks before the hash tie-break (see dealClues). */
+interface DeckRank { excessRegions: number; score: number; regions: number }
+
+/** Negative when `a` ranks above `b`: fewer Range questions past the first, then a higher score, then fewer Range questions. */
+function compareRanks(a: DeckRank, b: DeckRank): number {
+  return a.excessRegions - b.excessRegions || b.score - a.score || a.regions - b.regions;
+}
+
 /**
  * The clue deck: `count` questions that tell every suspect apart, chosen from the set alone (its sorted ids), so the
  * deck never depends on which suspect is the mystery. Each question from a different split (questionGroups), so the
@@ -145,22 +162,40 @@ export function dealClues(book: Book, set: readonly number[], place: ContinentKe
   const groups = questionGroups(book, sorted, place);
   if (groups.length < count) return null;
   const salt = sorted.join(',');
-  let best: { clues: Clue[]; excessRegions: number; score: number; regions: number; tie: number } | null = null;
-  for (const picked of combinations(groups, count)) {
-    const heads = picked.map(group => group[0]);
-    if (!tellsApart(heads, sorted.length)) continue;
-    // A group's questions share its split, so the split mix is the heads'.
-    const smaller = heads.map(clue => { const yes = clue.row.filter(Boolean).length; return Math.min(yes, sorted.length - yes); });
-    const splitMix = (smaller.some(n => n >= 2) ? 4 : 0) + (smaller.some(n => n === 1) ? 4 : 0);
-    for (const deck of cartesianProduct(picked)) {
-      if (new Set(deck.map(clue => clueFace(clue.tag))).size < deck.length) continue;
-      const regions = deck.filter(clue => PREFIX_CATEGORY[prefixOf(clue.tag)] === 'range').length;
-      const excessRegions = Math.max(0, regions - 1);
-      const score = splitMix + new Set(deck.map(clue => PREFIX_CATEGORY[prefixOf(clue.tag)])).size;
-      const tie = hash32(`${salt}:${deck.map(clue => clue.tag).join('|')}`);
-      const better = !best || excessRegions < best.excessRegions || (excessRegions === best.excessRegions && (score > best.score
-        || (score === best.score && (regions < best.regions || (regions === best.regions && tie < best.tie)))));
-      if (better) best = { clues: deck, excessRegions, score, regions, tie };
+  // What ranking needs from each question and split, worked out once. A split's questions share its row, so its minor
+  // side (the fewer suspects) is its first question's.
+  const splits = groups.map(group => {
+    const clues = group.map(clue => {
+      const category = PREFIX_CATEGORY[prefixOf(clue.tag)];
+      return { clue, isRange: category === 'range', categoryBit: CATEGORY_BIT[category], face: clueFace(clue.tag) };
+    });
+    const yes = group[0].row.filter(Boolean).length;
+    return {
+      clues, allRange: clues.every(entry => entry.isRange), categoryMask: clues.reduce((mask, entry) => mask | entry.categoryBit, 0),
+      minor: Math.min(yes, sorted.length - yes),
+    };
+  });
+  let best: (DeckRank & { clues: Clue[]; tie: number }) | null = null;
+  for (const picked of combinations(splits, count)) {
+    const splitMix = (picked.some(split => split.minor >= 2) ? 4 : 0) + (picked.some(split => split.minor === 1) ? 4 : 0);
+    // Cut-off: the best rank any deck from these splits could reach. An all-Range split adds a Range question; the
+    // categories can't outnumber the clues or the splits' own categories. Skip the splits when even that loses.
+    const minRegions = picked.filter(split => split.allRange).length;
+    const bound = {
+      excessRegions: Math.max(0, minRegions - 1), regions: minRegions,
+      score: splitMix + Math.min(count, bitCount(picked.reduce((mask, split) => mask | split.categoryMask, 0))),
+    };
+    if (best && compareRanks(bound, best) > 0) continue;
+    if (!tellsApart(picked.map(split => split.clues[0].clue), sorted.length)) continue;
+    for (const deck of cartesianProduct(picked.map(split => split.clues))) {
+      if (new Set(deck.map(entry => entry.face)).size < count) continue;
+      const regions = deck.filter(entry => entry.isRange).length;
+      const rank = { excessRegions: Math.max(0, regions - 1), score: splitMix + bitCount(deck.reduce((mask, entry) => mask | entry.categoryBit, 0)), regions };
+      const order = best ? compareRanks(rank, best) : -1;
+      if (order > 0) continue;
+      const clues = deck.map(entry => entry.clue);
+      const tie = hash32(`${salt}:${clues.map(clue => clue.tag).join('|')}`);
+      if (order < 0 || tie < best!.tie) best = { ...rank, clues, tie };
     }
   }
   return best?.clues ?? null;

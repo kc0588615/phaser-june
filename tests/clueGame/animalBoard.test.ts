@@ -19,7 +19,7 @@ import { clueFace } from '@/clueGame/clueFaces';
 import { PREFIX_CATEGORY, makeBook, poolFor, type Animal, type Book } from '@/clueGame/questionMatch';
 import { animalsFromProfiles } from '@/clueGame/questionMatchContent';
 import type { ContinentKey } from '@/clueGame/regions';
-import { mulberry32 } from '@/lib/seededRng';
+import { hash32, mulberry32 } from '@/lib/seededRng';
 import { profiles, sources } from './contentPool';
 
 const animals = animalsFromProfiles(profiles, sources, () => undefined);
@@ -170,6 +170,7 @@ test('every place has full-table questions for its sets', () => {
 //  16. A deck is dealt from fewer splits than clues (askable questions counted, not splits).
 //  17. fullTable isn't questionGroups' first questions, or a group repeats a non-Range category or mixes splits.
 //  18. A saved continent round resumes after a suspect leaves that continent, or with an id the book lacks (or throws).
+//  19. The dealer's cut-off skips a split combination holding the winning deck (its bound too tight).
 // Small hand-built books, so these don't move with content edits.
 
 const rank = (latin: string) => ({ latin, plain: null });
@@ -290,6 +291,37 @@ test('055-1: fullTable is each split group\'s first question; a group keeps one 
   // Both West and North Africa stay in their group; covering and birth share one.
   assert.ok(questionGroups(collidingFirst.book, collidingFirst.set, null).some(group => tags(group)!.join() === 'region:north-africa,region:west-africa'));
   assert.ok(questionGroups(shadowedBirth.book, shadowedBirth.set, 'africa').some(group => tags(group)!.join() === 'covering:fur,birth:eggs'));
+});
+
+/** The dealer's rule by brute force, no cut-off: every deck of one question from each of `count` groups, the lowest key wins. */
+function dealByBruteForce(caseBook: Book, set: readonly number[], place: ContinentKey | null, count: number): string[] | null {
+  const sorted = [...set].sort((a, b) => a - b);
+  const groups = questionGroups(caseBook, sorted, place);
+  const key = (deck: Clue[]) => {
+    const regions = regionCount(deck);
+    const minor = deck.map(clue => { const yes = clue.row.filter(Boolean).length; return Math.min(yes, sorted.length - yes); });
+    const score = (minor.some(n => n >= 2) ? 4 : 0) + (minor.some(n => n === 1) ? 4 : 0)
+      + new Set(deck.map(clue => PREFIX_CATEGORY[clue.tag.split(':')[0]])).size;
+    return [Math.max(0, regions - 1), -score, regions, hash32(`${sorted.join(',')}:${deck.map(clue => clue.tag).join('|')}`)];
+  };
+  const decks: Clue[][] = [];
+  const visit = (start: number, deck: Clue[]) => {
+    if (deck.length < count) for (let g = start; g < groups.length; g++) for (const clue of groups[g]) visit(g + 1, [...deck, clue]);
+    else if (tellsApart(deck, sorted.length) && new Set(deck.map(clue => clueFace(clue.tag))).size === count) decks.push(deck);
+  };
+  visit(0, []);
+  const lower = (a: number[], b: number[]) => { const i = a.findIndex((value, j) => value !== b[j]); return i >= 0 && a[i] < b[i]; };
+  const best = decks.map(deck => ({ deck, key: key(deck) }))
+    .reduce<{ deck: Clue[]; key: number[] } | null>((min, entry) => (!min || lower(entry.key, min.key) ? entry : min), null);
+  return tags(best?.deck ?? null);
+}
+
+test('055-1: the dealer deals what a search of every deck deals', () => {
+  const cases = [...SYNTH, { ...collidingOnly, place: null }, { ...threeSplits, place: 'africa' as const },
+    ...PLACES.flatMap(place => sets(place).map(set => ({ book, set, place })))];
+  for (const { book: caseBook, set, place } of cases) {
+    assert.deepEqual(tags(dealClues(caseBook, set, place, 4)), dealByBruteForce(caseBook, set, place, 4), `${place}: deck for ${set}`);
+  }
 });
 
 // A continent round on five Asian suspects, and the same suspects Anywhere.

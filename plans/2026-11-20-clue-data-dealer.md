@@ -967,7 +967,7 @@ dev() { ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.loca
   - **Acceptance:** record after-tables in the plan and check every Goal 4 target (birth ≥ 5 decks or accepted 4 with reason, `birth:eggs`/`birth:live` shown; life-cycle ≥ 35; region ≤ 75; >1 region forced-only; 100% separation; ≥ 60 4-category decks; worst deck < 20 ms; Anywhere load ≤ 351 ms) and balance bot check (≤ 3 pts Found move per place, or per-place explanation recorded — note Asia pool shrinks 20 → 17).
   - **Decides S15:** if worst deck `< 20 ms` AND Anywhere load `<= 351 ms`, check off S15 right now as `"not needed (worst X ms, Anywhere Y ms)"` and record why in Log; otherwise leave S15 unchecked for the next session.
 
-- [ ] **S15 · Conditional: lossless branch-and-bound cut-off in `dealClues` (Opus)**
+- [x] **S15 · Conditional: lossless branch-and-bound cut-off in `dealClues` (Opus)**
   - **Owner:** Opus (only if S14 missed `< 20 ms` worst deck or `<= 351 ms` Anywhere load). **Files:** `src/clueGame/animalBoard.ts`, `tests/clueGame/animalBoard.test.ts`.
   - **Test first:** add test asserting `dealClues` with cut-off matches exhaustive search over the hand-built pool and every `contentPool` set; verify the test catches an intentionally too-tight bound (e.g. `+0` instead of `min(count, ...)`) before keeping the real bound, and record that failing check in Log.
   - **Code:** upper bound `[-Math.max(0, allRegionGroups - 1), splitMix + Math.min(count, unionCategories)]` skipping combinations below best key so far.
@@ -1062,7 +1062,7 @@ npm run content -- check                                      # live, read-only,
 
 ## Measurements (after, rules 055-1)
 
-Recorded 2026-11-20 at S14 (commit `9b83582e`, all Goal 1–4 code and profile edits in place, before S15 branch-and-bound).
+Recorded 2026-11-20 at S14 (commit `9b83582e`, all Goal 1–4 code and profile edits in place) and timing refreshed at S15 (lossless branch-and-bound cut-off in `dealClues`; identical deck fingerprint `1798229f` and slot counts).
 
 ### Dealt-slot table (after, rules `055-1`)
 
@@ -1084,11 +1084,11 @@ Deck fingerprint: `1798229f` (verified identical across repeated runs).
 - Categories per deck: `1:3, 2:8, 3:25, 4:68`.
 - Birth: **7 decks** (`birth:eggs` 7 slots, `birth:live` 0); life-cycle slots: **50**.
 - Fixed questions never dealt (4, down from 6): `covering:spines`, `birth:live`, `lifespan:short`, `lifespan:medium`.
-- Timing: `dealClues` **263.9 ms** total, worst deck **28.6 ms (`S055`)** (`21.5–28.6 ms` across 4 runs); Anywhere load **217.1 ms** (`205.0–235.7 ms` across 4 runs).
+- Timing (after S15 cut-off): `dealClues` **80.7–97.5 ms** total, worst deck **6.2 ms (`S055`) / 7.8 ms (`S017`)** (`5.9–7.8 ms` across runs; was `21.5–28.6 ms` at S14); Anywhere load **131.5–135.2 ms** (was `205.0–235.7 ms` at S14).
 
 **Goal 4 targets check:**
 
-| Target | Baseline (`055-0`) | After (`055-1`, S14) | Status |
+| Target | Baseline (`055-0`) | After (`055-1`, S14 → S15) | Status |
 |---|---:|---:|---|
 | Birth decks (≥ 5) | 0 | 7 (`birth:eggs` 7, `birth:live` 0) | PASS |
 | Life-cycle slots (≥ 35) | 15 | 50 | PASS |
@@ -1096,8 +1096,8 @@ Deck fingerprint: `1798229f` (verified identical across repeated runs).
 | >1 region forced-only | 12 (6 avoidable) | 10 (0 avoidable; primary score key minimizes excess regions exhaustively) | PASS |
 | 5-suspect separation (100%) | 103/103 | 104/104 | PASS |
 | 4-category decks (≥ 60) | 42 | 68 | PASS |
-| Anywhere load (≤ 351 ms) | 117.5 ms | 217.1 ms (205–236 ms) | PASS |
-| Worst deck (< 20 ms) | 2.3 ms (`S093`) | **28.6 ms (`S055`)** (21.5–28.6 ms) | **FAIL → triggers S15** |
+| Anywhere load (≤ 351 ms) | 117.5 ms | **131.5–135.2 ms** (S14: 217.1 ms) | PASS |
+| Worst deck (< 20 ms) | 2.3 ms (`S093`) | **6.2–7.8 ms** (`S055`/`S017`; S14: 28.6 ms) | **PASS (after S15)** |
 
 ### Balance bot (after, rules `055-1`)
 
@@ -1183,5 +1183,6 @@ V10 comparison (`balance-before.txt` vs `balance-after.txt`): **PASS (exit 0)** 
 - 2026-11-20 10:42 UTC: S12 done (Opus → lead review). Added Node-side globe-vs-pool IDN/IDP agreement block to `scripts/e2e.mjs` (fetches `/api/places/` and `/api/clue-game/pool/` once each without perturbing page request lists or timing; records 10-row `report.idn`; adds 6 checks verifying 200 responses, `continent:oceania` holds `{17, 27, 67}` and omits Asian IDN ids, `continent:asia` holds `{5, 12, 24, 25, 28, 40, 44}` and omits IDP ids, and pool `country:idp`/`country:idn` tags agree). Verified `node --check scripts/e2e.mjs`, `npm run typecheck`, `npm run lint`, and `npm test` (102/102) PASS (first E2E run with these checks is S13).
 - 2026-11-20 10:57 UTC: S13 done (lead). Ran guarded `npm run e2e:fresh` against `phaser_june_dev` with all code, profiles, views, and dev content build in place: **1657/1657** checks passed (0 failed, 0 console/page errors, 0 failed requests; seed 7, 4 rounds, round 1 mystery `7` Hairy Frog); all 4 per-round 3-viewport (`390x844`, `375x548`, `320x720`) header-fit checks and 11-label probe passed (`detail: []`); all 6 IDN/IDP globe-vs-pool checks passed with all 10 rows in `report.idn` (`17`, `27`, `67` in `continent:oceania` + `country:idp`; `5`, `12`, `24`, `25`, `28`, `40`, `44` in `continent:asia` + `country:idn`); `anywhereLoad` median `1392 ms` (runs `3121, 1385, 1392`; cpu x1, vs S6 `1432 ms`) and `anywhereLoad.throttled` median `4981 ms` (runs `4981, 4805, 5003`; cpu x4, vs S3 baseline `4111 ms`, S6 `4587 ms`). Saved artifact to `$S/e2e-s13/`, preserved `$S/e2e-s6/report.json` as `$S/e2e-s6-report.json`, and removed `$S/e2e-s6/`. Plan-only commit.
 - 2026-11-20 11:09 UTC: S14 done (lead). Ran `--deals` (twice + 3 timing repeats; `$S/deals-after.txt`) and 5-place balance bot (`--rounds 400 --seed 44`; `$S/balance-after.txt`) with V10 diff. Dealt-slot table (rules `055-1`, fingerprint `1798229f` identical across runs): 104 sets / 416 slots, 104/104 separation, birth 7 decks (`birth:eggs` 7, `birth:live` 0; target ≥ 5), life-cycle 50 slots (target ≥ 35), region 74 slots (target ≤ 75; `0:48, 1:46, 2:5, 3:2, 4:3`, 10 forced >1-region decks, 0 avoidable), 4-category 68 decks (target ≥ 60), Anywhere load 217.1 ms (205–236 ms; target ≤ 351 ms), worst deck **28.6 ms (`S055`)** (`21.5–28.6 ms` across 4 runs; misses `< 20 ms` → S15 stays unchecked). Balance bot V10: PASS (exit 0; all 35 `(place, player)` Found rates within ±3 pts; `careful` 0 to +1, `asia/reader` 89→86% and `africa/reader` 94→91%). Plan-only commit.
+- 2026-11-20 11:17 UTC: S15 done (Opus → lead review). Added lossless branch-and-bound cut-off and per-split precomputation (`CATEGORY_BIT`, `bitCount`, `compareRanks`) to `dealClues` (`src/clueGame/animalBoard.ts`), keeping `questionGroups`/`fullTable`/`tellsApart`/`pickSuspectSet` unchanged. Failing-first unit test `055-1: the dealer deals what a search of every deck deals` (`tests/clueGame/animalBoard.test.ts`, comparing `dealClues` against independent brute-force reference `dealByBruteForce` across all synthetic cases and all 6 real `PLACES`) caught intentionally too-tight bound `splitMix + 0` (`africa: deck for 1,2,3,4,5` deck mismatch, 102/103) before real bound `splitMix + Math.min(count, unionCategories)` passed 103/103. Verified `npm run typecheck`, `npm run lint`, and `npm test` (103/103) PASS; refreshed `$S/deals-after.txt` and confirmed exact match against S14 output on all lines except timing (fingerprint `1798229f` identical across runs; `dealClues` 80.7–97.5 ms total, worst deck **6.2 ms `S055` / 7.8 ms `S017`** vs `< 20 ms`, Anywhere load **131.5–135.2 ms** vs `<= 351 ms`). All Goal 4 targets now PASS.
 
 ## Summary
