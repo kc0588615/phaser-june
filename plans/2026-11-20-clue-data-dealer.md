@@ -2,7 +2,7 @@
 mission: clue-data-dealer
 project: critter-connect
 branch: agent/clue-data-dealer
-status: active
+status: done
 started: 2026-11-20 06:45 UTC
 ---
 
@@ -1296,5 +1296,138 @@ SHOULD-CONSIDER:
 - 2026-11-20 11:50 UTC: S18 done (Opus → lead review). Exported `isoAliasTarget` from `src/clueGame/regions.ts` and rejected ISO alias codes loudly in `checkProfile` (`src/clueGame/profiles.ts`, naming the Natural Earth code to use), added `LSO` (`uncertain`) to `57-aardvark.json` and `MLI` (`possibly-extinct`), `BEN` (`extinct`), `GIN` (`uncertain`) to `65-african-wild-dog.json` (`range.countries` untouched), and clarified `docs/CONTENT_SOURCES.md:25` (Natural Earth codes, alias rejection, polygon-overlap scope). Failing-first unit tests in `tests/clueGame/content.test.ts` (`checkProfile rejects ISO alias SSD, naming Natural Earth SDS`, `checkProfile rejects ISO alias ESH, naming Natural Earth SAH` — both failed 0 vs 1 before `src/` edits, plus `checkProfile accepts SDS, which leaves presentCountries and the country clue` guard) now pass 106/106. Verified `npm run typecheck`, `npm run lint`, `npm test` (106/106), `npm run content -- preview` (0 problems), and live read-only `npm run content -- check` (76 playable, 2478 clues, 491 facts, 0 errors, 0 warnings) PASS.
 - 2026-11-20 11:53 UTC: S19 done (Opus → lead review). Exported `FIXED_QUESTION_TAGS` from `src/clueGame/questionMatch.ts` (replacing the regex-based `fixedQuestions()` parser in `scripts/balance-044.ts`), applied `MIN_PLACE_ANIMALS` in `reportDeals` so unplayable continents skip local sets and print a fallback-to-Anywhere note, and guarded empty `sets` in worst-deck timing (`- (no decks)`). Verified `npm run typecheck`, `npm run lint`, `npm test` (106/106), `--deals --places oceania` (exit 0, `7 < 12 animals`, 0 sets), `--deals --places europe` (exit 0, `0 < 12 animals`, 0 sets), `--deals --places world,oceania` (exit 0, 49 world sets + fallback note), and default `--deals` (exit 0, 105 sets / 420 slots, worst 6.8 ms, fingerprint `aa2e8a0f` after S17–S18 edits; S20 updates dev build and plan measurements next) PASS.
 - 2026-11-20 12:05 UTC: S20 done (lead). Rebuilt `phaser_june_dev` (guarded `npm run content -- build`: 16 sources, 76 species, 2475 clues, 491 facts, 0 citation warnings; `content -- check`: 76 playable, 2475 clues / 2083 deductive, 0 errors, 0 warnings; diet counts `plants 24 / meat 7 / insects 26 / mixed 16 / unrecorded 3` [`11`, `62`, `74`]; Yangtze turtle `18` clues matching `%China%`: 0; live `phaser_june` untouched: 2478 clues, 0 errors, 0 warnings). Re-ran `--deals` twice (`$S/deals-after.txt`, identical fingerprint `aa2e8a0f`: 105 sets / 420 slots, 105/105 separation, birth 8 decks [`birth:eggs` 8, `birth:live` 0], life-cycle 52, region 75 [`0:48, 1:47, 2:5, 3:2, 4:3`, 10 forced >1-region / 0 avoidable], 4-category 69, worst deck 5.9–6.2 ms `S055`, Anywhere load 130.2–143.2 ms — all Goal 4 targets PASS) and 5-place balance bot (`$S/balance-after.txt`; V10 diff PASS exit 0, all 35 Found rates within ±3 pts, max `-3` `africa/reader`, `asia/reader` 89→88%, `careful` 0 to +1). Updated `## Measurements (after, rules 055-1)`. Plan-only commit.
+- 2026-11-20 12:25 UTC: Full Verification (V1–V12) & Summary done (lead). V1 (`typecheck`, `lint`, `npm test` 106/106, `build`), V2 (`content -- preview`, 0 problems), V3 (live `content -- check`, 76 playable / 2478 clues / 0 errors), V4 (dev `content -- check`, 76 playable / 2475 clues / 0 errors; diet counts 24/7/26/16/3), V5 (guarded `e2e:fresh` on `phaser_june_dev`: **1657/1657** passed, 0 console/page/request errors, all header & IDN checks passed, `anywhereLoad` 2274 ms x1 / 4388 ms x4, saved to `$S/e2e-final/`), V6 (`VIEW-SQL-SAME`), V7 (all 10 IDN animals agree across globe, pool, and profiles), V8/V9 (fingerprint `aa2e8a0f` identical across runs, `dealClues` 81.3 ms / worst 5.9 ms `S055` / Anywhere 131.6 ms; round 0 matches `e2e-s13`), V10 (balance bot exit 0, all 35 Found deltas within ±3 pts), V11 (failing-first unit tests in Log for S4/S7/S8/S10/S15/S18), and V12 (Summary complete) all PASS. Set `status: done`; Release unit next.
 
 ## Summary
+
+Branch `agent/clue-data-dealer` (base `origin/main` `0837540a`, rules `055-1`) fixes all four systemic clue-data and dealer issues across the 76-species pool without touching the live database (`phaser_june`). Both architecture reviews (Fable `APPROVE_WITH_CHANGES`, Astra `APPROVE_WITH_CHANGES`) and final code reviews (Astra `REJECT` → 5 MUST-FIX; Fable `APPROVE_WITH_CHANGES` → 1 MUST-FIX) are resolved.
+
+### What changed
+
+1. **Goal 1 · Diet accuracy & wording (Option 1A′):** kept "only" for `plants`/`meat` and "mostly" for `insects` under a 4-step partition order (`plants` → `insects` → `meat` → `mixed`) in `docs/CONTENT_SOURCES.md`; aligned `QUESTION_TEXT`, `SHORT_TEXT` (`src/clueGame/questionMatch.ts`), and `DIET_TEXT` (`src/clueGame/profiles.ts`) so `meat` and `mixed` exclude the same invertebrate prey as `insects`; kept compact 54 px `COLUMN_LABEL`s and `signs.ts` intact; added `Invertebrate` to `src/clueGame/glossary.ts`; updated 19 profiles (13 value changes, 3 diets omitted as unsupported, 3 source/note cleanups).
+2. **Goal 2 · Unambiguous bin edges & fitting column labels (Option 2B):** assigned shared size edges to the lower bin (`tiny < 100 g`, `small 100 g–2 kg`, `medium >2–30 kg`, `large >30–300 kg`, `huge >300 kg`; 0 profile moves), moved 54 px size headers to weight-only (`<100 g`, `0.1–2 kg`, `>2–30 kg`, `>30–300 kg`, `>300 kg`) while switching hidden-cell `aria-label` in `EvidenceGrid.tsx` to `order.short.replace(/\?$/, '')`, fixed `Over 10 young`, `Over 20 years`, `Mainly` activity labels/short/`ACTIVITY_TEXT`, and `South\u00adern Africa`, and added 3-viewport header-fit assertions + 11-label probe in `scripts/e2e.mjs`.
+3. **Goal 3 · Indonesian New Guinea & confirmed extant range (3B + 3P-A + 3P-C):** split Indonesia along Lydekker's Line (`lon > 133.2` or `lon > 130 AND lat > -3.5`) into `IDP` (`'Indonesian New Guinea'`, `melanesia`, `oceania`) and tightened `presence IN (1, 2)` in `scripts/content.ts`, `db/schema.sql`, and practice SQL; mapped `IDP` and exported `isoAliasTarget` in `src/clueGame/regions.ts`; added `redList.notPresent` + shared pure `presentCountries()` in `src/clueGame/profiles.ts` and `src/clueGame/questionMatchContent.ts` with fail-loud `checkProfile` validation (rejecting ISO aliases and decoupled from `HAVING count(*) >= 2`); regenerated ranges on dev (6 expected file diffs) and added `notPresent` to 9 profiles; added continent eligibility check to `roundStillFits` (`src/clueGame/animalBoard.ts`) and `useAnimalSession.ts`; tested zero-downtime view-swap SQL on `phaser_june_dev` and added globe-vs-pool assertions to `scripts/e2e.mjs`.
+4. **Goal 4 · Dealer variety & region cap (Option 4C, rules `055-1`):** replaced `fullTable` single-prefix collapse with `questionGroups` + two-stage `dealClues` (`[-max(0, regions - 1), splitMix + categories, -regions, -hash32]` plus lossless branch-and-bound cut-off), preserving `fullTable`'s contract and output; added `--deals` reporting (with `MIN_PLACE_ANIMALS` threshold and `FIXED_QUESTION_TAGS` export) to `scripts/balance-044.ts`.
+
+### Verification (V1–V12)
+
+| Check | Result | Evidence |
+|---|---|---|
+| V1 Static & build | PASS | `npm run typecheck`, `npm run lint` (`--max-warnings 0` + theme), `npm test` (**106/106**, 0 failed, 3.96 s), `npm run build` all exit 0 |
+| V2 Profiles | PASS | `npm run content -- preview`: 76 profiles, 0 problems (`checkProfile`, `checkCitations`, `signProblems` = 0) |
+| V3 Live DB (read-only) | PASS | `npm run content -- check` on untouched `phaser_june`: `76 playable of 76 species, 2478 clues (2086 deductive), 491 facts. 0 errors, 0 warnings.` |
+| V4 Dev DB | PASS | `dev npm run content -- check` on `phaser_june_dev`: `76 playable of 76 species, 2475 clues (2083 deductive), 491 facts. 0 errors, 0 warnings.`; diets: `plants 24`, `meat 7`, `insects 26`, `mixed 16`, `unrecorded 3` (`11`, `62`, `74`) |
+| V5 Final E2E | PASS | **1657/1657** checks passed (baseline 1588/1588), 0 console/page/request errors; all 4 rounds × 3 viewports header-fit checks + 11-label probe `detail: []`; all 6 IDN globe-vs-pool checks passed (`report.idn` 10 rows); `anywhereLoad` median `2274 ms` (cpu x1) and `4388 ms` (cpu x4, vs S3 baseline `4111 ms`). Artifact: `/srv/critter-ai/agent-state/missions/clue-data-dealer/e2e-final/` |
+| V6 View-swap SQL | PASS | `VIEW-SQL-SAME` between `db/schema.sql` and `/srv/critter-ai/agent-state/missions/clue-data-dealer/view-swap.sql`; tested on `phaser_june_dev` in S11 (53.0 s total, 212 ms swap+grant txn, `critter_app` `t\|t`) |
+| V7 Globe vs rounds | PASS | All 10 IDN species match across `clue_match_places` (dev), `e2e-final/report.json` (`report.idn`), and `animalsFromProfiles` (table below) |
+| V8 Dealt-slot targets | PASS | `$S/deals-final.txt` (fingerprint `aa2e8a0f` = `$S/deals-after.txt`): 105 sets / 420 slots, 105/105 separation, birth 8 (`birth:eggs` 8, `birth:live` 0; ≥5), life-cycle 52 (≥35), region 75 (≤75), 10 >1-region (all forced, 0 avoidable), 4-cat 69 (≥60), worst deck `5.9 ms` (`S055`, <20 ms), Anywhere load `131.6 ms` (≤351 ms) |
+| V9 Reproducibility | PASS | Fingerprint `aa2e8a0f` identical across runs; `e2e-final` round 0 (`mysteryId: 7` Hairy Frog + 5 suspects) matches `e2e-s13` |
+| V10 Balance bot | PASS | Exit 0 (`$S/balance-before.txt` vs `$S/balance-after.txt`, 5 places × 7 players × 400 rounds, seed 44): all 35 Found deltas within ±3 pts (`careful` 0 to +1; max `-3` `africa/reader` 94→91%; `asia/reader` 89→88%) |
+| V11 Tests-first | PASS | Failing-first unit tests recorded in Log for S4 (`animalBoard.test.ts`), S7 (`glossary.test.ts`), S8 (`content.test.ts`), S10 (`content.test.ts`), S15 (`animalBoard.test.ts`), S18 (`content.test.ts`) |
+
+Reproduce V5 E2E:
+```bash
+( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+  [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+  CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh )
+```
+
+### Every changed answer
+
+#### Diet changes (13 value changes, 3 diets unrecorded, 3 source/note cleanups)
+
+| id | Animal | Question | Old → New | Source |
+|---|---|---|---|---|
+| 01 | Blanding's Turtle | Diet | `mixed` → **`insects`** | `adw` (half crustaceans incl. crayfish + insects/snails) |
+| 02 | Spiny Softshell Turtle | Diet | `meat` → **`insects`** | `adw` (water insects, crayfish) |
+| 04 | Big-headed Turtle | Diet | `meat` → **`mixed`** | `iucn` (was `adw`; fruit most common, plus insects, plant matter, crabs, molluscs) |
+| 10 | Suriname Toad | Diet | `meat` → **`insects`** | `amphibiaweb` (was `adw`; mostly invertebrates) |
+| 15 | Pancake Tortoise | Diet | `plants` → **`mixed`** | `iucn` (beetles in faeces) |
+| 20 | African Spurred Tortoise | Diet | `plants` → **`mixed`** | `tftsg` (carrion/garbage) |
+| 33 | Ethiopian Wolf | Diet | `meat` → **`mixed`** | `literature` (`https://doi.org/10.1002/ecy.4470`; rodents + flower nectar) |
+| 34 | Golden Snub-nosed Monkey | Diet | `plants` → **`mixed`** | `iucn` (plants + insects and small animals) |
+| 35 | Red Panda | Diet | `plants` → **`mixed`** | `adw` (bamboo + berries, blossoms, bird eggs) |
+| 40 | Sumatran Orangutan | Diet | `plants` → **`mixed`** | `iucn` (fruit/plants + sometimes insects) |
+| 60 | Giant Panda | Diet | `plants` → **`mixed`** | `adw` (bamboo + occasional small mammals, fish, insects) |
+| 71 | Andean Bear | Diet | `plants` → **`mixed`** | `adw` (bromeliads/fruit + sometimes small animals) |
+| 75 | Hellbender | Diet | `meat` → **`insects`** | `adw` (primarily crayfish) |
+| 11 | Goliath Frog | Diet | `meat` → **unrecorded** | `adw` (lists invertebrates & vertebrates without proportions) |
+| 62 | Chinese Giant Salamander | Diet | `meat` → **unrecorded** | `adw` (lists crabs, fish, frogs, shrews, conspecifics without invert/vert split) |
+| 74 | Axolotl | Diet | `meat` → **unrecorded** | `adw` (lists molluscs, arthropods, fishes without proportions) |
+| 16 | Purple Frog | Diet (note only) | `insects` → `insects` | `amphibiaweb` (hedged to *"probably eats mostly termites"*) |
+| 19 | Floreana Giant Tortoise | Diet (source only) | `plants` → `plants` | `literature` (`reptilesofecuador.com`, replacing `britannica`) |
+| 22 | Pinta Island Tortoise | Diet (source only) | `plants` → `plants` | `literature` (`reptilesofecuador.com`, replacing `britannica`) |
+
+#### Region, country & note changes
+
+| id | Animal | Question / Field | Old → New | Source / Rule |
+|---|---|---|---|---|
+| 17 | Pig-nosed Turtle | Southeast Asia (`IDN → IDP`); Asia continent | Yes → **No** (`oceania`: `australia-nz`, `melanesia`) | Lydekker's Line SQL + `regions.ts` |
+| 27 | Western Long-beaked Echidna | Southeast Asia / New Guinea (`IDN → IDP`); continent | SE Asia / Asia → **New Guinea / Oceania** (S018 yes) | Lydekker's Line SQL + `regions.ts` |
+| 67 | Eastern Long-beaked Echidna | Southeast Asia (`IDN → IDP`); Asia continent | Yes → **No** (`oceania`: `melanesia`) | Lydekker's Line SQL + `regions.ts` |
+| 18 | Yangtze Giant Softshell Turtle | East Asia (`notPresent: CHN`); witness note `clues[4]` | Yes → **No**; dropped `"in China"` from `clues[4]` | `iucn` (`CHN` possibly-extinct); `ngo` (avoids unblanked `"China"` beside East Asia = No) |
+| 24 | Sunda Pangolin | East Asia (`notPresent: CHN`) | Yes → **No** | `iucn` (`CHN` uncertain) |
+| 57 | Aardvark | North Africa (`notPresent: SDN, LSO`; presence 1–2 `-DJI, -TGO`) | Yes → **No** | `iucn` (`SDN`, `LSO` uncertain) + `presence IN (1, 2)` |
+| 65 | African Wild Dog | North Africa (`notPresent: DZA, SDN, BFA, CMR, MWI, NGA, TCD, MLI, BEN, GIN`) | Yes → **No** | `iucn` (`DZA`, `MLI` possibly-extinct; `SDN`, `BFA`, `CMR`, `MWI`, `NGA`, `BEN` extinct; `TCD`, `GIN` uncertain) |
+| 07, 50, 52, 58, 63 | Hairy Frog, Addax, Giant Anteater, Cheetah, Temminck's Pangolin | Country clues (`notPresent`; plus `58` `-DJI`, `41` Forest Elephant `-CAF, -TGO` via presence 1–2) | Country text drops non-extant codes; **no region flip** | `iucn` (`07` `COG`, `50` `MRT`, `52` `CRI`, `58` `SDN/SDS`, `63` `SWZ`) + `presence IN (1, 2)` |
+
+#### Globe vs rounds for all 10 IDN animals (V7, verified on `phaser_june_dev`)
+
+| id | Animal | Before (globe / rounds) | After deploy, before owner steps | After owner step 3 (view swap, ~1 min) | After owner step 4 (content build) |
+|---|---|---|---|---|---|
+| 5 | Wallace's Flying Frog | Asia / Asia (`southeast-asia`) | same | Asia / Asia | Asia / Asia (`southeast-asia`, `country:idn`) |
+| 12 | Spiny Hill Turtle | Asia / Asia (`southeast-asia`) | same | Asia / Asia | Asia / Asia (`southeast-asia`, `country:idn`) |
+| 17 | Pig-nosed Turtle | Asia+Oceania / Asia+Oceania | same | Oceania / Asia+Oceania | **Oceania / Oceania** (`australia-nz`, `melanesia`, `country:idp`) |
+| 24 | Sunda Pangolin | Asia / Asia (`east-asia`, `southeast-asia`) | same | Asia / Asia | Asia / Asia (`southeast-asia`, `country:idn`) |
+| 25 | Tiger | Asia / Asia (`south-`, `east-`, `southeast-asia`) | same | Asia / Asia | Asia / Asia (`south-`, `east-`, `southeast-asia`, `country:idn`) |
+| 27 | Western Long-beaked Echidna | Asia / Asia (`southeast-asia`) | same | Oceania / Asia | **Oceania / Oceania** (`melanesia`, `country:idp`) |
+| 28 | Asian Elephant | Asia / Asia (`south-`, `southeast-asia`) | same | Asia / Asia | Asia / Asia (`south-`, `southeast-asia`, `country:idn`) |
+| 40 | Sumatran Orangutan | Asia / Asia (`southeast-asia`) | same | Asia / Asia | Asia / Asia (`southeast-asia`, `country:idn`) |
+| 44 | Javan Rhinoceros | Asia / Asia (`southeast-asia`) | same | Asia / Asia | Asia / Asia (`southeast-asia`, `country:idn`) |
+| 67 | Eastern Long-beaked Echidna | Asia+Oceania / Asia+Oceania | same | Oceania / Asia+Oceania | **Oceania / Oceania** (`melanesia`, `country:idp`) |
+
+### Everything kept and why
+
+- **Obligate meat-eater carve-out (`48` Tasmanian devil, `65` African wild dog):** kept `meat`; trace grass/vegetation in ADW is incidental, neither guide mentions plants, and Opus rated both rows low.
+- **Proportion disputes (`23` Aye-aye `mixed`, `36` Giant armadillo `insects`):** kept; current values match their cited sources.
+- **Six newly-`mixed` animals with diet signs (`35` red panda `bamboo_eater`, `60` giant panda `bamboo_eater`, `40` Sumatran orangutan `fruit_eater`, `71` Andean bear `fruit_eater` + `bromeliad_eater`, `34` golden snub-nosed monkey `eats_lichen`, `33` Ethiopian wolf `rodent_hunter`):** kept; `signProblems` stays 0, and `signs.ts` changes are out of scope, but a child reading those signs could pencil "Only plants: yes" or "Only meat: yes" — flag for playtest and roadmap part 2 (witness notes).
+- **`birth:live` remains at 0 dealt slots:** `birth:eggs` is its exact complement and sorts first within the `life` category (8 `birth:eggs` decks dealt); kept 1-per-category-per-split per KISS.
+- **Astra architecture MUST-FIX #3 objection (`presence uncertain` region answers on `24` Sunda pangolin East Asia and `57` Aardvark North Africa):** kept dropping `uncertain` via `notPresent` because the brief defines region questions as confirmed extant range; adding uncertain-region skip tags across `deduction.ts` would add cross-cutting complexity for two border cases.
+- **`signs.ts:21` `fruit_eater` + `diet:insects` (Astra code-review SC 1):** kept rejecting `fruit_eater` on `diet:insects` so children aren't misled on "Mostly bugs"; 0 profiles hit it today. Note for future authors and roadmap part 2.
+- **`scripts/e2e.mjs` `idn:` checks assume post-build DB (Fable code-review SC 2):** four checks expect `IDP` / Oceania on `17`, `27`, `67`, so `npm run e2e:fresh` will fail against the live DB until the owner runs the post-release steps below (`phaser_june_dev` already has them and passes CI).
+- **CI E2E runtime watch (Fable code-review SC 6):** new 3-viewport header checks and 6 Anywhere loads (3 at 4× CPU) bring local `e2e:fresh` to ~13.7 min on 2-CPU ARM; watch the 15-min CI job on the PR.
+
+### Shapefile-vs-IUCN disagreements
+
+| Animal | Country | IUCN page | Shapefile (map / Red List year) | Resolution |
+|---|---|---|---|---|
+| Aardvark (57) | `SDN`, `LSO` | Presence uncertain | presence 1 (2015 / 2015) | `notPresent` (`SDN` flips North Africa; `LSO` guarded against `HAVING` shifts) |
+| Aardvark (57) | `TGO` | not listed | presence 1 | dropped via `presence IN (1, 2)` + `HAVING >= 2` |
+| African Wild Dog (65) | `DZA`, `MLI` | Possibly extinct | `DZA` presence 2 (2008 / 2025); `MLI` absent | `notPresent` (`DZA` + `SDN` flip North Africa) |
+| African Wild Dog (65) | `SDN`, `BFA`, `CMR`, `MWI`, `NGA`, `BEN` | Extinct | presence 1 (2008) | `notPresent` |
+| African Wild Dog (65) | `TCD`, `GIN` | Presence uncertain | presence 1 (2008) | `notPresent` |
+| Sunda Pangolin (24) | `CHN` | Presence uncertain | presence 1 (2019 / 2019) | `notPresent` (flips East Asia) |
+| Yangtze Giant Softshell (18) | `CHN` | Possibly extinct | presence 1 (compiled 2025) | `notPresent` (flips East Asia) + `clues[4]` reworded |
+| Cheetah (58) | `SDN`, `SDS` | Possibly extinct | presence 1 (2024 / 2024) | `notPresent` (no region flip) |
+| Addax (50) | `MRT` | Possibly extinct | 2016 / 2016 | `notPresent` (no region flip) |
+| Giant Anteater (52) | `CRI` | Possibly extinct | presence 1 (2014 / 2025) | `notPresent` (no region flip) |
+| Temminck's Pangolin (63) | `SWZ` | Possibly extinct | presence 1 (2019 / 2019) | `notPresent` (no region flip) |
+| Hairy Frog (07) | `COG` | Presence uncertain | presence 1 (2025) | `notPresent` (no region flip) |
+| Giant Pangolin (55) | `AGO` | not listed (ADW lists it) | presence 1 | kept (neither uncertain nor extinct; no region flip) |
+| Floreana (19), Pinta (22) | `ECU` | Extinct | extinct species | kept (historical range by design) |
+
+### Out-of-scope follow-ups (for later missions)
+
+- **Missing trait records made urgent by the dealer change** (force the 10 multi-region decks `S005`, `S006`, `S010`, `S022`, `S032`, `S044`, `S050`–`S053`): `diet` on Goliath frog (`11`), Chinese giant salamander (`62`), Axolotl (`74`) (note: omitting Goliath frog's diet added 4 forced 2-region African frog decks `S050`–`S053`); `trees` on Madagascar tomato frog; `size`/`activity`/`social`/`lifespan` on Purple frog, Hairy frog, Suriname toad; `activity`/`social` on Goodfellow's tree-kangaroo; `lifespan` on sloths.
+- **Geography & maps:** `HAVING count(*) >= 2` country rule (drops Darwin's frog Chile, Livingstone's flying fox Comoros, Hispaniolan solenodon, and Tiger Russia) and latent `RUS → eastern-europe` mapping in `regions.ts:129`; range maps still drawing `notPresent` polygons; refreshing IUCN polygons older than Red List pages (`65` wild dog 2008, `52` giant anteater 2014, `27` W echidna 2010, `43` Goodfellow's 2008).
+- **UI & wording:** `Australia & NZ` header clip; Carnivora gloss `"meat-eating"`; `covering:skin` and `social:pairs` wording; visible guide line repeating a dealt split (covering vs birth).
+- **Other verification rows:** Baird's tapir fur, tiger activity, giant otter social life, savanna vs grassland, give-away witness notes, and the 6 newly-`mixed` animals' diet signs listed above.
+
+### Owner's post-release steps (added to handoff after Release smoke passes)
+
+This change **requires the owner's database view swap and production content build** from WSL on fresh `main` (the code deploys cleanly first and stays compatible with live rows until these run):
+1. **Fresh production dump:** `ssh root@play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh` (verify `backup ok` before continuing).
+2. **Map parity gate (read-only ~15 min):** `npm run content -- ranges`, then confirm `git status --porcelain db/content/animals` is empty (proves live map data matches dev's; stop if non-empty).
+3. **Zero-downtime view swap:** paste `/srv/critter-ai/agent-state/missions/clue-data-dealer/view-swap.sql` (builds `*_new` views + unique indexes without locking reads for ~1 min, then swaps names and re-grants `SELECT` to `critter_app` in a ~200 ms transaction). *Players see:* zero downtime; globe moves W echidna Asia → Oceania, E echidna & pig-nosed turtle become Oceania-only, Asia lists 19, range maps drop presence-3 patches.
+4. **Production content build (~1 min):** `npm run content -- build`. *Players see:* rounds match globe (Asia pool 17), all 16 diet changes/omissions, 4 region flips, new guide sentences, updated Yangtze turtle note. *(Because `/api/places` caches 5 min / 60 min SWR and `/api/clue-game/pool` caches 1 min / 10 min SWR, returning browsers can see mixed revisions briefly until both revalidate; `roundStillFits` drops any stale saved Asia round once fresh pool data loads.)*
+5. **Verify (read-only):** `npm run content -- check` (expect `76 playable of 76 species, 2475 clues (2083 deductive), 491 facts. 0 errors, 0 warnings.`). Note: running `npm run e2e:fresh` against live will fail the 4 new `idn:` checks until steps 3–4 finish.
