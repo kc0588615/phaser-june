@@ -153,9 +153,9 @@ const COVERING_TEXT: Record<Covering, string> = {
 
 const SIZE_TEXT: Record<Size, string> = {
   tiny: 'It is tiny: under 100 g, lighter than an apple.',
-  small: 'It is small: between 100 g and 2 kg.',
-  medium: 'It is medium-sized: between 2 and 30 kg.',
-  large: 'It is large: between 30 and 300 kg.',
+  small: 'It is small: from 100 g up to 2 kg.',
+  medium: 'It is medium-sized: over 2 kg, up to 30 kg.',
+  large: 'It is large: over 30 kg, up to 300 kg.',
   huge: 'It is huge: over 300 kg.',
 };
 
@@ -167,9 +167,9 @@ const DIET_TEXT: Record<Diet, string> = {
 };
 
 const ACTIVITY_TEXT: Record<Activity, string> = {
-  day: 'It is active during the day.',
-  night: 'It is active at night.',
-  twilight: 'It is most active at dawn and dusk.',
+  day: 'It is mainly active during the day.',
+  night: 'It is mainly active at night.',
+  twilight: 'It is mainly active at dawn and dusk.',
   any: 'It can be active by day or by night.',
 };
 

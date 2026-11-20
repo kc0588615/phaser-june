@@ -411,7 +411,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
                             onHighlight(id, order.tag);
                           }
                         }}
-                        aria-label={`${name}, ${columnLabel(order.tag)}: not scouted${guess ? `, your guess ${guess}` : ''}${starred ? ', highlighted' : ''}${out ? '' : '. Tap to pencil a guess. Hold, or press H, to highlight.'}`}
+                        aria-label={`${name}, ${order.short.replace(/\?$/, '')}: not scouted${guess ? `, your guess ${guess}` : ''}${starred ? ', highlighted' : ''}${out ? '' : '. Tap to pencil a guess. Hold, or press H, to highlight.'}`}
                         className={`h-full w-full rounded-xs outline-dashed outline-1 -outline-offset-2 outline-control-edge ${starred ? '' : 'enabled:active:bg-neutral-3'} ${guess ? 'text-m font-regular text-neutral-7' : 'font-data text-s text-neutral-7'}`}
                       >
                         <span aria-hidden="true">{guess === 'yes' ? '✓' : guess === 'no' ? '✗' : '?'}</span>

@@ -53,7 +53,7 @@ Trait values (templates in `profiles.ts`):
 
 | Trait | Values |
 |---|---|
-| size | tiny < 100 g, small 100 g to 2 kg, medium 2 to 30 kg, large 30 to 300 kg, huge > 300 kg |
+| size | tiny < 100 g, small 100 g to 2 kg, medium over 2 up to 30 kg, large over 30 up to 300 kg, huge over 300 kg (an animal's typical adult weight decides) |
 | lifespan | short < 5 years, medium 5 to 20, long > 20 (longest known, zoo records included) |
 | young | one (1 or 2 per litter or clutch), few (3 to 10), many (> 10) |
 | diet | plants, meat, insects (and other small invertebrates), mixed |

@@ -55,8 +55,8 @@ export interface Animal {
 }
 
 const QUESTION_TEXT: Record<string, string> = {
-  'size:tiny': 'Is it tiny (under 100 g)?', 'size:small': 'Is it small (100 g to 2 kg)?', 'size:medium': 'Is it medium-sized (2 to 30 kg)?',
-  'size:large': 'Is it large (30 to 300 kg)?', 'size:huge': 'Is it huge (over 300 kg)?',
+  'size:tiny': 'Is it tiny (under 100 g)?', 'size:small': 'Is it small (100 g to 2 kg)?', 'size:medium': 'Is it medium-sized (over 2 kg, up to 30 kg)?',
+  'size:large': 'Is it large (over 30 kg, up to 300 kg)?', 'size:huge': 'Is it huge (over 300 kg)?',
   'covering:fur': 'Is it covered in fur?', 'covering:spines': 'Is it covered in spines?', 'covering:scales': 'Is it covered in overlapping scales?',
   'covering:armor': 'Does it have bands of bony armor?', 'covering:shell': 'Does it have a shell?', 'covering:skin': 'Does it have bare skin (no fur or scales)?',
   'diet:plants': 'Is it a plant-eater (plants only)?', 'diet:meat': 'Is it a meat-eater (other animals only)?',
@@ -77,12 +77,12 @@ const QUESTION_TEXT: Record<string, string> = {
 
 /** Short versions: what the board calls each clue gem (screen readers), and columnLabel's fallback. */
 const SHORT_TEXT: Record<string, string> = {
-  'size:tiny': 'Tiny (under 100 g)?', 'size:small': 'Small (100 g to 2 kg)?', 'size:medium': 'Medium (2 to 30 kg)?',
-  'size:large': 'Large (30 to 300 kg)?', 'size:huge': 'Huge (over 300 kg)?',
+  'size:tiny': 'Tiny (under 100 g)?', 'size:small': 'Small (100 g to 2 kg)?', 'size:medium': 'Medium (over 2, up to 30 kg)?',
+  'size:large': 'Large (over 30, up to 300 kg)?', 'size:huge': 'Huge (over 300 kg)?',
   'covering:fur': 'Covered in fur?', 'covering:spines': 'Covered in spines?', 'covering:scales': 'Covered in scales?',
   'covering:armor': 'Bands of bony armor?', 'covering:shell': 'Has a shell?', 'covering:skin': 'Bare skin?',
   'diet:plants': 'Eats only plants?', 'diet:meat': 'Eats only meat?', 'diet:insects': 'Eats mostly bugs?', 'diet:mixed': 'Eats plants and animals?',
-  'activity:day': 'Out in the day?', 'activity:night': 'Out at night?', 'activity:twilight': 'Out at dawn and dusk?', 'activity:any': 'Out day and night?',
+  'activity:day': 'Mainly out by day?', 'activity:night': 'Mainly out at night?', 'activity:twilight': 'Mainly out at dawn and dusk?', 'activity:any': 'Out day and night?',
   'social:alone': 'Lives alone?', 'social:pairs': 'Lives in pairs?', 'social:groups': 'Lives in groups?',
   'trees:yes': 'Lives in trees?',
   'birth:eggs': 'Lays eggs?', 'birth:live': 'Gives birth to live young?',
@@ -113,23 +113,22 @@ export function shortQuestionText(tag: string): string {
   return SHORT_TEXT[tag] ?? questionText(tag);
 }
 
-// One or two words over a question's column in the evidence grid (plan 044), 8 letters a line at most, keeping the
-// qualifiers (weights, "only", "mostly"). Soft hyphens (\u00ad) let the long words break.
+// One or two words over a question's column in the evidence grid (plan 044): two lines of the 54 px column at most, category mark included; the E2E checks it. Soft hyphens (\u00ad) let the long words break.
 const COLUMN_LABEL: Record<string, string> = {
-  'size:tiny': 'Tiny <100 g', 'size:small': 'Small 0.1–2 kg', 'size:medium': 'Medium 2–30 kg', 'size:large': 'Large 30–300 kg', 'size:huge': 'Huge 300+ kg',
+  'size:tiny': '<100 g', 'size:small': '0.1–2 kg', 'size:medium': '>2–30 kg', 'size:large': '>30–300 kg', 'size:huge': '>300 kg',
   'covering:fur': 'Fur', 'covering:spines': 'Spines', 'covering:scales': 'Scales', 'covering:armor': 'Bony armor', 'covering:shell': 'Shell', 'covering:skin': 'Bare skin',
   'diet:plants': 'Only plants', 'diet:meat': 'Only meat', 'diet:insects': 'Mostly bugs', 'diet:mixed': 'Plants & animals',
-  'activity:day': 'Day', 'activity:night': 'Night', 'activity:twilight': 'Dawn & dusk', 'activity:any': 'Day & night',
+  'activity:day': 'Mainly day', 'activity:night': 'Mainly night', 'activity:twilight': 'Mainly dawn/dusk', 'activity:any': 'Day & night',
   'social:alone': 'Alone', 'social:pairs': 'Pairs', 'social:groups': 'Groups', 'trees:yes': 'Lives in trees',
   'birth:eggs': 'Lays eggs', 'birth:live': 'Live young',
-  'young:one': '1–2 young', 'young:few': '3–10 young', 'young:many': '10+ young',
-  'lifespan:short': 'Under 5 years', 'lifespan:medium': '5–20 years', 'lifespan:long': '20+ years',
+  'young:one': '1–2 young', 'young:few': '3–10 young', 'young:many': 'Over 10 young',
+  'lifespan:short': 'Under 5 years', 'lifespan:medium': '5–20 years', 'lifespan:long': 'Over 20 years',
   'system:terrestrial': 'On land', 'system:freshwater': 'Fresh water', 'system:marine': 'Sea',
   'habitat:forest': 'Forest', 'habitat:savanna': 'Savanna', 'habitat:shrubland': 'Shrub\u00adland', 'habitat:grassland': 'Grass\u00adland',
   'habitat:wetlands': 'Wetlands', 'habitat:rocky': 'Rocky places', 'habitat:caves': 'Caves', 'habitat:desert': 'Desert',
   'habitat:marine': 'Coasts & sea',
   'region:east-africa': 'East Africa', 'region:central-africa': 'Central Africa', 'region:north-africa': 'North Africa',
-  'region:southern-africa': 'Southern Africa', 'region:west-africa': 'West Africa', 'region:central-asia': 'Central Asia',
+  'region:southern-africa': 'South\u00adern Africa', 'region:west-africa': 'West Africa', 'region:central-asia': 'Central Asia',
   'region:east-asia': 'East Asia', 'region:southeast-asia': 'South\u00adeast Asia', 'region:south-asia': 'South Asia', 'region:west-asia': 'Middle East',
   'region:eastern-europe': 'East Europe', 'region:northern-europe': 'North Europe', 'region:southern-europe': 'South Europe',
   'region:western-europe': 'West Europe', 'region:caribbean': 'Caribbean', 'region:central-america': 'Central America',
