@@ -1,6 +1,6 @@
 # The Animal Board: How It Plays, How to Play It Well, and What It Teaches
 
-> **A dated paper, not kept current.** This is the 2026-10-01 paper for rules 044-0, with the notes below for later rules up to 053-1. The current rules are summarised in `docs/CLUE_MATCH.md` (Rules) and `CONTEXT.md`; the numbers are in `ANIMAL_RULES` (`src/clueGame/animalBoard.ts`).
+> **A dated paper, not kept current.** This is the 2026-10-01 paper for rules 044-0, with the notes below for later rules up to 055-1. The current rules are summarised in `docs/CLUE_MATCH.md` (Rules) and `CONTEXT.md`; the numbers are in `ANIMAL_RULES` (`src/clueGame/animalBoard.ts`).
 
 *Critter Connect, rules 044-0 (branch `variant/044-animal-board`, plan `plans/044-animal-board.md`). Written 2026-10-01 from the built rules, the playable graybox at `/explore`, and the balance bot's results. Every success rate in this paper comes from simulated players, not from children; section 6 says what a human study should measure.*
 
@@ -35,7 +35,7 @@ The project owner set a clear goal: winning should require thinking, and random 
 ### 2.1 Setup
 
 1. **Five suspects.** The game picks a seed animal from the chosen continent and adds its four closest look-alikes: relatives first (same family, then order, then class), then the animals that share the most traits. If two candidates could never be told apart by any question the game can ask about this group, the second is skipped for the next look-alike. Only one pair among today's 76 animals can never be told apart at all: the Saola and the Sumatran Orangutan, whose records barely overlap. (The Dyeing and Golden Poison Frogs were the other until the Dyeing frog's clutch size, 2 to 6 eggs, was added.)
-2. **Four clues.** The game deals four yes/no questions about traits that all five suspects have a record for, chosen so that every suspect has a different pattern of answers. The clues therefore always contain enough information to identify any of the five. They are chosen from the group alone, before the mystery is picked, so the choice of clues never hints at the answer. The deal prefers a mix of strong clues (splitting the five 2 against 3) and weak ones (1 against 4) and clues from different categories, and it never deals two clues with the same picture.
+2. **Four clues.** The game deals four yes/no questions about traits that all five suspects have a record for, chosen so that every suspect has a different pattern of answers. The clues therefore always contain enough information to identify any of the five. They are chosen from the group alone, before the mystery is picked, so the choice of clues never hints at the answer. The deal prefers a mix of strong clues (splitting the five 2 against 3) and weak ones (1 against 4) and clues from different categories, and it never deals two clues with the same picture. (055-1: any question with the same split may stand in, so life-cycle questions are dealt; at most one Range question unless the group needs more.)
 3. **The mystery.** One of the five is chosen at random.
 4. **The board.** A 7×7 grid. The five suspects are pinned to cells at least three steps apart and never in a corner. Every other cell holds a gem.
 
