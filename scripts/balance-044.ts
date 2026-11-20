@@ -27,8 +27,9 @@ import {
 import type { AnimalProfile } from '../src/clueGame/profiles';
 import { contentSources } from '../src/lib/contentCitations';
 import {
-  CATEGORY_LABELS, CHARGE_CATEGORIES, PREFIX_CATEGORY, makeBook, poolFor, prefixOf, questionText, type Animal, type Book,
+  CATEGORY_LABELS, CHARGE_CATEGORIES, FIXED_QUESTION_TAGS, PREFIX_CATEGORY, makeBook, poolFor, prefixOf, type Animal, type Book,
 } from '../src/clueGame/questionMatch';
+import { MIN_PLACE_ANIMALS } from '../src/clueGame/places';
 import { animalsFromProfiles } from '../src/clueGame/questionMatchContent';
 import type { ContinentKey } from '../src/clueGame/regions';
 import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Move, type Special } from '../src/game/BoardModel';
@@ -233,16 +234,6 @@ const avg = (values: number[]) => (values.length ? (values.reduce((a, b) => a + 
 /** The round reached its last move undecided (then named right, wrong, or skipped). */
 const ranOut = (state: AnimalRound) => state.log.some(entry => entry.kind === 'out-of-moves');
 
-/** Every fixed tag QUESTION_TEXT asks (not exported, so read from its source), each checked against questionText. */
-function fixedQuestions(): string[] {
-  const source = readFileSync(path.join(process.cwd(), 'src/clueGame/questionMatch.ts'), 'utf8');
-  const block = source.match(/const QUESTION_TEXT: Record<string, string> = \{([\s\S]*?)\n\};/)?.[1];
-  if (!block) throw new Error('QUESTION_TEXT not found in src/clueGame/questionMatch.ts');
-  const tags = [...block.matchAll(/'([a-z]+:[a-z_]+)':/g)].map(match => match[1]);
-  for (const tag of tags) if (questionText(tag) === tag) throw new Error(`QUESTION_TEXT key ${tag} has no question`);
-  return tags;
-}
-
 interface DealtSet { id: string; place: string; members: number[]; deck: Clue[]; ms: number }
 
 /** --deals: every distinct set per place (seed order, deduped by members, ids S001… in place order), dealt once. */
@@ -250,9 +241,12 @@ function reportDeals(book: Book, animals: readonly Animal[], rules: AnimalRules)
   const name = (id: number) => book.byId.get(id)!.name;
   const placeNames = arg('places', 'world,africa,asia,north-america,south-america').split(',');
   const sets: DealtSet[] = [];
+  const fallbacks: string[] = [];
   for (const placeName of placeNames) {
     const place = placeName === 'world' ? null : placeName as ContinentKey;
     const pool = poolFor(animals, place);
+    // the live game plays Anywhere instead of a continent this small (useAnimalSession), so it deals no local sets
+    if (place && pool.length < MIN_PLACE_ANIMALS) { fallbacks.push(`${placeName} (${pool.length} < ${MIN_PLACE_ANIMALS} animals)`); continue; }
     const seen = new Set<string>();
     for (const seed of pool) {
       const members = pickSuspectSet(book, pool, seed, rules, place);
@@ -284,6 +278,7 @@ function reportDeals(book: Book, animals: readonly Animal[], rules: AnimalRules)
     .map(([subject, n], i) => `${i === 0 ? subject[0].toUpperCase() + subject.slice(1) : subject} ${n}`).join(', ');
 
   console.log(`Plan 044 deals, rules ${rules.version}: ${rules.suspects} suspects, ${rules.clues} questions a deck.\n`);
+  if (fallbacks.length) console.log(`Falls back to Anywhere, no local sets: ${fallbacks.join(', ')}\n`);
   console.log(`1. Sets: ${sets.length} (${placeNames.map(p => `${p} ${sets.filter(set => set.place === p).length}`).join(', ')}), ${slots} slots; ${sets.filter(set => tellsApart(set.deck, set.members.length)).length} of ${sets.length} decks tell all ${rules.suspects} apart.\n`);
 
   console.log(`2. Slots by category and subject:\n\n| Category | Questions dealt, by subject | Missing records (of ${animals.length}) |\n|---|---|---|`);
@@ -310,11 +305,11 @@ function reportDeals(book: Book, animals: readonly Animal[], rules: AnimalRules)
   }
 
   const dealtTags = new Set(sets.flatMap(tagsOf));
-  const never = fixedQuestions().filter(tag => !dealtTags.has(tag));
+  const never = FIXED_QUESTION_TAGS.filter(tag => !dealtTags.has(tag));
   console.log(`\n6. Fixed questions never dealt (${never.length}): ${never.join(', ')}`);
 
-  const worst = sets.reduce((a, b) => (b.ms > a.ms ? b : a));
-  console.log(`\n7. Timing: dealClues ${sets.reduce((n, set) => n + set.ms, 0).toFixed(1)} ms total, worst deck ${worst.ms.toFixed(1)} ms (${worst.id}); Anywhere load ${loadMs.toFixed(1)} ms (pickSuspectSet over ${worldPool.length} world seeds)`);
+  const worst = sets.length ? sets.reduce((a, b) => (b.ms > a.ms ? b : a)) : null;
+  console.log(`\n7. Timing: dealClues ${sets.reduce((n, set) => n + set.ms, 0).toFixed(1)} ms total, worst deck ${worst ? `${worst.ms.toFixed(1)} ms (${worst.id})` : '- (no decks)'}; Anywhere load ${loadMs.toFixed(1)} ms (pickSuspectSet over ${worldPool.length} world seeds)`);
 
   const fingerprint = hash32(sets.map(set => `${set.id}:${set.members.join(',')}:${tagsOf(set).join('|')}`).join('\n')) >>> 0;
   console.log(`\n8. Deck fingerprint: ${fingerprint.toString(16).padStart(8, '0')}`);
