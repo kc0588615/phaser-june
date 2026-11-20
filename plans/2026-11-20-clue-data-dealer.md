@@ -89,7 +89,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -686,6 +686,25 @@ Existing tests (`animalBoard.test.ts:38-58`, `:153-155`, `savedGame.test.ts`) ke
 
 ## Architecture review (Fable)
 
+*Reviewed 2026-11-20 by `architecture-reviewer` (Fable 5.2 · high); full transcript: `/srv/critter-ai/agent-state/missions/clue-data-dealer/tasks/20261120-080744-architecture-reviewer.md`.*
+
+```
+VERDICT: APPROVE_WITH_CHANGES
+MUST-FIX:
+1. Owner step 3 (live view change) stalls the live game's entry screen. The plan's form (DROP both materialized views, CREATE both, indexes, GRANT, in one transaction) holds an exclusive lock for about a minute. `/api/places` (the globe, the first screen), `/api/places/outline`, `/api/clue-game/range` and `/api/clue-game/ranges` read only these views (`src/lib/places.ts:15,36`, `src/app/api/clue-game/range*/route.ts`), so they hang for that minute. The plan's "players see" text gives only the after-state. Fix the handoff SQL: build both views under new names first (no lock on the old ones), then in one short transaction drop the old views, rename the new views and their unique indexes to the `schema.sql` names, and run the GRANT block. Use the same form on the dev copy so the SQL the owner pastes is the SQL that was tested. If the lead keeps the single transaction, the handoff item must state the stall and tell the owner to run it at a quiet hour.
+MISSED:
+1. F3's island list is wrong, and so is part of the Decision's reason for 3B. On the dev copy, the Natural Earth part at 131.41°E, 7.59°S (3,254 km²) is Yamdena in the Tanimbar Islands, not Waigeo; Waigeo is the 130.84°E, 0.21°S part. The `> 130` rule also takes the rest of Tanimbar (130.9–131.9°E, 7–8°S), Gorong/Watubela (about 131.3°E, 4°S) and Kai. These are Maluku (Wallacea), yet they become "Indonesian New Guinea" / Oceania. No current animal is affected, and the dev-copy step 2 diff gate would catch one. But "avoids Wallacea misfiling for future birds" is only partly true. Either add a latitude bound for the parts between 130°E and 132°E south of 6°S, or record the known misfiling in the SQL comment, `docs/CLUE_MATCH.md` and the Summary.
+2. Country lists depend on the whole pool through `HAVING count(*) >= 2` (`content.ts:94`). Adding or removing any animal can add or drop a country in another animal's `range.countries`. A `notPresent` code then fails `checkProfile`, and `assertProfilesReady` blocks the next `build` and `ranges` for all profiles. That is loud, as intended, but the error text and `docs/CONTENT_SOURCES.md` must say what to do: remove the entry, and re-add it if the country returns. Part 3 (birds) will hit this.
+3. Weight-only size labels also change the hidden cells' accessible names: `EvidenceGrid.tsx:414` builds them from `columnLabel`, so a screen reader would hear "Tiger, >2–30 kg: not scouted". Use `shortQuestionText` (or the question) for that aria-label, so only the visible header loses the size word.
+4. The Architecture and the Decision disagree on the branch-and-bound cut-off: the Architecture includes it only if `--deals` reports a worst deck of 20 ms or more; the Decision includes it always. Settle it before Steps. KISS says measure first and add it only if the target fails.
+SHOULD-CONSIDER:
+1. Make the globe-versus-rounds agreement an E2E assertion, not only the dev-copy step 6 query: on the dev copy, the globe's Oceania card lists ids 17, 27 and 67 and Asia's doesn't, and an Anywhere round answers yes for id 27 on New Guinea. That leaves an artifact that can be re-checked.
+2. Plant signs on animals that become `mixed` now point at a "no" answer: `bamboo_eater` on the giant panda and red panda, `fruit_eater` on the orangutan and Andean bear, `eats_lichen` on the snub-nosed monkey. `signs.ts` only denies meat and insects, so `signProblems` stays at 0, but a child reading "bamboo eater" will pencil "Only plants: yes" and lose pencil points. List these five in the Summary for the playtest and the witness-note mission.
+3. Add the load time on a slow phone to the targets: the Anywhere load deals 76 sets on the main thread, and the plan allows 3× today's time on the VPS. The E2E already has a CPU throttle; record the throttled load before and after.
+4. In the `IDP` test and the SQL comment, pin that the name literal `'Indonesian New Guinea'` is the same string in three places (`RANGES_SQL`, `schema.sql`, `regions.ts`). A check in `content.test.ts` that reads the literal from `scripts/content.ts` would catch drift; the plan's test only checks `regions.ts`.
+5. Birth is dealt in 6 simulated decks against a target of 5 or more. One content change could miss it, so say in the plan what the lead does if the final table shows 4.
+```
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -711,5 +730,6 @@ Existing tests (`animalBoard.test.ts:38-58`, `:153-155`, `savedGame.test.ts`) ke
 
 - 2026-11-20 07:10 UTC: Baseline done (lead). typecheck/lint PASS, unit tests 76/76 PASS, content preview/check PASS (76 playable, 2478 clues, 491 facts, 0 errors/warnings), E2E against `phaser_june_dev` 1588/1588 PASS (`e2e-baseline/`), balance bot baseline recorded across 5 places (`balance-before.txt`).
 - 2026-11-20 08:06 UTC: Architecture done (`architect` pass 1 → lead Decision → `architect` pass 2). Chosen design: 1A′ diet, 2B size/label edges (weight-only 54 px headers), 3B `IDP` (>130°E) + 3P-A (`presence IN (1,2)`) + 3P-C (`redList.notPresent`), 4C two-stage dealer (`055-1`). Plan-only edit; no code or DB writes.
+- 2026-11-20 08:13 UTC: Fable review done (`architecture-reviewer`, Fable 5.2 · high). VERDICT: APPROVE_WITH_CHANGES (1 MUST-FIX: swap live materialized views without a ~1 min lock stall; 4 MISSED: Tanimbar/Yamdena >130°E misfiling, `HAVING >= 2` vs `notPresent` recovery message, `EvidenceGrid.tsx:414` hidden-cell aria-label, branch-and-bound discrepancy; 5 SHOULD-CONSIDER). Plan-only edit; no code or DB writes.
 
 ## Summary
