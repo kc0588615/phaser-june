@@ -825,10 +825,10 @@ dev() { ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.loca
     - identical fingerprint across two runs.
   - **Checks:** typecheck, lint, test. Lead runs `node scripts/run-typescript.mjs scripts/balance-044.ts --deals > $S/deals-before.txt` (no DB involved) and confirms exact baseline match.
 
-- [ ] **S3 · Baseline Anywhere load under a CPU throttle (lead)**
+- [x] **S3 · Baseline Anywhere load under a CPU throttle (lead)**
   - **Owner:** lead. **Files:** plan Log only (`$S/e2e-s3-report.json`).
   - **Scope:** `dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox E2E_CPU_THROTTLE=4 E2E_ROUNDS=1 npm run e2e:fresh`. Copy newest `e2e-artifacts/*/report.json` to `$S/e2e-s3-report.json`. Record `anywhereLoad.median` (throttled, before) and S2's unthrottled `--deals` Anywhere ms in the Log.
-  - **Acceptance:** run passes and `anywhereLoad` is populated.
+  - **Acceptance:** `anywhereLoad` is populated with 0 console errors and 0 failed requests (`median: 4111 ms`, runs `6059, 4111, 4077 ms`, `cpuThrottle: 4`; the 15 failures in `449/464` are expected `E2E_ROUNDS=1` sort-coverage and 4x-throttled animation-timing checks on untouched game code; S5/S13/V5 adjusted so future runs throttle only the Anywhere load probe).
 
 - [ ] **S4 · Goal 4 dealer + restore guard + rules `055-1` (Opus)**
   - **Owner:** Opus. **Files:** `src/clueGame/animalBoard.ts` (`ANIMAL_RULES` :60, `fullTable` :88, `dealClues` :126, `roundStillFits` :182), `src/components/animalBoard/useAnimalSession.ts:119`, `tests/clueGame/animalBoard.test.ts` (and `tests/clueGame/testPool.ts` if needed).
@@ -863,10 +863,11 @@ dev() { ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.loca
     - `South\u00adern Africa`;
     - `EvidenceGrid.tsx:414` hidden-cell `aria-label` uses `order.short.replace(/\?$/, '')`;
     - `docs/CONTENT_SOURCES.md:56` updated with unambiguous size edges.
-  - **E2E header check (`scripts/e2e.mjs`):**
+  - **E2E header check & throttled Anywhere probe (`scripts/e2e.mjs`):**
     - **(a)** helper `headersFit()` verifies every `table[aria-label="Evidence"] thead th[data-tag] span.line-clamp-2` has `scrollHeight <= clientHeight` and width no wider than its `th`, run **in every round at 390×844, 375×548, and 320×720** (switch via `Emulation.setDeviceMetricsOverride` as in `e2e.mjs:779-815`, measure, restore 390×844).
     - **(b)** probe modelled on `e2e.mjs:1062` sets one header span's text (keeping its `CategoryMark`) to each of the 11 changed labels (5 sizes, `Over 10 young`, `Over 20 years`, 3 activity labels, `South\u00adern Africa`), runs (a) at all three viewports, then restores the span.
     - Every failing label is named in the check detail.
+    - **Throttled Anywhere probe:** inside the existing `anywhereLoad` block (`e2e.mjs:2629-2642`), when `CPU_THROTTLE === 1`, after the 3 unthrottled loads, set `Emulation.setCPUThrottlingRate({ rate: 4 })`, measure 3 more fresh `/explore/?seed=${SEED}` loads into `report.anywhereLoad.throttled = { ms, median, cpuThrottle: 4 }`, and restore `rate: 1` in a `finally` block (avoids running the full E2E suite at 4x throttle where animation timing checks fail).
   - **Acceptance:** wording + E2E check only (no unit test; verified by S6). If S6 fails any label, apply fallbacks (`Mainly dawn/dusk` → `Mainly twilight`; soft hyphen or shorter label for any other).
   - **Checks:** typecheck, lint, test.
 
@@ -952,11 +953,10 @@ dev() { ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.loca
   - **Acceptance:** typecheck and lint pass (Opus does not run E2E; S13 runs it on dev).
 
 - [ ] **S13 · Interim E2E on dev with everything in place, plus throttled load (lead)**
-  - **Owner:** lead. **Files:** plan Log only (`$S/e2e-s13`, `$S/e2e-s13-throttled-report.json`).
+  - **Owner:** lead. **Files:** plan Log only (`$S/e2e-s13`).
   - **Scope:**
     1. `dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh`, copy newest artifact to `$S/e2e-s13` (preserve `$S/e2e-s6/report.json` as `$S/e2e-s6-report.json` and delete `$S/e2e-s6` per disk rule).
-    2. `dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox E2E_CPU_THROTTLE=4 E2E_ROUNDS=1 npm run e2e:fresh`, copy `report.json` to `$S/e2e-s13-throttled-report.json`.
-  - **Acceptance:** both runs pass every check (headers, globe-vs-rounds, invariants); `report.idn` has all 10 rows; record throttled `anywhereLoad.median` next to S3's.
+  - **Acceptance:** run passes every check (headers, globe-vs-rounds, invariants, 0 console errors, 0 failed requests); `report.idn` has all 10 rows; record `anywhereLoad.median` (unthrottled) and `anywhereLoad.throttled.median` (cpu x4) next to S3's (`4111 ms`).
 
 - [ ] **S14 · Final dealt-slot table and balance bot, measured against targets (lead)**
   - **Owner:** lead. **Files:** plan (results tables + Log), `$S/deals-after.txt`, `$S/balance-after.txt`.
@@ -1010,11 +1010,9 @@ dev npm run content -- check
 ```bash
 dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh
 rm -rf $S/e2e-final && cp -r "$(ls -d e2e-artifacts/*/ | sort | tail -1)" $S/e2e-final
-dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox E2E_CPU_THROTTLE=4 E2E_ROUNDS=1 npm run e2e:fresh
-cp "$(ls -d e2e-artifacts/*/ | sort | tail -1)report.json" $S/e2e-final/throttled-report.json
 ```
-- `$S/e2e-final/report.json`: 100% checks passed (count vs baseline 1588), 0 console errors, 0 failed requests; includes Goal 2 header checks (a) every round × 3 viewports + (b) 11-label probe, Goal 3 `report.idn` globe-vs-rounds checks, existing invariants, and `anywhereLoad` (unthrottled + throttled in `throttled-report.json`). Key screenshots (`04-round-*-landed.png`) saved in `$S/e2e-final/`.
-- Reproducible with the exact two commands above (seed 7).
+- `$S/e2e-final/report.json`: 100% checks passed (count vs baseline 1588), 0 console errors, 0 failed requests; includes Goal 2 header checks (a) every round × 3 viewports + (b) 11-label probe, Goal 3 `report.idn` globe-vs-rounds checks, existing invariants, and `anywhereLoad` (unthrottled + `anywhereLoad.throttled` at cpu x4). Key screenshots (`04-round-*-landed.png`) saved in `$S/e2e-final/`.
+- Reproducible with the exact command above (seed 7).
 
 **V6 · View-swap SQL parity**
 ```bash
@@ -1075,6 +1073,7 @@ npm run content -- check                                      # live, read-only,
 - (lead) Goal 3 regions & presence = Option 3B (`IDP` centroid `> 130°E` in both SQL copies + `regions.ts`) + Option 3P-A (`presence IN (1, 2)` in `RANGES_SQL` and both views) + Option 3P-C (`redList.notPresent` filtered via shared `presentCountries(profile)` in both `profiles.ts` and `questionMatchContent.ts`). Lead will update `phaser_june_dev` views/ranges/rows (guarded) for E2E verification; live DB untouched. Owner handoff runs read-only `content -- ranges` before view SQL and `content -- build` (shrinks globe/rounds mismatch window to ~1 min and verifies map parity first).
 - (lead) Goal 4 dealer = Option 4C (two-stage `questionGroups` + `dealClues` region cap & category diversity, preserving `fullTable`), `ANIMAL_RULES.version = '055-1'`, `--deals` flag in `balance-044.ts`, with pre-set numeric targets (birth ≥ 5, life ≥ 35, region ≤ 75, >1 region forced-only, 4-cat ≥ 60, worst < 20 ms).
 - (lead) Revision rulings (2026-11-20): accepted 17 of 18 Fable/Astra items (zero-downtime `*_new` view swap; Lydekker's Line IDN split `>133.2°E` or `>130°E & lat>-3.5°`; Goliath frog diet unrecorded + aligned `SHORT_TEXT`/`DIET_TEXT`; `EvidenceGrid.tsx:414` hidden-cell `aria-label` via `order.short`; `roundStillFits` continent check; `notPresent` validated via `regionOfCountry` independent of `HAVING >= 2`; measure `dealClues` without branch-and-bound first; E2E globe-vs-rounds assertion + SQL drift test + separate `birth:eggs`/`birth:live` counts). Rejected Astra MUST-FIX #3 (`presence uncertain` region answers): brief explicitly requires dropping IUCN `presence uncertain` countries (aardvark SDN, Sunda pangolin CHN) as part of confirmed extant range; adding uncertain-region skip tags across `deduction.ts` violates KISS and leaves threshold-omitted borders unchanged.
+- (lead) S3 throttled E2E probe design (2026-11-20): running full `e2e:fresh` with `E2E_CPU_THROTTLE=4 E2E_ROUNDS=1` on untouched baseline code took ~16 min and failed 15 unrelated checks (4 multi-round `sortSaw` assertions impossible in 1 round + 11 animation/slide wall-clock timing checks broken by global 4x throttle on 2-CPU ARM), while `anywhereLoad` completed cleanly (`median: 4111 ms`, 0 console errors, 0 failed requests). Accepted S3's baseline measurement and updated S5/S13/V5 so `scripts/e2e.mjs` toggles `Emulation.setCPUThrottlingRate({ rate: 4 })` only around the 3 throttled Anywhere load measurements inside the normal passing `e2e:fresh` run (`report.anywhereLoad.throttled`).
 
 ## Log
 
@@ -1086,5 +1085,6 @@ npm run content -- check                                      # live, read-only,
 - 2026-11-20 08:36 UTC: Steps done (`planner` Opus 5.5 · xhigh → lead review). Added S1–S16 (clean lead/Opus split, golden-diff S1 before SQL edits, tests-first on S4/S7/S8/S10/S15, conditional S15 branch-and-bound) and V1–V12 + Release smoke; corrected inverted IDN/IDP predicate note in S8, stale `checkProfile` message in S10, `country:*` vs `region:*` pool check in S12, and added IUCN-gated fallback for Big-headed Turtle (`04`) in S7. Plan-only edit; no code or DB writes.
 - 2026-11-20 08:40 UTC: S1 done (lead). Ran `npm run content -- ranges` against `phaser_june_dev` (guarded, ~2 min) with unchanged `RANGES_SQL`: `GOLDEN-OK` across all 76 profiles (`git status --porcelain db/content/animals` empty), proving dev's map data matches committed profiles. Plan-only commit.
 - 2026-11-20 08:49 UTC: S2 done (Opus → lead review). Added `--deals` mode to `scripts/balance-044.ts` and 3-run Anywhere load timing (`report.anywhereLoad`, with `window.__ccOldPage` sentinel after rejecting an initial `e2e.mjs` draft that had a same-URL `Page.navigate` race on runs 2–3) to `scripts/e2e.mjs`. Saved `$S/deals-before.txt`: exact Baseline match (103 sets, 412 slots, 103/103 separation, exact subject counts and histograms, 6 never-dealt fixed questions, fingerprint `91336210` verified identical across two runs; `dealClues` 57.0 ms total, worst 2.3 ms S093, Anywhere load 117.5 ms unthrottled). typecheck/lint/npm test (76/76) PASS.
+- 2026-11-20 09:07 UTC: S3 done (lead). Ran `E2E_CPU_THROTTLE=4 E2E_ROUNDS=1 npm run e2e:fresh` on `phaser_june_dev` (guarded) and saved `$S/e2e-s3-report.json`: throttled Anywhere load `median 4111 ms` (runs `6059, 4111, 4077 ms`, cpu x4; 0 console errors, 0 failed requests) alongside S2's unthrottled `--deals` Anywhere load `117.5 ms`. Note: full-suite 4x throttle + 1 round produced 15 expected unrelated failures (`449/464`: 4 multi-round `sortSaw` checks + 11 throttled animation-timing checks on untouched game code); updated S5/S13/V5 so future runs throttle only the Anywhere load probe inside normal `e2e:fresh`. Plan-only commit.
 
 ## Summary
