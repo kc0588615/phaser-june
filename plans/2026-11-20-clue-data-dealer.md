@@ -803,7 +803,7 @@ dev() { ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.loca
   - **If it fails:** save `git diff --stat -- db/content/animals > $S/golden-diff.txt`, run `git checkout -- db/content/animals`, record the differing files in the plan, and add a handoff item ("dev map data differs from the committed profiles"). Carry on with S2–S7; S9's gate then compares against `$S/golden-diff.txt`.
   - **Checks:** `git status --porcelain db/content/animals` is empty afterwards.
 
-- [ ] **S2 · Measuring tools: `balance-044.ts --deals` and E2E Anywhere load time (Opus)**
+- [x] **S2 · Measuring tools: `balance-044.ts --deals` and E2E Anywhere load time (Opus)**
   - **Owner:** Opus. **Files:** `scripts/balance-044.ts`, `scripts/e2e.mjs`.
   - **Scope, `--deals`** (reporting only, no rule change), per Architecture "`scripts/balance-044.ts --deals`":
     - Uses `--places` (default `world,africa,asia,north-america,south-america`). Builds sets like `cc-clue-design/scripts/digest.ts:33-96`: per place, in seed order, deduped by members, ids `S001…` in place order, using the existing `animalsFromProfiles`, `pickSuspectSet`, and `dealClues` (`:253-270`).
@@ -1085,5 +1085,6 @@ npm run content -- check                                      # live, read-only,
 - 2026-11-20 08:26 UTC: Revision done (lead). Ruled on all 18 Fable/Astra items under Revision notes (17 accepted, 1 rejected: Astra MUST-FIX #3 on `presence uncertain` region answers per brief & KISS); verified all 97 eastern Natural Earth IDN polygons + 10 IDN species ranges on `phaser_june_dev` for exact Lydekker's Line predicate; revised Architecture, Compatibility, Decision, and Decisions in place. Plan-only edit; no code or DB writes.
 - 2026-11-20 08:36 UTC: Steps done (`planner` Opus 5.5 · xhigh → lead review). Added S1–S16 (clean lead/Opus split, golden-diff S1 before SQL edits, tests-first on S4/S7/S8/S10/S15, conditional S15 branch-and-bound) and V1–V12 + Release smoke; corrected inverted IDN/IDP predicate note in S8, stale `checkProfile` message in S10, `country:*` vs `region:*` pool check in S12, and added IUCN-gated fallback for Big-headed Turtle (`04`) in S7. Plan-only edit; no code or DB writes.
 - 2026-11-20 08:40 UTC: S1 done (lead). Ran `npm run content -- ranges` against `phaser_june_dev` (guarded, ~2 min) with unchanged `RANGES_SQL`: `GOLDEN-OK` across all 76 profiles (`git status --porcelain db/content/animals` empty), proving dev's map data matches committed profiles. Plan-only commit.
+- 2026-11-20 08:49 UTC: S2 done (Opus → lead review). Added `--deals` mode to `scripts/balance-044.ts` and 3-run Anywhere load timing (`report.anywhereLoad`, with `window.__ccOldPage` sentinel after rejecting an initial `e2e.mjs` draft that had a same-URL `Page.navigate` race on runs 2–3) to `scripts/e2e.mjs`. Saved `$S/deals-before.txt`: exact Baseline match (103 sets, 412 slots, 103/103 separation, exact subject counts and histograms, 6 never-dealt fixed questions, fingerprint `91336210` verified identical across two runs; `dealClues` 57.0 ms total, worst 2.3 ms S093, Anywhere load 117.5 ms unthrottled). typecheck/lint/npm test (76/76) PASS.
 
 ## Summary

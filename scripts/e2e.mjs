@@ -2624,6 +2624,23 @@ async function main() {
       check('a journal stored before this change is counted on the globe and kept as stored', header.startsWith(`${n} of `) && stored === oldJournalRaw, JSON.stringify({ header, n, kept: stored === oldJournalRaw }));
     }
 
+    // Anywhere (no place) load time, 3 fresh loads, recorded only. The sentinel on the old window stops waitFor
+    // matching the previous page: Page.navigate resolves before the old document unloads.
+    {
+      const url = `${BASE}/explore/?seed=${SEED}`;
+      const ms = [];
+      for (let i = 0; i < 3; i++) {
+        await evaluate(() => { sessionStorage.removeItem('cc:explore:game'); window.__ccOldPage = true; });
+        const t0 = Date.now();
+        await page('Page.navigate', { url });
+        await waitFor(() => !window.__ccOldPage && document.readyState === 'complete' && window.__cc?.clue?.() && window.__cc.state().ready && window.__cc.state().pins.length === 5, 'Anywhere board', 60_000);
+        ms.push(Date.now() - t0);
+      }
+      const median = [...ms].sort((a, b) => a - b)[1];
+      report.anywhereLoad = { ms, median, cpuThrottle: CPU_THROTTLE };
+      console.log(`Anywhere load: median ${median} ms (runs ${ms.join(', ')}; cpu x${CPU_THROTTLE})`);
+    }
+
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));
     check('no failed requests', report.failedRequests.length === 0, report.failedRequests.slice(0, 3).join(' | '));
     check('no request goes to Clerk', clerkRequests.length === 0, `${clerkRequests.length}: ${clerkRequests.slice(0, 3).join(' | ')}`);
