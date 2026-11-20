@@ -796,7 +796,7 @@ dev() { ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.loca
 
 ---
 
-- [ ] **S1 · Golden diff: dev's map data equals the committed profiles (lead)**
+- [x] **S1 · Golden diff: dev's map data equals the committed profiles (lead)**
   - **Owner:** lead. **Files:** none committed (plan Log only).
   - **Scope:** with today's `RANGES_SQL` (`scripts/content.ts:47-100`, not yet edited), run `dev npm run content -- ranges` (background command, ~15 min), then `git diff --quiet -- db/content/animals && echo GOLDEN-OK`.
   - **Acceptance:** `GOLDEN-OK`. Runs before S8 edits `RANGES_SQL`, so no temporary revert is needed.
@@ -1084,5 +1084,6 @@ npm run content -- check                                      # live, read-only,
 - 2026-11-20 08:18 UTC: Astra review done (Codex GPT-6.2-Astra · xhigh). VERDICT: APPROVE_WITH_CHANGES (5 MUST-FIX: zero-downtime materialized view swap, continent pool check in `roundStillFits`, uncertain region presence vs scored No, Goliath frog diet evidence + text consistency, Indonesian island boundary excluding Tanimbar/Maluku; 3 SHOULD-CONSIDER). Plan-only edit; no code or DB writes.
 - 2026-11-20 08:26 UTC: Revision done (lead). Ruled on all 18 Fable/Astra items under Revision notes (17 accepted, 1 rejected: Astra MUST-FIX #3 on `presence uncertain` region answers per brief & KISS); verified all 97 eastern Natural Earth IDN polygons + 10 IDN species ranges on `phaser_june_dev` for exact Lydekker's Line predicate; revised Architecture, Compatibility, Decision, and Decisions in place. Plan-only edit; no code or DB writes.
 - 2026-11-20 08:36 UTC: Steps done (`planner` Opus 5.5 · xhigh → lead review). Added S1–S16 (clean lead/Opus split, golden-diff S1 before SQL edits, tests-first on S4/S7/S8/S10/S15, conditional S15 branch-and-bound) and V1–V12 + Release smoke; corrected inverted IDN/IDP predicate note in S8, stale `checkProfile` message in S10, `country:*` vs `region:*` pool check in S12, and added IUCN-gated fallback for Big-headed Turtle (`04`) in S7. Plan-only edit; no code or DB writes.
+- 2026-11-20 08:40 UTC: S1 done (lead). Ran `npm run content -- ranges` against `phaser_june_dev` (guarded, ~2 min) with unchanged `RANGES_SQL`: `GOLDEN-OK` across all 76 profiles (`git status --porcelain db/content/animals` empty), proving dev's map data matches committed profiles. Plan-only commit.
 
 ## Summary
