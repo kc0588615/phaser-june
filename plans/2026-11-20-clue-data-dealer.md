@@ -87,7 +87,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -95,6 +95,79 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+Recorded 2026-11-20 (branch `agent/clue-data-dealer` at `4430269b`, base `origin/main` `0837540a`, rules `055-0`; Node v24.21.0, npm 11.19.0; `node_modules` installed; no DB migration needed). Handoff `/srv/critter-ai/handoff/critter-connect.md` checked: no `Status: done` items (only H9 `Status: later`).
+
+### Checks
+
+| Check | Result | Notes |
+|---|---|---|
+| `npm run typecheck` | PASS | Exit 0 |
+| `npm run lint` | PASS | ESLint (`--max-warnings 0`) + `scripts/check-theme.mjs`, exit 0 |
+| `npm test` | PASS | 76/76 passed, 0 failed, 0 skipped (2771 ms) |
+| `npm run content -- preview` | PASS | Exit 0, 76 profiles checked, 0 problems |
+| `npm run content -- check` (live DB, read-only) | PASS | `Pool: 76 playable of 76 species, 2478 clues (2086 deductive), 491 facts. 0 errors, 0 warnings.` |
+| `npm run e2e:fresh` (`phaser_june_dev`, guarded) | PASS | **1588/1588** checks passed (4 rounds, seed 7; AmphibiaWeb probe 14342 ms). Artifact: `/srv/critter-ai/agent-state/missions/clue-data-dealer/e2e-baseline/` |
+
+### Dealt-slot table (before, commit `0837540a`, rules `055-0`)
+
+103 distinct sets (anywhere 47, africa 23, asia 15, north-america 9, south-america 9; europe/oceania fall back to anywhere), 412 deck slots (`cc-clue-design/digest/facts.md` on `0837540a`):
+
+| Category | Questions dealt, by subject | Missing records (of 76) |
+|---|---|---|
+| Body | Size 51, covering 39 | Size 8 |
+| Habits | Diet 66, activity 21, trees 12, social 8 | Social 20, activity 14, trees 5 |
+| Habitat | Habitat 96, system 15 | None |
+| Range | Region 89 | Region 3 |
+| Life cycle | Young 11, lifespan 4, birth 0 | Lifespan 17, young 11 |
+
+- Birth splits 16 sets, enters `fullTable` in 0 (shadowed by `covering` in 15, `diet` in 1).
+- Fixed questions never dealt: `size:tiny`, `social:pairs`, `birth:eggs`, `birth:live`, `lifespan:short`, `lifespan:medium`.
+
+### Balance bot (before, rules `055-0`)
+
+Command: `node scripts/run-typescript.mjs scripts/balance-044.ts --places world,africa,asia,north-america,south-america --rounds 400 --seed 44`
+Full output: `/srv/critter-ai/agent-state/missions/clue-data-dealer/balance-before.txt`
+
+| Place (pool, sets) | Player | Found | ★★★ | Identified | Moves left | Orders | Notes | Seen | Points |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| world (76, 47) | careful | 98% ±2 | 64% | 95% | 15.5 | 2.6 | 1.8 | 9.1 | 276.2 |
+| world (76, 47) | novice | 97% ±2 | 62% | 93% | 15.1 | 2.7 | 1.8 | 9.6 | 268.3 |
+| world (76, 47) | expert | 100% ±0 | 78% | 100% | 17.2 | 2.3 | 1.7 | 6.7 | 309.4 |
+| world (76, 47) | reader | 94% ±2 | 31% | 84% | 10.4 | 2.9 | 1.9 | 7.5 | 189.5 |
+| world (76, 47) | guesser | 18% ±4 | 18% | - | 27.8 | 0.0 | 0.5 | 0.2 | 77.0 |
+| world (76, 47) | random | 20% ±4 | 0% | - | 0.0 | 3.9 | 2.0 | 14.4 | 10.0 |
+| world (76, 47) | oracle | 100% ±0 | 100% | - | 27.8 | 0.0 | 0.6 | 0.3 | 428.4 |
+| africa (26, 23) | careful | 98% ±1 | 73% | 95% | 16.9 | 2.3 | 1.7 | 8.5 | 296.7 |
+| africa (26, 23) | novice | 98% ±2 | 70% | 95% | 16.6 | 2.4 | 1.7 | 9.0 | 289.6 |
+| africa (26, 23) | expert | 100% ±1 | 81% | 100% | 18.1 | 2.0 | 1.6 | 6.4 | 318.0 |
+| africa (26, 23) | reader | 94% ±2 | 43% | 88% | 12.3 | 2.6 | 1.7 | 7.0 | 218.5 |
+| africa (26, 23) | guesser | 18% ±4 | 18% | - | 28.0 | 0.0 | 0.5 | 0.2 | 77.3 |
+| africa (26, 23) | random | 20% ±4 | 0% | - | 0.0 | 3.9 | 1.9 | 14.5 | 10.0 |
+| africa (26, 23) | oracle | 100% ±0 | 100% | - | 27.9 | 0.0 | 0.7 | 0.3 | 428.9 |
+| asia (20, 15) | careful | 96% ±2 | 51% | 91% | 13.8 | 2.9 | 1.3 | 10.3 | 246.0 |
+| asia (20, 15) | novice | 94% ±2 | 52% | 89% | 13.6 | 3.0 | 1.3 | 11.2 | 237.3 |
+| asia (20, 15) | expert | 100% ±0 | 63% | 100% | 15.4 | 2.6 | 1.2 | 8.2 | 281.9 |
+| asia (20, 15) | reader | 89% ±3 | 25% | 76% | 8.9 | 3.2 | 1.4 | 9.0 | 161.0 |
+| asia (20, 15) | guesser | 18% ±4 | 18% | - | 27.7 | 0.0 | 0.3 | 0.2 | 76.9 |
+| asia (20, 15) | random | 20% ±4 | 0% | - | 0.0 | 3.9 | 1.6 | 14.6 | 10.0 |
+| asia (20, 15) | oracle | 100% ±0 | 100% | - | 27.8 | 0.0 | 0.4 | 0.3 | 428.1 |
+| north-america (13, 9) | careful | 96% ±2 | 65% | 92% | 15.7 | 2.5 | 0.9 | 8.3 | 274.2 |
+| north-america (13, 9) | novice | 97% ±2 | 67% | 93% | 15.8 | 2.6 | 0.9 | 9.3 | 276.9 |
+| north-america (13, 9) | expert | 100% ±0 | 75% | 100% | 17.0 | 2.2 | 0.9 | 6.8 | 303.8 |
+| north-america (13, 9) | reader | 94% ±2 | 34% | 83% | 11.0 | 2.8 | 0.9 | 7.5 | 198.1 |
+| north-america (13, 9) | guesser | 18% ±4 | 18% | - | 27.8 | 0.0 | 0.4 | 0.2 | 77.1 |
+| north-america (13, 9) | random | 20% ±4 | 0% | - | 0.0 | 3.9 | 1.0 | 14.5 | 10.0 |
+| north-america (13, 9) | oracle | 100% ±0 | 100% | - | 27.8 | 0.0 | 0.5 | 0.3 | 427.9 |
+| south-america (14, 9) | careful | 96% ±2 | 74% | 93% | 16.8 | 2.3 | 1.8 | 7.6 | 291.1 |
+| south-america (14, 9) | novice | 99% ±1 | 72% | 96% | 16.1 | 2.5 | 1.8 | 8.8 | 287.8 |
+| south-america (14, 9) | expert | 100% ±0 | 80% | 100% | 17.7 | 2.0 | 1.7 | 6.1 | 315.1 |
+| south-america (14, 9) | reader | 93% ±3 | 38% | 84% | 11.5 | 2.8 | 1.8 | 6.9 | 204.8 |
+| south-america (14, 9) | guesser | 18% ±4 | 18% | - | 27.8 | 0.0 | 0.6 | 0.2 | 77.1 |
+| south-america (14, 9) | random | 20% ±4 | 0% | - | 0.0 | 3.9 | 1.9 | 14.3 | 10.0 |
+| south-america (14, 9) | oracle | 100% ±0 | 100% | - | 27.8 | 0.0 | 0.7 | 0.3 | 428.1 |
+
+Careful moves left at find (20th/40th/60th pct): world 11/15/18, africa 13/16/19, asia 9/12/16, north-america 10/15/18, south-america 12/16/19.
 
 ## Architecture
 
@@ -117,5 +190,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-20 07:10 UTC: Baseline done (lead). typecheck/lint PASS, unit tests 76/76 PASS, content preview/check PASS (76 playable, 2478 clues, 491 facts, 0 errors/warnings), E2E against `phaser_june_dev` 1588/1588 PASS (`e2e-baseline/`), balance bot baseline recorded across 5 places (`balance-before.txt`).
 
 ## Summary
