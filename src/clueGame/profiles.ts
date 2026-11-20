@@ -7,6 +7,7 @@
 import type { SpeciesClueCategory } from '@/clueGame/categories';
 import { renderCitation, type CitationSource, type CitedPage } from '@/clueGame/citations';
 import type { ContentRows } from '@/clueGame/pool';
+import { regionOfCountry } from '@/clueGame/regions';
 import { signProblems } from '@/clueGame/signs';
 import { FAMILY_NAMES, ORDER_NAMES } from '@/clueGame/speciesInfo';
 import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, prefixOf } from '@/clueGame/traits';
@@ -22,6 +23,7 @@ export type YesNo = 'yes' | 'no';
 export type Covering = 'fur' | 'spines' | 'scales' | 'armor' | 'shell' | 'skin';
 export type System = 'terrestrial' | 'freshwater' | 'marine';
 export type RedListCode = 'LC' | 'NT' | 'VU' | 'EN' | 'CR' | 'EW' | 'EX' | 'DD';
+export type NotPresentStatus = 'uncertain' | 'possibly-extinct' | 'extinct';
 export type FactCategory = 'key_fact' | 'behavior' | 'diet_prey' | 'diet_flora' | 'life_description' | 'threat';
 
 /** A shared trait's value, an optional detail sentence, and where it comes from (`url` when not the profile's page for that source). */
@@ -34,8 +36,11 @@ export interface AnimalProfile {
   taxonomy: { class: string; order: string; family: string; genus: string };
   /** Key into the imported IUCN range polygons (iucn.id_no). */
   iucnId: number;
-  /** trend: leave it out when the assessment doesn't give one. */
-  redList: { category: RedListCode; year: number; trend?: 'increasing' | 'stable' | 'decreasing' | 'unknown'; url: string };
+  /**
+   * trend: leave it out when the assessment doesn't give one. notPresent: countries the same assessment's Country
+   * Occurrence list marks extinct, possibly extinct or presence uncertain; they leave the country clue and the regions.
+   */
+  redList: { category: RedListCode; year: number; trend?: 'increasing' | 'stable' | 'decreasing' | 'unknown'; url: string; notPresent?: Array<{ code: string; status: NotPresentStatus }> };
   systems: System[];
   /** IUCN habitat classes and kinds, e.g. 'savanna', 'savanna:dry', 'rocky'. */
   habitats: string[];
@@ -224,6 +229,12 @@ const REALM_TEXT: Record<string, string> = {
   'realm:antarctic': 'It lives in Antarctica (the Antarctic realm).',
 };
 
+/** The confirmed extant range: the range maps' countries without redList.notPresent, in the same order. */
+export function presentCountries(profile: Pick<AnimalProfile, 'range' | 'redList'>): Array<{ code: string; name: string }> {
+  const gone = new Set((profile.redList?.notPresent ?? []).map(entry => entry.code));
+  return (profile.range?.countries ?? []).filter(country => !gone.has(country.code));
+}
+
 const titleCase = (value: string) => value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 /** A template sentence, then the profile's detail sentence. */
 const withNote = (text: string, note?: string) => (note ? `${text} ${note}` : text);
@@ -258,7 +269,7 @@ export function profileClues(profile: AnimalProfile): ClueDraft[] {
 
   // Range, from the range maps: realms one by one, then every country at once.
   for (const realm of profile.range?.realms ?? []) add('geography', REALM_TEXT[realm] ?? `It lives in the ${realm.slice(6)} realm.`, [realm], 'iucn_range');
-  const countries = profile.range?.countries ?? [];
+  const countries = presentCountries(profile);
   if (countries.length > 0) {
     const names = countries.map(country => country.name);
     const shown = names.length > 6 ? `${names.slice(0, 5).join(', ')} and ${names.length - 5} more countries` : listNames(names);
@@ -302,6 +313,7 @@ const TRAIT_VALUES: Record<keyof AnimalProfile['traits'], readonly string[]> = {
   birth: Object.keys(BIRTH_TEXT), young: Object.keys(YOUNG_TEXT), social: Object.keys(SOCIAL_TEXT), covering: Object.keys(COVERING_TEXT),
   trees: Object.keys(TREES_TEXT),
 };
+const NOT_PRESENT_STATUSES: readonly string[] = ['uncertain', 'possibly-extinct', 'extinct'] satisfies NotPresentStatus[];
 const CLUE_CATEGORIES = ['habitat', 'morphology', 'diet', 'behavior', 'reproduction', 'taxonomy', 'key_fact', 'geography', 'conservation'];
 const FACT_CATEGORIES = ['key_fact', 'behavior', 'diet_prey', 'diet_flora', 'life_description', 'threat'];
 
@@ -322,6 +334,15 @@ export function checkProfile(profile: AnimalProfile, sources: readonly Pick<Cont
   for (const rank of ['class', 'order', 'family', 'genus'] as const) if (!profile.taxonomy?.[rank]) problems.push(`taxonomy.${rank} is missing`);
   if (!RED_LIST_TEXT[profile.redList?.category] || !profile.redList?.year || !profile.redList?.url) problems.push('redList needs category, year and url');
   if (profile.redList?.trend && !TREND_TEXT[profile.redList.trend]) problems.push(`unknown trend "${profile.redList.trend}"`);
+  // Codes needn't be in range.countries: the range maps keep a country only while 2+ animals share it (HAVING count(*) >= 2).
+  const seen = new Set<string>();
+  for (const [i, { code, status }] of (profile.redList?.notPresent ?? []).entries()) {
+    if (!/^[A-Z]{3}$/.test(code) || regionOfCountry(code) === null) problems.push(`redList.notPresent[${i}]: "${code}" is not a known 3-letter uppercase country code`);
+    if (!NOT_PRESENT_STATUSES.includes(status)) problems.push(`redList.notPresent[${i}]: status must be one of ${NOT_PRESENT_STATUSES.join(', ')}`);
+    if (seen.has(code)) problems.push(`redList.notPresent[${i}]: "${code}" is listed twice`);
+    seen.add(code);
+  }
+  if ((profile.range?.countries.length ?? 0) > 0 && presentCountries(profile).length === 0) problems.push('redList.notPresent removes every country in range.countries');
   if (!profile.systems?.length || profile.systems.some(system => !['terrestrial', 'freshwater', 'marine'].includes(system))) problems.push('systems must list terrestrial, freshwater or marine');
   for (const habitat of profile.habitats ?? []) {
     if (!HABITAT_TEXT[habitat] && !HABITAT_KIND_TEXT[habitat]) problems.push(`unknown habitat "${habitat}"`);

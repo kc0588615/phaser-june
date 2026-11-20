@@ -13,7 +13,13 @@
     "category": "VU",
     "year": 2025,
     "trend": "decreasing",
-    "url": "https://www.iucnredlist.org/species/14224/210444314"
+    "url": "https://www.iucnredlist.org/species/14224/210444314",
+    "notPresent": [
+      {
+        "code": "CRI",
+        "status": "possibly-extinct"
+      }
+    ]
   },
   "systems": [
     "terrestrial"

@@ -13,7 +13,13 @@
     "category": "LC",
     "year": 2017,
     "trend": "decreasing",
-    "url": "https://www.iucnredlist.org/species/54443/18361006"
+    "url": "https://www.iucnredlist.org/species/54443/18361006",
+    "notPresent": [
+      {
+        "code": "COG",
+        "status": "uncertain"
+      }
+    ]
   },
   "systems": [
     "terrestrial",

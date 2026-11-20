@@ -13,7 +13,37 @@
     "category": "EN",
     "year": 2025,
     "trend": "decreasing",
-    "url": "https://www.iucnredlist.org/species/12436/221299510"
+    "url": "https://www.iucnredlist.org/species/12436/221299510",
+    "notPresent": [
+      {
+        "code": "DZA",
+        "status": "possibly-extinct"
+      },
+      {
+        "code": "SDN",
+        "status": "extinct"
+      },
+      {
+        "code": "BFA",
+        "status": "extinct"
+      },
+      {
+        "code": "CMR",
+        "status": "extinct"
+      },
+      {
+        "code": "MWI",
+        "status": "extinct"
+      },
+      {
+        "code": "NGA",
+        "status": "extinct"
+      },
+      {
+        "code": "TCD",
+        "status": "uncertain"
+      }
+    ]
   },
   "systems": [
     "terrestrial"

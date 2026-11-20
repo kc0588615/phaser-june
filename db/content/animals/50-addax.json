@@ -13,7 +13,13 @@
     "category": "CR",
     "year": 2016,
     "trend": "decreasing",
-    "url": "https://www.iucnredlist.org/species/512/50180603"
+    "url": "https://www.iucnredlist.org/species/512/50180603",
+    "notPresent": [
+      {
+        "code": "MRT",
+        "status": "possibly-extinct"
+      }
+    ]
   },
   "systems": [
     "terrestrial"

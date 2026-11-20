@@ -13,7 +13,13 @@
     "category": "CR",
     "year": 2021,
     "trend": "decreasing",
-    "url": "https://www.iucnredlist.org/species/39621/2931537"
+    "url": "https://www.iucnredlist.org/species/39621/2931537",
+    "notPresent": [
+      {
+        "code": "CHN",
+        "status": "possibly-extinct"
+      }
+    ]
   },
   "systems": [
     "terrestrial",
