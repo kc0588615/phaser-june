@@ -1017,7 +1017,7 @@ dev() { ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.loca
     - Import `MIN_PLACE_ANIMALS` from `@/clueGame/places` in `scripts/balance-044.ts`: in `reportDeals`, skip non-null places whose `pool.length < MIN_PLACE_ANIMALS` (logging that they fall back to Anywhere, matching the live game), and handle `sets.length === 0` gracefully without throwing at `sets.reduce(...)` or histogram formatting.
   - **Acceptance:** `typecheck`, `lint`, `test` pass; lead verifies `--deals --places oceania` and `--deals --places europe` both exit 0 with clear fallback note (0 local sets, no crash) and default `--deals` runs cleanly.
 
-- [ ] **S20 · Refresh `phaser_june_dev` content build and post-review `--deals` / balance bot measurements (lead)**
+- [x] **S20 · Refresh `phaser_june_dev` content build and post-review `--deals` / balance bot measurements (lead)**
   - **Owner:** lead. **Origin:** Astra SHOULD-CONSIDER 2 (keep `phaser_june_dev` and plan measurements in sync with S17–S19 before final Verification).
   - **Scope:**
     1. Inside `dev`: run `npm run content -- build`, then `npm run content -- check` (verify 76 playable, 0 errors, diet counts `plants 24 / meat 7 / insects 26 / mixed 16 / unrecorded 3`).
@@ -1110,42 +1110,42 @@ npm run content -- check                                      # live, read-only,
 
 ## Measurements (after, rules 055-1)
 
-Recorded 2026-11-20 at S14 (commit `9b83582e`, all Goal 1–4 code and profile edits in place) and timing refreshed at S15 (lossless branch-and-bound cut-off in `dealClues`; identical deck fingerprint `1798229f` and slot counts).
+Recorded 2026-11-20 at S20 (commit `4f1653e2`, after S15 branch-and-bound cut-off and S17–S19 code-review fixes; supersedes S14/S15 pre-review table `1798229f`).
 
 ### Dealt-slot table (after, rules `055-1`)
 
 Command: `node scripts/run-typescript.mjs scripts/balance-044.ts --deals > $S/deals-after.txt`
 Full output: `/srv/critter-ai/agent-state/missions/clue-data-dealer/deals-after.txt`
-Deck fingerprint: `1798229f` (verified identical across repeated runs).
+Deck fingerprint: `aa2e8a0f` (verified identical across two consecutive runs).
 
-104 distinct sets (world 49, africa 23, asia 15, north-america 8, south-america 9), 416 deck slots; **104/104 (100%)** tell all 5 suspects apart.
+105 distinct sets (world 49, africa 23, asia 15, north-america 9, south-america 9), 420 deck slots; **105/105 (100%)** tell all 5 suspects apart.
 
 | Category | Questions dealt, by subject | Missing records (of 76) |
 |---|---|---|
-| Body | Size 45, covering 30 | Size 8 |
-| Habits | Diet 59, activity 18, social 10, trees 10 | Social 20, activity 14, trees 5, diet 1 |
-| Habitat | Habitat 94, system 26 | None |
-| Range | Region 74 | Region 3 |
-| Life cycle | Young 28, lifespan 15, birth 7 | Lifespan 17, young 11 |
+| Body | Size 45, covering 31 | Size 8 |
+| Habits | Diet 56, activity 18, trees 12, social 10 | Social 20, activity 14, trees 5, diet 3 |
+| Habitat | Habitat 94, system 27 | None |
+| Range | Region 75 | Region 3 |
+| Life cycle | Young 28, lifespan 16, birth 8 | Lifespan 17, young 11 |
 
-- Region questions per deck: `0:48, 1:46, 2:5, 3:2, 4:3` (10 forced multi-region decks: `S005`, `S006`, `S010`, `S022`, `S032`, `S044` in world; `S050`–`S053` in africa, where omitting Goliath Frog's unsupported diet leaves the 4 African frogs short on shared non-region traits).
-- Categories per deck: `1:3, 2:8, 3:25, 4:68`.
-- Birth: **7 decks** (`birth:eggs` 7 slots, `birth:live` 0); life-cycle slots: **50**.
+- Region questions per deck: `0:48, 1:47, 2:5, 3:2, 4:3` (10 forced multi-region decks: `S005`, `S006`, `S010`, `S022`, `S032`, `S044` in world; `S050`–`S053` in africa, where omitting Goliath Frog's unsupported diet leaves the 4 African frogs short on shared non-region traits).
+- Categories per deck: `1:3, 2:7, 3:26, 4:69`.
+- Birth: **8 decks** (`birth:eggs` 8 slots, `birth:live` 0); life-cycle slots: **52**.
 - Fixed questions never dealt (4, down from 6): `covering:spines`, `birth:live`, `lifespan:short`, `lifespan:medium`.
-- Timing (after S15 cut-off): `dealClues` **80.7–97.5 ms** total, worst deck **6.2 ms (`S055`) / 7.8 ms (`S017`)** (`5.9–7.8 ms` across runs; was `21.5–28.6 ms` at S14); Anywhere load **131.5–135.2 ms** (was `205.0–235.7 ms` at S14).
+- Timing (two consecutive runs): `dealClues` **79.4–79.5 ms** total, worst deck **5.9–6.2 ms (`S055`)**; Anywhere load **130.2–143.2 ms**.
 
 **Goal 4 targets check:**
 
-| Target | Baseline (`055-0`) | After (`055-1`, S14 → S15) | Status |
+| Target | Baseline (`055-0`) | After (`055-1`, post-review S20) | Status |
 |---|---:|---:|---|
-| Birth decks (≥ 5) | 0 | 7 (`birth:eggs` 7, `birth:live` 0) | PASS |
-| Life-cycle slots (≥ 35) | 15 | 50 | PASS |
-| Region slots (≤ 75) | 89 | 74 | PASS |
+| Birth decks (≥ 5) | 0 | 8 (`birth:eggs` 8, `birth:live` 0) | PASS |
+| Life-cycle slots (≥ 35) | 15 | 52 | PASS |
+| Region slots (≤ 75) | 89 | 75 | PASS |
 | >1 region forced-only | 12 (6 avoidable) | 10 (0 avoidable; primary score key minimizes excess regions exhaustively) | PASS |
-| 5-suspect separation (100%) | 103/103 | 104/104 | PASS |
-| 4-category decks (≥ 60) | 42 | 68 | PASS |
-| Anywhere load (≤ 351 ms) | 117.5 ms | **131.5–135.2 ms** (S14: 217.1 ms) | PASS |
-| Worst deck (< 20 ms) | 2.3 ms (`S093`) | **6.2–7.8 ms** (`S055`/`S017`; S14: 28.6 ms) | **PASS (after S15)** |
+| 5-suspect separation (100%) | 103/103 | 105/105 | PASS |
+| 4-category decks (≥ 60) | 42 | 69 | PASS |
+| Anywhere load (≤ 351 ms) | 117.5 ms | **130.2–143.2 ms** | PASS |
+| Worst deck (< 20 ms) | 2.3 ms (`S093`) | **5.9–6.2 ms** (`S055`) | PASS |
 
 ### Balance bot (after, rules `055-1`)
 
@@ -1154,10 +1154,10 @@ Full output: `/srv/critter-ai/agent-state/missions/clue-data-dealer/balance-afte
 
 | Place (pool, sets) | Player | Found | Δ Found | ★★★ | Identified | Moves left | Orders | Notes | Seen | Points |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| world (76, 49) | careful | 98% ±1 | 0 | 60% | 95% | 15.1 | 2.6 | 1.8 | 9.2 | 269.9 |
-| world (76, 49) | novice | 97% ±2 | 0 | 62% | 93% | 15.0 | 2.8 | 1.8 | 9.7 | 267.1 |
-| world (76, 49) | expert | 100% ±0 | 0 | 77% | 100% | 17.1 | 2.3 | 1.7 | 6.7 | 308.7 |
-| world (76, 49) | reader | 92% ±3 | -2 | 31% | 83% | 10.2 | 3.0 | 1.9 | 7.6 | 182.9 |
+| world (76, 49) | careful | 98% ±1 | 0 | 61% | 95% | 15.1 | 2.6 | 1.8 | 9.2 | 271.5 |
+| world (76, 49) | novice | 97% ±2 | 0 | 63% | 93% | 15.1 | 2.7 | 1.8 | 9.7 | 268.7 |
+| world (76, 49) | expert | 100% ±0 | 0 | 78% | 100% | 17.2 | 2.3 | 1.7 | 6.8 | 309.4 |
+| world (76, 49) | reader | 92% ±3 | -2 | 30% | 83% | 10.2 | 3.0 | 1.9 | 7.7 | 183.4 |
 | world (76, 49) | guesser | 18% ±4 | 0 | 18% | - | 27.7 | 0.0 | 0.5 | 0.2 | 76.9 |
 | world (76, 49) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.9 | 2.0 | 14.6 | 10.0 |
 | world (76, 49) | oracle | 100% ±0 | 0 | 100% | - | 27.8 | 0.0 | 0.6 | 0.3 | 428.4 |
@@ -1168,20 +1168,20 @@ Full output: `/srv/critter-ai/agent-state/missions/clue-data-dealer/balance-afte
 | africa (26, 23) | guesser | 18% ±4 | 0 | 18% | - | 28.0 | 0.0 | 0.5 | 0.2 | 77.4 |
 | africa (26, 23) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.9 | 1.8 | 14.5 | 10.0 |
 | africa (26, 23) | oracle | 100% ±0 | 0 | 100% | - | 27.9 | 0.0 | 0.6 | 0.2 | 429.0 |
-| asia (17, 15) | careful | 96% ±2 | 0 | 48% | 91% | 13.6 | 3.0 | 0.8 | 10.6 | 242.6 |
-| asia (17, 15) | novice | 96% ±2 | +2 | 48% | 89% | 12.8 | 3.1 | 0.9 | 11.6 | 231.7 |
-| asia (17, 15) | expert | 100% ±0 | 0 | 61% | 100% | 15.0 | 2.7 | 0.8 | 8.1 | 277.3 |
-| asia (17, 15) | reader | 86% ±3 | -3 | 24% | 73% | 8.8 | 3.2 | 0.9 | 9.2 | 153.3 |
+| asia (17, 15) | careful | 96% ±2 | 0 | 51% | 92% | 13.7 | 3.0 | 0.9 | 10.5 | 246.2 |
+| asia (17, 15) | novice | 96% ±2 | +2 | 50% | 91% | 13.2 | 3.1 | 0.9 | 11.4 | 236.8 |
+| asia (17, 15) | expert | 100% ±0 | 0 | 63% | 100% | 15.3 | 2.7 | 0.9 | 8.0 | 281.6 |
+| asia (17, 15) | reader | 88% ±3 | -1 | 24% | 76% | 9.0 | 3.2 | 0.9 | 8.9 | 159.4 |
 | asia (17, 15) | guesser | 18% ±4 | 0 | 18% | - | 27.9 | 0.0 | 0.3 | 0.2 | 77.3 |
-| asia (17, 15) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.9 | 1.0 | 14.5 | 10.0 |
-| asia (17, 15) | oracle | 100% ±0 | 0 | 100% | - | 27.8 | 0.0 | 0.3 | 0.3 | 428.4 |
-| north-america (13, 8) | careful | 97% ±2 | +1 | 65% | 92% | 15.8 | 2.5 | 1.0 | 8.5 | 276.7 |
-| north-america (13, 8) | novice | 96% ±2 | -1 | 65% | 92% | 15.7 | 2.6 | 0.9 | 9.3 | 271.7 |
-| north-america (13, 8) | expert | 100% ±0 | 0 | 71% | 100% | 16.8 | 2.2 | 0.9 | 6.7 | 299.5 |
-| north-america (13, 8) | reader | 93% ±2 | -1 | 37% | 85% | 11.3 | 2.8 | 0.9 | 7.3 | 202.2 |
-| north-america (13, 8) | guesser | 18% ±4 | 0 | 18% | - | 27.8 | 0.0 | 0.4 | 0.2 | 77.1 |
-| north-america (13, 8) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.9 | 1.0 | 14.4 | 10.0 |
-| north-america (13, 8) | oracle | 100% ±0 | 0 | 100% | - | 27.8 | 0.0 | 0.5 | 0.3 | 428.0 |
+| asia (17, 15) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.9 | 1.1 | 14.5 | 10.0 |
+| asia (17, 15) | oracle | 100% ±0 | 0 | 100% | - | 27.8 | 0.0 | 0.4 | 0.3 | 428.2 |
+| north-america (13, 9) | careful | 97% ±2 | +1 | 64% | 93% | 15.8 | 2.6 | 0.9 | 8.7 | 275.8 |
+| north-america (13, 9) | novice | 96% ±2 | -1 | 62% | 93% | 15.2 | 2.6 | 0.9 | 9.5 | 266.4 |
+| north-america (13, 9) | expert | 100% ±1 | 0 | 71% | 99% | 16.6 | 2.3 | 0.9 | 6.9 | 296.2 |
+| north-america (13, 9) | reader | 93% ±2 | -1 | 36% | 85% | 11.0 | 2.9 | 0.9 | 7.5 | 198.7 |
+| north-america (13, 9) | guesser | 18% ±4 | 0 | 18% | - | 27.8 | 0.0 | 0.4 | 0.2 | 77.0 |
+| north-america (13, 9) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.9 | 1.0 | 14.5 | 10.0 |
+| north-america (13, 9) | oracle | 100% ±0 | 0 | 100% | - | 27.8 | 0.0 | 0.5 | 0.3 | 427.9 |
 | south-america (14, 9) | careful | 97% ±2 | +1 | 70% | 94% | 16.5 | 2.4 | 1.7 | 8.1 | 286.6 |
 | south-america (14, 9) | novice | 98% ±1 | -1 | 68% | 95% | 16.3 | 2.4 | 1.7 | 8.7 | 285.4 |
 | south-america (14, 9) | expert | 100% ±0 | 0 | 77% | 100% | 17.7 | 2.0 | 1.7 | 6.2 | 314.1 |
@@ -1190,8 +1190,8 @@ Full output: `/srv/critter-ai/agent-state/missions/clue-data-dealer/balance-afte
 | south-america (14, 9) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.8 | 1.9 | 14.4 | 10.0 |
 | south-america (14, 9) | oracle | 100% ±0 | 0 | 100% | - | 27.8 | 0.0 | 0.7 | 0.3 | 428.1 |
 
-Careful moves left at find (20th/40th/60th pct): world 10/14/17, africa 12/15/18, asia 9/12/15, north-america 11/15/18, south-america 11/16/19.
-V10 comparison (`balance-before.txt` vs `balance-after.txt`): **PASS (exit 0)** — all 35 `(place, player)` Found rates stay within ±3 percentage points (max move `-3`: `africa/reader` 94→91%, `asia/reader` 89→86% where Asia pool shrank 20→17; `careful` 0 to +1 across all 5 places).
+Careful moves left at find (20th/40th/60th pct): world 10/14/17, africa 12/15/18, asia 9/12/16, north-america 11/15/18, south-america 11/16/19.
+V10 comparison (`balance-before.txt` vs `balance-after.txt`): **PASS (exit 0)** — all 35 `(place, player)` Found rates stay within ±3 percentage points (max move `-3`: `africa/reader` 94→91%; `asia/reader` 89→88%, `careful` 0 to +1 across all 5 places).
 
 ## Code review (Astra)
 
@@ -1295,5 +1295,6 @@ SHOULD-CONSIDER:
 - 2026-11-20 11:44 UTC: S17 done (Opus → lead review). Aligned `diet:meat` and `diet:mixed` exclusion wording with `diet:insects` in `src/clueGame/questionMatch.ts` (`QUESTION_TEXT`, `SHORT_TEXT`; `COLUMN_LABEL` unchanged) and `src/clueGame/profiles.ts` (`DIET_TEXT`), updated `01-blandings-turtle.json` (`diet: insects`, updated ADW note), removed unsupported `traits.diet` from `74-axolotl.json` and `62-chinese-giant-salamander.json`, and dropped `"in China"` from `18-yangtze-giant-softshell-turtle.json` `clues[4]` (0 `"China"` hits in traits/clues/facts). Verified diet counts across 76 profiles (`plants 24`, `meat 7`, `insects 26`, `mixed 16`, `unrecorded 3` [`11`, `62`, `74`]), `npm run typecheck`, `npm run lint`, `npm test` (103/103), `npm run content -- preview` (0 problems), and live read-only `npm run content -- check` (76 playable, 2478 clues, 491 facts, 0 errors, 0 warnings) PASS.
 - 2026-11-20 11:50 UTC: S18 done (Opus → lead review). Exported `isoAliasTarget` from `src/clueGame/regions.ts` and rejected ISO alias codes loudly in `checkProfile` (`src/clueGame/profiles.ts`, naming the Natural Earth code to use), added `LSO` (`uncertain`) to `57-aardvark.json` and `MLI` (`possibly-extinct`), `BEN` (`extinct`), `GIN` (`uncertain`) to `65-african-wild-dog.json` (`range.countries` untouched), and clarified `docs/CONTENT_SOURCES.md:25` (Natural Earth codes, alias rejection, polygon-overlap scope). Failing-first unit tests in `tests/clueGame/content.test.ts` (`checkProfile rejects ISO alias SSD, naming Natural Earth SDS`, `checkProfile rejects ISO alias ESH, naming Natural Earth SAH` — both failed 0 vs 1 before `src/` edits, plus `checkProfile accepts SDS, which leaves presentCountries and the country clue` guard) now pass 106/106. Verified `npm run typecheck`, `npm run lint`, `npm test` (106/106), `npm run content -- preview` (0 problems), and live read-only `npm run content -- check` (76 playable, 2478 clues, 491 facts, 0 errors, 0 warnings) PASS.
 - 2026-11-20 11:53 UTC: S19 done (Opus → lead review). Exported `FIXED_QUESTION_TAGS` from `src/clueGame/questionMatch.ts` (replacing the regex-based `fixedQuestions()` parser in `scripts/balance-044.ts`), applied `MIN_PLACE_ANIMALS` in `reportDeals` so unplayable continents skip local sets and print a fallback-to-Anywhere note, and guarded empty `sets` in worst-deck timing (`- (no decks)`). Verified `npm run typecheck`, `npm run lint`, `npm test` (106/106), `--deals --places oceania` (exit 0, `7 < 12 animals`, 0 sets), `--deals --places europe` (exit 0, `0 < 12 animals`, 0 sets), `--deals --places world,oceania` (exit 0, 49 world sets + fallback note), and default `--deals` (exit 0, 105 sets / 420 slots, worst 6.8 ms, fingerprint `aa2e8a0f` after S17–S18 edits; S20 updates dev build and plan measurements next) PASS.
+- 2026-11-20 12:05 UTC: S20 done (lead). Rebuilt `phaser_june_dev` (guarded `npm run content -- build`: 16 sources, 76 species, 2475 clues, 491 facts, 0 citation warnings; `content -- check`: 76 playable, 2475 clues / 2083 deductive, 0 errors, 0 warnings; diet counts `plants 24 / meat 7 / insects 26 / mixed 16 / unrecorded 3` [`11`, `62`, `74`]; Yangtze turtle `18` clues matching `%China%`: 0; live `phaser_june` untouched: 2478 clues, 0 errors, 0 warnings). Re-ran `--deals` twice (`$S/deals-after.txt`, identical fingerprint `aa2e8a0f`: 105 sets / 420 slots, 105/105 separation, birth 8 decks [`birth:eggs` 8, `birth:live` 0], life-cycle 52, region 75 [`0:48, 1:47, 2:5, 3:2, 4:3`, 10 forced >1-region / 0 avoidable], 4-category 69, worst deck 5.9–6.2 ms `S055`, Anywhere load 130.2–143.2 ms — all Goal 4 targets PASS) and 5-place balance bot (`$S/balance-after.txt`; V10 diff PASS exit 0, all 35 Found rates within ±3 pts, max `-3` `africa/reader`, `asia/reader` 89→88%, `careful` 0 to +1). Updated `## Measurements (after, rules 055-1)`. Plan-only commit.
 
 ## Summary
