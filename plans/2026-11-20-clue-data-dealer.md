@@ -92,7 +92,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -773,7 +773,294 @@ SHOULD-CONSIDER:
 
 ## Steps
 
+*Drafted by `planner` (Opus 5.5 · xhigh; `/srv/critter-ai/agent-state/missions/clue-data-dealer/tasks/20261120-082840-planner.md`) and reviewed/adjusted by lead, 2026-11-20.*
+
+Shared shell block for every `(lead)` step that touches `phaser_june_dev`. Define it in the same shell call that uses it, because functions don't carry over between calls. Never print the connection string.
+
+```bash
+cd /srv/critter-ai/worktrees/clue-data-dealer
+S=/srv/critter-ai/agent-state/missions/clue-data-dealer
+dev() { ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+  [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || { echo 'GUARD FAILED: not phaser_june_dev'; exit 1; }
+  "$@" ); }
+```
+
+- If the guard fails, stop the step and add a handoff item.
+- `scripts/connect.ts:8` and Next's env loader don't override variables that are already set, so `.env.local` can't take over inside `dev`. The baseline E2E already confirmed this.
+- No step writes to `phaser_june`. Opus steps (`claude-task`) never run `content -- ranges`, `content -- build`, `iucn`, `e2e:fresh`, or anything inside `dev`.
+
+**Rules for every step**
+- **Tests first.** In a step that adds or changes a rule, Opus writes the new unit tests first and runs `npm test`. Every new test must fail for the reason the test names (not a build or import error). Opus then writes the code until `npm test` passes. The step's Log line names the tests that failed first.
+- **Checks after every Opus step:** `npm run typecheck`, `npm run lint` and `npm test` (all exit 0). Add `npm run content -- preview` (0 problems) when a profile, `profiles.ts` or `questionMatchContent.ts` changes. When the lead reviews the step, the lead also runs `npm run content -- check` (live, read-only) whenever pool-reading code or profiles changed; it must print `0 errors, 0 warnings`.
+- **Disk:** keep at most one intermediate E2E folder beside `$S/e2e-final/`. When a new intermediate folder is written, preserve the previous run's `report.json` as `$S/<old>-report.json` and delete its folder (`e2e-baseline` included). Never delete `$S/e2e-final/`.
+
+---
+
+- [ ] **S1 · Golden diff: dev's map data equals the committed profiles (lead)**
+  - **Owner:** lead. **Files:** none committed (plan Log only).
+  - **Scope:** with today's `RANGES_SQL` (`scripts/content.ts:47-100`, not yet edited), run `dev npm run content -- ranges` (background command, ~15 min), then `git diff --quiet -- db/content/animals && echo GOLDEN-OK`.
+  - **Acceptance:** `GOLDEN-OK`. Runs before S8 edits `RANGES_SQL`, so no temporary revert is needed.
+  - **If it fails:** save `git diff --stat -- db/content/animals > $S/golden-diff.txt`, run `git checkout -- db/content/animals`, record the differing files in the plan, and add a handoff item ("dev map data differs from the committed profiles"). Carry on with S2–S7; S9's gate then compares against `$S/golden-diff.txt`.
+  - **Checks:** `git status --porcelain db/content/animals` is empty afterwards.
+
+- [ ] **S2 · Measuring tools: `balance-044.ts --deals` and E2E Anywhere load time (Opus)**
+  - **Owner:** Opus. **Files:** `scripts/balance-044.ts`, `scripts/e2e.mjs`.
+  - **Scope, `--deals`** (reporting only, no rule change), per Architecture "`scripts/balance-044.ts --deals`":
+    - Uses `--places` (default `world,africa,asia,north-america,south-america`). Builds sets like `cc-clue-design/scripts/digest.ts:33-96`: per place, in seed order, deduped by members, ids `S001…` in place order, using the existing `animalsFromProfiles`, `pickSuspectSet`, and `dealClues` (`:253-270`).
+    - Prints:
+      1. sets per place and total slots;
+      2. slot table by category then subject (Baseline format);
+      3. histograms of region questions per deck and categories per deck;
+      4. decks with birth (separate `birth:eggs` and `birth:live` counts) and life-cycle slots;
+      5. every deck with more than one region (id, place, names, missing records);
+      6. fixed questions never dealt;
+      7. timing: total ms, worst deck ms with its set id, and Anywhere load ms (`pickSuspectSet` over all 76 seeds for `place = null`, matching `useAnimalSession.ts:100-103`);
+      8. a **deck fingerprint**: `hash32` of every `setId:sortedIds:tags` line in order (proves reproducibility and that any later cut-off is lossless).
+  - **Scope, `e2e.mjs`:** after existing play, load `/explore/?seed=${SEED}` with no `place` (Anywhere) 3 times. Time each from `goto` until `window.__cc.state().ready && pins.length === 5`. Store `report.anywhereLoad = { ms: [...], median, cpuThrottle }` and log the median (recorded only, no pass/fail threshold).
+  - **Acceptance:** on today's code, `--deals` reproduces the Baseline exactly:
+    - 103 sets (anywhere 47, africa 23, asia 15, north-america 9, south-america 9), 412 slots;
+    - subject counts: habitat 96, region 89, diet 66, size 51, covering 39, activity 21, system 15, trees 12, young 11, social 8, lifespan 4, birth 0;
+    - region histogram 0:33, 1:58, 2:7, 3:3, 4:2; S005 holds 4 regions;
+    - the 6 never-dealt fixed questions;
+    - identical fingerprint across two runs.
+  - **Checks:** typecheck, lint, test. Lead runs `node scripts/run-typescript.mjs scripts/balance-044.ts --deals > $S/deals-before.txt` (no DB involved) and confirms exact baseline match.
+
+- [ ] **S3 · Baseline Anywhere load under a CPU throttle (lead)**
+  - **Owner:** lead. **Files:** plan Log only (`$S/e2e-s3-report.json`).
+  - **Scope:** `dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox E2E_CPU_THROTTLE=4 E2E_ROUNDS=1 npm run e2e:fresh`. Copy newest `e2e-artifacts/*/report.json` to `$S/e2e-s3-report.json`. Record `anywhereLoad.median` (throttled, before) and S2's unthrottled `--deals` Anywhere ms in the Log.
+  - **Acceptance:** run passes and `anywhereLoad` is populated.
+
+- [ ] **S4 · Goal 4 dealer + restore guard + rules `055-1` (Opus)**
+  - **Owner:** Opus. **Files:** `src/clueGame/animalBoard.ts` (`ANIMAL_RULES` :60, `fullTable` :88, `dealClues` :126, `roundStillFits` :182), `src/components/animalBoard/useAnimalSession.ts:119`, `tests/clueGame/animalBoard.test.ts` (and `tests/clueGame/testPool.ts` if needed).
+  - **Tests first** (Architecture "Unit tests" row 1), each seen failing before production edits:
+    - birth question shadowed by covering is still never dealt;
+    - 2-region deck is dealt where a 1-region deck exists;
+    - forced 2-region set returns `null`;
+    - deck holds two questions with one split;
+    - region faces collide in a deck;
+    - deck changes with id order or with the mystery;
+    - `fullTable` differs from `questionGroups().map(g => g[0])`;
+    - `count` greater than number of groups doesn't return `null`;
+    - `roundStillFits` accepts a saved continent round after a suspect leaves that continent, or one with an id missing from `book`.
+  - **Code:**
+    - `questionGroups(book, set, place)` as specified;
+    - `fullTable` as `questionGroups(...).map(g => g[0])`, preserving its contract and output;
+    - `dealClues` using combinations over groups (`tellsApart` on group heads), then Cartesian product over group members with distinct `clueFace` check, scoring `[-Math.max(0, regions - 1), splitMix + categories, -regions, -hash32(...)]`. **No branch-and-bound yet** (KISS; S15 adds it only if S14 misses timing targets).
+    - `roundStillFits` verifies every suspect is in `book.byId` and, when `round.place !== null`, `book.byId.get(id)?.continents.includes(round.place)`.
+    - `useAnimalSession.ts:119` adds `saved.session.round.place === data.continent`.
+    - `ANIMAL_RULES.version = '055-1'`.
+    - `pickSuspectSet` unchanged.
+  - **Acceptance:** new tests fail first then pass; existing tests pass (`animalBoard.test.ts`, `savedGame.test.ts`); interim `--deals` (today's content) shows birth dealt, >1 region only in forced decks, 100% separation; interim worst-deck and Anywhere times recorded as a signal (final timing is S14).
+  - **Checks:** typecheck, lint, test; lead saves `node scripts/run-typescript.mjs scripts/balance-044.ts --deals > $S/deals-s4.txt`.
+
+- [ ] **S5 · Goal 2 edges and labels + E2E header-clamp check (Opus)**
+  - **Owner:** Opus. **Files:** `src/clueGame/questionMatch.ts` (`QUESTION_TEXT` :58-59, `SHORT_TEXT` :80-85, comment :116, `COLUMN_LABEL` :119-126 + `region:southern-africa`), `src/clueGame/profiles.ts` (`SIZE_TEXT` :154-160, `ACTIVITY_TEXT` :169-172), `src/components/animalBoard/EvidenceGrid.tsx:414`, `scripts/e2e.mjs`, `docs/CONTENT_SOURCES.md:56`.
+  - **Scope:** every string in Goal 2's table and "Other labels" list verbatim:
+    - sizes `<100 g`, `0.1–2 kg`, `>2–30 kg`, `>30–300 kg`, `>300 kg`;
+    - `Over 10 young`, `Over 20 years`;
+    - `Mainly day`, `Mainly night`, `Mainly dawn/dusk`;
+    - activity short texts and `ACTIVITY_TEXT` with `"mainly"`;
+    - `South\u00adern Africa`;
+    - `EvidenceGrid.tsx:414` hidden-cell `aria-label` uses `order.short.replace(/\?$/, '')`;
+    - `docs/CONTENT_SOURCES.md:56` updated with unambiguous size edges.
+  - **E2E header check (`scripts/e2e.mjs`):**
+    - **(a)** helper `headersFit()` verifies every `table[aria-label="Evidence"] thead th[data-tag] span.line-clamp-2` has `scrollHeight <= clientHeight` and width no wider than its `th`, run **in every round at 390×844, 375×548, and 320×720** (switch via `Emulation.setDeviceMetricsOverride` as in `e2e.mjs:779-815`, measure, restore 390×844).
+    - **(b)** probe modelled on `e2e.mjs:1062` sets one header span's text (keeping its `CategoryMark`) to each of the 11 changed labels (5 sizes, `Over 10 young`, `Over 20 years`, 3 activity labels, `South\u00adern Africa`), runs (a) at all three viewports, then restores the span.
+    - Every failing label is named in the check detail.
+  - **Acceptance:** wording + E2E check only (no unit test; verified by S6). If S6 fails any label, apply fallbacks (`Mainly dawn/dusk` → `Mainly twilight`; soft hyphen or shorter label for any other).
+  - **Checks:** typecheck, lint, test.
+
+- [ ] **S6 · Interim E2E on dev: new dealer and labels, old dev rows (lead)**
+  - **Owner:** lead. **Files:** plan Log only (plus Opus fix if any label fails).
+  - **Scope:** `dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh`; copy newest artifact to `$S/e2e-s6` (keep baseline `report.json` as `$S/e2e-baseline-report.json` and remove `$S/e2e-baseline` per disk rule).
+  - **Acceptance:** every check passes including (a)/(b) header checks; `report.json` shows rules `055-1`; 0 console errors. Any failing label goes back to Opus (S5 fallbacks) before checking S6 off.
+
+- [ ] **S7 · Goal 1 diet: wording, glossary, 16 profile edits (Opus)**
+  - **Owner:** Opus. **Files:**
+    - code: `src/clueGame/questionMatch.ts` (diet in `QUESTION_TEXT`, `SHORT_TEXT`, `COLUMN_LABEL`), `src/clueGame/profiles.ts` (`DIET_TEXT` :162-167), `src/clueGame/glossary.ts` (beside :55-61), `tests/clueGame/glossary.test.ts`, `docs/CONTENT_SOURCES.md:59`;
+    - profiles in `db/content/animals/`: `35`, `15`, `20`, `71`, `34`, `40`, `60`, `33`, `04`, `02`, `10`, `75`, `11`, `19`, `22`, `16`.
+  - **Test first:** in `tests/clueGame/glossary.test.ts`, assert `glossaryParts` over every `DIET_TEXT` sentence matches `invertebrate(s)` as a defined glossary term (fails today because `DIET_TEXT.insects` says `"invertebrates"` with no entry).
+  - **Code:** Goal 1's four diet rows verbatim (`QUESTION_TEXT`, `SHORT_TEXT`, `COLUMN_LABEL`, `DIET_TEXT`); add `['Invertebrate', 'An animal without a backbone, like an insect, worm, snail or crayfish.', 'invertebrates?']` to `glossary.ts`; keep `signs.ts` unchanged; update `docs/CONTENT_SOURCES.md:59` with the 4-step decision order and meat-eater carve-out.
+  - **Profiles:** apply all 16 rows from Target design's "Profile edits" table:
+    - `11-goliath-frog.json`: remove `traits.diet`;
+    - `19`, `22`: `source: "literature"` with their Reptiles of Ecuador URLs;
+    - `33`: `source: "literature"`, `url: "https://doi.org/10.1002/ecy.4470"`;
+    - `04-big-headed-turtle.json`: first check `/srv/critter-ai/agent-state/missions/cc-clue-design/` for any saved IUCN 17585 diet excerpt; if absent, try one plain fetch of `https://www.iucnredlist.org/species/17585/1423706` (never bypass Cloudflare/anti-bot/CAPTCHA). If IUCN's full diet text is readable, set `value: "mixed"`, `source: "iucn"`, and name only foods IUCN names. If IUCN is gated/unreadable, set `value: "mixed"`, `source: "iucn"`, and `note: "Fruits are what it eats most often."` (directly verified by the vault's IUCN quote `"fruits from Machilus spp. were most commonly eaten"`, paired with `DIET_TEXT.mixed`'s `"It eats both plants and animals (not mostly bugs)."`).
+  - **Acceptance:** glossary test fails first then passes; `npm run content -- preview` shows 0 problems; `content.test.ts` passes (`signProblems` = 0); diet counts across 76 profiles are plants 24, meat 9, insects 25, mixed 17, unrecorded 1 (Opus reports counts).
+  - **Checks:** typecheck, lint, test, `content -- preview`; lead runs live `content -- check` (read-only, 0 errors/warnings).
+
+- [ ] **S8 · Goal 3 SQL: IDP split along Lydekker's Line, presence 1–2, drift test, view-swap SQL file (Opus)**
+  - **Owner:** Opus. **Files:** `scripts/content.ts` (`RANGES_SQL` :47-100, comment :44-46), `db/schema.sql` (`clue_match_ranges` :101-139, `clue_match_places` :158-221, comments :93, :146), `src/clueGame/regions.ts` (new row beside :134/:201), `tests/clueGame/content.test.ts`, `docs/SHAPEFILE_BEST_PRACTICES.md:35`, `docs/CLUE_MATCH.md:67`, and `$S/view-swap.sql` (outside the repo).
+  - **Tests first** (`tests/clueGame/content.test.ts`, "IDP & SQL drift" row), each seen failing:
+    - `regionOfCountry('IDP') === 'melanesia'`;
+    - `countryName('IDP') === 'Indonesian New Guinea'`;
+    - `continentOf('country:idp') === 'oceania'`;
+    - reading `scripts/content.ts` and `db/schema.sql` as text, both contain `'IDP', 'Indonesian New Guinea'`, `NOT IN ('RUS', 'IDN')`, the exact Lydekker's Line predicate `ST_X(ST_Centroid(d.geom)) > 133.2 OR (ST_X(ST_Centroid(d.geom)) > 130 AND ST_Y(ST_Centroid(d.geom)) > -3.5)` (**negated** in the `IDN` branch, **positive** in the `IDP` branch), and no `presence IN (1, 2, 3)`. The `'IDP'` name literal equals `countryName('IDP')`.
+  - **Code:**
+    - exact `NOT IN ('RUS', 'IDN')` + two `UNION ALL` branches from Target design in both `scripts/content.ts` and `db/schema.sql`;
+    - `presence IN (1, 2)` in all three queries (`RANGES_SQL`, `clue_match_ranges`, `clue_match_places`) for both `WHERE` and `OR NOT EXISTS`;
+    - updated SQL comments and `['IDP', '', 'melanesia', 'Indonesian New Guinea']` in `regions.ts` (noting IDP is this project's code, not Natural Earth's);
+    - write `$S/view-swap.sql`: (1) `DROP MATERIALIZED VIEW IF EXISTS clue_match_ranges_new, clue_match_places_new;`, (2) `CREATE MATERIALIZED VIEW clue_match_ranges_new AS ...;` + unique index `clue_match_ranges_new_species_id`, (3) `CREATE MATERIALIZED VIEW clue_match_places_new AS ...;` + unique index `clue_match_places_new_key`, (4) `BEGIN; DROP MATERIALIZED VIEW clue_match_places; DROP MATERIALIZED VIEW clue_match_ranges; ALTER MATERIALIZED VIEW clue_match_ranges_new RENAME TO clue_match_ranges; ALTER INDEX clue_match_ranges_new_species_id RENAME TO clue_match_ranges_species_id; ALTER MATERIALIZED VIEW clue_match_places_new RENAME TO clue_match_places; ALTER INDEX clue_match_places_new_key RENAME TO clue_match_places_key;` + `DO $$ ... GRANT SELECT ON clue_match_places, clue_match_ranges TO critter_app; ... $$;` copied from `db/schema.sql:224-230` + `COMMIT;`.
+  - **Acceptance:** tests fail first then pass; V6 diff between `db/schema.sql` and `$S/view-swap.sql` is empty (`VIEW-SQL-SAME`); no profile changes yet (`ranges` is S9).
+  - **Checks:** typecheck, lint, test, preview; lead runs live `content -- check` (read-only) and V6 diff.
+
+- [ ] **S9 · New ranges on dev: only the expected country changes (lead)**
+  - **Owner:** lead. **Files:** `db/content/animals/{17,27,67,57,58,41}-*.json` (written by script, never hand-edited).
+  - **Scope:** `dev npm run content -- ranges` with the S8 query (background command, ~15 min), then inspect `git diff --stat -- db/content/animals` and `git diff -- db/content/animals`.
+  - **Acceptance:** exactly 6 files change:
+    - `17`, `27`, `67`: `IDN/Indonesia` → `IDP/Indonesian New Guinea` (`17` and `67` keep their other countries);
+    - `57`: `−DJI`, `−TGO`;
+    - `58`: `−DJI`;
+    - `41`: `−CAF`, `−TGO`;
+    - no `realms` change.
+    - Any unexpected diff: revert (`git checkout -- db/content/animals`), investigate (comparing against `$S/golden-diff.txt` if S1 failed), and record before proceeding.
+    - `npm run content -- preview` shows 0 problems; `npm test` passes.
+  - **Commit:** updated profiles + plan together.
+
+- [ ] **S10 · Goal 3 `redList.notPresent` + `presentCountries` + `checkProfile` (Opus)**
+  - **Owner:** Opus. **Files:** `src/clueGame/profiles.ts` (`redList` type :38, `presentCountries`, `profileClues` :235/:261, `checkProfile` :314), `src/clueGame/questionMatchContent.ts:183`, `tests/clueGame/content.test.ts`, profiles `57`, `65`, `24`, `18`, `58`, `50`, `52`, `63`, `07`, `docs/CONTENT_SOURCES.md:24`, `docs/CLUE_MATCH.md:61`.
+  - **Tests first** ("`presentCountries` / `checkProfile`" row), each seen failing:
+    - listed `notPresent` code survives into country clue text/tags or into `animalsFromProfiles` regions;
+    - profile door (`contentRowsFromProfiles` → `poolFromRows` → `animalsFromPool`) and `animalsFromProfiles` disagree on regions;
+    - lowercase code, unknown `regionOfCountry` code, bad status, duplicate code, or removing every country (`presentCountries` empty when `range.countries` is non-empty) passes `checkProfile`;
+    - valid sourced code absent from `range.countries` wrongly fails `checkProfile`.
+  - **Code:**
+    - `notPresent?: Array<{ code: string; status: 'uncertain' | 'possibly-extinct' | 'extinct' }>` on `redList`;
+    - pure `export function presentCountries(profile: Pick<AnimalProfile, 'range' | 'redList'>)` called by `profileClues` and `animalsFromProfiles` (`animalsFromPool` untouched);
+    - fail-loud `checkProfile` validation (no case normalization; decoupled from `range.countries` so `HAVING count(*) >= 2` pool shifts never break unrelated profiles).
+  - **Profiles:** the 9 entries from Target design's table (`57`, `65`, `24`, `18`, `58`, `50`, `52`, `63`, `07`); keep ECU on Floreana/Pinta; skip giant pangolin AGO.
+  - **Docs:** update `docs/CONTENT_SOURCES.md:24` (field, confirmed extant range rule, `HAVING count(*) >= 2` decoupling, validation) and `docs/CLUE_MATCH.md:61` (countries minus `redList.notPresent`).
+  - **Acceptance:** tests fail first then pass; `content -- preview` shows 0 problems; exactly 4 region answers flip in `animalsFromProfiles` (aardvark north-africa, wild dog north-africa, Sunda pangolin east-asia, Yangtze softshell east-asia — Opus reports full before/after `traits.region` diff across all 76).
+  - **Checks:** typecheck, lint, test, `content -- preview`; lead runs live `content -- check` (read-only).
+
+- [ ] **S11 · Dev copy: zero-downtime view swap, content build, check, IDN table (lead)**
+  - **Owner:** lead. **Files:** plan Log only.
+  - **Scope**, in order inside `dev`:
+    1. Run `$S/view-swap.sql` on `phaser_june_dev` (`dev bash -c 'psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "\\timing on" -f "$1"' _ "$S/view-swap.sql"`), recording both total duration and the swap transaction duration.
+    2. `dev npm run content -- build`.
+    3. `dev npm run content -- check`.
+    4. Read-only IDN check: `dev bash -c "psql \"\$DATABASE_URL\" -tAc \"select key, array(select x from unnest(species_ids) x where x = any('{5,12,17,24,25,27,28,40,44,67}') order by x) from clue_match_places where kind='continent' order by key\""`.
+    5. Privilege check (if `critter_app` exists on dev): `dev bash -c "psql \"\$DATABASE_URL\" -tAc \"select has_table_privilege('critter_app','clue_match_places','select'), has_table_privilege('critter_app','clue_match_ranges','select')\""`.
+  - **Acceptance:** SQL exits 0 (swap transaction in milliseconds); `content -- check` reports 76 playable, 0 errors; Oceania lists `{17, 27, 67}`, Asia lists `{5, 12, 24, 25, 28, 40, 44}` and none of `{17, 27, 67}`; grants `t|t`. Note in Log that other PRs' CI will see `IDP` on dev (only warns).
+
+- [ ] **S12 · E2E globe-vs-rounds agreement assertion (Opus)**
+  - **Owner:** Opus. **Files:** `scripts/e2e.mjs`.
+  - **Scope:** add one check block that fetches `/api/places/` and `/api/clue-game/pool/` once, then:
+    - builds `report.idn`: one row per id in `[5, 12, 17, 24, 25, 27, 28, 40, 44, 67]` with common name, globe continents (`continent:*` keys whose `speciesIds` contain the id), and pool country tags (`country:*` `compareTags` on that species's clues);
+    - asserts `continent:oceania` holds `17`, `27`, `67` and `continent:asia` holds `5`, `12`, `24`, `25`, `28`, `40`, `44` and omits `17`, `27`, `67`;
+    - asserts pool country tags match: `17`, `27`, `67` carry `country:idp` and not `country:idn`, while the 7 Asian ids carry `country:idn` and not `country:idp` (coupled with S8's unit test pinning `country:idp → region:melanesia → oceania`, and V7's `animalsFromPool` check).
+  - **Acceptance:** typecheck and lint pass (Opus does not run E2E; S13 runs it on dev).
+
+- [ ] **S13 · Interim E2E on dev with everything in place, plus throttled load (lead)**
+  - **Owner:** lead. **Files:** plan Log only (`$S/e2e-s13`, `$S/e2e-s13-throttled-report.json`).
+  - **Scope:**
+    1. `dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh`, copy newest artifact to `$S/e2e-s13` (preserve `$S/e2e-s6/report.json` as `$S/e2e-s6-report.json` and delete `$S/e2e-s6` per disk rule).
+    2. `dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox E2E_CPU_THROTTLE=4 E2E_ROUNDS=1 npm run e2e:fresh`, copy `report.json` to `$S/e2e-s13-throttled-report.json`.
+  - **Acceptance:** both runs pass every check (headers, globe-vs-rounds, invariants); `report.idn` has all 10 rows; record throttled `anywhereLoad.median` next to S3's.
+
+- [ ] **S14 · Final dealt-slot table and balance bot, measured against targets (lead)**
+  - **Owner:** lead. **Files:** plan (results tables + Log), `$S/deals-after.txt`, `$S/balance-after.txt`.
+  - **Scope:**
+    1. Run `node scripts/run-typescript.mjs scripts/balance-044.ts --deals > $S/deals-after.txt` twice; verify identical fingerprint.
+    2. Run `node scripts/run-typescript.mjs scripts/balance-044.ts --places world,africa,asia,north-america,south-america --rounds 400 --seed 44 > $S/balance-after.txt`.
+    3. Run V10 comparison against `$S/balance-before.txt`.
+  - **Acceptance:** record after-tables in the plan and check every Goal 4 target (birth ≥ 5 decks or accepted 4 with reason, `birth:eggs`/`birth:live` shown; life-cycle ≥ 35; region ≤ 75; >1 region forced-only; 100% separation; ≥ 60 4-category decks; worst deck < 20 ms; Anywhere load ≤ 351 ms) and balance bot check (≤ 3 pts Found move per place, or per-place explanation recorded — note Asia pool shrinks 20 → 17).
+  - **Decides S15:** if worst deck `< 20 ms` AND Anywhere load `<= 351 ms`, check off S15 right now as `"not needed (worst X ms, Anywhere Y ms)"` and record why in Log; otherwise leave S15 unchecked for the next session.
+
+- [ ] **S15 · Conditional: lossless branch-and-bound cut-off in `dealClues` (Opus)**
+  - **Owner:** Opus (only if S14 missed `< 20 ms` worst deck or `<= 351 ms` Anywhere load). **Files:** `src/clueGame/animalBoard.ts`, `tests/clueGame/animalBoard.test.ts`.
+  - **Test first:** add test asserting `dealClues` with cut-off matches exhaustive search over the hand-built pool and every `contentPool` set; verify the test catches an intentionally too-tight bound (e.g. `+0` instead of `min(count, ...)`) before keeping the real bound, and record that failing check in Log.
+  - **Code:** upper bound `[-Math.max(0, allRegionGroups - 1), splitMix + Math.min(count, unionCategories)]` skipping combinations below best key so far.
+  - **Acceptance:** `--deals` fingerprint equals S14's verbatim; worst deck `< 20 ms`; Anywhere load `<= 351 ms`; refresh `$S/deals-after.txt`.
+  - **Checks:** typecheck, lint, test.
+
+- [ ] **S16 · Docs sweep (Opus)**
+  - **Owner:** Opus. **Files:** `docs/CLUE_MATCH.md` (`:51` `"053-1"` → `"055-1"`, verify `:61` and `:67`), `docs/ANIMAL_BOARD_PAPER.md:38` (append dated `055-1` note verbatim from Target design), `docs/CONTENT_SOURCES.md` (`:24`, `:56`, `:59`), `docs/SHAPEFILE_BEST_PRACTICES.md:35`. (`CONTEXT.md` unchanged.)
+  - **Acceptance:** docs match final code; `rg -n "presence 1-3|IN \(1, 2, 3\)|2 to 30 kg|30 to 300 kg|055-0" docs db scripts src` finds no stale hit (outside frozen historical prose); typecheck and lint pass.
+
 ## Verification
+
+*After all Steps are checked, run Final code review (`## Code review (Astra)` and `## Code review (Fable)`, plus lead rulings and any accepted MUST-FIX steps) per `~/.gemini/mission-lead.md`. Once code review is resolved, run this full Verification one heavy job at a time from `/srv/critter-ai/worktrees/clue-data-dealer` (with `S` and `dev()` defined as at the top of Steps).*
+
+**V1 · Static checks & build**
+```bash
+npm run typecheck && npm run lint && npm test && npm run build
+```
+- All exit 0. `npm test` includes every test added in S4, S7, S8, S10 (and S15 if run), with failing-first evidence in Log.
+
+**V2 · Profiles**
+```bash
+npm run content -- preview
+```
+- `0 problems` over 76 profiles (`checkProfile` incl. `notPresent`, `checkCitations`).
+
+**V3 · Live database, read-only (today's live rows)**
+```bash
+npm run content -- check
+```
+- `Pool: 76 playable of 76 species … 0 errors, 0 warnings`. Proves deployed code works before the owner's steps.
+
+**V4 · Dev copy, after S11's build**
+```bash
+dev npm run content -- check
+```
+- 76 playable, `0 errors`; dev pool diet counts match plants 24 / meat 9 / insects 25 / mixed 17 / unrecorded 1.
+
+**V5 · E2E (verifiable final artifact)**
+```bash
+dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh
+rm -rf $S/e2e-final && cp -r "$(ls -d e2e-artifacts/*/ | sort | tail -1)" $S/e2e-final
+dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox E2E_CPU_THROTTLE=4 E2E_ROUNDS=1 npm run e2e:fresh
+cp "$(ls -d e2e-artifacts/*/ | sort | tail -1)report.json" $S/e2e-final/throttled-report.json
+```
+- `$S/e2e-final/report.json`: 100% checks passed (count vs baseline 1588), 0 console errors, 0 failed requests; includes Goal 2 header checks (a) every round × 3 viewports + (b) 11-label probe, Goal 3 `report.idn` globe-vs-rounds checks, existing invariants, and `anywhereLoad` (unthrottled + throttled in `throttled-report.json`). Key screenshots (`04-round-*-landed.png`) saved in `$S/e2e-final/`.
+- Reproducible with the exact two commands above (seed 7).
+
+**V6 · View-swap SQL parity**
+```bash
+strip() { grep -v '^\s*--' | grep -v '^\s*$'; }
+diff <(sed -n '/^CREATE MATERIALIZED VIEW clue_match_ranges AS/,/^CREATE UNIQUE INDEX clue_match_places_key/p' db/schema.sql | strip) \
+     <(sed -n '/^CREATE MATERIALIZED VIEW clue_match_ranges_new AS/,/^CREATE UNIQUE INDEX clue_match_places_new_key/p' $S/view-swap.sql | sed 's/_new//g' | strip) && echo VIEW-SQL-SAME
+```
+- Prints `VIEW-SQL-SAME`. Exact file tested on `phaser_june_dev` in S11 (exit 0, millisecond swap, grants `t|t`).
+
+**V7 · Globe vs rounds for all 10 IDN animals**
+- Confirm via S11's `clue_match_places` query + `$S/e2e-final/report.json` (`report.idn`) + `animalsFromProfiles` (confirming id `27` has `region:melanesia` and `continents: ['oceania']`, `17` has `region:melanesia` + `region:australia-nz` and `['oceania']`, `67` has `region:melanesia` and `['oceania']`, and the 7 Asian ids have `region:southeast-asia` and `['asia']`). Record the before/after table in Summary.
+
+**V8 · Dealt-slot table (Goal 4)**
+```bash
+node scripts/run-typescript.mjs scripts/balance-044.ts --deals | tee $S/deals-final.txt
+```
+- Matches `$S/deals-after.txt` (identical fingerprint); meets all targets (birth ≥ 5 or accepted 4 with reason, `birth:eggs`/`birth:live` shown; life-cycle ≥ 35; region ≤ 75; >1 region forced-only; 100% separation; ≥ 60 4-category decks; worst deck < 20 ms; Anywhere load ≤ 351 ms). Record throttled browser load before (S3) vs after (V5).
+
+**V9 · Seeded rounds reproducibility**
+- V8 fingerprint identical across two runs.
+- `jq '.rounds[0] | {mysteryId, mystery, suspects}' $S/e2e-final/report.json` equals `$S/e2e-s13/report.json`.
+
+**V10 · Balance bot before/after on identical seeds**
+```bash
+f() { awk -F' [|] ' '/^[|] [a-z-]+ [(]/{split($1,p," "); sub(/%.*/,"",$3); print p[2]"/"$2, $3}' "$1" | sort; }
+join <(f $S/balance-before.txt) <(f $S/balance-after.txt) | awk '{d=$3-$2; print $0, (d>0?"+":"") d; if (d>3||d<-3) bad=1} END{exit bad}'
+```
+- Both full tables in plan; exit 0 (≤ 3 pts move in every place) or per-place explanation recorded.
+
+**V11 · Unit tests written first**
+- Log records failing-first test names for S4, S7, S8, S10 (and S15 if run).
+
+**V12 · Summary completeness (before setting `status: done`)**
+- Every changed answer (animal, question, old → new, source): 12 diet values, Goliath frog unrecorded, 4 region flips, IDN → IDP changes (`17`, `27`, `67`).
+- Everything kept and why: devil/wild dog carve-out, aye-aye, giant armadillo, 5 newly-`mixed` animals with plant signs, `birth:live` = 0, Astra MUST-FIX #3 objection.
+- Shapefile-vs-IUCN disagreement table, out-of-scope follow-ups (incl. missing trait records), and owner's exact post-release steps.
+
+**Release smoke (during Release unit, after `deploy critter-connect`)**
+```bash
+curl -fsS https://play.critterconnect.org/version.txt          # = merge commit
+for p in / /explore/ /api/places/ /api/clue-game/pool/; do curl -fsS -o /dev/null -w "%{http_code} $p\n" "https://play.critterconnect.org$p"; done   # all 200
+curl -fsS https://play.critterconnect.org/api/places/ | jq -c '.places[] | select(.key=="continent:asia" or .key=="continent:oceania") | {key, n: (.speciesIds|length), w27: (.speciesIds|index(27) != null)}'
+npm run content -- check                                      # live, read-only, 0 errors
+```
+- Globe still shows old views (`Asia` holds `27`) until owner's step 3 (proves live DB untouched).
+- Only AFTER smoke passes, add one handoff item to `/srv/critter-ai/handoff/critter-connect.md` with the owner's ordered steps (1. fresh dump, 2. read-only `content -- ranges` with empty git diff gate, 3. paste `$S/view-swap.sql`, 4. `content -- build`, 5. optional `content -- check`), what players see after each step, and the `/api/places` (5 min) vs `/api/clue-game/pool` (1 min) cache window.
 
 ## Code review (Astra)
 
@@ -796,5 +1083,6 @@ SHOULD-CONSIDER:
 - 2026-11-20 08:13 UTC: Fable review done (`architecture-reviewer`, Fable 5.2 · high). VERDICT: APPROVE_WITH_CHANGES (1 MUST-FIX: swap live materialized views without a ~1 min lock stall; 4 MISSED: Tanimbar/Yamdena >130°E misfiling, `HAVING >= 2` vs `notPresent` recovery message, `EvidenceGrid.tsx:414` hidden-cell aria-label, branch-and-bound discrepancy; 5 SHOULD-CONSIDER). Plan-only edit; no code or DB writes.
 - 2026-11-20 08:18 UTC: Astra review done (Codex GPT-6.2-Astra · xhigh). VERDICT: APPROVE_WITH_CHANGES (5 MUST-FIX: zero-downtime materialized view swap, continent pool check in `roundStillFits`, uncertain region presence vs scored No, Goliath frog diet evidence + text consistency, Indonesian island boundary excluding Tanimbar/Maluku; 3 SHOULD-CONSIDER). Plan-only edit; no code or DB writes.
 - 2026-11-20 08:26 UTC: Revision done (lead). Ruled on all 18 Fable/Astra items under Revision notes (17 accepted, 1 rejected: Astra MUST-FIX #3 on `presence uncertain` region answers per brief & KISS); verified all 97 eastern Natural Earth IDN polygons + 10 IDN species ranges on `phaser_june_dev` for exact Lydekker's Line predicate; revised Architecture, Compatibility, Decision, and Decisions in place. Plan-only edit; no code or DB writes.
+- 2026-11-20 08:36 UTC: Steps done (`planner` Opus 5.5 · xhigh → lead review). Added S1–S16 (clean lead/Opus split, golden-diff S1 before SQL edits, tests-first on S4/S7/S8/S10/S15, conditional S15 branch-and-bound) and V1–V12 + Release smoke; corrected inverted IDN/IDP predicate note in S8, stale `checkProfile` message in S10, `country:*` vs `region:*` pool check in S12, and added IUCN-gated fallback for Big-headed Turtle (`04`) in S7. Plan-only edit; no code or DB writes.
 
 ## Summary
