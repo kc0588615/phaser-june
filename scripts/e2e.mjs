@@ -2716,6 +2716,45 @@ async function main() {
     check('/login/ redirects to the globe', login.status === 308 && login.headers.get('location') === '/', `${login.status} ${login.headers.get('location')}`);
     const journalRoute = await fetch(`${BASE}/api/clue-game/journal/`);
     check('the journal route is gone', journalRoute.status === 404, String(journalRoute.status));
+    // Plan 2026-11-20 S12: the globe and the rounds agree on the 10 Indonesian animals. Indonesian New Guinea (IDP) is
+    // Oceania, the rest of Indonesia (IDN) is Asia. From Node too.
+    {
+      const IDN_IDS = [5, 12, 17, 24, 25, 27, 28, 40, 44, 67];
+      const IDP_IDS = [17, 27, 67];
+      const ASIA_IDN_IDS = [5, 12, 24, 25, 28, 40, 44];
+      const getJson = async route => {
+        try {
+          const res = await fetch(`${BASE}${route}`);
+          check(`idn: ${route} answers 200`, res.ok, String(res.status));
+          return res.ok ? await res.json() : null;
+        } catch (error) {
+          check(`idn: ${route} answers 200`, false, error.message);
+          return null;
+        }
+      };
+      const places = await getJson('/api/places/');
+      const pool = await getJson('/api/clue-game/pool/');
+      if (places && pool) {
+        const continents = places.places.filter(place => place.kind === 'continent');
+        report.idn = IDN_IDS.map(id => ({
+          id,
+          name: pool.species.find(species => species.id === id)?.commonName ?? null,
+          globeContinents: continents.filter(place => place.speciesIds.includes(id)).map(place => place.key).sort(),
+          poolCountries: [...new Set(pool.clues.filter(clue => clue.speciesId === id).flatMap(clue => clue.compareTags).filter(tag => tag.startsWith('country:')))].sort(),
+        }));
+        const row = id => report.idn.find(r => r.id === id);
+        const onGlobe = (key, ids, wanted) => ids.filter(id => row(id).globeContinents.includes(key) !== wanted);
+        const badOceania = [...onGlobe('continent:oceania', IDP_IDS, true), ...onGlobe('continent:oceania', ASIA_IDN_IDS, false)];
+        check('idn: globe continent:oceania holds the IDP animals (17, 27, 67) and none of the Asian ones', badOceania.length === 0, JSON.stringify(badOceania.map(row)));
+        const badAsia = [...onGlobe('continent:asia', ASIA_IDN_IDS, true), ...onGlobe('continent:asia', IDP_IDS, false)];
+        check('idn: globe continent:asia holds the 7 Asian IDN animals and none of the IDP ones', badAsia.length === 0, JSON.stringify(badAsia.map(row)));
+        const tagged = (ids, has, lacks) => ids.filter(id => !row(id).poolCountries.includes(has) || row(id).poolCountries.includes(lacks));
+        const badIdp = tagged(IDP_IDS, 'country:idp', 'country:idn');
+        check('idn: pool tags 17, 27, 67 country:idp and not country:idn', badIdp.length === 0, JSON.stringify(badIdp.map(row)));
+        const badIdn = tagged(ASIA_IDN_IDS, 'country:idn', 'country:idp');
+        check('idn: pool tags the 7 Asian IDN animals country:idn and not country:idp', badIdn.length === 0, JSON.stringify(badIdn.map(row)));
+      }
+    }
   } finally {
     await close();
   }
