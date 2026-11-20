@@ -90,7 +90,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -707,6 +707,26 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+*Reviewed 2026-11-20 by Astra (Codex GPT-6.2-Astra · xhigh); saved output: `/srv/critter-ai/agent-state/missions/clue-data-dealer/tasks/astra-arch-review.md`.*
+
+```
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. **Keep the globe available during the view change.** Dropping both materialized views before rebuilding them holds exclusive locks for about a minute. The app role times out after 15 seconds, so globe and range requests can return 500s. Build and index replacements first, then swap them and apply grants in one short transaction.
+2. **Check continent eligibility when restoring a round.** An Asia round with suspects `5, 16, 27, 62, 67` can pass `roundStillFits` after both echidnas move to Oceania. Its clue rows and witness notes still match. Require every saved suspect to belong to the current effective pool before restoring.
+3. **Preserve uncertainty in region answers.** Removing China from the Sunda pangolin’s country list turns “presence uncertain” into a scored **No** for East Asia. Either ask about documented range or skip that question when the evidence cannot establish an answer.
+4. **Require evidence for both sides of the diet split.** The plan keeps the Goliath frog in `meat` because its source gives no proportions, yet that bin now asserts it does **not** eat mostly invertebrates. Leave diet unrecorded when the source cannot distinguish the bins. Make the full question, short question, and guide express the same distinction.
+5. **Correct the Indonesian island boundary.** The `>130°E` rule assigns Tanimbar and parts of Maluku to “Indonesian New Guinea.” That changes the globe outline even with today’s animal set. Use the same verified island boundary in both SQL paths.
+
+SHOULD-CONSIDER:
+
+1. Keep sourced country exclusions when a range refresh temporarily drops a country. The `HAVING count(*) >= 2` threshold depends on other animals and can otherwise invalidate an unrelated profile.
+2. Account for the independent `/places` and `/pool` caches in the rollout. Players can see mismatched revisions beyond the estimated one-minute database window.
+3. Count both birth questions in the dealer report. With one representative per category and split, `birth:eggs` always precedes its complement, so the birth target can pass while `birth:live` is never dealt.
+```
+
 ## Revision notes
 
 ## Steps
@@ -731,5 +751,6 @@ SHOULD-CONSIDER:
 - 2026-11-20 07:10 UTC: Baseline done (lead). typecheck/lint PASS, unit tests 76/76 PASS, content preview/check PASS (76 playable, 2478 clues, 491 facts, 0 errors/warnings), E2E against `phaser_june_dev` 1588/1588 PASS (`e2e-baseline/`), balance bot baseline recorded across 5 places (`balance-before.txt`).
 - 2026-11-20 08:06 UTC: Architecture done (`architect` pass 1 → lead Decision → `architect` pass 2). Chosen design: 1A′ diet, 2B size/label edges (weight-only 54 px headers), 3B `IDP` (>130°E) + 3P-A (`presence IN (1,2)`) + 3P-C (`redList.notPresent`), 4C two-stage dealer (`055-1`). Plan-only edit; no code or DB writes.
 - 2026-11-20 08:13 UTC: Fable review done (`architecture-reviewer`, Fable 5.2 · high). VERDICT: APPROVE_WITH_CHANGES (1 MUST-FIX: swap live materialized views without a ~1 min lock stall; 4 MISSED: Tanimbar/Yamdena >130°E misfiling, `HAVING >= 2` vs `notPresent` recovery message, `EvidenceGrid.tsx:414` hidden-cell aria-label, branch-and-bound discrepancy; 5 SHOULD-CONSIDER). Plan-only edit; no code or DB writes.
+- 2026-11-20 08:18 UTC: Astra review done (Codex GPT-6.2-Astra · xhigh). VERDICT: APPROVE_WITH_CHANGES (5 MUST-FIX: zero-downtime materialized view swap, continent pool check in `roundStillFits`, uncertain region presence vs scored No, Goliath frog diet evidence + text consistency, Indonesian island boundary excluding Tanimbar/Maluku; 3 SHOULD-CONSIDER). Plan-only edit; no code or DB writes.
 
 ## Summary
