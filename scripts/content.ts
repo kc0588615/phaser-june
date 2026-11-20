@@ -42,8 +42,11 @@ async function load(tx: postgres.TransactionSql, table: string, rows: ReadonlyAr
 // themselves, passed as one JSON parameter of [{ id, iucn_id }], so a new animal
 // gets its realms and countries before any build.
 // The country rules repeat the places view's in db/schema.sql: change both together.
-// The view splits Russia at 60°E for its continents; here the halves rejoin, so the
-// split changes nothing (kept so the two copies read alike).
+// Ranges are IUCN presence 1-2 (extant, probably extant). The view splits Russia at
+// 60°E for its continents; here the halves rejoin, so the split changes nothing (kept
+// so the two copies read alike). Indonesia is split along Lydekker's Line (> 133.2°E,
+// or > 130°E north of 3.5°S): its parts east of it are the project's own code IDP
+// (Indonesian New Guinea, Oceania), a country of their own here as on the globe.
 const RANGES_SQL = `
 WITH ranges AS (
   SELECT p.id AS species_id, i.wkb_geometry AS geom, i.presence
@@ -52,8 +55,8 @@ WITH ranges AS (
 ), kept AS (
   SELECT r.species_id, ST_Union(ST_MakeValid(r.geom)) AS geom
   FROM ranges r
-  WHERE r.presence IN (1, 2, 3)
-     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2, 3))
+  WHERE r.presence IN (1, 2)
+     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2))
   GROUP BY r.species_id
 ), realm_area AS (
   SELECT k.species_id, b.realm, sum(ST_Area(ST_Intersection(ST_MakeValid(b.wkb_geometry), k.geom)::geography)) AS area
@@ -73,13 +76,26 @@ WITH ranges AS (
          END AS continent
   FROM natural_earth.countries c
   CROSS JOIN LATERAL ST_Dump(ST_MakeValid(c.geom)) d
-  WHERE c.continent NOT IN ('Seven seas (open ocean)', 'Antarctica') AND c.adm0_a3 <> 'RUS'
+  WHERE c.continent NOT IN ('Seven seas (open ocean)', 'Antarctica') AND c.adm0_a3 NOT IN ('RUS', 'IDN')
   UNION ALL
   SELECT c.adm0_a3, c.name, 'Asia', ST_Intersection(ST_MakeValid(c.geom), ST_MakeEnvelope(60, -90, 180, 90, 4326)), 'Asia'
   FROM natural_earth.countries c WHERE c.adm0_a3 = 'RUS'
   UNION ALL
   SELECT c.adm0_a3, c.name, 'Asia', ST_Intersection(ST_MakeValid(c.geom), ST_MakeEnvelope(-180, -90, 60, 90, 4326)), 'Europe'
   FROM natural_earth.countries c WHERE c.adm0_a3 = 'RUS'
+  UNION ALL
+  -- Indonesia west of Lydekker's Line (Sumatra through Maluku/Wallacea: Seram, Halmahera, Gorong/Watubela, Kai, Tanimbar) stays Asia.
+  SELECT c.adm0_a3, c.name, c.continent, d.geom, c.continent
+  FROM natural_earth.countries c CROSS JOIN LATERAL ST_Dump(ST_MakeValid(c.geom)) d
+  WHERE c.adm0_a3 = 'IDN'
+    AND NOT (ST_X(ST_Centroid(d.geom)) > 133.2 OR (ST_X(ST_Centroid(d.geom)) > 130 AND ST_Y(ST_Centroid(d.geom)) > -3.5))
+  UNION ALL
+  -- Its parts east of Lydekker's Line (mainland Papua, Raja Ampat, Cenderawasih Bay, Adi/Karas, Aru) are Oceania,
+  -- under the project code IDP (regions.ts: melanesia). Same name literal as regions.ts.
+  SELECT 'IDP', 'Indonesian New Guinea', 'Oceania', d.geom, 'Oceania'
+  FROM natural_earth.countries c CROSS JOIN LATERAL ST_Dump(ST_MakeValid(c.geom)) d
+  WHERE c.adm0_a3 = 'IDN'
+    AND (ST_X(ST_Centroid(d.geom)) > 133.2 OR (ST_X(ST_Centroid(d.geom)) > 130 AND ST_Y(ST_Centroid(d.geom)) > -3.5))
 ), country_shapes AS MATERIALIZED (
   SELECT adm0_a3, name, ST_Union(geom) AS geom
   FROM country_parts

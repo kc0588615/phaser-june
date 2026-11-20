@@ -130,6 +130,9 @@ const COUNTRY_REGIONS: ReadonlyArray<readonly [string, string, string, string]> 
   ['SVK', 'SK', 'eastern-europe', 'Slovakia'],
   ['UKR', 'UA', 'eastern-europe', 'Ukraine'],
   ['FJI', 'FJ', 'melanesia', 'Fiji'],
+  // IDP is this project's code, not Natural Earth's: the range query (scripts/content.ts RANGES_SQL)
+  // and clue_match_places (db/schema.sql) split it off IDN east of Lydekker's Line. Same name as their SQL literal.
+  ['IDP', '', 'melanesia', 'Indonesian New Guinea'],
   ['NCL', 'NC', 'melanesia', 'New Caledonia'],
   ['PNG', 'PG', 'melanesia', 'Papua New Guinea'],
   ['SLB', 'SB', 'melanesia', 'Solomon Is.'],
