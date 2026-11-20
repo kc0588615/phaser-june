@@ -20,3 +20,11 @@ test('every Red List status in the clue text has a definition', () => {
   }
   assert.ok(GLOSSARY.every(entry => entry.definition.endsWith('.')), 'definitions are full sentences');
 });
+
+test('every clue that says invertebrates explains the word', () => {
+  const clues = contentPool.clues.filter(c => /\binvertebrates?\b/i.test(c.label));
+  assert.ok(clues.length > 0);
+  for (const clue of clues) assert.ok(terms(clue.label).includes('Invertebrate'), clue.label);
+  assert.deepEqual(terms('An invertebrate.'), ['Invertebrate']);
+  assert.deepEqual(terms('Some invertebrates.'), ['Invertebrate']);
+});

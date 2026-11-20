@@ -15,11 +15,11 @@ WITH playable AS (
   JOIN playable p ON p.species_id = s.id
   JOIN iucn i ON i.id_no = s.iucn_id
 ), kept AS (
-  -- IUCN presence 1-3 = extant; extinct species keep their historical range.
+  -- IUCN presence 1-2 = extant; extinct species keep their historical range.
   SELECT r.species_id, ST_MakeValid(r.geom) AS geom
   FROM ranges r
-  WHERE r.presence IN (1, 2, 3)
-     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2, 3))
+  WHERE r.presence IN (1, 2)
+     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2))
 ), realm_area AS (
   SELECT k.species_id, b.realm,
          sum(ST_Area(ST_Intersection(ST_MakeValid(b.wkb_geometry), k.geom)::geography)) AS area_m2

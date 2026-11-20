@@ -130,6 +130,9 @@ const COUNTRY_REGIONS: ReadonlyArray<readonly [string, string, string, string]> 
   ['SVK', 'SK', 'eastern-europe', 'Slovakia'],
   ['UKR', 'UA', 'eastern-europe', 'Ukraine'],
   ['FJI', 'FJ', 'melanesia', 'Fiji'],
+  // IDP is this project's code, not Natural Earth's: the range query (scripts/content.ts RANGES_SQL)
+  // and clue_match_places (db/schema.sql) split it off IDN east of Lydekker's Line. Same name as their SQL literal.
+  ['IDP', '', 'melanesia', 'Indonesian New Guinea'],
   ['NCL', 'NC', 'melanesia', 'New Caledonia'],
   ['PNG', 'PG', 'melanesia', 'Papua New Guinea'],
   ['SLB', 'SB', 'melanesia', 'Solomon Is.'],
@@ -295,6 +298,11 @@ for (const [alpha3, alpha2, region, name] of COUNTRY_REGIONS) {
   if (alpha2) BY_CODE.set(alpha2, { region, name });
 }
 for (const [iso, naturalEarth] of Object.entries(ISO_ALIASES)) BY_CODE.set(iso, BY_CODE.get(naturalEarth)!);
+
+/** The Natural Earth code an ISO alpha-3 alias stands for (SSD -> 'SDS'), or null when the code isn't an alias. */
+export function isoAliasTarget(code: string): string | null {
+  return Object.hasOwn(ISO_ALIASES, code) ? ISO_ALIASES[code] : null;
+}
 
 /** The region key for an ISO alpha-3 or alpha-2 country code (or a Natural Earth adm0_a3), or null when unknown. */
 export function regionOfCountry(code: string): string | null {

@@ -22,6 +22,7 @@ Rules:
 - Take each fact from the highest tier that states it. When sources disagree, the higher tier wins (ADW's Asian elephant gestation "18 to 23 weeks" lost to Smithsonian's 18 to 22 months).
 - Every trait, clue and fact names its `source` key. `url` points to the exact page when it isn't the profile's page for that key (a news story, a DOI).
 - Red List data comes from the latest assessment; `redList.url` is its page. `year` is the year published.
+- Countries are the confirmed extant range: `range.countries` (the range maps' output, never hand-edited) minus `redList.notPresent`, a list of `{ code, status }` where `status` is `uncertain`, `possibly-extinct` or `extinct`, cited by `redList.url` (the same assessment's Country Occurrence list). Codes are Natural Earth 3-letter codes, as in `range.countries`: `checkProfile` rejects an ISO alias (`SSD`, `ESH`) and names the code to use (`SDS`, `SAH`). List every country in `range.countries`, or overlapping the animal's range polygons, that the assessment marks extinct, possibly extinct or presence uncertain; `presentCountries` drops them from the country clue and the regions. A code may be missing from `range.countries` (a country stays only while 2+ animals share it, `HAVING count(*) >= 2`), so adding or removing another animal never breaks the entry. `checkProfile` fails on an ISO alias, a code that isn't a known 3-letter uppercase country code, a bad status, a code listed twice, or a list that removes every country.
 - Habitats are IUCN classes and level-2 kinds, marginal ones included. Add a kind the IUCN text supports but its table omits (the Sunda pangolin's "lowland dipterocarp forest"), so a clue can't wrongly rule the animal out. Never add one no source supports. Skip the `artificial` class (Farms & towns) and its kinds: the game doesn't know it (plans 055, 056): the content check rejects it as an unknown habitat.
 - Leave a trait out when no source documents it. Missing data never rules a candidate out.
 - A yes/no trait (`trees`) needs a source for a `no` just as for a `yes`: a quote that rules it out. When two sources disagree on it, leave it out (no record), rather than taking the higher tier.
@@ -53,14 +54,16 @@ Trait values (templates in `profiles.ts`):
 
 | Trait | Values |
 |---|---|
-| size | tiny < 100 g, small 100 g to 2 kg, medium 2 to 30 kg, large 30 to 300 kg, huge > 300 kg |
+| size | tiny < 100 g, small 100 g to 2 kg, medium over 2 up to 30 kg, large over 30 up to 300 kg, huge over 300 kg (an animal's typical adult weight decides) |
 | lifespan | short < 5 years, medium 5 to 20, long > 20 (longest known, zoo records included) |
 | young | one (1 or 2 per litter or clutch), few (3 to 10), many (> 10) |
-| diet | plants, meat, insects (and other small invertebrates), mixed |
+| diet | plants, meat, insects (mostly insects and other small invertebrates), mixed (first match in the order below) |
 | activity | day, night, twilight, any |
 | social | alone, pairs, groups |
 | covering | fur, spines, scales, armor, shell, skin (mostly bare) |
 | trees | yes, no (only `yes` is ever asked: "Does it live in trees?"; `no` records the answer) |
+
+`diet` is the first of these that fits: 1. **plants** when sources name no animal food (for a plant-eater, any animal food a source names counts); 2. **insects** when sources say it eats mostly small animals without backbones (insects, worms, snails, crayfish and other invertebrates); 3. **meat** when sources name no plant food (grass or other plant bits a meat-eater swallows in small amounts don't count; plant food it seeks out, like fruit or nectar, does); 4. otherwise **mixed**. Leave `diet` unrecorded when sources list both invertebrates and vertebrates without proportions, so `insects` vs `meat` can't be settled.
 
 `trees` (plan 055; rules written before the research, `docs/research/2026-11-07-moves-and-signs.md` §2): **yes** when it spends most of its active life up in trees: it feeds and rests or sleeps there, and comes down rarely. The source must say "arboreal", "lives in trees", "spends most of its time in the canopy" or the like. **No** when a source says it lives mostly on the ground, underground or in water; an animal that climbs but lives mostly on the ground is a no (with a quote) or no record. Its `note` uses only ground, branch or burrow words (no habitat, water, diet, size, day/night, social or birth words), because it shows whenever its own question isn't dealt.
 

@@ -42,9 +42,10 @@
       "source": "adw"
     },
     "diet": {
-      "value": "meat",
-      "note": "It mostly eats rodents.",
-      "source": "iucn"
+      "value": "mixed",
+      "note": "It mostly eats rodents, and it also licks nectar from flowers.",
+      "source": "literature",
+      "url": "https://doi.org/10.1002/ecy.4470"
     },
     "activity": {
       "value": "day",

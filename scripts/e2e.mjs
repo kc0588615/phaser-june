@@ -89,6 +89,35 @@ const sortFacts = (facts, view = fact => fact) => [...facts]
   .sort((a, b) => a.out - b.out || view(a).contradicted - view(b).contradicted || view(b).matches - view(a).matches || a.number - b.number)
   .map(fact => fact.id);
 const sameList = (a, b) => a.join() === b.join();
+/** Plan 2026-11-20 S5: the phone sizes the evidence headers must fit, and the column labels Goal 2 changed. */
+const HEADER_VIEWPORTS = [[390, 844], [375, 548], [320, 720]];
+const CHANGED_LABELS = ['<100 g', '0.1–2 kg', '>2–30 kg', '>30–300 kg', '>300 kg', 'Over 10 young', 'Over 20 years', 'Mainly day', 'Mainly night', 'Mainly dawn/dusk', 'South\u00adern Africa'];
+/** In the page: the evidence headers whose label doesn't fit two lines of its column (clamped, overflowing, or wider than
+ * its th). With `labels`, the first header's label text (the text node after its category mark) shows each in turn instead,
+ * then goes back. */
+const headerMisfits = labels => {
+  const headers = [...document.querySelectorAll('table[aria-label="Evidence"] thead th[data-tag]')];
+  if (headers.length === 0) throw new Error('no evidence headers');
+  const labelOf = th => {
+    const span = th.querySelector('span.line-clamp-2');
+    const text = span?.querySelector(':scope > [data-category-mark]')?.nextSibling;
+    if (text?.nodeType !== Node.TEXT_NODE) throw new Error(`${th.dataset.tag}'s header has no category mark followed by its label`);
+    return { span, text };
+  };
+  const misfit = (th, { span, text }) => {
+    const m = { tag: th.dataset.tag, text: text.nodeValue, scrollHeight: span.scrollHeight, clientHeight: span.clientHeight, scrollWidth: span.scrollWidth, clientWidth: span.clientWidth,
+      spanWidth: span.getBoundingClientRect().width, thWidth: th.getBoundingClientRect().width };
+    return m.scrollHeight <= m.clientHeight && m.scrollWidth <= m.clientWidth && m.spanWidth <= m.thWidth + 0.5 ? [] : [m];
+  };
+  if (!labels) return headers.flatMap(th => misfit(th, labelOf(th)));
+  const label = labelOf(headers[0]);
+  const original = label.text.nodeValue;
+  try {
+    return labels.flatMap(text => { label.text.nodeValue = text; return misfit(headers[0], label); });
+  } finally {
+    label.text.nodeValue = original;
+  }
+};
 
 /** Keeps the newest KEEP_RUNS runs in e2e-artifacts/ (run names sort by time). */
 function pruneArtifacts() {
@@ -841,6 +870,25 @@ async function main() {
       if (!sameList(sortFacts(facts), sortFacts(facts, fact => fact.cheat))) sortSaw.hiddenWouldMove = true;
     };
     let pagingShot = null;
+    /** Switches the phone's size and waits for the page to take it and lay out. */
+    const setViewport = async (width, height) => {
+      await page('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 2, mobile: true });
+      await waitFor((w, h) => innerWidth === w && innerHeight === h && new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)))), `a ${width}x${height} viewport`, 10_000, width, height);
+    };
+    /** headerMisfits at each HEADER_VIEWPORTS size (tagged with it), then back to 390x844 with the board settled (as the layout checks above). */
+    const headerMisfitsAcross = async labels => {
+      const misfits = [];
+      try {
+        for (const [width, height] of HEADER_VIEWPORTS) {
+          await setViewport(width, height);
+          misfits.push(...(await evaluate(headerMisfits, labels)).map(m => ({ viewport: `${width}x${height}`, ...m })));
+        }
+      } finally {
+        await setViewport(390, 844);
+        await sleep(800);
+      }
+      return misfits;
+    };
     for (let n = 1; n <= ROUNDS; n++) {
       const start = await evaluate(() => window.__cc.clue());
       const pins = await evaluate(() => window.__cc.state().pins);
@@ -859,6 +907,13 @@ async function main() {
       // A yes/no trait's `no` is recorded, never asked (plan 055: trees:no).
       check(`round ${n}: no column asks a "no" value`, screen.columns.every(tag => !tag.endsWith(':no')), screen.columns.join());
       check(`round ${n}: the grid doesn't name the mystery while it's hidden`, screen.mystery.includes('On camera') && !screen.mystery.includes(mysteryName), screen.mystery);
+      const fitSizes = HEADER_VIEWPORTS.map(size => size.join('x')).join(', ');
+      const misfitHeaders = await headerMisfitsAcross(null);
+      check(`round ${n}: every evidence header fits two lines of its column at ${fitSizes}`, misfitHeaders.length === 0, JSON.stringify(misfitHeaders));
+      if (n === 1) {
+        const misfitLabels = await headerMisfitsAcross(CHANGED_LABELS);
+        check(`each of the ${CHANGED_LABELS.length} changed column labels fits two lines of a column at ${fitSizes}`, misfitLabels.length === 0, JSON.stringify(misfitLabels));
+      }
       if (n === 1) {
         // Tap an animal's tile: it's picked in the grid (its actions in the status line); tap again to drop it.
         const tile = await evaluate(async () => {
@@ -2624,6 +2679,35 @@ async function main() {
       check('a journal stored before this change is counted on the globe and kept as stored', header.startsWith(`${n} of `) && stored === oldJournalRaw, JSON.stringify({ header, n, kept: stored === oldJournalRaw }));
     }
 
+    // Anywhere (no place) load time, 3 fresh loads, recorded only; on an unthrottled run, 3 more at 4x CPU (like a CI
+    // runner). The sentinel on the old window stops waitFor matching the previous page: Page.navigate resolves before the
+    // old document unloads.
+    {
+      const url = `${BASE}/explore/?seed=${SEED}`;
+      const anywhereLoads = async cpuThrottle => {
+        const ms = [];
+        for (let i = 0; i < 3; i++) {
+          await evaluate(() => { sessionStorage.removeItem('cc:explore:game'); window.__ccOldPage = true; });
+          const t0 = Date.now();
+          await page('Page.navigate', { url });
+          await waitFor(() => !window.__ccOldPage && document.readyState === 'complete' && window.__cc?.clue?.() && window.__cc.state().ready && window.__cc.state().pins.length === 5, 'Anywhere board', 60_000);
+          ms.push(Date.now() - t0);
+        }
+        const median = [...ms].sort((a, b) => a - b)[1];
+        console.log(`Anywhere load: median ${median} ms (runs ${ms.join(', ')}; cpu x${cpuThrottle})`);
+        return { ms, median, cpuThrottle };
+      };
+      report.anywhereLoad = await anywhereLoads(CPU_THROTTLE);
+      if (CPU_THROTTLE === 1) {
+        try {
+          await page('Emulation.setCPUThrottlingRate', { rate: 4 });
+          report.anywhereLoad.throttled = await anywhereLoads(4);
+        } finally {
+          await page('Emulation.setCPUThrottlingRate', { rate: 1 });
+        }
+      }
+    }
+
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));
     check('no failed requests', report.failedRequests.length === 0, report.failedRequests.slice(0, 3).join(' | '));
     check('no request goes to Clerk', clerkRequests.length === 0, `${clerkRequests.length}: ${clerkRequests.slice(0, 3).join(' | ')}`);
@@ -2632,6 +2716,45 @@ async function main() {
     check('/login/ redirects to the globe', login.status === 308 && login.headers.get('location') === '/', `${login.status} ${login.headers.get('location')}`);
     const journalRoute = await fetch(`${BASE}/api/clue-game/journal/`);
     check('the journal route is gone', journalRoute.status === 404, String(journalRoute.status));
+    // Plan 2026-11-20 S12: the globe and the rounds agree on the 10 Indonesian animals. Indonesian New Guinea (IDP) is
+    // Oceania, the rest of Indonesia (IDN) is Asia. From Node too.
+    {
+      const IDN_IDS = [5, 12, 17, 24, 25, 27, 28, 40, 44, 67];
+      const IDP_IDS = [17, 27, 67];
+      const ASIA_IDN_IDS = [5, 12, 24, 25, 28, 40, 44];
+      const getJson = async route => {
+        try {
+          const res = await fetch(`${BASE}${route}`);
+          check(`idn: ${route} answers 200`, res.ok, String(res.status));
+          return res.ok ? await res.json() : null;
+        } catch (error) {
+          check(`idn: ${route} answers 200`, false, error.message);
+          return null;
+        }
+      };
+      const places = await getJson('/api/places/');
+      const pool = await getJson('/api/clue-game/pool/');
+      if (places && pool) {
+        const continents = places.places.filter(place => place.kind === 'continent');
+        report.idn = IDN_IDS.map(id => ({
+          id,
+          name: pool.species.find(species => species.id === id)?.commonName ?? null,
+          globeContinents: continents.filter(place => place.speciesIds.includes(id)).map(place => place.key).sort(),
+          poolCountries: [...new Set(pool.clues.filter(clue => clue.speciesId === id).flatMap(clue => clue.compareTags).filter(tag => tag.startsWith('country:')))].sort(),
+        }));
+        const row = id => report.idn.find(r => r.id === id);
+        const onGlobe = (key, ids, wanted) => ids.filter(id => row(id).globeContinents.includes(key) !== wanted);
+        const badOceania = [...onGlobe('continent:oceania', IDP_IDS, true), ...onGlobe('continent:oceania', ASIA_IDN_IDS, false)];
+        check('idn: globe continent:oceania holds the IDP animals (17, 27, 67) and none of the Asian ones', badOceania.length === 0, JSON.stringify(badOceania.map(row)));
+        const badAsia = [...onGlobe('continent:asia', ASIA_IDN_IDS, true), ...onGlobe('continent:asia', IDP_IDS, false)];
+        check('idn: globe continent:asia holds the 7 Asian IDN animals and none of the IDP ones', badAsia.length === 0, JSON.stringify(badAsia.map(row)));
+        const tagged = (ids, has, lacks) => ids.filter(id => !row(id).poolCountries.includes(has) || row(id).poolCountries.includes(lacks));
+        const badIdp = tagged(IDP_IDS, 'country:idp', 'country:idn');
+        check('idn: pool tags 17, 27, 67 country:idp and not country:idn', badIdp.length === 0, JSON.stringify(badIdp.map(row)));
+        const badIdn = tagged(ASIA_IDN_IDS, 'country:idn', 'country:idp');
+        check('idn: pool tags the 7 Asian IDN animals country:idn and not country:idp', badIdn.length === 0, JSON.stringify(badIdn.map(row)));
+      }
+    }
   } finally {
     await close();
   }

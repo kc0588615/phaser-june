@@ -38,8 +38,8 @@
       "source": "adw"
     },
     "diet": {
-      "value": "plants",
-      "note": "Bamboo is almost all of its food.",
+      "value": "mixed",
+      "note": "Bamboo is almost all of its food; now and then it eats small mammals, fish or insects.",
       "source": "adw"
     },
     "activity": {

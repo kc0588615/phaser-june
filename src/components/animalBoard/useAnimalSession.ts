@@ -116,7 +116,7 @@ export function useAnimalSession() {
       const load = { type: 'load' as const, book: data.book, ...first, trail: newTrail(ANIMAL_RULES) };
       if (saved) {
         try { // only the guard, the shape check and the restore: a save that throws or doesn't fit is dropped
-          if (saved.requested === requested && saved.session.round.rules.version === ANIMAL_RULES.version && roundStillFits(data.book, saved.session.round)) {
+          if (saved.requested === requested && saved.session.round.place === data.continent && saved.session.round.rules.version === ANIMAL_RULES.version && roundStillFits(data.book, saved.session.round)) {
             const { book: _book, ...fresh } = animalSessionReducer(null, load)!;
             if (!fitsShape(saved.session, fresh)) throw new Error("a field today's code writes is missing");
             // Later rounds don't replay the uninterrupted session exactly; they just shouldn't repeat round 1's deal.

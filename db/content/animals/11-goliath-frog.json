@@ -36,11 +36,6 @@
       "note": "It weighs 600 g to 3.25 kg.",
       "source": "adw"
     },
-    "diet": {
-      "value": "meat",
-      "note": "Insects, crabs, fish, snails, small mammals and smaller frogs.",
-      "source": "adw"
-    },
     "activity": {
       "value": "night",
       "source": "adw"

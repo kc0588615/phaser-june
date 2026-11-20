@@ -13,7 +13,13 @@
     "category": "CR",
     "year": 2019,
     "trend": "decreasing",
-    "url": "https://www.iucnredlist.org/species/12763/123584856"
+    "url": "https://www.iucnredlist.org/species/12763/123584856",
+    "notPresent": [
+      {
+        "code": "CHN",
+        "status": "uncertain"
+      }
+    ]
   },
   "systems": [
     "terrestrial"

@@ -11,13 +11,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ANIMAL_RULES, applyPhase, dealClues, endOfMove, fullTable, mark, nameIt, newAnimalRound, newTrail, pickSuspectSet,
-  scoreRound, starsFor, stillPossible, tellsApart, tileCells, trailAfter, trailFinished, witnessNotes, type AnimalRound,
+  ANIMAL_RULES, applyPhase, dealClues, endOfMove, fullTable, mark, nameIt, newAnimalRound, newTrail, pickSuspectSet, questionGroups,
+  roundStillFits, scoreRound, starsFor, stillPossible, tellsApart, tileCells, trailAfter, trailFinished, witnessNotes,
+  type AnimalRound, type Clue,
 } from '@/clueGame/animalBoard';
-import { makeBook, poolFor } from '@/clueGame/questionMatch';
+import { clueFace } from '@/clueGame/clueFaces';
+import { PREFIX_CATEGORY, makeBook, poolFor, type Animal, type Book } from '@/clueGame/questionMatch';
 import { animalsFromProfiles } from '@/clueGame/questionMatchContent';
 import type { ContinentKey } from '@/clueGame/regions';
-import { mulberry32 } from '@/lib/seededRng';
+import { hash32, mulberry32 } from '@/lib/seededRng';
 import { profiles, sources } from './contentPool';
 
 const animals = animalsFromProfiles(profiles, sources, () => undefined);
@@ -25,10 +27,14 @@ const book = makeBook(animals);
 const id = (name: string) => animals.find(animal => animal.name === name)!.id;
 const PLACES: Array<ContinentKey | null> = ['africa', 'asia', 'north-america', 'south-america', 'oceania', null];
 
-/** Every set the place's seeds make. */
+/** Every set the place's seeds make (once per place: the tests share them). */
+const setsByPlace = new Map<ContinentKey | null, number[][]>();
 function sets(place: ContinentKey | null): number[][] {
-  const pool = poolFor(animals, place);
-  return pool.map(seed => pickSuspectSet(book, pool, seed, ANIMAL_RULES, place)).filter((set): set is number[] => set !== null);
+  if (!setsByPlace.has(place)) {
+    const pool = poolFor(animals, place);
+    setsByPlace.set(place, pool.map(seed => pickSuspectSet(book, pool, seed, ANIMAL_RULES, place)).filter((set): set is number[] => set !== null));
+  }
+  return setsByPlace.get(place)!;
 }
 
 const africa = ['Okapi', 'Aardvark', 'Giant Pangolin', 'Black Rhinoceros', 'Hirola'].map(id);
@@ -152,4 +158,191 @@ test('one name any time: right finds (one star, no points for moves left), wrong
 
 test('every place has full-table questions for its sets', () => {
   for (const place of PLACES) for (const set of sets(place)) assert.ok(fullTable(book, set, place).length >= 4);
+});
+
+// ---- Rules 055-1: the dealer (plan 2026-11-20-clue-data-dealer, Goal 4). Written down first, the ways it could break:
+//  10. A birth question with the same split as a covering question is never dealt (only the split's first question stands).
+//  11. A 2-region deck is dealt where a 1-region deck also tells all five apart.
+//  12. A set that needs 2 regions gets no deck.
+//  13. A deck holds two questions with one split.
+//  14. Two region questions in a deck share a face, or a set loses its deck because a split's first region collides.
+//  15. The deck changes with the order of the ids or with the mystery.
+//  16. A deck is dealt from fewer splits than clues (askable questions counted, not splits).
+//  17. fullTable isn't questionGroups' first questions, or a group repeats a non-Range category or mixes splits.
+//  18. A saved continent round resumes after a suspect leaves that continent, or with an id the book lacks (or throws).
+//  19. The dealer's cut-off skips a split combination holding the winning deck (its bound too tight).
+// Small hand-built books, so these don't move with content edits.
+
+const rank = (latin: string) => ({ latin, plain: null });
+const NOTE = { text: 'Seen in a large group.', source: { name: 'Test', url: null }, tags: ['size:large'] };
+
+/** A synthetic book of five suspects (ids 1-5): per prefix, each suspect's value(s), tagged `prefix:value`. */
+function synth(columns: Record<string, Array<string | string[]>>, continents: ContinentKey[] = ['africa']): { book: Book; set: number[] } {
+  const list: Animal[] = [1, 2, 3, 4, 5].map((animalId, i) => {
+    const traits = Object.fromEntries(Object.entries(columns).map(([prefix, values]) => [prefix, [values[i]].flat().map(value => `${prefix}:${value}`)]));
+    return {
+      id: animalId, name: `Synth ${animalId}`, scientificName: `Synthus ${animalId}`, photo: null, continents: [...continents], traits,
+      familyTree: { class: rank('C'), order: rank('O'), family: rank('F'), genus: 'G', species: `s${animalId}` },
+      notes: [NOTE], revealNotes: [], guide: { body: [], habits: [], habitat: [], range: [], life: [], family: [] }, signs: [],
+      tags: Object.values(traits).flat(),
+    };
+  });
+  return { book: makeBook(list), set: list.map(animal => animal.id) };
+}
+
+const tags = (deck: readonly Clue[] | null) => deck?.map(clue => clue.tag) ?? null;
+const regionCount = (deck: readonly Clue[]) => deck.filter(clue => clue.tag.startsWith('region:')).length;
+const split = (clue: Clue) => clue.row.map(answer => (answer === clue.row[0] ? 0 : 1)).join('');
+
+// Birth (eggs/live) splits the set exactly as covering (fur/scales) does; size already stands for body.
+const shadowedBirth = synth({
+  size: ['small', 'large', 'small', 'large', 'large'],
+  covering: ['fur', 'fur', 'scales', 'scales', 'scales'],
+  birth: ['live', 'live', 'eggs', 'eggs', 'eggs'],
+  diet: ['plants', 'meat', 'meat', 'plants', 'meat'],
+  social: ['groups', 'groups', 'groups', 'groups', 'alone'],
+});
+// Three habits questions, each picking out one suspect (1, 2, 3), and two Range questions: {4} and {4, 5}.
+const singles = { social: ['alone', 'groups', 'groups', 'groups', 'groups'], diet: ['plants', 'meat', 'plants', 'plants', 'plants'] };
+const twoRegions = [['central-africa'], ['central-africa'], ['central-africa'], ['central-africa', 'east-africa', 'west-africa'], ['central-africa', 'west-africa']];
+const oneRegionWins = synth({ ...singles, activity: ['day', 'day', 'night', 'day', 'day'], region: twoRegions });
+// As above, but activity splits {1, 2}: no deck with one region tells 3 from 5.
+const forcedTwo = synth({ ...singles, activity: ['night', 'night', 'day', 'day', 'day'], region: twoRegions });
+// Anywhere, forced 2 regions: split {4} is Melanesia (⬆️); split {4, 5} is North Africa (⬆️, sorts first) and West Africa (⬅️).
+const collidingFirst = synth({ ...singles, activity: ['night', 'night', 'day', 'day', 'day'],
+  region: [['usa-canada'], ['usa-canada'], ['usa-canada'], ['usa-canada', 'melanesia', 'north-africa', 'west-africa'], ['usa-canada', 'north-africa', 'west-africa']] });
+// The same without West Africa: the only separating pair shares a face.
+const collidingOnly = synth({ ...singles, activity: ['night', 'night', 'day', 'day', 'day'],
+  region: [['usa-canada'], ['usa-canada'], ['usa-canada'], ['usa-canada', 'melanesia', 'north-africa'], ['usa-canada', 'north-africa']] });
+// Three splits (eight askable questions) that tell all five apart.
+const threeSplits = synth({
+  covering: ['fur', 'fur', 'scales', 'scales', 'scales'],
+  birth: ['live', 'live', 'eggs', 'eggs', 'eggs'],
+  diet: ['meat', 'plants', 'meat', 'plants', 'plants'],
+  social: ['alone', 'groups', 'groups', 'alone', 'groups'],
+});
+const SYNTH: Array<{ book: Book; set: number[]; place: ContinentKey | null }> = [
+  { ...shadowedBirth, place: 'africa' }, { ...oneRegionWins, place: 'africa' }, { ...forcedTwo, place: 'africa' }, { ...collidingFirst, place: null },
+];
+
+test('055-1: a birth question with the same split as covering is dealt when it adds a category', () => {
+  const deck = dealClues(shadowedBirth.book, shadowedBirth.set, 'africa', 4)!;
+  assert.ok(deck && tellsApart(deck, 5));
+  assert.ok(tags(deck)!.includes('birth:eggs'), `deck ${tags(deck)}`);
+  assert.ok(!tags(deck)!.some(tag => tag.startsWith('covering:')), `deck ${tags(deck)}`);
+});
+
+test('055-1: a deck with one region beats one with two when both tell all five apart', () => {
+  const deck = dealClues(oneRegionWins.book, oneRegionWins.set, 'africa', 4)!;
+  assert.ok(deck && tellsApart(deck, 5));
+  assert.equal(regionCount(deck), 1, `deck ${tags(deck)}`);
+});
+
+test('055-1: a set that needs two regions still gets a deck', () => {
+  const deck = dealClues(forcedTwo.book, forcedTwo.set, 'africa', 4);
+  assert.ok(deck && tellsApart(deck, 5), `deck ${tags(deck)}`);
+  assert.equal(regionCount(deck), 2);
+});
+
+test('055-1: no deck holds two questions with one split', () => {
+  const cases = [...SYNTH, ...PLACES.flatMap(place => sets(place).map(set => ({ book, set, place })))];
+  for (const { book: caseBook, set, place } of cases) {
+    const deck = dealClues(caseBook, set, place, 4);
+    assert.ok(deck, `${place}: a deck for ${set}`);
+    assert.equal(new Set(deck.map(split)).size, deck.length, `deck ${tags(deck)}`);
+  }
+});
+
+test('055-1: a split whose first region collides keeps its other regions; colliding faces are never dealt', () => {
+  const deck = dealClues(collidingFirst.book, collidingFirst.set, null, 4);
+  assert.ok(deck && tellsApart(deck, 5), `deck ${tags(deck)}`);
+  assert.ok(tags(deck)!.includes('region:melanesia') && tags(deck)!.includes('region:west-africa'), `deck ${tags(deck)}`);
+  assert.equal(new Set(deck.map(clue => clueFace(clue.tag))).size, 4);
+  assert.equal(dealClues(collidingOnly.book, collidingOnly.set, null, 4), null);
+});
+
+test('055-1: the deck is the same whatever the order of the ids and whichever suspect is the mystery', () => {
+  const cases = [...SYNTH, ...PLACES.flatMap(place => sets(place).slice(0, 5).map(set => ({ book, set, place })))];
+  for (const { book: caseBook, set, place } of cases) {
+    const deck = tags(dealClues(caseBook, set, place, 4));
+    assert.ok(deck, `${place}: a deck for ${set}`);
+    for (const order of [[...set].reverse(), [...set.slice(2), ...set.slice(0, 2)]]) assert.deepEqual(tags(dealClues(caseBook, order, place, 4)), deck);
+    for (const mysteryId of set) assert.deepEqual(newAnimalRound(caseBook, ANIMAL_RULES, { suspects: [...set].reverse(), mysteryId, place }).orders.map(order => order.tag), deck);
+  }
+});
+
+test('055-1: no deck when the set has fewer splits than clues, however many questions it has', () => {
+  assert.ok(dealClues(threeSplits.book, threeSplits.set, 'africa', 3));
+  assert.equal(dealClues(threeSplits.book, threeSplits.set, 'africa', 4), null);
+});
+
+test('055-1: fullTable is each split group\'s first question; a group keeps one question per category plus every region', () => {
+  const cases = [...SYNTH, { ...collidingOnly, place: null }, { ...threeSplits, place: 'africa' as const },
+    ...PLACES.flatMap(place => sets(place).map(set => ({ book, set, place })))];
+  for (const { book: caseBook, set, place } of cases) {
+    const groups = questionGroups(caseBook, set, place);
+    assert.deepEqual(fullTable(caseBook, set, place), groups.map(group => group[0]));
+    for (const group of groups) {
+      assert.equal(new Set(group.map(split)).size, 1, `one split in ${tags(group)}`);
+      const categories = group.map(clue => PREFIX_CATEGORY[clue.tag.split(':')[0]]).filter(category => category !== 'range');
+      assert.equal(new Set(categories).size, categories.length, `one question per category in ${tags(group)}`);
+    }
+  }
+  // Both West and North Africa stay in their group; covering and birth share one.
+  assert.ok(questionGroups(collidingFirst.book, collidingFirst.set, null).some(group => tags(group)!.join() === 'region:north-africa,region:west-africa'));
+  assert.ok(questionGroups(shadowedBirth.book, shadowedBirth.set, 'africa').some(group => tags(group)!.join() === 'covering:fur,birth:eggs'));
+});
+
+/** The dealer's rule by brute force, no cut-off: every deck of one question from each of `count` groups, the lowest key wins. */
+function dealByBruteForce(caseBook: Book, set: readonly number[], place: ContinentKey | null, count: number): string[] | null {
+  const sorted = [...set].sort((a, b) => a - b);
+  const groups = questionGroups(caseBook, sorted, place);
+  const key = (deck: Clue[]) => {
+    const regions = regionCount(deck);
+    const minor = deck.map(clue => { const yes = clue.row.filter(Boolean).length; return Math.min(yes, sorted.length - yes); });
+    const score = (minor.some(n => n >= 2) ? 4 : 0) + (minor.some(n => n === 1) ? 4 : 0)
+      + new Set(deck.map(clue => PREFIX_CATEGORY[clue.tag.split(':')[0]])).size;
+    return [Math.max(0, regions - 1), -score, regions, hash32(`${sorted.join(',')}:${deck.map(clue => clue.tag).join('|')}`)];
+  };
+  const decks: Clue[][] = [];
+  const visit = (start: number, deck: Clue[]) => {
+    if (deck.length < count) for (let g = start; g < groups.length; g++) for (const clue of groups[g]) visit(g + 1, [...deck, clue]);
+    else if (tellsApart(deck, sorted.length) && new Set(deck.map(clue => clueFace(clue.tag))).size === count) decks.push(deck);
+  };
+  visit(0, []);
+  const lower = (a: number[], b: number[]) => { const i = a.findIndex((value, j) => value !== b[j]); return i >= 0 && a[i] < b[i]; };
+  const best = decks.map(deck => ({ deck, key: key(deck) }))
+    .reduce<{ deck: Clue[]; key: number[] } | null>((min, entry) => (!min || lower(entry.key, min.key) ? entry : min), null);
+  return tags(best?.deck ?? null);
+}
+
+test('055-1: the dealer deals what a search of every deck deals', () => {
+  const cases = [...SYNTH, { ...collidingOnly, place: null }, { ...threeSplits, place: 'africa' as const },
+    ...PLACES.flatMap(place => sets(place).map(set => ({ book, set, place })))];
+  for (const { book: caseBook, set, place } of cases) {
+    assert.deepEqual(tags(dealClues(caseBook, set, place, 4)), dealByBruteForce(caseBook, set, place, 4), `${place}: deck for ${set}`);
+  }
+});
+
+// A continent round on five Asian suspects, and the same suspects Anywhere.
+const asia = synth({ size: ['small', 'large', 'small', 'large', 'large'], covering: ['fur', 'fur', 'scales', 'scales', 'scales'],
+  diet: ['plants', 'meat', 'meat', 'plants', 'meat'], social: ['groups', 'groups', 'groups', 'groups', 'alone'] }, ['asia']);
+const asiaAnimals = () => [...asia.book.byId.values()];
+const asiaRound = (place: ContinentKey | null) => newAnimalRound(asia.book, ANIMAL_RULES, { suspects: asia.set, mysteryId: 1, place });
+
+test('055-1: a saved continent round stops fitting once a suspect leaves that continent', () => {
+  assert.equal(roundStillFits(asia.book, asiaRound('asia')), true);
+  assert.equal(roundStillFits(asia.book, asiaRound(null)), true);
+  // Suspect 3 moved to Africa; its rows and the notes still match.
+  const moved = makeBook(asiaAnimals().map(animal => (animal.id === 3 ? { ...animal, continents: ['africa' as const] } : animal)));
+  assert.equal(roundStillFits(moved, asiaRound(null)), true);
+  assert.equal(roundStillFits(moved, asiaRound('asia')), false);
+});
+
+test('055-1: a saved round with a suspect the book lacks doesn\'t fit, and doesn\'t throw', () => {
+  const without = (gone: number) => makeBook(asiaAnimals().filter(animal => animal.id !== gone));
+  for (const gone of [3, 1]) for (const round of [asiaRound('asia'), asiaRound(null)]) {
+    assert.equal(roundStillFits(without(gone), round), false, `missing ${gone}`);
+    assert.equal(roundStillFits(without(gone), { ...round, orders: [] }), false, `missing ${gone}, no orders`);
+  }
 });

@@ -17,8 +17,8 @@ WITH playable AS (
 ), kept AS (
   SELECT r.species_id, ST_MakeValid(r.geom) AS geom
   FROM ranges r
-  WHERE r.presence IN (1, 2, 3)
-     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2, 3))
+  WHERE r.presence IN (1, 2)
+     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2))
 )
 SELECT
   s.id AS species_id,

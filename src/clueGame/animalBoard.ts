@@ -57,7 +57,7 @@ export interface AnimalRules {
  * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '055-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
+  version: '055-1', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 
@@ -81,30 +81,38 @@ function animal(book: Book, id: number): Animal {
 export interface Clue { tag: string; question: string; short: string; row: boolean[] }
 
 /**
- * The questions a set can be asked: every suspect has a record for the trait and the answers aren't all alike. One
- * question per way of splitting the set (a question and its opposite split it the same way); Range stays inside the
- * place, as in the 041 game.
+ * Every question a set can be asked, grouped by how it splits the set (a question and its opposite share a group): every
+ * suspect has a record for the trait and the answers aren't all alike; Range stays inside the place, as in the 041
+ * game. Groups in the order of their first question (prefix order, then tag); each keeps the first question of each
+ * category, plus every Range question (their faces differ, and one may collide with another clue's).
  */
-export function fullTable(book: Book, set: readonly number[], place: ContinentKey | null): Clue[] {
+export function questionGroups(book: Book, set: readonly number[], place: ContinentKey | null): Clue[][] {
   const tags = new Set<string>();
   for (const id of set) for (const [prefix, values] of book.traits.get(id)!) if (PREFIX_CATEGORY[prefix]) for (const tag of values) tags.add(tag);
   const ordered = [...tags]
     .filter(tag => !neverAsked(tag))
     .filter(tag => !(prefixOf(tag) === 'region' && place && REGIONS[tag.slice(7)]?.continent !== place))
     .sort((a, b) => QUESTION_PREFIXES.indexOf(prefixOf(a)) - QUESTION_PREFIXES.indexOf(prefixOf(b)) || a.localeCompare(b));
-  const splits = new Set<string>();
-  const clues: Clue[] = [];
+  const groups = new Map<string, { clues: Clue[]; categories: Set<string> }>();
   for (const tag of ordered) {
     const records = set.map(id => book.traits.get(id)!.get(prefixOf(tag)));
     if (records.some(record => !record)) continue;
     const row = records.map(record => record!.has(tag));
     if (row.every(answer => answer === row[0])) continue;
     const split = row.map(answer => (answer === row[0] ? 0 : 1)).join('');
-    if (splits.has(split)) continue;
-    splits.add(split);
-    clues.push({ tag, question: questionText(tag), short: shortQuestionText(tag), row });
+    const group = groups.get(split) ?? { clues: [], categories: new Set<string>() };
+    groups.set(split, group);
+    const category = PREFIX_CATEGORY[prefixOf(tag)];
+    if (category !== 'range' && group.categories.has(category)) continue;
+    group.categories.add(category);
+    group.clues.push({ tag, question: questionText(tag), short: shortQuestionText(tag), row });
   }
-  return clues;
+  return [...groups.values()].map(group => group.clues);
+}
+
+/** The questions a set can be asked: one per way of splitting the set (each group's first; see questionGroups). */
+export function fullTable(book: Book, set: readonly number[], place: ContinentKey | null): Clue[] {
+  return questionGroups(book, set, place).map(group => group[0]);
 }
 
 /** Whether these clues give every suspect a different row of answers. */
@@ -117,24 +125,78 @@ function* combinations<T>(items: readonly T[], size: number, start = 0, picked: 
   for (let i = start; i <= items.length - (size - picked.length); i++) yield* combinations(items, size, i + 1, [...picked, items[i]]);
 }
 
+/** Every way to take one item from each list, in order. */
+function* cartesianProduct<T>(lists: readonly (readonly T[])[], picked: T[] = []): Generator<T[]> {
+  if (picked.length === lists.length) { yield [...picked]; return; }
+  for (const item of lists[picked.length]) yield* cartesianProduct(lists, [...picked, item]);
+}
+
+/** One bit per question category, so a deck's categories count without a Set. */
+const CATEGORY_BIT = Object.fromEntries([...new Set(Object.values(PREFIX_CATEGORY))].map((category, i) => [category, 1 << i]));
+
+function bitCount(mask: number): number {
+  let count = 0;
+  for (let rest = mask; rest; rest &= rest - 1) count++;
+  return count;
+}
+
+/** How a deck ranks before the hash tie-break (see dealClues). */
+interface DeckRank { excessRegions: number; score: number; regions: number }
+
+/** Negative when `a` ranks above `b`: fewer Range questions past the first, then a higher score, then fewer Range questions. */
+function compareRanks(a: DeckRank, b: DeckRank): number {
+  return a.excessRegions - b.excessRegions || b.score - a.score || a.regions - b.regions;
+}
+
 /**
  * The clue deck: `count` questions that tell every suspect apart, chosen from the set alone (its sorted ids), so the
- * deck never depends on which suspect is the mystery. Prefers a mix of a strong clue (splits 2 against 3) and a weak
- * one (1 against 4), then the most categories; ties break on a hash of the set. No two clues show the same picture
- * on the board (clueFace), or their gems couldn't be told apart. Null when no such deck exists.
+ * deck never depends on which suspect is the mystery. Each question from a different split (questionGroups), so the
+ * splits decide which decks tell the set apart, and any question of a split may stand in for it. Prefers at most one
+ * Range question (more only when no deck with one tells the set apart), then a mix of a strong clue (splits 2 against
+ * 3) and a weak one (1 against 4) plus the most categories, then fewer Range questions; ties break on a hash of the
+ * set. No two clues show the same picture on the board (clueFace), or their gems couldn't be told apart. Null when no
+ * such deck exists.
  */
 export function dealClues(book: Book, set: readonly number[], place: ContinentKey | null, count: number): Clue[] | null {
   const sorted = [...set].sort((a, b) => a - b);
-  const table = fullTable(book, sorted, place);
-  if (table.length < count) return null;
+  const groups = questionGroups(book, sorted, place);
+  if (groups.length < count) return null;
   const salt = sorted.join(',');
-  let best: { clues: Clue[]; score: number; tie: number } | null = null;
-  for (const deck of combinations(table, count)) {
-    if (!tellsApart(deck, sorted.length) || new Set(deck.map(clue => clueFace(clue.tag))).size < deck.length) continue;
-    const smaller = deck.map(clue => { const yes = clue.row.filter(Boolean).length; return Math.min(yes, sorted.length - yes); });
-    const score = (smaller.some(n => n >= 2) ? 4 : 0) + (smaller.some(n => n === 1) ? 4 : 0) + new Set(deck.map(clue => PREFIX_CATEGORY[prefixOf(clue.tag)])).size;
-    const tie = hash32(`${salt}:${deck.map(clue => clue.tag).join('|')}`);
-    if (!best || score > best.score || (score === best.score && tie < best.tie)) best = { clues: deck, score, tie };
+  // What ranking needs from each question and split, worked out once. A split's questions share its row, so its minor
+  // side (the fewer suspects) is its first question's.
+  const splits = groups.map(group => {
+    const clues = group.map(clue => {
+      const category = PREFIX_CATEGORY[prefixOf(clue.tag)];
+      return { clue, isRange: category === 'range', categoryBit: CATEGORY_BIT[category], face: clueFace(clue.tag) };
+    });
+    const yes = group[0].row.filter(Boolean).length;
+    return {
+      clues, allRange: clues.every(entry => entry.isRange), categoryMask: clues.reduce((mask, entry) => mask | entry.categoryBit, 0),
+      minor: Math.min(yes, sorted.length - yes),
+    };
+  });
+  let best: (DeckRank & { clues: Clue[]; tie: number }) | null = null;
+  for (const picked of combinations(splits, count)) {
+    const splitMix = (picked.some(split => split.minor >= 2) ? 4 : 0) + (picked.some(split => split.minor === 1) ? 4 : 0);
+    // Cut-off: the best rank any deck from these splits could reach. An all-Range split adds a Range question; the
+    // categories can't outnumber the clues or the splits' own categories. Skip the splits when even that loses.
+    const minRegions = picked.filter(split => split.allRange).length;
+    const bound = {
+      excessRegions: Math.max(0, minRegions - 1), regions: minRegions,
+      score: splitMix + Math.min(count, bitCount(picked.reduce((mask, split) => mask | split.categoryMask, 0))),
+    };
+    if (best && compareRanks(bound, best) > 0) continue;
+    if (!tellsApart(picked.map(split => split.clues[0].clue), sorted.length)) continue;
+    for (const deck of cartesianProduct(picked.map(split => split.clues))) {
+      if (new Set(deck.map(entry => entry.face)).size < count) continue;
+      const regions = deck.filter(entry => entry.isRange).length;
+      const rank = { excessRegions: Math.max(0, regions - 1), score: splitMix + bitCount(deck.reduce((mask, entry) => mask | entry.categoryBit, 0)), regions };
+      const order = best ? compareRanks(rank, best) : -1;
+      if (order > 0) continue;
+      const clues = deck.map(entry => entry.clue);
+      const tie = hash32(`${salt}:${clues.map(clue => clue.tag).join('|')}`);
+      if (order < 0 || tie < best!.tie) best = { ...rank, clues, tie };
+    }
   }
   return best?.clues ?? null;
 }
@@ -176,10 +238,17 @@ export function witnessNotes(book: Book, suspects: readonly number[], mysteryId:
 
 /**
  * Content can change between visits (the owner's content build lands after the deploy): a saved round resumes only if
- * the book would deal it the same clue rows and witness notes now. Rows first, so witnessNotes never meets an id the
- * book lacks; notes compare on what the player reads (text, tags, fits), so a citation edit alone keeps the round.
+ * every suspect (and the mystery) is still in the book and, on a continent, still lives there, and the book would deal
+ * it the same clue rows and witness notes now. Ids first, so witnessNotes never meets an id the book lacks; notes
+ * compare on what the player reads (text, tags, fits), so a citation edit alone keeps the round.
  */
 export function roundStillFits(book: Book, round: AnimalRound): boolean {
+  const place = round.place;
+  const inBook = book.byId.has(round.mysteryId) && round.suspects.every(id => {
+    const found = book.byId.get(id);
+    return found !== undefined && (place === null || found.continents.includes(place));
+  });
+  if (!inBook) return false;
   const rowsFit = round.orders.every(order => round.suspects.every((id, i) =>
     book.traits.get(id)?.get(prefixOf(order.tag))?.has(order.tag) === order.row[i]));
   if (!rowsFit) return false;

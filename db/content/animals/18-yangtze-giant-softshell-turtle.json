@@ -13,7 +13,13 @@
     "category": "CR",
     "year": 2021,
     "trend": "decreasing",
-    "url": "https://www.iucnredlist.org/species/39621/2931537"
+    "url": "https://www.iucnredlist.org/species/39621/2931537",
+    "notPresent": [
+      {
+        "code": "CHN",
+        "status": "possibly-extinct"
+      }
+    ]
   },
   "systems": [
     "terrestrial",
@@ -91,7 +97,7 @@
     },
     {
       "category": "conservation",
-      "text": "The last known female died at a zoo in China in 2019, aged over 90.",
+      "text": "The last known female died at a zoo in 2019, aged over 90.",
       "source": "ngo"
     }
   ],

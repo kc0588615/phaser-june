@@ -32,7 +32,7 @@ ogr2ogr -append -f PostgreSQL "PG:..." FILE.shp -nln iucn -nlt PROMOTE_TO_MULTI 
 - Source-owned: raw IUCN columns, lowercased (`id_no, sci_name, presence, origin, seasonal, category, citation, ...`; `order_` and `terrestria` are shapefile truncations; quote `"class"` in SQL). Never add app columns; game data lives on `species`.
 - `wkb_geometry` is `MULTIPOLYGON`, SRID 4326. Check before any other kind of load: `SELECT Find_SRID('public','iucn','wkb_geometry'), GeometryType(wkb_geometry), count(*) FROM iucn GROUP BY 1,2`.
 - Many rows per species (disjoint areas, presence and origin codes). Join on `species.iucn_id = iucn.id_no`, never on `ogc_fid`.
-- `presence`: 1 extant, 2 probably extant, 3 possibly extant, 4 possibly extinct, 5 extinct, 6 uncertain. The views and `content -- ranges` use 1 to 3 and fall back to all polygons for any animal with no polygon of presence 1 to 3, so a hellbender's possibly-extinct rows or a tapir's extinct ones stay off its map.
+- `presence`: 1 extant, 2 probably extant, 3 possibly extant, 4 possibly extinct, 5 extinct, 6 uncertain. The views and `content -- ranges` use 1 and 2 and fall back to all polygons for any animal with no polygon of presence 1 or 2, so a hellbender's possibly-extinct rows or a tapir's extinct ones stay off its map.
 - Some polygons are invalid (self-intersections). The views wrap them in `ST_MakeValid`; leave the raw rows as imported. Imported areas match the shapefile's `shape_area`.
 
 ## `id_no` and names

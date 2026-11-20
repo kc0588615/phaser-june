@@ -13,7 +13,17 @@
     "category": "LC",
     "year": 2015,
     "trend": "unknown",
-    "url": "https://www.iucnredlist.org/species/41504/21286437"
+    "url": "https://www.iucnredlist.org/species/41504/21286437",
+    "notPresent": [
+      {
+        "code": "SDN",
+        "status": "uncertain"
+      },
+      {
+        "code": "LSO",
+        "status": "uncertain"
+      }
+    ]
   },
   "systems": [
     "terrestrial"
@@ -250,10 +260,6 @@
         "name": "Dem. Rep. Congo"
       },
       {
-        "code": "DJI",
-        "name": "Djibouti"
-      },
-      {
         "code": "GNQ",
         "name": "Eq. Guinea"
       },
@@ -348,10 +354,6 @@
       {
         "code": "TZA",
         "name": "Tanzania"
-      },
-      {
-        "code": "TGO",
-        "name": "Togo"
       },
       {
         "code": "UGA",

@@ -90,7 +90,7 @@ CREATE TABLE habitat_colormap (
 
 -- Each playable species' IUCN range as a small SVG path (lon/lat degrees, y
 -- flipped as ST_AsSVG writes it), so the game never runs geometry at request
--- time. The range is the extant range (IUCN presence 1-3), or the historical
+-- time. The range is the extant range (IUCN presence 1-2), or the historical
 -- range for an extinct species. Specks under 0.05 square degrees are dropped (the
 -- largest part always stays) and bigger ranges are simplified more. geojson is
 -- the same shape for the globe (SVG can't tell holes from parts). lon/lat is a
@@ -109,8 +109,8 @@ WITH playable AS (
 ), kept AS (
   SELECT r.species_id, ST_MakeValid(r.geom) AS geom
   FROM ranges r
-  WHERE r.presence IN (1, 2, 3)
-     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2, 3))
+  WHERE r.presence IN (1, 2)
+     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2))
 ), merged AS (
   SELECT species_id, ST_Union(geom) AS geom FROM kept GROUP BY species_id
 ), parts AS (
@@ -144,12 +144,15 @@ CREATE UNIQUE INDEX clue_match_ranges_species_id ON clue_match_ranges (species_i
 -- playable animals live. An animal lives in a place when the place holds at
 -- least 5% of its range, or at least 5,000 km² of it (so a big range brushing a
 -- border doesn't count). Ranges as in clue_match_ranges.
--- scripts/content.ts (content -- ranges) builds its countries from the same country parts (Russia split at 60°E, France's overseas parts, no open ocean or Antarctica) with the same 5% or 5,000 km² rule: change both together. country_parts below is its copy, unused columns included, so the two read alike.
+-- scripts/content.ts (content -- ranges) builds its countries from the same country parts (Russia split at 60°E, Indonesia split along Lydekker's Line, France's overseas parts, no open ocean or Antarctica) with the same 5% or 5,000 km² rule: change both together. country_parts below is its copy, unused columns included, so the two read alike.
 --
 -- Natural Earth files all of Russia under Europe and French Guiana under France,
 -- which would put tigers and Amazon frogs in Europe. So Russia is split at the
 -- Urals (60°E: west is Europe, east is Asia), and France's overseas parts count
--- for the continent they sit on.
+-- for the continent they sit on. It also files all of Indonesia under Asia, so
+-- its parts east of Lydekker's Line (> 133.2°E, or > 130°E north of 3.5°S: New
+-- Guinea, Raja Ampat, Aru) become IDP, Indonesian New Guinea, in Oceania (the
+-- project's own code; regions.ts names it). Ranges are IUCN presence 1-2.
 --
 -- bbox and center use the continent's largest part. outline is simplified for drawing.
 --
@@ -166,8 +169,8 @@ WITH playable AS (
 ), kept AS (
   SELECT r.species_id, ST_Union(ST_MakeValid(r.geom)) AS geom
   FROM ranges r
-  WHERE r.presence IN (1, 2, 3)
-     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2, 3))
+  WHERE r.presence IN (1, 2)
+     OR NOT EXISTS (SELECT 1 FROM ranges x WHERE x.species_id = r.species_id AND x.presence IN (1, 2))
   GROUP BY r.species_id
 ), country_parts AS (
   -- Each polygon of each country, with the continent it actually sits on.
@@ -179,13 +182,26 @@ WITH playable AS (
          END AS continent
   FROM natural_earth.countries c
   CROSS JOIN LATERAL ST_Dump(ST_MakeValid(c.geom)) d
-  WHERE c.continent NOT IN ('Seven seas (open ocean)', 'Antarctica') AND c.adm0_a3 <> 'RUS'
+  WHERE c.continent NOT IN ('Seven seas (open ocean)', 'Antarctica') AND c.adm0_a3 NOT IN ('RUS', 'IDN')
   UNION ALL
   SELECT c.adm0_a3, c.name, 'Asia', ST_Intersection(ST_MakeValid(c.geom), ST_MakeEnvelope(60, -90, 180, 90, 4326)), 'Asia'
   FROM natural_earth.countries c WHERE c.adm0_a3 = 'RUS'
   UNION ALL
   SELECT c.adm0_a3, c.name, 'Asia', ST_Intersection(ST_MakeValid(c.geom), ST_MakeEnvelope(-180, -90, 60, 90, 4326)), 'Europe'
   FROM natural_earth.countries c WHERE c.adm0_a3 = 'RUS'
+  UNION ALL
+  -- Indonesia west of Lydekker's Line (Sumatra through Maluku/Wallacea: Seram, Halmahera, Gorong/Watubela, Kai, Tanimbar) stays Asia.
+  SELECT c.adm0_a3, c.name, c.continent, d.geom, c.continent
+  FROM natural_earth.countries c CROSS JOIN LATERAL ST_Dump(ST_MakeValid(c.geom)) d
+  WHERE c.adm0_a3 = 'IDN'
+    AND NOT (ST_X(ST_Centroid(d.geom)) > 133.2 OR (ST_X(ST_Centroid(d.geom)) > 130 AND ST_Y(ST_Centroid(d.geom)) > -3.5))
+  UNION ALL
+  -- Its parts east of Lydekker's Line (mainland Papua, Raja Ampat, Cenderawasih Bay, Adi/Karas, Aru) are Oceania,
+  -- under the project code IDP (regions.ts: melanesia). Same name literal as regions.ts.
+  SELECT 'IDP', 'Indonesian New Guinea', 'Oceania', d.geom, 'Oceania'
+  FROM natural_earth.countries c CROSS JOIN LATERAL ST_Dump(ST_MakeValid(c.geom)) d
+  WHERE c.adm0_a3 = 'IDN'
+    AND (ST_X(ST_Centroid(d.geom)) > 133.2 OR (ST_X(ST_Centroid(d.geom)) > 130 AND ST_Y(ST_Centroid(d.geom)) > -3.5))
 ), areas AS (
   SELECT 'continent'::text AS kind, 'continent:' || lower(replace(continent, ' ', '-')) AS key, continent AS name, 'Continents' AS grp, ST_Union(geom) AS geom
   FROM country_parts

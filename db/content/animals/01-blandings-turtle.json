@@ -40,8 +40,8 @@
       "source": "adw"
     },
     "diet": {
-      "value": "mixed",
-      "note": "Half its food is crayfish. It also eats insects, fish, frogs, snails and water plants.",
+      "value": "insects",
+      "note": "Half its food is crustaceans, including crayfish. It also eats insects, snails, fish, frogs and water plants.",
       "source": "adw"
     },
     "trees": {

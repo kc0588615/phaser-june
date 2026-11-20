@@ -13,7 +13,17 @@
     "category": "VU",
     "year": 2024,
     "trend": "decreasing",
-    "url": "https://www.iucnredlist.org/species/219/259025524"
+    "url": "https://www.iucnredlist.org/species/219/259025524",
+    "notPresent": [
+      {
+        "code": "SDN",
+        "status": "possibly-extinct"
+      },
+      {
+        "code": "SDS",
+        "status": "possibly-extinct"
+      }
+    ]
   },
   "systems": [
     "terrestrial"
@@ -229,10 +239,6 @@
       {
         "code": "TCD",
         "name": "Chad"
-      },
-      {
-        "code": "DJI",
-        "name": "Djibouti"
       },
       {
         "code": "ETH",

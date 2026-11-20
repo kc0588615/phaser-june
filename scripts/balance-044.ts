@@ -15,16 +15,21 @@
 //     --toy: a release by the player's own run leaves a line toy; follows --wander unless set. 045-0: --wander off)
 //     [--toyscout on|off]   (rules 047-1, on in the rules: a line or blast gem in the move's own clear scouts its color)
 //     [--double N]   (rules 053-1, 2 in the rules: a move whose own runs are two colors adds N gems to each clue order hit; 0 off)
+//     [--deals]   (no rounds: deals every distinct suspect set of --places, default world,africa,asia,north-america,south-america,
+//     and reports deck slots, region and category spread, never-dealt questions, timing and a deck fingerprint)
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
   ANIMAL_RULES, BOARD_GEMS, HEADING_STEP, PENCIL_WEIGHT, WITNESS_GEM, applyPhase, endOfMove, headingOf, mark, nameIt, newAnimalRound, newTrail,
-  pickSuspectSet, reportOf, rewardToy, scoreRound, sharpEye, shownMismatches, starsFor, stillPossible, tileCells, trailAfter, trailFinished, travelOf, walkOff, walkers,
-  type AnimalRound, type AnimalRules, type PhaseReport,
+  dealClues, pickSuspectSet, reportOf, rewardToy, scoreRound, sharpEye, shownMismatches, starsFor, stillPossible, tellsApart, tileCells, trailAfter, trailFinished, travelOf, walkOff, walkers,
+  type AnimalRound, type AnimalRules, type Clue, type PhaseReport,
 } from '../src/clueGame/animalBoard';
 import type { AnimalProfile } from '../src/clueGame/profiles';
 import { contentSources } from '../src/lib/contentCitations';
-import { PREFIX_CATEGORY, makeBook, poolFor, type Book } from '../src/clueGame/questionMatch';
+import {
+  CATEGORY_LABELS, CHARGE_CATEGORIES, FIXED_QUESTION_TAGS, PREFIX_CATEGORY, makeBook, poolFor, prefixOf, type Animal, type Book,
+} from '../src/clueGame/questionMatch';
+import { MIN_PLACE_ANIMALS } from '../src/clueGame/places';
 import { animalsFromProfiles } from '../src/clueGame/questionMatchContent';
 import type { ContinentKey } from '../src/clueGame/regions';
 import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Move, type Special } from '../src/game/BoardModel';
@@ -229,6 +234,87 @@ const avg = (values: number[]) => (values.length ? (values.reduce((a, b) => a + 
 /** The round reached its last move undecided (then named right, wrong, or skipped). */
 const ranOut = (state: AnimalRound) => state.log.some(entry => entry.kind === 'out-of-moves');
 
+interface DealtSet { id: string; place: string; members: number[]; deck: Clue[]; ms: number }
+
+/** --deals: every distinct set per place (seed order, deduped by members, ids S001… in place order), dealt once. */
+function reportDeals(book: Book, animals: readonly Animal[], rules: AnimalRules) {
+  const name = (id: number) => book.byId.get(id)!.name;
+  const placeNames = arg('places', 'world,africa,asia,north-america,south-america').split(',');
+  const sets: DealtSet[] = [];
+  const fallbacks: string[] = [];
+  for (const placeName of placeNames) {
+    const place = placeName === 'world' ? null : placeName as ContinentKey;
+    const pool = poolFor(animals, place);
+    // the live game plays Anywhere instead of a continent this small (useAnimalSession), so it deals no local sets
+    if (place && pool.length < MIN_PLACE_ANIMALS) { fallbacks.push(`${placeName} (${pool.length} < ${MIN_PLACE_ANIMALS} animals)`); continue; }
+    const seen = new Set<string>();
+    for (const seed of pool) {
+      const members = pickSuspectSet(book, pool, seed, rules, place);
+      if (!members || seen.has(members.join(','))) continue;
+      seen.add(members.join(','));
+      const start = performance.now();
+      const deck = dealClues(book, members, place, rules.clues);
+      const ms = performance.now() - start;
+      if (!deck) throw new Error(`${placeName} ${members.join(',')}: dealClues found no deck`);
+      sets.push({ id: `S${String(sets.length + 1).padStart(3, '0')}`, place: placeName, members, deck, ms });
+    }
+  }
+  const worldPool = poolFor(animals, null);
+  const loadStart = performance.now();
+  for (const seed of worldPool) pickSuspectSet(book, worldPool, seed, rules, null);
+  const loadMs = performance.now() - loadStart;
+
+  const slots = sets.reduce((n, set) => n + set.deck.length, 0);
+  const prefixes = Object.keys(PREFIX_CATEGORY);
+  const tagsOf = (set: DealtSet) => set.deck.map(clue => clue.tag);
+  const count = (set: DealtSet, prefix: string) => tagsOf(set).filter(tag => prefixOf(tag) === prefix).length;
+  const histogram = (values: number[], from: number) => {
+    const counts = new Map<number, number>();
+    for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+    return Array.from({ length: Math.max(from, ...values) - from + 1 }, (_unused, i) => `${from + i}:${counts.get(from + i) ?? 0}`).join(', ');
+  };
+  const missingOf = (ids: readonly number[], prefix: string) => ids.filter(id => !book.traits.get(id)!.has(prefix));
+  const listed = (pairs: Array<[string, number]>) => pairs.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([subject, n], i) => `${i === 0 ? subject[0].toUpperCase() + subject.slice(1) : subject} ${n}`).join(', ');
+
+  console.log(`Plan 044 deals, rules ${rules.version}: ${rules.suspects} suspects, ${rules.clues} questions a deck.\n`);
+  if (fallbacks.length) console.log(`Falls back to Anywhere, no local sets: ${fallbacks.join(', ')}\n`);
+  console.log(`1. Sets: ${sets.length} (${placeNames.map(p => `${p} ${sets.filter(set => set.place === p).length}`).join(', ')}), ${slots} slots; ${sets.filter(set => tellsApart(set.deck, set.members.length)).length} of ${sets.length} decks tell all ${rules.suspects} apart.\n`);
+
+  console.log(`2. Slots by category and subject:\n\n| Category | Questions dealt, by subject | Missing records (of ${animals.length}) |\n|---|---|---|`);
+  for (const category of CHARGE_CATEGORIES) {
+    const subjects = prefixes.filter(prefix => PREFIX_CATEGORY[prefix] === category);
+    const dealt = listed(subjects.map((prefix): [string, number] => [prefix, sets.reduce((n, set) => n + count(set, prefix), 0)]));
+    const missing = listed(subjects.map((prefix): [string, number] => [prefix, missingOf(animals.map(a => a.id), prefix).length]).filter(([, n]) => n > 0));
+    console.log(`| ${CATEGORY_LABELS[category]} | ${dealt} | ${missing || 'None'} |`);
+  }
+
+  console.log(`\n3. Region questions per deck: ${histogram(sets.map(set => count(set, 'region')), 0)}`);
+  console.log(`   Categories per deck: ${histogram(sets.map(set => new Set(tagsOf(set).map(tag => PREFIX_CATEGORY[prefixOf(tag)])).size), 1)}`);
+
+  const life = sets.reduce((n, set) => n + count(set, 'birth') + count(set, 'young') + count(set, 'lifespan'), 0);
+  const slotsOf = (tag: string) => sets.reduce((n, set) => n + tagsOf(set).filter(other => other === tag).length, 0);
+  console.log(`\n4. Decks with birth: ${sets.filter(set => count(set, 'birth') > 0).length} (birth:eggs ${slotsOf('birth:eggs')} slots, birth:live ${slotsOf('birth:live')}); life-cycle slots: ${life}`);
+
+  const multi = sets.filter(set => count(set, 'region') > 1);
+  console.log(`\n5. Decks with more than one region question: ${multi.length}`);
+  for (const set of multi) {
+    const missing = prefixes.map(prefix => [prefix, missingOf(set.members, prefix)] as const).filter(([, ids]) => ids.length > 0)
+      .map(([prefix, ids]) => `${prefix} (${ids.map(name).join(', ')})`);
+    console.log(`- ${set.id} ${set.place}, ${count(set, 'region')} regions: ${set.members.map(name).join(', ')}; missing records: ${missing.join('; ') || 'none'}`);
+  }
+
+  const dealtTags = new Set(sets.flatMap(tagsOf));
+  const never = FIXED_QUESTION_TAGS.filter(tag => !dealtTags.has(tag));
+  console.log(`\n6. Fixed questions never dealt (${never.length}): ${never.join(', ')}`);
+
+  const worst = sets.length ? sets.reduce((a, b) => (b.ms > a.ms ? b : a)) : null;
+  console.log(`\n7. Timing: dealClues ${sets.reduce((n, set) => n + set.ms, 0).toFixed(1)} ms total, worst deck ${worst ? `${worst.ms.toFixed(1)} ms (${worst.id})` : '- (no decks)'}; Anywhere load ${loadMs.toFixed(1)} ms (pickSuspectSet over ${worldPool.length} world seeds)`);
+
+  const fingerprint = hash32(sets.map(set => `${set.id}:${set.members.join(',')}:${tagsOf(set).join('|')}`).join('\n')) >>> 0;
+  console.log(`\n8. Deck fingerprint: ${fingerprint.toString(16).padStart(8, '0')}`);
+}
+
 async function main() {
   const rounds = Number(arg('rounds', '400'));
   const setupSeed = Number(arg('seed', '44'));
@@ -253,6 +339,7 @@ async function main() {
   const animals = animalsFromProfiles(profiles, contentSources, () => undefined);
   const book = makeBook(animals);
   const name = (id: number) => book.byId.get(id)!.name;
+  if (process.argv.includes('--deals')) { reportDeals(book, animals, rules); return; }
 
   const explain = process.argv.includes('--explain') ? Number(arg('explain', '0')) : null;
   if (explain === null) {

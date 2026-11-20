@@ -33,7 +33,8 @@
     },
     "diet": {
       "value": "plants",
-      "source": "britannica"
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_niger.html"
     },
     "trees": {
       "value": "no",

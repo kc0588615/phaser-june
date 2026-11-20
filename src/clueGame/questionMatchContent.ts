@@ -4,7 +4,7 @@
 // Two front doors, one builder: animalsFromPool for the game (database rows from
 // GET /api/clue-game/pool) and animalsFromProfiles for the balance bot and the unit tests
 // (db/content/animals/*.json). Pure.
-import { isHandWrittenClue, profileClues, type AnimalProfile, type ContentSource } from '@/clueGame/profiles';
+import { isHandWrittenClue, presentCountries, profileClues, type AnimalProfile, type ContentSource } from '@/clueGame/profiles';
 import type { CluePool } from '@/clueGame/pool';
 import { signsOf } from '@/clueGame/signs';
 import { FAMILY_NAMES, ORDER_NAMES } from '@/clueGame/speciesInfo';
@@ -180,7 +180,7 @@ export function animalsFromProfiles(profiles: readonly AnimalProfile[], registry
       photo: profile.photo?.url ?? null,
       clues: drafts.map((draft, index) => ({ category: draft.category, text: draft.text, tags: draft.tags, source: sourceOf(draft.source, draft.url), handWritten: index >= firstOwn })),
       facts: profile.facts.map(fact => ({ text: fact.text, source: sourceOf(fact.source, fact.url) })),
-      countries: profile.range?.countries ?? [],
+      countries: presentCountries(profile),
     }, warn);
   });
 }
