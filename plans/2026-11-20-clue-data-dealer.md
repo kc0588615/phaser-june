@@ -88,7 +88,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -171,6 +171,519 @@ Careful moves left at find (20th/40th/60th pct): world 11/15/18, africa 13/16/19
 
 ## Architecture
 
+*Architect, final pass, 2026-11-20. Code at `8ae493ce` (base `origin/main` `0837540a`, rules `055-0`). Numbers come from read-only SELECTs on `phaser_june_dev`, from esbuild scripts outside the repo (`/tmp/cdd-ana/`) that call the game's own builder and dealer, and from headless-Chrome label measurements (`/tmp/cdd-p2/`). The scripts reproduce the brief's baseline exactly: 103 sets, 412 slots, the same set ids.*
+
+### Findings
+
+Ranked by impact.
+
+#### F1 · Goal 4: the dealer drops questions that split the set the same way, and never limits region questions (bug)
+
+**Where:** `src/clueGame/animalBoard.ts:88-108` (`fullTable`), `:126-140` (`dealClues`).
+
+- **`fullTable` keeps one question per split.** It sorts tags in `PREFIX_CATEGORY` key order (`questionMatch.ts:18-24`: size, covering, diet, activity, social, trees, system, habitat, region, birth, young, lifespan) and keeps only the first tag for each split (`:102-104`). Life-cycle questions come last, so they lose every split they share with an earlier question.
+  - Birth splits 16 sets and reaches the table in none: covering takes 15, diet takes 1.
+- **`dealClues` doesn't limit regions.** Its score is `(any 2v3 ? 4 : 0) + (any 1v4 ? 4 : 0) + #categories` (`:135`).
+- **The split bonuses aren't the cause.** 99/103 decks already have a 2-vs-3 split and 103/103 have a 1-vs-4. Dropping either bonus moved at most 1 slot.
+- **Baseline:**
+
+  | Measure | Value |
+  |---|---|
+  | Slots by subject | habitat 96, region 89, diet 66, size 51, covering 39, activity 21, system 15, trees 12, young 11, social 8, lifespan 4, birth 0 |
+  | Region questions per deck (regions: decks) | 0:33, 1:58, 2:7, 3:3, 4:2 |
+  | Categories per deck (categories: decks) | 1:2, 2:11, 3:48, 4:42 |
+  | `fullTable` size | 4–12 questions |
+  | Speed | 103 decks in 78 ms; Anywhere load (76 seeds) 117 ms |
+
+- **12 decks hold more than one region question.**
+  - 6 are avoidable: a valid deck with at most one region exists.
+  - 6 are forced by missing trait records: S005 and S006 need 4 regions, S031 and S044 need 3, S010 and S021 need 2. All are in Anywhere.
+  - In S005 and S006 the five frogs share every recorded non-region trait. The tomato frog lacks `trees`; the purple frog lacks `size`.
+- **Forcing birth isn't needed.** A valid deck with birth exists in all 16 sets that birth splits. A valid deck with a life-cycle question exists in 48 sets.
+- **How the research built its table** (`cc-clue-design/scripts/digest.ts:33-96`):
+  - Places are Anywhere plus continents with at least `MIN_PLACE_ANIMALS` (12) animals: Anywhere 76, Africa 26, Asia 20, North America 13, South America 14. Europe and Oceania fall back to Anywhere.
+  - For each seed it runs `pickSuspectSet`, dedupes sets by members within each place, deals each set once, and counts `prefixOf(tag)`. Set ids follow place order, then seed order.
+  - The script is pinned to `0837540`, so it can't run on new code. `scripts/balance-044.ts:270` already builds the same sets.
+- **Callers:**
+  - `pickSuspectSet`: `useAnimalSession.ts:101` (once per seed at load), `balance-044.ts:270`, tests.
+  - `dealClues`: `animalBoard.ts:157` (inside `pickSuspectSet`) and `:295` (`newAnimalRound`).
+  - `fullTable`: `:155` (`tellsApart` while growing a set), `:128`, tests.
+  - `ANIMAL_RULES.version`: `useAnimalSession.ts:119`, together with `roundStillFits` (`:182-191`).
+  - `witnessNotes` doesn't depend on the deck (`:300`).
+
+#### F2 · Goal 1: diet answers contradict their own guide lines and sources (wrong biology)
+
+**Where:** `questionMatch.ts:62-63` (questions), `:84` (short), `:121` (column); `profiles.ts:162-167` (`DIET_TEXT`); `signs.ts:21-23,:128`; `glossary.ts:58-61`; `docs/CONTENT_SOURCES.md:59`.
+
+Diet values today: plants 31, meat 15, insects 22, mixed 8. "Sets dealing diet" are baseline sets that deal a diet question with this animal.
+
+| # | Animal (file) | Now | Guide note | Source evidence (tier) | Astra / Opus, severity | Sets dealing diet |
+|---|---|---|---|---|---|---|
+| 1 | Red panda (35) | plants | "also eats … bird eggs" | ADW bird eggs; IUCN insects (1, 2) | checks 1-3 high, agree | S025, S032, S043, S081 |
+| 2 | Pancake tortoise (15) | plants | "plus the odd beetle" | IUCN beetles in faeces (1) | 1-3 high, agree | S001, S052, S054 |
+| 3 | African spurred tortoise (20) | plants | "dead animals or garbage" | TFTSG carrion (2) | 1-3 high, agree | S002, S052, S054 |
+| 4 | Andean bear (71) | plants | "sometimes small animals" | ADW; IUCN "omnivorous" (1) | 1-3 high, agree | S025, S037, S043, S099-S103 |
+| 5 | Golden snub-nosed monkey (34) | plants | leaves, lichens | IUCN "insects, and small vertebrates" (1) | check 1 high, agree; check 3 high, Opus disagrees | S032, S081 |
+| 6 | Sumatran orangutan (40) | plants | "sometimes insects" | IUCN termites, slow loris; ADW ~5 % insects | 1-3 medium (Opus disagrees on check 3) | none |
+| 7 | Giant panda (60) | plants | "Bamboo is almost all" | ADW "small mammals, fish and insects" (2) | high (Opus: medium) | S025, S037, S043, S081 |
+| 8 | Ethiopian wolf (33) | meat | "mostly eats rodents"; `clues[4]`, `facts[1]` nectar | Ecology 2024 nectar study, doi 10.1002/ecy.4470 (literature) | 1-2 high, agree | S024, S030, S034, S046, S054, S068 |
+| 9 | Tasmanian devil (48) | meat | hunts, scavenges | ADW "small amounts of vegetation" | high (Opus: low) | S027 |
+| 10 | African wild dog (65) | meat | antelope | ADW "except for small amounts of grass" | high (Opus: low) | S024, S030, S046, S066, S068 |
+| 11 | Spiny softshell (02) | meat | water insects, crayfish | ADW macroinvertebrates (2); IUCN "omnivorous, tends to carnivory" (1) | wrong, high, agree | S001, S002, S013, S086, S087 |
+| 12 | Suriname toad (10) | meat | worms, insects, crustaceans, fish | ADW "aquatic omnivores"; AmphibiaWeb "mostly of invertebrates" (2) | wrong, high, agree | S003, S009, S010, S012, S047, S095, S096 |
+| 13 | Goliath frog (11) | meat | insects, crabs, … frogs | ADW lists foods, no proportions; 60 % arthropods only in an uncited Brill paper | wrong, high; Opus disagrees | S007, S010, S048-S051 |
+| 14 | Hellbender (75) | meat | "mostly eats crayfish" | ADW "primarily crayfish" (2) | 1-2 high; Opus disagrees ("crayfish isn't a bug") | S047, S086, S087, S089 |
+| 15 | Big-headed turtle (04) | meat | fish, snails, worms | IUCN "fruits … most commonly eaten" (1) | check 3 high; Opus: the real fault is check 1 | S002, S004, S071, S074, S075, S085 |
+| 16 | Floreana (19), Pinta (22) tortoises | plants | (none) | Britannica page names no food; Reptiles of Ecuador does | unsupported, medium | none |
+| 17 | Purple frog (16) | insects | "Mostly termites" | AmphibiaWeb "likely" | overstated, medium (Opus: low) | value holds |
+
+**Wording rows** (no value change):
+- `diet:meat`, high. "other animals only" also fits insect-eaters: Wallace's flying frog (05), red-eyed tree frog (06), coastal tailed frog (08), Hispaniolan solenodon (49), Sunda pangolin (24, S081).
+- `diet:insects`. "small bugs" leaves out worms (echidna, S072) and crayfish.
+- `diet:plants`. `DIET_TEXT` "It eats plants." lacks the column's "only" (sloth 54, okapi 29, tapir 53, Livingstone's flying fox 45).
+- Aye-aye (23, mixed) and giant armadillo (36, insects) are disputes about proportions.
+
+**Signs:**
+- `NOT_PLANTS` (`signs.ts:21`) lets plant signs deny meat and insects. `NOT_ANIMALS` (`:23`) lets animal signs deny plants. `nectar_drinker` (`:128`) denies meat.
+- The Ethiopian wolf's nectar clue has no tag, so no sign check sees it.
+- `signProblems` over all 76 profiles with the 1A′ values: **0 problems** (simulated).
+
+**Before the owner's build:** question and column text are code and change at deploy. Diet values and `DIET_TEXT` are database rows and change only at the build.
+
+#### F3 · Goal 3: Indonesian New Guinea maps to Southeast Asia, and the globe and rounds compute continents separately (bug)
+
+**Where:** `regions.ts:201` (`IDN → southeast-asia`); `questionMatchContent.ts:89-97` (continents from countries in rounds); `src/lib/places.ts:12-31` (the globe reads `clue_match_places.species_ids`); `db/schema.sql:172-188` (the view takes Natural Earth's `continent`, which is Asia for all of IDN).
+
+- **Ten profiles carry `IDN`:**
+  - 7 Asian: 05, 12, 24, 25, 28, 40, 44 (`realm:indomalayan`; the tiger also palearctic).
+  - 3 New Guinea: 17 pig-nosed turtle, 27 western long-beaked echidna, 67 eastern long-beaked echidna (`realm:australasian`).
+- **Goodfellow's tree-kangaroo (43)** is the only other New Guinea animal (PNG). It has no Indonesian polygon, so it's unaffected.
+- **Realm is unsafe as a split key.** OneEarth puts all of Wallacea under Australasia: Sulawesi, Lombok, Timor, Halmahera and Seram (point lookups on dev).
+- **Natural Earth's IDN parts:**
+  - East of 130°E: New Guinea mainland (centroid 137.45°E, xmin 130.95°E), Raja Ampat (Misool 130.13°E, Salawati 130.84°E, Waigeo 131.41°E), Aru (134.2–134.5°E), Kai (132.7°E).
+  - West of 130°E: Seram (129.46°E) and Halmahera (128.02°E), both Wallacea.
+  - A part-centroid rule at 130°E separates them cleanly, the way France's overseas parts are already reassigned (`schema.sql:175-177`).
+- **Range inside Indonesia** (km², presence 1): W echidna 88,930 (all of it); E echidna 49,423 (PNG 124,846); pig-nosed turtle 111,132 (AUS 54,430, PNG 71,800).
+
+**Globe and rounds under the chosen 3B, with the owner's steps in the order the Target design gives** (1 dump, 2 `ranges` check, 3 view SQL, 4 build). "Rounds" is the round pool's continents, with regions in brackets. Oceania rounds fall back to Anywhere (pool under 12).
+
+| id | Animal | Globe / rounds now | After deploy (live rows, old views) | After step 3 (globe / rounds) | After step 4 (globe / rounds) |
+|---|---|---|---|---|---|
+| 5 | Wallace's flying frog | Asia / Asia (SE Asia) | same | Asia / Asia | Asia / Asia |
+| 12 | Spiny hill turtle | Asia / Asia | same | Asia / Asia | Asia / Asia |
+| 17 | Pig-nosed turtle | Asia+Oceania / Asia+Oceania (AU-NZ, SE Asia, Melanesia) | same | **Oceania / Asia+Oceania ✗** (about 1 min) | Oceania / Oceania (AU-NZ, Melanesia) |
+| 24 | Sunda pangolin | Asia / Asia | same | Asia / Asia | Asia / Asia (loses East Asia via `notPresent`) |
+| 25 | Tiger | Asia / Asia | same | Asia / Asia | Asia / Asia |
+| 27 | W. long-beaked echidna | Asia / Asia (SE Asia; answers no in S018) | same | **Oceania / Asia ✗** (about 1 min) | Oceania / Oceania (Melanesia; S018 yes) |
+| 28 | Asian elephant | Asia / Asia | same | Asia / Asia | Asia / Asia |
+| 40 | Sumatran orangutan | Asia / Asia | same | Asia / Asia | Asia / Asia |
+| 44 | Javan rhinoceros | Asia / Asia | same | Asia / Asia | Asia / Asia |
+| 67 | E. long-beaked echidna | Asia+Oceania / Asia+Oceania (SE Asia, Melanesia) | same | **Oceania / Asia+Oceania ✗** (about 1 min) | Oceania / Oceania (Melanesia) |
+
+- **Pools after step 4:** Asia rounds 20 → 17 (still at least 12); globe Asia 22 → 19; Oceania 6 → 7.
+- **The two echidnas stay separable** after both become Melanesia-only: the eastern one has shrubland and grassland.
+- **Unrelated mismatches already exist** (caused by F5): Darwin's frog, Livingstone's flying fox and the solenodon have no continent in rounds; the spurred tortoise and the cheetah show under Asia on the globe only. `docs/CLUE_MATCH.md:67` already says counts "can differ by one or two".
+
+#### F4 · Goal 3: the presence filter isn't what puts wrong countries into region answers (finding against the brief's premise)
+
+**Where:** `scripts/content.ts:55-56`, `db/schema.sql:112-113`, `:169-170`.
+
+**Presence codes in `iucn` for our 76 species:**
+
+| Presence | Polygons | Species |
+|---|---|---|
+| 1 | 159 | 74 |
+| 2 | 1 | 1 (wild dog) |
+| 3 | 12 | 9 (cheetah, addax, giant panda, Asian elephant, both African elephants, orangutan, both tapirs) |
+| 4 | 12 | 10 |
+| 5 | 13 | 7 |
+| 6 | 5 | 5 |
+
+- De Winton's golden mole (presence 4 only) and the Pinta tortoise (6 only) rely on the `OR NOT EXISTS` fallback. The Floreana tortoise has one presence-1 polygon of 42 km².
+- **What `IN (1, 2)` changes in profile countries:**
+  - The cheetah loses DJI. Its LBY is already dropped by `HAVING`.
+  - The forest elephant loses CAF and TGO.
+  - Through `HAVING count(*) >= 2` (`content.ts:94`), the aardvark then loses DJI and TGO. That incidentally fixes Opus's note about Togo.
+  - **No region answer changes.**
+- **No globe continent changes either.** All 33 species with polygons of presence 2–6 were checked, including the case where a smaller range lowers the 5 % threshold and adds a continent.
+- **`= 1`** would also drop the wild dog's DZA (its only presence-2 polygon, 15,420 km²) and throw away "probably extant" range.
+- **The extinct-species fallback is unaffected** by either filter.
+
+**Every place the shapefile and IUCN's page disagree:**
+
+| Animal | Country | IUCN page | Shapefile (map year / Red List year) | Cause | Region answer it carries |
+|---|---|---|---|---|---|
+| Aardvark (57) | SDN | Presence uncertain | presence 1 (2015 / 2015) | map coarser than page | **North Africa** (its only North Africa country; S040) |
+| Aardvark | TGO | not listed | presence 1 | map vs page | none (dropped by 3P-A via `HAVING`) |
+| African wild dog (65) | DZA | Possibly extinct | presence 2 (2008 / 2025) | stale map | **North Africa** (with SDN; S030) |
+| African wild dog | SDN | Extinct | presence 1 (2008) | stale map | **North Africa** |
+| African wild dog | BFA, CMR, MWI, NGA | Extinct | presence 1 | stale map | none |
+| African wild dog | TCD | Presence uncertain | presence 1 | stale map | none |
+| Sunda pangolin (24) | CHN | Presence uncertain | presence 1 (2019 / 2019) | coarse map | **East Asia** (S018, S076, S078) |
+| Yangtze giant softshell (18) | CHN | Possibly extinct | presence 1 (compiled 2025 from assessment text, not the IUCN download) | non-IUCN map | **East Asia** |
+| Cheetah (58) | SDN 7,495 km², SDS 46,615 km² | Possibly extinct | presence 1 (2024 / 2024) | coarse map | none (DZA, ETH, KEN keep its regions) |
+| Addax (50) | MRT | Possibly extinct | 2016 / 2016 | coarse map | none |
+| Giant anteater (52) | CRI | Possibly extinct | presence 1 (2014 / 2025) | stale map | none |
+| Giant pangolin (55) | AGO | not listed (ADW lists it) | presence 1 | map vs page | none |
+| Temminck's pangolin (63) | SWZ | Possibly extinct | presence 1 (2019 / 2019) | coarse map | none |
+| Hairy frog (07) | COG | Presence uncertain | presence 1 (2025) | map vs page | none |
+| Floreana (19), Pinta (22) | ECU | Extinct | extinct species | historical range by design | keep (South America) |
+
+- **Not verifiable in `iucn`:** countries IUCN lists where the map share is under the threshold (Darwin's frog ARG, red-eyed tree frog COL, red panda MMR, Asian elephant CHN, forest elephant SDS, Goodfellow's IDN). These are "can't check" rows, not region errors.
+- **Conclusion:** the four region-flipping errors need a sourced correction where countries become clues. A newer map wouldn't fix the aardvark or the Sunda pangolin, whose maps are the same year as their pages.
+
+#### F5 · `HAVING count(*) >= 2` drops countries with a single pool animal (out of scope, recorded)
+
+**Where:** `scripts/content.ts:94`.
+
+- Darwin's frog (Chile), Livingstone's flying fox (Comoros) and the Hispaniolan solenodon (Hispaniola) get no country, so no region. These are the 3 missing region records.
+- The tiger loses Russia (226,201 km²). If Russia were kept, `regions.ts:129` would map all of it to `eastern-europe`, a latent error.
+- **It matters for 3B:** `IDP` holds 3 animals, so it passes `HAVING`.
+
+#### F6 · Goal 2: shared bin edges, dropped qualifiers, and column labels cut off by the 2-line clamp (wording and UI bug)
+
+| Where | Today | Problem |
+|---|---|---|
+| `questionMatch.ts:58-59` questions, `:80-81` short | small "100 g to 2 kg", medium "2 to 30 kg", large "30 to 300 kg", huge "over 300 kg" | 2 kg and 30 kg each claimed twice |
+| `:119` column | `Small 0.1–2 kg`, `Medium 2–30 kg`, `Large 30–300 kg`, `Huge 300+ kg` | 2, 30 and 300 kg each claimed twice; Medium and Large also cut off (below) |
+| `profiles.ts:154-160` `SIZE_TEXT` | "between 100 g and 2 kg" … "between 30 and 300 kg" | as the questions |
+| `docs/CONTENT_SOURCES.md:56` | same | same |
+| `:125` young column | `3–10 young` vs `10+ young` | the question says "more than 10" |
+| `:126` lifespan column | `5–20 years` vs `20+ years` | the question says "more than 20" |
+| `:122` activity column | `Day`, `Night`, `Dawn & dusk` | the questions say "mainly" |
+| `:85` activity short | `Out in the day?`, `Out at night?`, `Out at dawn and dusk?` | drop "mainly" |
+| `profiles.ts:169-172` `ACTIVITY_TEXT` | day and night lines lack "mainly" | check 2, low |
+
+- `YOUNG_TEXT`, `LIFESPAN_TEXT` and the short texts `Over 10 young at once?` and `Lives over 20 years?` are already clean. No test pins any of these strings (`tests/`, `scripts/e2e*.mjs`).
+- **Column labels already get cut off (verified).** In the baseline E2E screenshot `e2e-baseline/04-round-3-landed.png`, the `Southern Africa` header reads "Southern…".
+  - The header is a 54 px column (`EvidenceGrid.tsx:227`), with `text-xs` (Nunito 12 px / 16 px, −0.01 em), `line-clamp-2`, and a 12 px category mark plus 4 px margin at the start of line 1 (`:248`).
+  - Rebuilt in headless Chrome with the app's font and checked against two baseline headers (`Central Africa` fits at 56 px; `Southern Africa` clips in both):
+
+    | Label | 54–56 px |
+    |---|---|
+    | `Medium 2–30 kg`, `Large 30–300 kg` (today) | 3 lines, cut off |
+    | `Medium >2–30 kg`, `Large >30–300 kg`, `Large >30–300kg` | 3 lines, cut off |
+    | `<100 g`, `0.1–2 kg`, `>2–30 kg`, `>30–300 kg`, `>300 kg` | fit |
+    | `Over 10 young`, `Over 20 years`, `Mainly day`, `Mainly night`, `Mainly dawn/dusk`, `Mainly twilight` | fit |
+    | `South­ern Africa` (soft hyphen) | fits |
+    | `Austra­lia & NZ` (today), `Australia, NZ` | cut off |
+
+  - The "8 letters a line" comment (`questionMatch.ts:116`) is already wrong. Nothing in E2E checks clamping.
+- **Weights at or near an edge** (all 68 size records checked; 8 animals have none: 02, 04, 07, 10, 12, 16, 17, 32):
+
+  | Edge | Animals |
+  |---|---|
+  | 2 kg | Goliath frog 0.6–3.25 kg (medium); greater bilby 0.6–2.5 (small); aye-aye about 2.5 (medium); pygmy sloth 2.5–3.5 (medium) |
+  | 30 kg | maned wolf 20–30 (medium); giant armadillo 19–32 (medium); wild dog 18–36 (medium); orangutan 30–90 (large); hairy-nosed wombat about 32 (large); giant pangolin ">30" (large); giant anteater 27–45 (large) |
+  | 300 kg | tiger "up to about 300" (large); Baird's tapir 150–300 (large); okapi about 290 average (large) |
+
+  Each value follows the animal's typical weight, not an endpoint, so **no animal changes size under either edge convention**.
+
+#### F7 · Areas checked and found fine
+
+- `roundStillFits` already re-checks saved rounds against fresh content.
+- Deals depend on the set alone (sorted ids plus a hash tie-break).
+- `validatePool` checks neither countries nor diet meaning, so `content -- check` stays valid on live rows.
+- An unknown country code only warns (`questionMatchContent.ts:90`).
+- `content -- ranges` writes `{ ...profile, range }` (`content.ts:180-181`), so any other profile field (such as `redList.notPresent`) survives a range refresh.
+- `checkCitations` checks only clues and facts, not traits (`profiles.ts:357-366`). Trait source changes need a known source key and a page (`trait.url` or `profile.sources[key]`) and no `citations.json` entry.
+- All 43 non-region clue faces are distinct (`clueFaces.ts`). Only region faces repeat across continents (⬆️ for north-africa, northern-europe, melanesia).
+
+### Target design
+
+One design: **1A′ + 2B (weight-only size labels) + 3B / 3P-A / 3P-C + 4C**, as decided by the lead.
+
+#### Goal 1 · Diet (1A′)
+
+**Rule** (`docs/CONTENT_SOURCES.md:59`; the diet row becomes this decision order):
+1. **plants** when the sources name no animal food;
+2. **insects** when they say it eats mostly small animals without backbones (insects, worms, snails, crayfish and other invertebrates);
+3. **meat** when they name no plant food;
+4. otherwise **mixed**.
+
+- **Carve-out for meat-eaters:** grass or other plant bits a meat-eater swallows in small amounts don't count. Plant food it seeks out (fruit, nectar) does.
+- For plant-eaters, any animal food a source names counts.
+- Record each judgement call in the plan's Summary.
+
+**Wording:**
+
+| Tag | `QUESTION_TEXT` | `SHORT_TEXT` | `COLUMN_LABEL` | `DIET_TEXT` |
+|---|---|---|---|---|
+| `diet:plants` | Is it a plant-eater (only plants)? | Eats only plants? | `Only plants` (same) | It eats only plants. |
+| `diet:meat` | Is it a meat-eater (only other animals, and not mostly bugs)? | Eats only meat? (same) | `Only meat` (same) | It eats only other animals. |
+| `diet:insects` | Does it mostly eat bugs and other small animals without backbones, like worms, snails or crayfish? | Eats mostly bugs? (same) | `Mostly bugs` (same) | It mostly eats insects and other small invertebrates, like worms, snails or crayfish. |
+| `diet:mixed` | Does it eat both plants and animals (and not mostly bugs)? | Eats plants and animals? (same) | `Plants & animals` (same) | It eats both plants and animals. (same) |
+
+- The exclusions sit in the questions only. Diet is exclusive (one value per animal), so a guide line never needs to deny the other bins.
+- **`glossary.ts`:** add `['Invertebrate', 'An animal without a backbone, like an insect, worm, snail or crayfish.', 'invertebrates?']`. "invertebrates" already appears in `DIET_TEXT` and in one profile note.
+- **`signs.ts`:** unchanged (`NOT_PLANTS`, `NOT_ANIMALS`, `nectar_drinker`). `signProblems` gives 0 problems on the 1A′ values.
+
+**Profile edits** (12 value changes + 3 source/note cleanups). Every source key below exists in `sources.json`; the URL comes from `trait.url` or `profile.sources[key]`.
+
+| id | Animal | Value | `source` (`url`) | `note` |
+|---|---|---|---|---|
+| 35 | Red panda | plants → **mixed** | `adw` | "Bamboo leaves are most of its food; it also eats berries, blossoms and bird eggs." |
+| 15 | Pancake tortoise | plants → **mixed** | `iucn` | unchanged ("… plus the odd beetle.") |
+| 20 | African spurred tortoise | plants → **mixed** | `tftsg` | unchanged ("It sometimes eats dead animals or garbage too.") |
+| 71 | Andean bear | plants → **mixed** | `adw` | unchanged |
+| 34 | Golden snub-nosed monkey | plants → **mixed** | `iucn` | "It eats leaves, buds, seeds, bark and lichens, and sometimes insects and small animals." |
+| 40 | Sumatran orangutan | plants → **mixed** | `iucn` | unchanged ("… sometimes insects.") |
+| 60 | Giant panda | plants → **mixed** | `adw` | "Bamboo is almost all of its food; now and then it eats small mammals, fish or insects." |
+| 33 | Ethiopian wolf | meat → **mixed** | `literature` (`url: https://doi.org/10.1002/ecy.4470`; the profile has no `literature` key) | "It mostly eats rodents, and it also licks nectar from flowers." |
+| 04 | Big-headed turtle | meat → **mixed** | `iucn` (was `adw`) | "Fruit is what it eats most often; it also eats animals like snails, worms and fish." (implementer verifies each named food against the IUCN page and drops any it doesn't name) |
+| 02 | Spiny softshell | meat → **insects** | `adw` | unchanged |
+| 10 | Suriname toad | meat → **insects** | `amphibiaweb` (was `adw`, which says "omnivores") | "It mostly eats invertebrates, like worms, insects and crustaceans, plus some small fish." |
+| 75 | Hellbender | meat → **insects** | `adw` | unchanged |
+| 19 | Floreana tortoise | plants (same) | `literature` (`url: https://www.reptilesofecuador.com/chelonoidis_niger.html`; same URL its `trees` trait already uses) | none |
+| 22 | Pinta tortoise | plants (same) | `literature` (`url: https://www.reptilesofecuador.com/chelonoidis_abingdonii.html`) | none |
+| 16 | Purple frog | insects (same) | `amphibiaweb` | "It probably eats mostly termites, catching them underground." |
+
+- **Diet counts after:** plants 24, meat 10, insects 25, mixed 17.
+- **Kept as they are** (reasons go in the Summary):
+  - Tasmanian devil (48) and African wild dog (65) stay `meat`: ADW's "small amounts of vegetation" and "of grass" fall under the carve-out.
+  - Goliath frog (11) stays `meat`: the cited ADW page gives no proportions, and the 60 % arthropod figure is from an uncited paper.
+  - Aye-aye (23, mixed) and giant armadillo (36, insects) are disputes about proportions, not wrong values.
+  - Wording-only rows (05, 06, 08, 24, 29, 45, 49, 53, 54, echidna 27/67) are fixed by the new question text and need no value change.
+  - The wolf's nectar clue stays untagged. Tagging it `nectar_drinker` would add a visible sign, which is a gameplay change outside the goal.
+
+#### Goal 2 · Edges and labels (2B)
+
+Edges: tiny < 100 g; small 100 g to 2 kg (owns 100 g and 2 kg); medium over 2 kg up to 30 kg; large over 30 kg up to 300 kg; huge over 300 kg. No animal moves.
+
+| Tag | `QUESTION_TEXT` | `SHORT_TEXT` | `COLUMN_LABEL` | `SIZE_TEXT` |
+|---|---|---|---|---|
+| `size:tiny` | (same) Is it tiny (under 100 g)? | (same) | `<100 g` | (same) |
+| `size:small` | (same) Is it small (100 g to 2 kg)? | (same) | `0.1–2 kg` | It is small: from 100 g up to 2 kg. |
+| `size:medium` | Is it medium-sized (over 2 kg, up to 30 kg)? | Medium (over 2, up to 30 kg)? | `>2–30 kg` | It is medium-sized: over 2 kg, up to 30 kg. |
+| `size:large` | Is it large (over 30 kg, up to 300 kg)? | Large (over 30, up to 300 kg)? | `>30–300 kg` | It is large: over 30 kg, up to 300 kg. |
+| `size:huge` | (same) Is it huge (over 300 kg)? | (same) | `>300 kg` | (same) |
+
+- **Why weight-only column labels:** every form of `Medium …` and `Large …` with a weight range gets cut off in the 54 px header (F6), including today's. The gem face (`XS`/`S`/`M`/`L`/`XL`) and the full question still name the size.
+- **Other labels:**
+  - Young: `young:many` → `Over 10 young`.
+  - Lifespan: `lifespan:long` → `Over 20 years`.
+  - Activity columns: `Mainly day`, `Mainly night`, `Mainly dawn/dusk`; `Day & night` unchanged.
+  - Activity short texts: `Mainly out by day?`, `Mainly out at night?`, `Mainly out at dawn and dusk?`.
+  - `ACTIVITY_TEXT`: "It is mainly active during the day.", "It is mainly active at night.", "It is mainly active at dawn and dusk."; `any` unchanged.
+  - `region:southern-africa` → `South\u00adern Africa` (fixes existing clip in seed-7 round 3).
+- The `questionMatch.ts:116` comment becomes: "two lines of the 54 px column at most, category mark included; the E2E checks it."
+- **`docs/CONTENT_SOURCES.md:56`:** "tiny < 100 g, small 100 g to 2 kg, medium over 2 up to 30 kg, large over 30 up to 300 kg, huge over 300 kg (an animal's typical adult weight decides)".
+- **E2E header check** (`scripts/e2e.mjs`):
+  - **(a)** In every round at every viewport the E2E uses (390×844, 375×548, 320×720), each `table[aria-label="Evidence"] thead th[data-tag] span.line-clamp-2` has `scrollHeight <= clientHeight` and a width no wider than its `th`.
+  - **(b)** A probe like the existing long-name probe (`e2e.mjs:1062`): sets one header span's text, mark kept, to each label this mission changes (5 sizes, `Over 10 young`, `Over 20 years`, 3 activity, `South­ern Africa`), checks (a), then restores it.
+  - **Fallbacks if a label still fails:** `Mainly dawn/dusk` → `Mainly twilight` (measured to fit). For any other pre-existing label the new decks deal, use a soft hyphen or shorter text that passes (a).
+
+#### Goal 3 · Regions and presence (3B + 3P-A + 3P-C)
+
+**SQL, identical in `scripts/content.ts` (`RANGES_SQL`) and `db/schema.sql` (`clue_match_places`).** In `country_parts`, the first branch excludes IDN as it excludes RUS (`AND c.adm0_a3 NOT IN ('RUS', 'IDN')`). Two branches then mirror Russia's split:
+
+```sql
+  UNION ALL
+  -- Indonesia west of 130°E (Sumatra to Halmahera) stays Asia.
+  SELECT c.adm0_a3, c.name, c.continent, d.geom, c.continent
+  FROM natural_earth.countries c CROSS JOIN LATERAL ST_Dump(ST_MakeValid(c.geom)) d
+  WHERE c.adm0_a3 = 'IDN' AND ST_X(ST_Centroid(d.geom)) <= 130
+  UNION ALL
+  -- Its parts east of 130°E (western New Guinea, Raja Ampat, Aru, Kai) are Oceania, under the project code IDP
+  -- (regions.ts: melanesia). Same name as regions.ts.
+  SELECT 'IDP', 'Indonesian New Guinea', 'Oceania', d.geom, 'Oceania'
+  FROM natural_earth.countries c CROSS JOIN LATERAL ST_Dump(ST_MakeValid(c.geom)) d
+  WHERE c.adm0_a3 = 'IDN' AND ST_X(ST_Centroid(d.geom)) > 130
+```
+
+- In `content.ts`, `country_shapes` (`WHERE continent = home OR adm0_a3 = 'RUS'`, grouped by `adm0_a3, name, home`) keeps both IDN and IDP as separate shapes without change, because each has `continent = home`.
+- In `clue_match_places`, the IDP parts join `continent:oceania` and the IDN parts stay in `continent:asia`.
+- **Presence 1–2 (3P-A):** in all three queries (`RANGES_SQL`, `clue_match_ranges`, `clue_match_places`), both `presence IN (1, 2, 3)` become `presence IN (1, 2)`: the `WHERE` and the `OR NOT EXISTS` fallback. Update comments `schema.sql:93`, `:146` and `content.ts:44-46` to match and note "Indonesia split at 130°E".
+- **`clue_match_ranges`** changes only its presence filter (range maps lose presence-3 patches).
+- **`regions.ts`:** add `['IDP', '', 'melanesia', 'Indonesian New Guinea']`, noting IDP is this project's code from the range query, not Natural Earth's. The name must equal the SQL literal, because the pool door uses `countryName` and the profile door uses the SQL name.
+
+**`redList.notPresent` (3P-C):**
+- **Type** (`profiles.ts`): `redList: { …; notPresent?: Array<{ code: string; status: 'uncertain' | 'possibly-extinct' | 'extinct' }> }`. Cited by `redList.url` (same assessment's Country Occurrence list).
+- **Helper** (query, pure): `export function presentCountries(profile: Pick<AnimalProfile, 'range' | 'redList'>): Array<{ code: string; name: string }>`. Returns `range.countries` without the `notPresent` codes, in the same order.
+- **Called by both doors that read profiles:**
+  - `profileClues` (`profiles.ts:261`): the country clue's text and `country:` tags, and so the database rows, and so `animalsFromPool`.
+  - `animalsFromProfiles` (`questionMatchContent.ts:183`): the bot and the tests.
+  - `animalsFromPool` needs no change: it reads the already-filtered tags.
+- **`checkProfile` fails loudly (no case normalization) when:**
+  - `notPresent` is non-empty but `range` is missing;
+  - a code isn't exactly one of `range.countries[].code` (catches lowercase codes and entries a map refresh made obsolete);
+  - a status is outside the three allowed values;
+  - a code appears twice;
+  - every country would be removed.
+- **`range.countries` stays raw map output and is never hand-edited.**
+- **Entries:**
+
+  | id | Animal | `notPresent` |
+  |---|---|---|
+  | 57 | Aardvark | SDN uncertain |
+  | 65 | African wild dog | DZA possibly-extinct; SDN, BFA, CMR, MWI, NGA extinct; TCD uncertain |
+  | 24 | Sunda pangolin | CHN uncertain |
+  | 18 | Yangtze giant softshell | CHN possibly-extinct |
+  | 58 | Cheetah | SDN, SDS possibly-extinct |
+  | 50 | Addax | MRT possibly-extinct |
+  | 52 | Giant anteater | CRI possibly-extinct |
+  | 63 | Temminck's pangolin | SWZ possibly-extinct |
+  | 07 | Hairy frog | COG uncertain |
+
+  - All codes exist in today's `range.countries`, and none is removed by 3P-A (verified).
+  - Floreana and Pinta keep ECU (historical range by design). Giant pangolin AGO is skipped (not an uncertain or extinct status; changes no region).
+- **Effect** (simulated):
+  - Exactly 4 region answers flip: aardvark North Africa yes → no; wild dog North Africa yes → no; Sunda pangolin East Asia yes → no; Yangtze East Asia yes → no.
+  - No continent changes in rounds or on the globe. The views use polygons, not `notPresent`; range maps still draw those countries (acceptable, recorded in Summary).
+
+**Dev copy (`phaser_june_dev`), done by the lead.** Every command runs inside the brief's guard block. Never `.env.local`.
+1. **Golden diff:** on today's query, run `content -- ranges`. `git diff --quiet -- db/content/animals` must pass (proves dev's map data matches committed profiles).
+2. With the new `RANGES_SQL`, run `content -- ranges` again. Only expected diffs: 17 (`IDN → IDP`), 27 (`IDN → IDP`), 67 (`IDN → IDP`), 57 (`−DJI, −TGO`), 58 (`−DJI`), 41 (`−CAF, −TGO`). Any other diff: stop and investigate. Commit the result.
+3. Apply profile edits (diet, `notPresent`). Run `content -- preview`: 0 problems.
+4. Run the view-change SQL on dev: `DROP MATERIALIZED VIEW clue_match_places; DROP MATERIALIZED VIEW clue_match_ranges;`, then both `CREATE`s, unique indexes, and the `GRANT` DO-block, in one transaction.
+5. `content -- build` on dev, then `content -- check` on dev, then `e2e:fresh`.
+6. Read-only check: `clue_match_places` continents for the 10 IDN ids match `animalsFromProfiles` continents. Record the table in the plan.
+
+#### Goal 4 · Dealer (4C)
+
+```ts
+/** Every askable question for the set, grouped by how it splits the set (a question and its opposite share a group).
+ *  Groups in the order of their first question (prefix order, then tag); each keeps one question per category
+ *  (the first) plus every region question (their faces differ). */
+export function questionGroups(book: Book, set: readonly number[], place: ContinentKey | null): Clue[][];
+/** Unchanged contract and output: one question per split. */
+export function fullTable(book, set, place) { return questionGroups(book, set, place).map(group => group[0]); }
+```
+
+**`dealClues(book, set, place, count)`:**
+- Sort the ids. Take `groups = questionGroups(...)`. If `groups.length < count`, return `null`.
+- For each `combinations(groups, count)`: skip it unless `tellsApart(groupHeads)` holds. All members of a group share its split, so the heads decide.
+- Then for each `product(groups)` deck, skip it unless all `clueFace`s are distinct, and score it:
+
+  ```
+  key = [ -max(0, regions - 1),
+          (any minor >= 2 ? 4 : 0) + (any minor === 1 ? 4 : 0) + #categories,
+          -regions,
+          -hash32(`${sortedIds}:${tags.join('|')}`) ]
+  ```
+
+  The highest key wins, compared element by element (same hash tie-break as today: lower hash wins).
+
+**Why it's correct:**
+- One question per category per split loses no deck that would score higher. Non-region faces are all distinct, and the score depends only on regions, splits and categories.
+- So if a dealt deck holds more than one region, no valid deck with at most one exists. The dealer proves "forced" by itself.
+- Two questions in one deck never share a split (each comes from a different group).
+- Colliding region faces in one group don't matter: a deck takes one question per group, and the face check covers the deck.
+
+**`pickSuspectSet`:**
+- Unchanged code. Calls `fullTable` to grow a set and `dealClues` for the final check.
+- The new dealer finds a deck whenever the old one did, so no set is lost. A seed the old dealer rejected may now form a set; `--deals` reports the set count.
+
+**Other changes:**
+- `ANIMAL_RULES.version = '055-1'`.
+- **Speed fallback** (lossless, included if `--deals` reports a worst deck ≥ 20 ms): before the product loop, compute an upper bound for the combination: `[-max(0, #all-region groups - 1), splitMix + min(count, |categories across the groups' members|)]`. Skip the combination if this bound is strictly lower than the best key's first two entries. Never skips a better deck, so decks don't change.
+
+**`scripts/balance-044.ts --deals`:**
+- Deals only, with no rounds. Uses `--places` (default `world,africa,asia,north-america,south-america`; `world` = Anywhere).
+- Builds sets like `digest.ts`: per place, seed order, deduped by members, ids `S001…` in place order.
+- Prints: (1) sets per place and total slots; (2) slot table by category then subject (Baseline format); (3) region-per-deck and categories-per-deck histograms; (4) decks with birth and life-cycle slots; (5) each deck with >1 region (id, place, names, missing records); (6) fixed questions never dealt; (7) timing (total ms, worst deck ms + set id, Anywhere load ms).
+
+**Targets** (set by the lead before the change):
+- birth in ≥ 5 decks;
+- life-cycle slots ≥ 35;
+- region slots ≤ 75;
+- > 1 region only where forced;
+- 100 % of decks tell all five apart;
+- ≥ 60 decks with 4 categories;
+- worst deck < 20 ms;
+- Anywhere load ≤ 3× 117 ms.
+
+**Simulation with all content changes** (1A′, IDN → Melanesia, 3P-A drops, `notPresent`; old `pickSuspectSet`):
+- 104 sets; birth in 6 decks; life-cycle 49 slots; region 69; 7 decks with >1 region (2:3, 3:2, 4:2, all forced); 72 decks with 4 categories; every deck tells all five apart.
+- Speed: 226–271 ms total; worst deck 13–24 ms across runs (addressed by the lossless branch-and-bound fallback above).
+
+#### Docs to update
+
+- **`docs/CONTENT_SOURCES.md`:** `:56` size edges; `:59` diet decision order and carve-out; `:24` `redList.notPresent` field, rule, and validation.
+- **`docs/CLUE_MATCH.md`:** `:61` countries minus `redList.notPresent`; `:67` places view splits Indonesia at 130°E (`IDP → Oceania`) and uses presence 1–2; `:51` "notes up to 053-1" → "055-1".
+- **`docs/ANIMAL_BOARD_PAPER.md:38`** (frozen): append one dated note to item 2: "(055-1: any question with the same split may stand in, so life-cycle questions are dealt; at most one Range question unless the group needs more.)"
+- **`docs/SHAPEFILE_BEST_PRACTICES.md:35`:** presence 1–2.
+- **`CONTEXT.md`:** no change (terms still hold).
+
+### Rejected alternatives
+
+- **1B ("mostly" for every bin):** needs proportion data the sources lack, contradicts the 8 existing `mixed` notes, and breaks single-sign deduction in `signs.ts`.
+- **Strict 1A (devil and wild dog → mixed):** treats swallowed grass as diet; Opus rated both rows low. Remains the cheap fallback if a review rejects the carve-out.
+- **Goliath frog → insects:** only proportion figure comes from an uncited paper.
+- **2A (`[a, b)` edges):** moves 300 kg into huge and needs awkward `30–<300 kg` labels.
+- **Named size labels (`Medium >2–30 kg` / `Large >30–300 kg` / `>30–300kg`):** all get cut off at 54–56 px (F6).
+- **3A (split IDN by realm in code):** misfiles Wallacea, and globe stays wrong without a view change.
+- **3A+G (globe continents computed from code):** `/api/places` would load the whole pool, and every continent's list changes rules.
+- **Changing the `IDN` row to Melanesia:** breaks seven Asian animals.
+- **Splitting IDN with an envelope like Russia's:** cuts through Seram; part centroids are cleaner.
+- **3P-B (`presence = 1`):** drops probably-extant range and fixes no flagged row.
+- **3P-A alone:** flips no region answer (F4).
+- **Hand-editing `range.countries`:** `content -- ranges` overwrites it.
+- **4A (region cap only):** birth stays at 0.
+- **4B (every question in one flat table):** 17× slower (pruned: 4×).
+- **Rejecting multi-region sets in `pickSuspectSet`:** shrinks pools, and the brief allows forced cases.
+- **Dropping the +4/+4 split bonuses:** no measurable effect, and the 2-vs-3 split is the paper's teaching point (`ANIMAL_BOARD_PAPER.md:153-155`).
+- **A random representative per split:** harder to debug, and adds nothing over the category score.
+
+### Compatibility, invariants, and open risks
+
+**Live database after deploy, before the owner acts.**
+- **At deploy:** new question and column text, new dealer, rules `055-1`. Saved games are dropped once. `?seed=` rounds stay deterministic. `roundStillFits` and `content -- check` stay valid.
+- **Until the build:** diet values, guide sentences, `IDP` and `notPresent` stay as they are. Diet errors stay until the build (spiny softshell, Suriname toad and hellbender still answer yes to "meat-eater (… not mostly bugs)" until the build). `IDP` in `regions.ts` sits unused.
+
+**Owner's steps** (one handoff item, added only after deploy smoke tests pass; from WSL on fresh `main`):
+1. **Fresh dump:** `ssh play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`.
+2. **`npm run content -- ranges`.** Read-only (~15 min). Expect `git status --porcelain db/content/animals` empty (proves live map data equals dev's); if non-empty, stop before view SQL and build.
+3. **Paste the view-change SQL** (~1 min). Players see: W echidna moves Asia → Oceania on the globe; E echidna and pig-nosed turtle show only under Oceania; Asia lists 19; range maps lose presence-3 patches.
+4. **`npm run content -- build`.** Players see: rounds follow the globe (Asia pool 17); 12 diet answers change; 4 region answers flip; new guide sentences.
+5. **Optional:** `npm run content -- check`.
+
+Running read-only `ranges` before the view SQL shrinks the globe-vs-rounds mismatch window (F3 table) from ~15 minutes to ~1 minute and gates the live view change on map parity.
+
+**Unit tests, written first and seen failing:**
+
+| Test (file) | Must catch |
+|---|---|
+| `questionGroups` / `dealClues` (`tests/clueGame/animalBoard.test.ts`, hand-built pool) | birth shadowed by covering is still never dealt; a deck with 2 regions where a 1-region deck exists; a forced 2-region set returns `null`; two questions with one split in a deck; colliding region faces; the deck changes with id order or with the mystery; `fullTable` output differs from `questionGroups().map(g => g[0])`; `count` > groups doesn't return `null` |
+| IDP (`tests/clueGame/content.test.ts`) | `regionOfCountry('IDP') !== 'melanesia'`; `countryName('IDP') !== 'Indonesian New Guinea'`; `continentOf('country:idp') !== 'oceania'` |
+| `presentCountries` / `checkProfile` (`content.test.ts`) | a listed code survives into the country clue or into `animalsFromProfiles` regions; the two doors disagree; a lowercase code, a code not in the range, a bad status, a duplicate, `notPresent` without `range`, or removing every country passes `checkProfile` |
+| Glossary (`glossary.test.ts`) | "invertebrates" in `DIET_TEXT` has no definition |
+
+Existing tests (`animalBoard.test.ts:38-58`, `:153-155`, `savedGame.test.ts`) keep passing (`fullTable`'s contract is unchanged; no test pins rules version).
+
+**E2E** (`e2e:fresh` on dev, after dev-copy steps): header check (Goal 2 (a) and (b)), existing invariants, globe/rounds check from dev-copy step 6.
+
+**Open risks:**
+- **Worst deck 13–24 ms** against < 20 ms target on 2-CPU VPS; use the lossless branch-and-bound fallback in `dealClues` so it stays comfortably under 20 ms.
+- **The 1A′ carve-out is uneven:** a beetle makes a tortoise mixed, while incidental grass doesn't make a dog mixed. Written down explicitly; strict 1A (14 edits) is the fallback if reviews reject it.
+- **Balance bot may move > 3 points in some places** because every deck changes; record the reasons per place.
+- **CI for other PRs runs old code on updated dev rows/views:** unknown `IDP` only warns.
+- **Big-headed turtle's note** must name only foods IUCN names.
+
+**Out of scope, for the Summary:**
+- `HAVING >= 2` country rule and latent Russia → Eastern Europe mapping (F5);
+- `Austra­lia & NZ` label (cut off in every form tested);
+- missing records forcing multi-region decks: tomato frog `trees`, purple frog `size`, Suriname toad `size`/`activity`/`social`, Goodfellow's `activity`/`social`, sloths' `lifespan`;
+- range maps still drawing `notPresent` countries;
+- refreshing IUCN polygons older than their pages (wild dog 2008, giant anteater 2014, W echidna 2010, Goodfellow's 2008);
+- Carnivora gloss "meat-eating";
+- tapir's fur, tiger's activity, giant otter's social life, savanna vs grassland, `covering:skin` and `social:pairs` wording, give-away witness notes;
+- visible guide line repeating a dealt question's split (covering vs birth).
+
+### Decision (lead)
+
+1. **Goal 1 (Diet): Option 1A′** — keep *"only"* for `plants` and `meat`, *"mostly"* for `insects`, with the explicit 4-step partition order in `docs/CONTENT_SOURCES.md:59` (`plants` → `insects` → `meat` → `mixed`) and the incidental-plant carve-out for obligate meat-eaters (`48`, `65`).
+   - *Why over 1B:* inspecting the 8 existing `mixed` profiles (`56-chimpanzee`, `17-pig-nosed-turtle`) shows their notes already say *"mostly"* fruit/plants; shifting to *"mostly"* would contradict existing omnivores, require proportion data sources lack, and break single-sign deduction in `signs.ts`.
+   - *Why 1A′ over strict 1A:* Tasmanian devil (`48`) and African wild dog (`65`) are obligate carnivores whose ADW trace grass/vegetation is incidental (Opus rated both low, neither guide mentions plants); keep them `meat` and document why in Summary. Giant panda (`60`) moves to `mixed` with its ADW note updated to mention occasional insects/fish/small mammals, because its guide already says *"almost all"* and Opus rated it medium. Goliath frog (`11`) stays `meat` (cited ADW gives no proportions). Total: 12 value edits + 3 source/note cleanups. Keep `Mostly bugs` in the 54 px column, clarify full/short questions and `DIET_TEXT`, add `Invertebrate` to `glossary.ts`, and keep `signs.ts` intact.
+2. **Goal 2 (Edges & labels): Option 2B with weight-only size column labels** — mirror lifespan and young (`tiny < 100 g`, `small 100 g to 2 kg`, `medium over 2 kg to 30 kg`, `large over 30 kg to 300 kg`, `huge over 300 kg`; 0 profile moves), fix `Over 10 young`, `Over 20 years`, `Mainly` on activity labels/short texts/`ACTIVITY_TEXT`, and add soft hyphen to `South\u00adern Africa`. Accept architect's Chrome-measured refinement to weight-only size column headers (`<100 g`, `0.1–2 kg`, `>2–30 kg`, `>30–300 kg`, `>300 kg`) since the gem face already shows `XS`/`S`/`M`/`L`/`XL` and any `Medium`/`Large` + range string clips at 54 px; enforce with the E2E header-clamp check and probe.
+3. **Goal 3 (Regions & presence): Option 3B + Option 3P-A + Option 3P-C combined.**
+   - Split `IDN` parts with `ST_X(ST_Centroid(d.geom)) > 130` into `IDP` ("Indonesian New Guinea", Oceania) in both `scripts/content.ts` and `db/schema.sql`, and map `IDP → melanesia` in `regions.ts`. Avoids Wallacea misfiling for future birds and keeps globe and rounds aligned on one geographic rule.
+   - Tighten `presence IN (1, 2, 3)` → `presence IN (1, 2)` in `scripts/content.ts` (`RANGES_SQL`) and `db/schema.sql` (`clue_match_ranges`, `clue_match_places`) **and** add `redList.notPresent` filtered via one shared pure helper `presentCountries(profile)` called by both `profileClues` (`profiles.ts`) and `animalsFromProfiles` (`questionMatchContent.ts`), with fail-loud validation in `checkProfile`.
+   - **Dev copy (`phaser_june_dev`):** the lead will run golden-diff + new `content -- ranges`, recreate `clue_match_ranges` and `clue_match_places` (preserving `GRANT SELECT ... TO critter_app`), and run `content -- build` on `phaser_june_dev` ONLY (guarded) so E2E verifies globe + rounds together.
+   - **Owner handoff order:** accept architect's refinement to run read-only `content -- ranges` before the view SQL and `content -- build`, cutting the globe-vs-rounds mismatch window from ~15 min to ~1 min and gating live SQL on map parity.
+4. **Goal 4 (Dealer): Option 4C** — two-stage `questionGroups` + `dealClues` with lexicographic scoring `[-Math.max(0, regions - 1), splitMix + categories, -regions, -hash]` (plus the lossless branch-and-bound cut-off so worst deck stays `< 20 ms`), preserving `fullTable`'s contract and output; bump `ANIMAL_RULES.version` to `'055-1'`; add `--deals` to `scripts/balance-044.ts`.
+   - **Confirmed targets (set before implementation):** birth ≥ 5 decks; life-cycle ≥ 35 slots; region ≤ 75 slots; >1 region only where forced; 100% 5-suspect separation; ≥ 60 4-category decks; worst single `dealClues` < 20 ms; Anywhere load ≤ 3× baseline (~350 ms).
+
 ## Architecture review (Fable)
 
 ## Architecture review (Astra)
@@ -189,8 +702,14 @@ Careful moves left at find (20th/40th/60th pct): world 11/15/18, africa 13/16/19
 
 ## Decisions
 
+- (lead) Goal 1 diet wording = Option 1A′: keep "only" for plants/meat and "mostly" for insects (4-step partition order); 12 value edits + 3 source/note cleanups; keep Tasmanian devil (48), African wild dog (65), and Goliath frog (11) as `meat`. Avoids breaking existing `mixed` profiles (Chimpanzee, Pig-nosed Turtle) and preserves single-sign deduction.
+- (lead) Goal 2 bin edges = Option 2B with weight-only size column labels (`<100 g`, `0.1–2 kg`, `>2–30 kg`, `>30–300 kg`, `>300 kg`) + soft-hyphenated `South\u00adern Africa`: headless Chrome measured named Medium/Large headers clipping at 54–56 px (while gem faces already show XS/S/M/L/XL); 0 profile moves; fix young/lifespan/activity labels and enforce in E2E.
+- (lead) Goal 3 regions & presence = Option 3B (`IDP` centroid `> 130°E` in both SQL copies + `regions.ts`) + Option 3P-A (`presence IN (1, 2)` in `RANGES_SQL` and both views) + Option 3P-C (`redList.notPresent` filtered via shared `presentCountries(profile)` in both `profiles.ts` and `questionMatchContent.ts`). Lead will update `phaser_june_dev` views/ranges/rows (guarded) for E2E verification; live DB untouched. Owner handoff runs read-only `content -- ranges` before view SQL and `content -- build` (shrinks globe/rounds mismatch window to ~1 min and verifies map parity first).
+- (lead) Goal 4 dealer = Option 4C (two-stage `questionGroups` + `dealClues` region cap & category diversity + lossless branch-and-bound cut-off, preserving `fullTable`), `ANIMAL_RULES.version = '055-1'`, `--deals` flag in `balance-044.ts`, with pre-set numeric targets (birth ≥ 5, life ≥ 35, region ≤ 75, >1 region forced-only, 4-cat ≥ 60, worst < 20 ms).
+
 ## Log
 
 - 2026-11-20 07:10 UTC: Baseline done (lead). typecheck/lint PASS, unit tests 76/76 PASS, content preview/check PASS (76 playable, 2478 clues, 491 facts, 0 errors/warnings), E2E against `phaser_june_dev` 1588/1588 PASS (`e2e-baseline/`), balance bot baseline recorded across 5 places (`balance-before.txt`).
+- 2026-11-20 08:06 UTC: Architecture done (`architect` pass 1 → lead Decision → `architect` pass 2). Chosen design: 1A′ diet, 2B size/label edges (weight-only 54 px headers), 3B `IDP` (>130°E) + 3P-A (`presence IN (1,2)`) + 3P-C (`redList.notPresent`), 4C two-stage dealer (`055-1`). Plan-only edit; no code or DB writes.
 
 ## Summary
