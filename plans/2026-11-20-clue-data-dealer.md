@@ -958,7 +958,7 @@ dev() { ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.loca
     1. `dev env CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh`, copy newest artifact to `$S/e2e-s13` (preserve `$S/e2e-s6/report.json` as `$S/e2e-s6-report.json` and delete `$S/e2e-s6` per disk rule).
   - **Acceptance:** run passes every check (headers, globe-vs-rounds, invariants, 0 console errors, 0 failed requests); `report.idn` has all 10 rows; record `anywhereLoad.median` (unthrottled) and `anywhereLoad.throttled.median` (cpu x4) next to S3's (`4111 ms`).
 
-- [ ] **S14 · Final dealt-slot table and balance bot, measured against targets (lead)**
+- [x] **S14 · Final dealt-slot table and balance bot, measured against targets (lead)**
   - **Owner:** lead. **Files:** plan (results tables + Log), `$S/deals-after.txt`, `$S/balance-after.txt`.
   - **Scope:**
     1. Run `node scripts/run-typescript.mjs scripts/balance-044.ts --deals > $S/deals-after.txt` twice; verify identical fingerprint.
@@ -1060,6 +1060,91 @@ npm run content -- check                                      # live, read-only,
 - Globe still shows old views (`Asia` holds `27`) until owner's step 3 (proves live DB untouched).
 - Only AFTER smoke passes, add one handoff item to `/srv/critter-ai/handoff/critter-connect.md` with the owner's ordered steps (1. fresh dump, 2. read-only `content -- ranges` with empty git diff gate, 3. paste `$S/view-swap.sql`, 4. `content -- build`, 5. optional `content -- check`), what players see after each step, and the `/api/places` (5 min) vs `/api/clue-game/pool` (1 min) cache window.
 
+## Measurements (after, rules 055-1)
+
+Recorded 2026-11-20 at S14 (commit `9b83582e`, all Goal 1–4 code and profile edits in place, before S15 branch-and-bound).
+
+### Dealt-slot table (after, rules `055-1`)
+
+Command: `node scripts/run-typescript.mjs scripts/balance-044.ts --deals > $S/deals-after.txt`
+Full output: `/srv/critter-ai/agent-state/missions/clue-data-dealer/deals-after.txt`
+Deck fingerprint: `1798229f` (verified identical across repeated runs).
+
+104 distinct sets (world 49, africa 23, asia 15, north-america 8, south-america 9), 416 deck slots; **104/104 (100%)** tell all 5 suspects apart.
+
+| Category | Questions dealt, by subject | Missing records (of 76) |
+|---|---|---|
+| Body | Size 45, covering 30 | Size 8 |
+| Habits | Diet 59, activity 18, social 10, trees 10 | Social 20, activity 14, trees 5, diet 1 |
+| Habitat | Habitat 94, system 26 | None |
+| Range | Region 74 | Region 3 |
+| Life cycle | Young 28, lifespan 15, birth 7 | Lifespan 17, young 11 |
+
+- Region questions per deck: `0:48, 1:46, 2:5, 3:2, 4:3` (10 forced multi-region decks: `S005`, `S006`, `S010`, `S022`, `S032`, `S044` in world; `S050`–`S053` in africa, where omitting Goliath Frog's unsupported diet leaves the 4 African frogs short on shared non-region traits).
+- Categories per deck: `1:3, 2:8, 3:25, 4:68`.
+- Birth: **7 decks** (`birth:eggs` 7 slots, `birth:live` 0); life-cycle slots: **50**.
+- Fixed questions never dealt (4, down from 6): `covering:spines`, `birth:live`, `lifespan:short`, `lifespan:medium`.
+- Timing: `dealClues` **263.9 ms** total, worst deck **28.6 ms (`S055`)** (`21.5–28.6 ms` across 4 runs); Anywhere load **217.1 ms** (`205.0–235.7 ms` across 4 runs).
+
+**Goal 4 targets check:**
+
+| Target | Baseline (`055-0`) | After (`055-1`, S14) | Status |
+|---|---:|---:|---|
+| Birth decks (≥ 5) | 0 | 7 (`birth:eggs` 7, `birth:live` 0) | PASS |
+| Life-cycle slots (≥ 35) | 15 | 50 | PASS |
+| Region slots (≤ 75) | 89 | 74 | PASS |
+| >1 region forced-only | 12 (6 avoidable) | 10 (0 avoidable; primary score key minimizes excess regions exhaustively) | PASS |
+| 5-suspect separation (100%) | 103/103 | 104/104 | PASS |
+| 4-category decks (≥ 60) | 42 | 68 | PASS |
+| Anywhere load (≤ 351 ms) | 117.5 ms | 217.1 ms (205–236 ms) | PASS |
+| Worst deck (< 20 ms) | 2.3 ms (`S093`) | **28.6 ms (`S055`)** (21.5–28.6 ms) | **FAIL → triggers S15** |
+
+### Balance bot (after, rules `055-1`)
+
+Command: `node scripts/run-typescript.mjs scripts/balance-044.ts --places world,africa,asia,north-america,south-america --rounds 400 --seed 44 > $S/balance-after.txt`
+Full output: `/srv/critter-ai/agent-state/missions/clue-data-dealer/balance-after.txt`
+
+| Place (pool, sets) | Player | Found | Δ Found | ★★★ | Identified | Moves left | Orders | Notes | Seen | Points |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| world (76, 49) | careful | 98% ±1 | 0 | 60% | 95% | 15.1 | 2.6 | 1.8 | 9.2 | 269.9 |
+| world (76, 49) | novice | 97% ±2 | 0 | 62% | 93% | 15.0 | 2.8 | 1.8 | 9.7 | 267.1 |
+| world (76, 49) | expert | 100% ±0 | 0 | 77% | 100% | 17.1 | 2.3 | 1.7 | 6.7 | 308.7 |
+| world (76, 49) | reader | 92% ±3 | -2 | 31% | 83% | 10.2 | 3.0 | 1.9 | 7.6 | 182.9 |
+| world (76, 49) | guesser | 18% ±4 | 0 | 18% | - | 27.7 | 0.0 | 0.5 | 0.2 | 76.9 |
+| world (76, 49) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.9 | 2.0 | 14.6 | 10.0 |
+| world (76, 49) | oracle | 100% ±0 | 0 | 100% | - | 27.8 | 0.0 | 0.6 | 0.3 | 428.4 |
+| africa (26, 23) | careful | 98% ±1 | 0 | 66% | 94% | 16.2 | 2.4 | 1.6 | 8.8 | 284.9 |
+| africa (26, 23) | novice | 96% ±2 | -2 | 64% | 93% | 16.1 | 2.5 | 1.6 | 9.4 | 276.9 |
+| africa (26, 23) | expert | 100% ±0 | 0 | 79% | 100% | 17.8 | 2.1 | 1.5 | 6.7 | 315.6 |
+| africa (26, 23) | reader | 91% ±3 | -3 | 38% | 83% | 11.6 | 2.7 | 1.7 | 7.4 | 202.1 |
+| africa (26, 23) | guesser | 18% ±4 | 0 | 18% | - | 28.0 | 0.0 | 0.5 | 0.2 | 77.4 |
+| africa (26, 23) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.9 | 1.8 | 14.5 | 10.0 |
+| africa (26, 23) | oracle | 100% ±0 | 0 | 100% | - | 27.9 | 0.0 | 0.6 | 0.2 | 429.0 |
+| asia (17, 15) | careful | 96% ±2 | 0 | 48% | 91% | 13.6 | 3.0 | 0.8 | 10.6 | 242.6 |
+| asia (17, 15) | novice | 96% ±2 | +2 | 48% | 89% | 12.8 | 3.1 | 0.9 | 11.6 | 231.7 |
+| asia (17, 15) | expert | 100% ±0 | 0 | 61% | 100% | 15.0 | 2.7 | 0.8 | 8.1 | 277.3 |
+| asia (17, 15) | reader | 86% ±3 | -3 | 24% | 73% | 8.8 | 3.2 | 0.9 | 9.2 | 153.3 |
+| asia (17, 15) | guesser | 18% ±4 | 0 | 18% | - | 27.9 | 0.0 | 0.3 | 0.2 | 77.3 |
+| asia (17, 15) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.9 | 1.0 | 14.5 | 10.0 |
+| asia (17, 15) | oracle | 100% ±0 | 0 | 100% | - | 27.8 | 0.0 | 0.3 | 0.3 | 428.4 |
+| north-america (13, 8) | careful | 97% ±2 | +1 | 65% | 92% | 15.8 | 2.5 | 1.0 | 8.5 | 276.7 |
+| north-america (13, 8) | novice | 96% ±2 | -1 | 65% | 92% | 15.7 | 2.6 | 0.9 | 9.3 | 271.7 |
+| north-america (13, 8) | expert | 100% ±0 | 0 | 71% | 100% | 16.8 | 2.2 | 0.9 | 6.7 | 299.5 |
+| north-america (13, 8) | reader | 93% ±2 | -1 | 37% | 85% | 11.3 | 2.8 | 0.9 | 7.3 | 202.2 |
+| north-america (13, 8) | guesser | 18% ±4 | 0 | 18% | - | 27.8 | 0.0 | 0.4 | 0.2 | 77.1 |
+| north-america (13, 8) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.9 | 1.0 | 14.4 | 10.0 |
+| north-america (13, 8) | oracle | 100% ±0 | 0 | 100% | - | 27.8 | 0.0 | 0.5 | 0.3 | 428.0 |
+| south-america (14, 9) | careful | 97% ±2 | +1 | 70% | 94% | 16.5 | 2.4 | 1.7 | 8.1 | 286.6 |
+| south-america (14, 9) | novice | 98% ±1 | -1 | 68% | 95% | 16.3 | 2.4 | 1.7 | 8.7 | 285.4 |
+| south-america (14, 9) | expert | 100% ±0 | 0 | 77% | 100% | 17.7 | 2.0 | 1.7 | 6.2 | 314.1 |
+| south-america (14, 9) | reader | 93% ±2 | 0 | 39% | 81% | 11.5 | 2.7 | 1.8 | 7.1 | 203.8 |
+| south-america (14, 9) | guesser | 18% ±4 | 0 | 18% | - | 27.8 | 0.0 | 0.5 | 0.2 | 77.0 |
+| south-america (14, 9) | random | 20% ±4 | 0 | 0% | - | 0.0 | 3.8 | 1.9 | 14.4 | 10.0 |
+| south-america (14, 9) | oracle | 100% ±0 | 0 | 100% | - | 27.8 | 0.0 | 0.7 | 0.3 | 428.1 |
+
+Careful moves left at find (20th/40th/60th pct): world 10/14/17, africa 12/15/18, asia 9/12/15, north-america 11/15/18, south-america 11/16/19.
+V10 comparison (`balance-before.txt` vs `balance-after.txt`): **PASS (exit 0)** — all 35 `(place, player)` Found rates stay within ±3 percentage points (max move `-3`: `africa/reader` 94→91%, `asia/reader` 89→86% where Asia pool shrank 20→17; `careful` 0 to +1 across all 5 places).
+
 ## Code review (Astra)
 
 ## Code review (Fable)
@@ -1074,6 +1159,7 @@ npm run content -- check                                      # live, read-only,
 - (lead) Goal 4 dealer = Option 4C (two-stage `questionGroups` + `dealClues` region cap & category diversity, preserving `fullTable`), `ANIMAL_RULES.version = '055-1'`, `--deals` flag in `balance-044.ts`, with pre-set numeric targets (birth ≥ 5, life ≥ 35, region ≤ 75, >1 region forced-only, 4-cat ≥ 60, worst < 20 ms).
 - (lead) Revision rulings (2026-11-20): accepted 17 of 18 Fable/Astra items (zero-downtime `*_new` view swap; Lydekker's Line IDN split `>133.2°E` or `>130°E & lat>-3.5°`; Goliath frog diet unrecorded + aligned `SHORT_TEXT`/`DIET_TEXT`; `EvidenceGrid.tsx:414` hidden-cell `aria-label` via `order.short`; `roundStillFits` continent check; `notPresent` validated via `regionOfCountry` independent of `HAVING >= 2`; measure `dealClues` without branch-and-bound first; E2E globe-vs-rounds assertion + SQL drift test + separate `birth:eggs`/`birth:live` counts). Rejected Astra MUST-FIX #3 (`presence uncertain` region answers): brief explicitly requires dropping IUCN `presence uncertain` countries (aardvark SDN, Sunda pangolin CHN) as part of confirmed extant range; adding uncertain-region skip tags across `deduction.ts` violates KISS and leaves threshold-omitted borders unchanged.
 - (lead) S3 throttled E2E probe design (2026-11-20): running full `e2e:fresh` with `E2E_CPU_THROTTLE=4 E2E_ROUNDS=1` on untouched baseline code took ~16 min and failed 15 unrelated checks (4 multi-round `sortSaw` assertions impossible in 1 round + 11 animation/slide wall-clock timing checks broken by global 4x throttle on 2-CPU ARM), while `anywhereLoad` completed cleanly (`median: 4111 ms`, 0 console errors, 0 failed requests). Accepted S3's baseline measurement and updated S5/S13/V5 so `scripts/e2e.mjs` toggles `Emulation.setCPUThrottlingRate({ rate: 4 })` only around the 3 throttled Anywhere load measurements inside the normal passing `e2e:fresh` run (`report.anywhereLoad.throttled`).
+- (lead) S14 timing gate triggers S15 (2026-11-20): `--deals` met every content/diversity target and Anywhere load (`217.1 ms`, `205–236 ms` vs `<= 351 ms`), and V10 balance check passed (`exit 0`, all 35 Found rates within ±3 pts), but worst-deck `dealClues` time (`28.6 ms` on `S055`; `21.5–28.6 ms` across 4 runs) exceeded the `< 20 ms` target. Leaving S15 unchecked so Opus adds the lossless branch-and-bound cut-off next session while preserving fingerprint `1798229f`.
 
 ## Log
 
@@ -1096,5 +1182,6 @@ npm run content -- check                                      # live, read-only,
 - 2026-11-20 10:38 UTC: S11 done (lead). Applied zero-downtime `$S/view-swap.sql` on `phaser_june_dev` (guarded): exit 0, wall time `53.0 s` (`clue_match_ranges_new` 17.4 s / 76 rows, `clue_match_places_new` 34.9 s / 5 rows), swap+grant transaction `212 ms` (`BEGIN`–`COMMIT`). Ran `npm run content -- build` on dev (`0 citation warnings`, 16 sources, 76 species, 2477 clues, 491 facts) and `npm run content -- check` on dev (`76 playable of 76 species, 2477 clues (2085 deductive), 491 facts. 0 errors, 0 warnings`; diet tags: `plants 24`, `meat 9`, `insects 25`, `mixed 17`, + 1 unrecorded Goliath frog). Verified globe-vs-pool parity across all 10 IDN species on dev: `continent:asia` 19 (`{5, 12, 24, 25, 28, 40, 44}`, all `country:idn`, `24` omits `country:chn`), `continent:oceania` 7 (`{17, 27, 67}`, all `country:idp`, none in Asia); africa 27, north-america 14, south-america 15. `critter_app` privileges on dev: `t|t`. Note: other PRs' CI on `phaser_june_dev` will now see `IDP` (only warns on older code). Live `phaser_june` confirmed untouched (`npm run content -- check`: 2478 clues, 0 errors, 0 warnings). Plan-only commit.
 - 2026-11-20 10:42 UTC: S12 done (Opus → lead review). Added Node-side globe-vs-pool IDN/IDP agreement block to `scripts/e2e.mjs` (fetches `/api/places/` and `/api/clue-game/pool/` once each without perturbing page request lists or timing; records 10-row `report.idn`; adds 6 checks verifying 200 responses, `continent:oceania` holds `{17, 27, 67}` and omits Asian IDN ids, `continent:asia` holds `{5, 12, 24, 25, 28, 40, 44}` and omits IDP ids, and pool `country:idp`/`country:idn` tags agree). Verified `node --check scripts/e2e.mjs`, `npm run typecheck`, `npm run lint`, and `npm test` (102/102) PASS (first E2E run with these checks is S13).
 - 2026-11-20 10:57 UTC: S13 done (lead). Ran guarded `npm run e2e:fresh` against `phaser_june_dev` with all code, profiles, views, and dev content build in place: **1657/1657** checks passed (0 failed, 0 console/page errors, 0 failed requests; seed 7, 4 rounds, round 1 mystery `7` Hairy Frog); all 4 per-round 3-viewport (`390x844`, `375x548`, `320x720`) header-fit checks and 11-label probe passed (`detail: []`); all 6 IDN/IDP globe-vs-pool checks passed with all 10 rows in `report.idn` (`17`, `27`, `67` in `continent:oceania` + `country:idp`; `5`, `12`, `24`, `25`, `28`, `40`, `44` in `continent:asia` + `country:idn`); `anywhereLoad` median `1392 ms` (runs `3121, 1385, 1392`; cpu x1, vs S6 `1432 ms`) and `anywhereLoad.throttled` median `4981 ms` (runs `4981, 4805, 5003`; cpu x4, vs S3 baseline `4111 ms`, S6 `4587 ms`). Saved artifact to `$S/e2e-s13/`, preserved `$S/e2e-s6/report.json` as `$S/e2e-s6-report.json`, and removed `$S/e2e-s6/`. Plan-only commit.
+- 2026-11-20 11:09 UTC: S14 done (lead). Ran `--deals` (twice + 3 timing repeats; `$S/deals-after.txt`) and 5-place balance bot (`--rounds 400 --seed 44`; `$S/balance-after.txt`) with V10 diff. Dealt-slot table (rules `055-1`, fingerprint `1798229f` identical across runs): 104 sets / 416 slots, 104/104 separation, birth 7 decks (`birth:eggs` 7, `birth:live` 0; target ≥ 5), life-cycle 50 slots (target ≥ 35), region 74 slots (target ≤ 75; `0:48, 1:46, 2:5, 3:2, 4:3`, 10 forced >1-region decks, 0 avoidable), 4-category 68 decks (target ≥ 60), Anywhere load 217.1 ms (205–236 ms; target ≤ 351 ms), worst deck **28.6 ms (`S055`)** (`21.5–28.6 ms` across 4 runs; misses `< 20 ms` → S15 stays unchecked). Balance bot V10: PASS (exit 0; all 35 `(place, player)` Found rates within ±3 pts; `careful` 0 to +1, `asia/reader` 89→86% and `africa/reader` 94→91%). Plan-only commit.
 
 ## Summary
