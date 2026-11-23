@@ -220,7 +220,7 @@ test('A5: a clean profile has no problems', () => {
 });
 
 // ---- A6: the rule fixes on real SIGNS (F1-F4, and S1's rulings for snorkel_nose, shares_food, often_in_trees,
-// fully_aquatic, climbs_boulders).
+// fully_aquatic, climbs_boulders; the S25 review fixes for above_tree_line, crevice_hider, leaf_litter).
 
 test('A6: climber and swimmer carry no habitat rule', () => {
   assert.deepEqual(real(['climber'], ['trees:no']), []);
@@ -236,9 +236,20 @@ test('A6: never_climbs means trees only: any habitat, beside climber, but not be
   assert.match(inTrees[0], /not often_in_trees/);
 });
 
-test('A6: above_tree_line allows forest lower down; sand_dunes needs no desert', () => {
+test('A6: above_tree_line allows forest and trees lower down; sand_dunes needs no desert', () => {
   assert.deepEqual(real(['above_tree_line'], ['habitat:forest', 'trees:no']), []);
+  assert.deepEqual(real(['above_tree_line'], ['habitat:forest', 'trees:yes']), []);
+  assert.deepEqual(real(['above_tree_line', 'sleeps_high_in_trees'], ['habitat:forest', 'trees:yes']), []);
   assert.deepEqual(real(['sand_dunes'], ['habitat:shrubland']), []);
+});
+
+test('A6: crevice_hider needs no rocky habitat', () => {
+  assert.deepEqual(real(['crevice_hider'], ['habitat:forest', 'habitat:wetlands']), []);
+});
+
+test('A6: leaf_litter states no forest_floor, so a leaf-litter climber passes', () => {
+  assert.ok(!impliesOf('leaf_litter').includes('forest_floor'));
+  assert.deepEqual(real(['leaf_litter', 'climber'], ['habitat:forest', 'trees:no']), []);
 });
 
 test('A6: snorkel_nose needs no fresh water; shares_food still rules out a loner', () => {

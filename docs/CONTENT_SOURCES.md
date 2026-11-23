@@ -77,7 +77,7 @@ Rules, from `SIGNS`:
 - `climber` and `swimmer` carry no trait `implies`: climbing rocks isn't living in trees, and swimming isn't fresh water.
 
 Narrower and broader signs (Goal 2 of the sign audit):
-- A narrower sign lists its strictly broader sign in `implies` (`climbs_boulders` → `climber`, `leaf_litter` → `forest_floor`) once the edge passes both gates: entailment under the approved `meaning`s, and the wording gate (zero false fits on every live and audited note tagged with the broader sign).
+- A narrower sign lists its strictly broader sign in `implies` (`climbs_boulders` → `climber`, `dung_piles` → `scent_marks`) once the edge passes both gates: entailment under the approved `meaning`s, and the wording gate (zero false fits on every live and audited note tagged with the broader sign).
 - `animalFitsNote` closes over wired `implies` edges, so a holder of the narrower sign fits a note tagged with the broader one, for witness fits and deduction (`witnessNotes`, `stillPossible`).
 - One sign per fact **per note**: never tag one note with a narrower sign and a broader sign it implies (`signProblems` flags it); keep the narrower one its words state. A broad tag on a **different** note stays, so that note can still be dealt. `signsOf` drops implied broader signs, so the field guide shows one badge per fact.
 
