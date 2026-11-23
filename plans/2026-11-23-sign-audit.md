@@ -95,7 +95,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -533,6 +533,23 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. **Gate broader-sign matching on the note’s actual words.** In the current Anywhere deal `[25,31,43,53,57]`, the proposed `backward_pouch → pouch` rule makes “Its pouch opens forward” eligible at 2 of 5 by counting the wombat, whose pouch opens backward. Check newly matched suspect IDs against each note in both release snapshots. Defer unsafe edges until compatible wording is live.
+2. **Use one fit rule for dealing and deduction.** §1.4 changes `witnessNotes`, but `stillPossible` still requires literal tags. The balance bot would eliminate suspects the displayed count includes. Use the same predicate for both and for audit metrics.
+3. **Enforce one sign per fact on each note.** §2.7 strips a broad tag when another note gains a narrower one. If that was the first note’s only tag, the dealer loses a valid clue. Preserve each note’s evidence and deduplicate the field-guide badges separately.
+4. **Reconcile the ledger with the original and final profiles.** §1.6 changes tags before the audit export, and §2.6 records only one clue index per change. Animal 31 alone has three `burrower` notes. Record every affected note and verify that the complete tag diff matches the rulings.
+
+SHOULD-CONSIDER:
+
+1. Revisit `never_climbs denies climber`. The cited note says “never climbs trees,” while `climber` explicitly includes rock climbing. Those facts can coexist.
+2. Reopen an implied pair when its only narrower evidence receives `can’t tell`. The broader sign may have independent support.
+3. Recheck against fresh `origin/main` before release. Reviewed `agent/sign-audit` at `bab6f49d`. The read-only checkout blocked fetching, so remote freshness is unverified.
+
+*(Saved: `/srv/critter-ai/agent-state/missions/sign-audit/tasks/astra-arch-review.md`)*
+
 ## Revision notes
 
 ## Steps
@@ -554,5 +571,6 @@ SHOULD-CONSIDER:
 - 2026-11-23 02:20 UTC · Baseline: verified clean `0d02c12e` (`origin/main` `7bce511a`); typecheck, lint, unit tests (106/106), content preview/check (live + dev, 76 species / 2475 clues / 491 facts, 0 errors/warnings), and `e2e:fresh` on `phaser_june_dev` (1657/1657, artifact in `…/sign-audit/e2e-baseline/`) all pass.
 - 2026-11-23 02:42 UTC · Architecture: `architect` audited `SIGNS`/content/sources/witness baseline (F1–F9, 105 sets, 402/525 combos, 940 notes, 259/267 cached sources) and proposed options; lead chose A3 + B2 with 4 refinements (`SignEntry` union, `travelOf` water-system guard, auditing held pairs, 3-snapshot witness metrics); `architect` finalized the single target design. Plan updated; no code changed.
 - 2026-11-23 02:47 UTC · Fable review: `architecture-reviewer` (Fable 5.2 · high) returned `APPROVE_WITH_CHANGES` with 3 MUST-FIX (broad-note narrow wording false fits, `stillPossible` third literal fit check, profile-level one-sign-per-fact hiding true notes), 4 MISSED, 5 SHOULD-CONSIDER. Recorded in plan; no code changed.
+- 2026-11-23 02:51 UTC · Astra review: `astra-review` (Codex GPT-6.2-Astra · xhigh) returned `APPROVE_WITH_CHANGES` with 4 MUST-FIX (gate broader-sign matching on note wording, unify `witnessNotes`/`stillPossible`/metrics fit predicate, keep one-sign-per-fact per-note and dedupe field-guide badges separately, reconcile ledger across pre-export changes and multi-note tags) and 3 SHOULD-CONSIDER. Recorded in plan; no code changed.
 
 ## Summary
