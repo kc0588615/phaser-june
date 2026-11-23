@@ -93,28 +93,17 @@
     {
       "category": "diet",
       "text": "Fruit is its main food.",
-      "tags": [
-        "fruit_eater"
-      ],
       "source": "iucn"
     },
     {
       "category": "behavior",
       "text": "It builds a nest of branches in the trees to sleep in each night.",
-      "tags": [
-        "sleeping_nests",
-        "climber"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Orangutan"
     },
     {
       "category": "behavior",
       "text": "It lives almost entirely in the trees; females almost never touch the ground.",
-      "tags": [
-        "climber",
-        "seldom_on_ground"
-      ],
       "source": "iucn"
     },
     {
@@ -160,6 +149,124 @@
         "reddish_fur"
       ],
       "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud calls that carry far, such as songs, hoots, barks, roars or wails.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It drinks nectar from flowers.",
+      "tags": [
+        "nectar_drinker"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Pongo/"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by hanging or perching in tree branches.",
+      "tags": [
+        "roosts_in_trees"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/orangutans/behavior"
+    },
+    {
+      "category": "diet",
+      "text": "It spreads plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps or rests high up in trees.",
+      "tags": [
+        "sleeps_high_in_trees"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "At least sometimes, it stands, rears up, hops or runs on its back legs alone.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/orangutans/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It walks on its knuckles or the sides of its curled front feet, keeping its claws or fingers off the ground.",
+      "tags": [
+        "walks_on_knuckles"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Orangutan"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Orangutan"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is a main or favorite part of its food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives in trees and seldom comes down to the ground.",
+      "tags": [
+        "seldom_on_ground"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It builds a nest or bed of leaves, branches or grass to sleep or rest in.",
+      "tags": [
+        "sleeping_nests"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Orangutan"
     }
   ],
   "facts": [

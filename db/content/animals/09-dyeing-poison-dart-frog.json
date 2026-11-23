@@ -93,17 +93,11 @@
     {
       "category": "behavior",
       "text": "It hops around on the forest floor near small streams.",
-      "tags": [
-        "forest_floor"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "It defends its patch by calling, chasing and wrestling other frogs.",
-      "tags": [
-        "territorial"
-      ],
       "source": "adw"
     },
     {
@@ -156,6 +150,30 @@
       "text": "Its bright colors warn predators that it is poisonous or bad to eat.",
       "tags": [
         "warning_colors"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
       ],
       "source": "adw"
     }

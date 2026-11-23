@@ -75,19 +75,12 @@
     {
       "category": "morphology",
       "text": "Its long, golden-brown tail helps it balance in the trees.",
-      "tags": [
-        "long_tail",
-        "climber"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
     },
     {
       "category": "behavior",
       "text": "It lives in the treetops, gripping branches with strong arms and hooked claws.",
-      "tags": [
-        "climber"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
     },
@@ -142,6 +135,66 @@
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by hanging or perching in tree branches.",
+      "tags": [
+        "roosts_in_trees"
+      ],
+      "source": "literature",
+      "url": "https://www.mdpi.com/2673-5636/3/1/9"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps or rests high up in trees.",
+      "tags": [
+        "sleeps_high_in_trees"
+      ],
+      "source": "literature",
+      "url": "https://www.mdpi.com/2673-5636/3/1/9"
+    },
+    {
+      "category": "behavior",
+      "text": "At least sometimes, it stands, rears up, hops or runs on its back legs alone.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/buerger-matschie-treekangaroos/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

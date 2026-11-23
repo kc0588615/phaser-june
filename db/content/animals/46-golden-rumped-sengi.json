@@ -187,6 +187,41 @@
         "pointed_snout"
       ],
       "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

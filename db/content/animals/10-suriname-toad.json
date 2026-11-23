@@ -96,9 +96,6 @@
     {
       "category": "behavior",
       "text": "It almost never leaves the water, resting on the bottom of murky ponds.",
-      "tags": [
-        "rests_on_bottom"
-      ],
       "source": "adw"
     },
     {
@@ -168,6 +165,63 @@
         "webbed_feet"
       ],
       "source": "amphibiaweb"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/surinam-toad"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It spends its whole life in water and rarely or never comes out onto land.",
+      "tags": [
+        "fully_aquatic"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

@@ -80,9 +80,6 @@
     {
       "category": "behavior",
       "text": "By eating fruit and spreading the seeds, it helped shape the island's forests.",
-      "tags": [
-        "seed_spreader"
-      ],
       "source": "ngo"
     },
     {
@@ -112,6 +109,77 @@
       ],
       "source": "sdzwa",
       "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rested in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "diet",
+      "text": "It found most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_niger.html"
+    },
+    {
+      "category": "behavior",
+      "text": "It lived and fed on the forest floor, and rarely if ever climbed up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_niger.html"
+    },
+    {
+      "category": "behavior",
+      "text": "It made a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "literature",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Articles/Van_Denburgh_1914.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It made loud calls that carried far, such as roars or bellows.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "literature",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Articles/Van_Denburgh_1914.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It could go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "literature",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Articles/Van_Denburgh_1914.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It moved very slowly, even when disturbed.",
+      "tags": [
+        "slow_mover"
+      ],
+      "source": "literature",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Articles/Van_Denburgh_1914.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It spread plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "ngo"
     }
   ],
   "facts": [

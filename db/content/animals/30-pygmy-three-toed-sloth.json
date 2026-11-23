@@ -162,6 +162,73 @@
       ],
       "source": "adw",
       "url": "https://animaldiversity.org/accounts/Bradypodidae/"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rests in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "literature",
+      "url": "https://treatment.plazi.org/GgServer/xhtml/FFF8FF9B2B17FFC26666FF81FF96BE7C"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by hanging or perching in tree branches.",
+      "tags": [
+        "roosts_in_trees"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Sloth"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives in trees and seldom comes down to the ground.",
+      "tags": [
+        "seldom_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps or rests high up in trees.",
+      "tags": [
+        "sleeps_high_in_trees"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Pygmy_three-toed_sloth"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

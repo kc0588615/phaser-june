@@ -106,10 +106,6 @@
     {
       "category": "behavior",
       "text": "It sees poorly. Bumps along its body feel the tiny ripples that prey makes in the water.",
-      "tags": [
-        "poor_eyesight",
-        "senses_vibrations"
-      ],
       "source": "adw"
     },
     {
@@ -123,9 +119,6 @@
     {
       "category": "diet",
       "text": "It waits in ambush on the stream bed, then sucks prey into its wide mouth.",
-      "tags": [
-        "ambush_hunter"
-      ],
       "source": "sdzwa",
       "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics"
     },
@@ -196,6 +189,89 @@
       ],
       "source": "sdzwa",
       "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics"
+    },
+    {
+      "category": "diet",
+      "text": "Fish are a main part of its food.",
+      "tags": [
+        "fish_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It can regrow lost body parts, such as legs, a tail or gills.",
+      "tags": [
+        "regrows_body_parts"
+      ],
+      "source": "literature",
+      "url": "https://link.springer.com/article/10.1186/s40851-024-00240-1"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its skin oozes a sticky glue when it is grabbed.",
+      "tags": [
+        "sticky_skin"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests or sleeps through the winter, inactive for weeks or months.",
+      "tags": [
+        "winter_rest"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It can feel vibrations or ripples through the ground or water, to sense prey, danger or others.",
+      "tags": [
+        "senses_vibrations"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

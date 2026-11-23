@@ -113,6 +113,68 @@
       ],
       "source": "sdzwa",
       "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rested in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "diet",
+      "text": "It found most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_abingdonii.html"
+    },
+    {
+      "category": "behavior",
+      "text": "It made a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/galapagostortoises/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It made loud calls that carried far, such as roars or bellows.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_abingdonii.html"
+    },
+    {
+      "category": "diet",
+      "text": "It could go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Gal%C3%A1pagos_tortoise"
+    },
+    {
+      "category": "diet",
+      "text": "It spread plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "behavior",
+      "text": "It moved very slowly, even when disturbed.",
+      "tags": [
+        "slow_mover"
+      ],
+      "source": "literature",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/15802673/"
     }
   ],
   "facts": [

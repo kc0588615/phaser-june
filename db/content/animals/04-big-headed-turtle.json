@@ -151,6 +151,39 @@
         "huge_head"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "literature",
+      "url": "http://www.unc.edu/~dtkirkpa/stuff/bigheads.html"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs up big rocks, boulders or cliffs.",
+      "tags": [
+        "climbs_boulders"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is a main or favorite part of its food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

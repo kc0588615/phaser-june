@@ -109,9 +109,6 @@
     {
       "category": "behavior",
       "text": "By day it hides under a big flat rock on the stream bed, and it defends that rock from other hellbenders.",
-      "tags": [
-        "territorial"
-      ],
       "source": "adw"
     },
     {
@@ -169,6 +166,39 @@
       "text": "It has webbed feet: skin joins its toes.",
       "tags": [
         "webbed_feet"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/hellbender"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
       ],
       "source": "adw"
     }

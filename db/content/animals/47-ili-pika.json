@@ -62,9 +62,6 @@
     {
       "category": "behavior",
       "text": "It gathers plants in summer and stores them in haypiles for the winter.",
-      "tags": [
-        "stores_food"
-      ],
       "source": "iucn"
     },
     {
@@ -142,6 +139,58 @@
       ],
       "source": "adw",
       "url": "https://animaldiversity.org/accounts/Ochotonidae/"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs up big rocks, boulders or cliffs.",
+      "tags": [
+        "climbs_boulders"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves its dung in piles that it comes back to, as messages to others of its kind.",
+      "tags": [
+        "dung_piles"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    {
+      "category": "diet",
+      "text": "It mostly eats grass or other low plants that it crops from the ground.",
+      "tags": [
+        "grazer"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "ngo",
+      "url": "https://www.worldlagomorphsociety.org/Content/pdf/news/Proceedings%20WLC5.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It gathers food and stores it to eat later.",
+      "tags": [
+        "stores_food"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

@@ -97,10 +97,6 @@
     {
       "category": "morphology",
       "text": "It has five claws on each front foot. Its western cousin usually has only three.",
-      "tags": [
-        "five_front_claws",
-        "digging_claws"
-      ],
       "source": "adw"
     },
     {
@@ -182,6 +178,38 @@
       "text": "Its tongue is very long and can reach far out of its mouth.",
       "tags": [
         "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It moves very slowly, even when disturbed.",
+      "tags": [
+        "slow_mover"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has strong, long claws that it digs with.",
+      "tags": [
+        "digging_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
       ],
       "source": "adw"
     }

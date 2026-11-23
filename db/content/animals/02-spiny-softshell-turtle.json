@@ -85,9 +85,6 @@
     {
       "category": "behavior",
       "text": "When disturbed, it dives and buries itself in sand with only its head showing.",
-      "tags": [
-        "buries_itself"
-      ],
       "source": "adw"
     },
     {
@@ -98,11 +95,6 @@
     {
       "category": "behavior",
       "text": "From October to April it rests buried on the bottom of rivers and lakes.",
-      "tags": [
-        "winter_rest",
-        "buries_itself",
-        "rests_on_bottom"
-      ],
       "source": "adw"
     },
     {
@@ -197,6 +189,55 @@
       "text": "It can take in oxygen from the water while it stays underwater.",
       "tags": [
         "underwater_breathing"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rests in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "It often eats animals that are already dead.",
+      "tags": [
+        "scavenger"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "government",
+      "url": "https://publications.gc.ca/collections/collection_2017/eccc/CW69-14-257-2016-eng.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests or sleeps through the winter, inactive for weeks or months.",
+      "tags": [
+        "winter_rest"
       ],
       "source": "adw"
     }

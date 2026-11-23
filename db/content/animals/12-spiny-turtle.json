@@ -95,9 +95,6 @@
     {
       "category": "diet",
       "text": "Fallen fruit is one of its favorite foods.",
-      "tags": [
-        "fruit_eater"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Spiny_turtle"
     },
@@ -163,6 +160,33 @@
       ],
       "source": "literature",
       "url": "https://iucn-tftsg.org/wp-content/uploads/file/Articles/Taylor_1920.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "government",
+      "url": "https://www.nparks.gov.sg/florafaunaweb/fauna/0/6/06"
+    },
+    {
+      "category": "diet",
+      "text": "It spreads plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Spiny_turtle"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is a main or favorite part of its food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Spiny_turtle"
     }
   ],
   "facts": [

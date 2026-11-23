@@ -111,9 +111,6 @@
     {
       "category": "behavior",
       "text": "It is a good swimmer and runs into the water to escape danger.",
-      "tags": [
-        "swimmer"
-      ],
       "source": "adw"
     },
     {
@@ -135,10 +132,6 @@
     {
       "category": "diet",
       "text": "It feasts on palm fruit and is the main spreader of the moriche palm's seeds.",
-      "tags": [
-        "fruit_eater",
-        "seed_spreader"
-      ],
       "source": "iucn"
     },
     {
@@ -187,6 +180,123 @@
         "hooves"
       ],
       "source": "sdzwa"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/tapirs/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It wallows in mud, or coats itself with mud, to cool off or protect its skin.",
+      "tags": [
+        "mud_bather"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/tapirs/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud, harsh screeches.",
+      "tags": [
+        "screecher"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It can breathe through the tip of its raised nose, snout or trunk while the rest of its body stays under water.",
+      "tags": [
+        "snorkel_nose"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/tapir"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "ngo",
+      "url": "https://tapirs.org/wp-content/uploads/2018/06/TAPIR-TRACKS-A-Curriculum-Guide-for-Educators.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/tapir"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is a main or favorite part of its food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "It spreads plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

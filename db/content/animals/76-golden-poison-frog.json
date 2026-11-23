@@ -159,6 +159,14 @@
         "yellow_legs"
       ],
       "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

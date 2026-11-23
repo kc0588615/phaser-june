@@ -96,9 +96,6 @@
     {
       "category": "behavior",
       "text": "It is a good climber: some have been found in cracks high up on tall boulders.",
-      "tags": [
-        "climbs_boulders"
-      ],
       "source": "iucn"
     },
     {
@@ -151,6 +148,50 @@
       "text": "Its shell is very flat and low, not domed.",
       "tags": [
         "flat_shell"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rests in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%202%20No%201%20%281996%29/Moll_and_Klemens_1996.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%202%20No%201%20%281996%29/Moll_and_Klemens_1996.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It mostly eats grass or other low plants that it crops from the ground.",
+      "tags": [
+        "grazer"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%202%20No%201%20%281996%29/Moll_and_Klemens_1996.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It can go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/african-pancake-tortoise"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs up big rocks, boulders or cliffs.",
+      "tags": [
+        "climbs_boulders"
       ],
       "source": "iucn"
     }

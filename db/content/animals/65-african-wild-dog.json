@@ -167,9 +167,6 @@
     {
       "category": "behavior",
       "text": "Pack members bring up food for the pups, and for sick or hurt dogs that stayed behind.",
-      "tags": [
-        "shares_food"
-      ],
       "source": "adw"
     },
     {
@@ -233,6 +230,57 @@
       "text": "Its ears are large for its head.",
       "tags": [
         "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/painted-dog-african-hunting-dog"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/painted-dog-african-hunting-dog"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/painted-dog-african-hunting-dog"
+    },
+    {
+      "category": "diet",
+      "text": "It shares food with, or brings food to, members of its group other than its own young.",
+      "tags": [
+        "shares_food"
       ],
       "source": "adw"
     }

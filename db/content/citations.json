@@ -1,4 +1,9 @@
 {
+  "http://www.unc.edu/~dtkirkpa/stuff/bigheads.html": {
+    "accessed": "2026-11-23",
+    "cite": "Kirkpatrick, D. T. 1995. The Big-headed Turtle, Platysternon megacephalum. Reptile & Amphibian Magazine, November/December 1995, 40–47.",
+    "archive": "https://web.archive.org/web/20110522230829/http://www.unc.edu/~dtkirkpa/stuff/bigheads.html"
+  },
   "https://academic.oup.com/mspecies/article/47/927/100/2609399": {
     "accessed": "2026-11-23",
     "cite": "Derbridge, J. J., Posthumus, E. E., Chen, H. L., & Koprowski, J. L. (2015). Solenodon paradoxus (Soricomorpha: Solenodontidae). Mammalian Species, 47(927), 100–106. https://doi.org/10.1093/mspecies/sev010"
@@ -291,6 +296,10 @@
     "accessed": "2026-09-25",
     "cite": "Vereecke, M. 2001. \"Platysternon megacephalum\" (On-line), Animal Diversity Web."
   },
+  "https://animaldiversity.org/accounts/Pongo/": {
+    "accessed": "2026-11-23",
+    "cite": "Hey, A. 2022. \"Pongo\" (On-line), Animal Diversity Web."
+  },
   "https://animaldiversity.org/accounts/Pongo_abelii/": {
     "accessed": "2026-09-25",
     "cite": "Urban, K. 2008. \"Pongo abelii\" (On-line), Animal Diversity Web."
@@ -331,6 +340,10 @@
     "accessed": "2026-09-25",
     "cite": "Linsted, M. 2000. \"Rhinoderma darwinii\" (On-line), Animal Diversity Web."
   },
+  "https://animaldiversity.org/accounts/Rhinopithecus/": {
+    "accessed": "2026-11-23",
+    "cite": "Rice, D. 2023. \"Rhinopithecus\" (On-line), Animal Diversity Web."
+  },
   "https://animaldiversity.org/accounts/Rhinopithecus_roxellana/": {
     "accessed": "2026-09-25",
     "cite": "Munoz, P. 1999. \"Rhinopithecus roxellana\" (On-line), Animal Diversity Web."
@@ -367,6 +380,10 @@
     "accessed": "2026-09-25",
     "cite": "Brown, M. 2025. \"Zaglossus bruijni\" (On-line), Animal Diversity Web."
   },
+  "https://animals.sandiegozoo.org/animals/andean-spectacled-bear": {
+    "accessed": "2026-11-23",
+    "cite": "San Diego Zoo Wildlife Alliance. n.d. Andean (Spectacled) Bear. San Diego Zoo Animals & Plants."
+  },
   "https://animals.sandiegozoo.org/animals/axolotl": {
     "accessed": "2026-11-23",
     "cite": "San Diego Zoo Wildlife Alliance. n.d. Axolotl. San Diego Zoo Animals & Plants."
@@ -382,6 +399,10 @@
   "https://animals.sandiegozoo.org/animals/giant-anteater": {
     "accessed": "2026-09-27",
     "cite": "San Diego Zoo Wildlife Alliance. n.d. Giant Anteater. San Diego Zoo Animals & Plants."
+  },
+  "https://animals.sandiegozoo.org/animals/goliath-frog": {
+    "accessed": "2026-11-23",
+    "cite": "San Diego Zoo Wildlife Alliance. n.d. Goliath Frog. San Diego Zoo Animals & Plants."
   },
   "https://animals.sandiegozoo.org/animals/jaguar": {
     "accessed": "2026-11-23",
@@ -399,6 +420,10 @@
     "accessed": "2026-11-23",
     "cite": "San Diego Zoo Wildlife Alliance. n.d. Red Panda. San Diego Zoo Animals & Plants."
   },
+  "https://animals.sandiegozoo.org/animals/rhinoceros": {
+    "accessed": "2026-11-23",
+    "cite": "San Diego Zoo Wildlife Alliance. n.d. Rhinoceros. San Diego Zoo Animals & Plants."
+  },
   "https://animals.sandiegozoo.org/animals/surinam-toad": {
     "accessed": "2026-11-23",
     "cite": "San Diego Zoo Wildlife Alliance. n.d. Surinam Toad. San Diego Zoo Animals & Plants."
@@ -411,13 +436,46 @@
     "accessed": "2026-11-23",
     "cite": "San Diego Zoo Wildlife Alliance. n.d. Tiger. San Diego Zoo Animals & Plants."
   },
+  "https://awsassets.panda.org/downloads/saolaproceedingenglish.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Hardcastle, J., Cox, S., Nguyen Thi Dao and Grieser Johns, A. (eds). 2004. Rediscovering the Saola: Proceedings of the \"Rediscovering the saola - a status review and conservation planning workshop\", Pu Mat National Park, Vietnam, 27-28 February 2004. WWF Indochina Programme, SFNC Project and Pu Mat National Park."
+  },
+  "https://biozoojournals.ro/nwjz/content/v14n2/nwjz_e171508_Bourke.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Bourke, J., Busse, K., & Böhme, W. (2018). Potential effects of climate change on the distribution of the endangered Darwin’s frog. North-Western Journal of Zoology, 14(2), 165–170."
+  },
+  "https://blogs.sandiegozoo.org/story-hub/2026/03/02/welcome-denny-sanford-elephant-valley": {
+    "accessed": "2026-11-23",
+    "cite": "Weber, J. 2026. Welcome to Denny Sanford Elephant Valley. San Diego Zoo Wildlife Alliance."
+  },
+  "https://blogs.sandiegozoo.org/story-hub/2026/understanding-elephant-behavior-interactions": {
+    "accessed": "2026-11-23",
+    "cite": "Maher, S. 2026. Eyes on Elephants. San Diego Zoo Wildlife Alliance."
+  },
   "https://cb.naturalsciences.be/antelopes/Aridlands_Antelopes/addax_description_en.pdf": {
     "accessed": "2026-11-23",
     "cite": "Institut royal des Sciences naturelles de Belgique. 2006. Addax nasomaculatus."
   },
+  "https://ccb.kglmeridian.com/view/journals/ccab/12/1/article-p56.xml": {
+    "accessed": "2026-11-23",
+    "cite": "Rasoma, R. V. J., Raselimanana, A. P., Ratovonamana, Y. R., & Ganzhorn, J. U. (2013). Habitat Use and Diet of Astrochelys radiata in the Subarid Zone of Southern Madagascar. Chelonian Conservation and Biology, 12(1), 56–69. https://doi.org/10.2744/ccb-0909.1"
+  },
+  "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%202%20No%201%20%281996%29/Moll_and_Klemens_1996.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Moll, D., & Klemens, M. W. (1996). Ecological characteristics of the pancake tortoise, Malacochersus tornieri, in Tanzania. Chelonian Conservation and Biology, 2(1), 26–35."
+  },
+  "https://chelonian.org/wp-content/uploads/file/CCB_Vol_4_Nos1-4(2001-2005)/Doody_etal_2001.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Doody, J. S., Sims, R. A., & Georges, A. (2001). Use of thermal springs for aquatic basking by the pig-nosed turtle, Carettochelys insculpta. Chelonian Conservation and Biology, 4(1), 81–87."
+  },
   "https://chm-thai.onep.go.th/wp-content/uploads/2021/10/ONEP_V14.pdf": {
     "accessed": "2026-11-23",
     "cite": "Nabhitabhata J. and T. Chan ard. 2005. Thailand Red Data : Mammals, Reptiles and Amphibians. Office of Natural Resources and Environmental Policy and Planning, Bangkok, Thailand. 234 p."
+  },
+  "https://cites.org/sites/default/files/eng/cop/08/prop/E08-Prop-56_Conraua.PDF": {
+    "accessed": "2026-11-23",
+    "cite": "CITES. 1992. Inclusion of Conraua goliath in Appendix II (CoP8 Prop. 56; proponent: the United States of America). Eighth Meeting of the Conference of the Parties, Kyoto.",
+    "archive": "https://web.archive.org/web/20221006031847/http://cites.org/sites/default/files/eng/cop/08/prop/E08-Prop-56_Conraua.PDF"
   },
   "https://doi.org/10.1002/ajpa.23936": {
     "accessed": "2026-09-25",
@@ -464,6 +522,10 @@
     "accessed": "2026-09-27",
     "cite": "Wilson, A. M., Lowe, J. C., Roskilly, K., Hudson, P. E., Golabek, K. A., & McNutt, J. W. (2013). Locomotion dynamics of hunting in wild cheetahs. Nature, 498(7453), 185–189. https://doi.org/10.1038/nature12295"
   },
+  "https://doi.org/10.1071/wr21015": {
+    "accessed": "2026-11-23",
+    "cite": "Palmer, B. J., Beca, G., Erickson, T. E., Hobbs, R. J., & Valentine, L. E. (2021). New evidence of seed dispersal identified in Australian mammals. Wildlife Research, 48(7), 635–642. https://doi.org/10.1071/wr21015"
+  },
   "https://doi.org/10.1098/rspb.2017.0347": {
     "accessed": "2026-11-08",
     "cite": "Walker, R. H., King, A. J., McNutt, J. W., & Jordan, N. R. (2017). Sneeze to leave: African wild dogs (Lycaon pictus) use variable quorum thresholds facilitated by sneezes in collective decisions. Proceedings of the Royal Society B: Biological Sciences, 284(1862), 20170347. https://doi.org/10.1098/rspb.2017.0347"
@@ -480,6 +542,11 @@
     "accessed": "2026-09-25",
     "cite": "Zachariah, A., Abraham, R. K., Das, S., Jayan, K. C., & Altig, R. (2012). A detailed account of the reproductive strategy and developmental stages of Nasikabatrachus sahyadrensis (Anura: Nasikabatrachidae), the only extant member of an archaic frog lineage. Zootaxa, 3510(1). https://doi.org/10.11646/zootaxa.3510.1.3"
   },
+  "https://doi.org/10.1186/s12983-015-0132-y": {
+    "accessed": "2026-11-23",
+    "cite": "Valenzuela-Sánchez, A., Cunningham, A. A., & Soto-Azat, C. (2015). Geographic body size variation in ectotherms: effects of seasonality on an anuran from the southern temperate forest. Frontiers in Zoology, 12(1). https://doi.org/10.1186/s12983-015-0132-y",
+    "license": "CC BY 4.0"
+  },
   "https://doi.org/10.3389/fphys.2020.00637": {
     "accessed": "2026-09-27",
     "cite": "Weyer, N. M., Fuller, A., Haw, A. J., Meyer, L. C. R., Mitchell, D., Picker, M., Rey, B., & Hetem, R. S. (2020). Increased Diurnal Activity Is Indicative of Energy Deficit in a Nocturnal Mammal, the Aardvark. Frontiers in Physiology, 11. https://doi.org/10.3389/fphys.2020.00637",
@@ -490,8 +557,15 @@
     "cite": "Helgen, K. M., Portela Miguez, R., Kohen, J., & Helgen, L. (2012). Twentieth century occurrence of the Long-Beaked Echidna Zaglossus bruijnii in the Kimberley region of Australia. ZooKeys, 255, 103–132. https://doi.org/10.3897/zookeys.255.3774",
     "license": "CC BY 3.0"
   },
+  "https://elephantconservation.org/wp-content/uploads/2022/05/CompleteHusbandryGuide1stEdition.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Olson, D. (ed.). n.d. Elephant Husbandry Resource Guide. American Zoo and Aquarium Association Elephant Taxon Group, Elephant Managers Association and International Elephant Foundation."
+  },
   "https://en.wikipedia.org/wiki/Aardvark": {
     "accessed": "2026-09-27"
+  },
+  "https://en.wikipedia.org/wiki/Addax": {
+    "accessed": "2026-11-23"
   },
   "https://en.wikipedia.org/wiki/African_bush_elephant": {
     "accessed": "2026-09-29"
@@ -555,6 +629,9 @@
   },
   "https://en.wikipedia.org/wiki/Golden-rumped_sengi": {
     "accessed": "2026-09-25"
+  },
+  "https://en.wikipedia.org/wiki/Golden_mole": {
+    "accessed": "2026-11-23"
   },
   "https://en.wikipedia.org/wiki/Golden_poison_frog": {
     "accessed": "2026-09-29"
@@ -646,10 +723,16 @@
   "https://en.wikipedia.org/wiki/Sunda_pangolin": {
     "accessed": "2026-09-25"
   },
+  "https://en.wikipedia.org/wiki/Tailed_frog": {
+    "accessed": "2026-11-23"
+  },
   "https://en.wikipedia.org/wiki/Tasmanian_devil": {
     "accessed": "2026-09-25"
   },
   "https://en.wikipedia.org/wiki/Tiger": {
+    "accessed": "2026-11-23"
+  },
+  "https://en.wikipedia.org/wiki/Tomato_frog": {
     "accessed": "2026-11-23"
   },
   "https://en.wikipedia.org/wiki/Tu%27i_Malila": {
@@ -668,6 +751,14 @@
     "accessed": "2026-09-25",
     "cite": "Endangered Wildlife Trust. 2023. FOUND: Iridescent blind mole with super-hearing powers rediscovered ‘swimming’ through sand dunes of South Africa."
   },
+  "https://ewt.org/wp-content/uploads/2022/11/Temmincks-Ground-Pangolin-Smutsia-temminckii_VU.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Pietersen D, Jansen R, Swart J, Kotze A. 2016. A conservation assessment of Smutsia temminckii. In Child MF, Roxburgh L, Do Linh San E, Raimondo D, Davies-Mostert HT, editors. The Red List of Mammals of South Africa, Swaziland and Lesotho. South African National Biodiversity Institute and Endangered Wildlife Trust, South Africa."
+  },
+  "https://files.dnr.state.mn.us/eco/nongame/projects/consgrant_reports/1998/1998_sajwaj_etal.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Lang, J.W., Sajwaj, T. and Piepgras, S. 1998. Blanding's Turtle (Emydoidea blandingii) at Camp Ripley: critical habitats, population status, management guidelines. Final Report to Nongame Wildlife Office, Minnesota DNR."
+  },
   "https://forestry.sarawak.gov.my/web/subpage/webpage_view/1150": {
     "accessed": "2026-11-23",
     "cite": "Forest Department Sarawak. n.d. PAS_All soft-shelled turtles (species of Tryonychidae)."
@@ -676,17 +767,41 @@
     "accessed": "2026-09-25",
     "cite": "Galapagos Conservation Trust. 2023. Pinta."
   },
+  "https://ielc.libguides.com/sdzg/factsheets/african_elephant/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "African Elephants (Loxodonta africana and L. cyclotis) Fact Sheet. c2008-2025. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
   "https://ielc.libguides.com/sdzg/factsheets/african_elephant/characteristics": {
     "accessed": "2026-11-23",
     "cite": "African Elephants (Loxodonta africana and L. cyclotis) Fact Sheet. c2008-2025. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/axolotl/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "Axolotl (Ambystoma mexicanum) Fact Sheet. c2023. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/axolotl/characteristics": {
+    "accessed": "2026-11-23",
+    "cite": "Axolotl (Ambystoma mexicanum) Fact Sheet. c2023. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/ayeaye/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "Aye-aye (Daubentonia madagascariensis) Fact Sheet. c2014-2020. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
   "https://ielc.libguides.com/sdzg/factsheets/blackrhino/characteristics": {
     "accessed": "2026-11-23",
     "cite": "Black Rhinoceros (Diceros bicornis) Fact Sheet. c2003-2020. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
+  "https://ielc.libguides.com/sdzg/factsheets/buerger-matschie-treekangaroos/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "Buergers'/Goodfellow's (Dendrolagus goodfellowi) and Matschie's (Dendrolagus matschiei) Tree Kangaroos Fact Sheet. c2013. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
   "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics": {
     "accessed": "2026-09-27",
     "cite": "Chinese Giant Salamanders (Andrias spp.) Fact Sheet. c2019. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/galapagostortoises/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "Galapagos Tortoises (Chelonoidis spp.) Fact Sheet. c2017. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
   "https://ielc.libguides.com/sdzg/factsheets/giantpanda/behavior": {
     "accessed": "2026-09-27",
@@ -696,21 +811,49 @@
     "accessed": "2026-11-23",
     "cite": "Giant Panda (Ailuropoda melanoleuca) Fact Sheet. c2001-2025. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
+  "https://ielc.libguides.com/sdzg/factsheets/okapi/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "Okapi (Okapia johnstoni) Fact Sheet. c2009-2025. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
   "https://ielc.libguides.com/sdzg/factsheets/okapi/characteristics": {
     "accessed": "2026-11-23",
     "cite": "Okapi (Okapia johnstoni) Fact Sheet. c2009-2025. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/orangutans/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "Orangutans (Pongo spp.) Fact Sheet. c2003-2017. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/redpanda/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "Red Panda (Ailurus fulgens) Fact Sheet. c2011–2026. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
   "https://ielc.libguides.com/sdzg/factsheets/redpanda/characteristics": {
     "accessed": "2026-11-23",
     "cite": "Red Panda (Ailurus fulgens) Fact Sheet. c2011–2026. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
+  "https://ielc.libguides.com/sdzg/factsheets/tapirs/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "Tapirs (extant/living species; Tapirus spp.) Fact Sheet. c2009-2019. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
   "https://ielc.libguides.com/sdzg/factsheets/tapirs/characteristics": {
     "accessed": "2026-09-27",
     "cite": "Tapirs (extant/living species; Tapirus spp.) Fact Sheet. c2009-2019. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
+  "https://ielc.libguides.com/sdzg/factsheets/tasmaniandevil/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "Tasmanian Devil (Sarcophilus harrisii) Fact Sheet. c2012-2019. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/tiger/behavior": {
+    "accessed": "2026-11-23",
+    "cite": "Tiger (Panthera tigris) Fact Sheet. c2009-2022. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
   "https://ielc.libguides.com/sdzg/factsheets/tiger/characteristics": {
     "accessed": "2026-11-23",
     "cite": "Tiger (Panthera tigris) Fact Sheet. c2009-2022. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
+  "https://ipe.org.br/images/Desbiez_etal_2019_Spatial_ecology_of_the_giant_armadillo_Priodontes_maximus_in_Midwestern_Brazil.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Desbiez, A. L. J., Kluyber, D., Massocato, G. F., Oliveira-Santos, L. G. R., & Attias, N. (2019). Spatial ecology of the giant armadillo Priodontes maximus in Midwestern Brazil. Journal of Mammalogy, 101(1), 151–163. https://doi.org/10.1093/jmammal/gyz172"
   },
   "https://ipe.org.br/images/Giant_Armadillo_Morphology_2019.pdf": {
     "accessed": "2026-11-23",
@@ -748,9 +891,27 @@
     "accessed": "2026-11-23",
     "cite": "Van Denburgh, J. (1914). The gigantic land tortoises of the Galapagos Archipelago. Proceedings of the California Academy of Sciences, Fourth Series, 2(1), 203–374."
   },
+  "https://journals.plos.org/plosone/article/file?id=10.1371%2Fjournal.pone.0251974&type=printable": {
+    "accessed": "2026-11-23",
+    "cite": "Bettoni, S., Stoeger, A., Rodriguez, C., & Fitch, W. T. (2021). Airborne vocal communication in adult neotropical otters (Lontra longicaudis). Plos One, 16(5), e0251974. https://doi.org/10.1371/journal.pone.0251974",
+    "license": "CC BY 4.0"
+  },
   "https://kids.nationalgeographic.com/animals/mammals/facts/aye-aye": {
     "accessed": "2026-09-25",
     "cite": "National Geographic Kids. n.d. Aye-Aye."
+  },
+  "https://libraryir.parliament.go.ke/server/api/core/bitstreams/bc013f65-0cde-471b-b7d3-ff0fb5ae457f/content": {
+    "accessed": "2026-11-23",
+    "cite": "Royal National Parks of Kenya. 1957. Royal National Parks of Kenya Report 1957 (Twelfth Year)."
+  },
+  "https://link.springer.com/article/10.1186/s40851-024-00240-1": {
+    "accessed": "2026-11-23",
+    "cite": "Klein, N., Konietzko-Meier, D., Kalita, S., Noda, M., Ishikawa, S., Taguchi, Y., Anzai, W., & Hayashi, S. (2024). Unique bone histology of modern giant salamanders: a study on humeri and femora of Andrias spp. Zoological Letters, 10(1). https://doi.org/10.1186/s40851-024-00240-1",
+    "license": "CC BY 4.0"
+  },
+  "https://media.rufford.org/media/project_reports/19010-1Biodivers.%20Conserv..pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Ibouroi, M. T., Cheha, A., Astruc, G., Dhurham, S. A. O., & Besnard, A. (2018). A habitat suitability analysis at multi-spatial scale of two sympatric flying fox species reveals the urgent need for conservation action. Biodiversity and Conservation, 27(9), 2395–2423. https://doi.org/10.1007/s10531-018-1544-8"
   },
   "https://media.rufford.org/media/project_reports/B-12.11.06%20Booklet.pdf": {
     "accessed": "2026-11-23",
@@ -761,6 +922,9 @@
     "cite": "U.S. Geological Survey, 2026, Pipa pipa (Linnaeus, 1758): Nonindigenous Aquatic Species Database, Gainesville, FL, Revision Date: 8/6/2013."
   },
   "https://nationalzoo.si.edu/animals/addax": {
+    "accessed": "2026-11-23"
+  },
+  "https://nationalzoo.si.edu/animals/african-pancake-tortoise": {
     "accessed": "2026-11-23"
   },
   "https://nationalzoo.si.edu/animals/andean-bear": {
@@ -784,6 +948,9 @@
   "https://nationalzoo.si.edu/animals/giant-panda": {
     "accessed": "2026-09-27"
   },
+  "https://nationalzoo.si.edu/animals/hellbender": {
+    "accessed": "2026-11-23"
+  },
   "https://nationalzoo.si.edu/animals/maned-wolf": {
     "accessed": "2026-11-23"
   },
@@ -806,23 +973,51 @@
     "accessed": "2026-09-25",
     "cite": "McCray, D. 2025. Northern hairy-nosed wombat joeys mark conservation success for rare Queensland animal. ABC News (Australia)."
   },
+  "https://onlinelibrary.wiley.com/doi/10.1155/2014/795062": {
+    "accessed": "2026-11-23",
+    "cite": "Mohapatra, R. K., & Panda, S. (2014). Behavioural Descriptions of Indian Pangolins (Manis crassicaudata) in Captivity. International Journal of Zoology, 2014, 1–7. https://doi.org/10.1155/2014/795062",
+    "archive": "https://web.archive.org/web/20250224154611/https://onlinelibrary.wiley.com/doi/10.1155/2014/795062"
+  },
   "https://pdf.usaid.gov/pdf_docs/Pnadr534.pdf": {
     "accessed": "2026-11-23",
     "cite": "Woods, C.A. and Ottenwalder, J.A. 1992. The Natural History of Southern Haiti. Florida Museum of Natural History."
   },
+  "https://peru.fzs.org/wp-content/uploads/2023/05/manu-book-dv-ingles-baja-completo_fnl_compressed_compressed.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Schenck, C., Gamboa, P., Williams, R., Ochoa, J.A., Dourojeanni, M., Huamantupa-Chuquimaco, I., Álvarez-Loayza, P., Terborgh, J., Macedo, M., Farfan, J., Torres, L.F., Chalán, I., Silva, J., Flórez, J., Muellner, A., Hoops, H. and Chicchón, A. 2017. National Park Manu – A Legacy Landscape. Frankfurt Zoological Society and Apus Graph Ediciones."
+  },
+  "https://pmc.ncbi.nlm.nih.gov/articles/PMC10773314/": {
+    "accessed": "2026-11-23",
+    "cite": "Chen, F. S. E., Dawson, S. J., & Fleming, P. A. (2023). Housework or vigilance? Bilbies alter their burrowing activity under threat of predation by feral cats. Behavioral Ecology, 35(1). https://doi.org/10.1093/beheco/arad073",
+    "license": "CC BY 4.0"
+  },
   "https://pmc.ncbi.nlm.nih.gov/articles/PMC13431924/": {
     "accessed": "2026-11-23",
     "cite": "Smith, H. F., Rocco, F. A., Felix, M. A., Valdez, D., & Lynch, L. M. (2024). African wild dog (Lycaon pictus) masticatory apparatus and oral cavity morphology. The Anatomical Record, 309(9), 2395–2410. https://doi.org/10.1002/ar.25547"
+  },
+  "https://pmc.ncbi.nlm.nih.gov/articles/PMC4229255/": {
+    "accessed": "2026-11-23",
+    "cite": "Mumm, C. A. S., & Knörnschild, M. (2014). The Vocal Repertoire of Adult and Neonate Giant Otters (Pteronura brasiliensis). PLoS ONE, 9(11), e112562. https://doi.org/10.1371/journal.pone.0112562",
+    "license": "CC BY 4.0"
   },
   "https://pmc.ncbi.nlm.nih.gov/articles/PMC4814056": {
     "accessed": "2026-09-25",
     "cite": "Senevirathne, G., Thomas, A., Kerney, R., Hanken, J., Biju, S. D., & Meegaskumbura, M. (2016). From Clinging to Digging: The Postembryonic Skeletal Ontogeny of the Indian Purple Frog, Nasikabatrachus sahyadrensis (Anura: Nasikabatrachidae). Plos One, 11(3), e0151114. https://doi.org/10.1371/journal.pone.0151114",
     "license": "CC BY 4.0"
   },
+  "https://pmc.ncbi.nlm.nih.gov/articles/PMC5038593/": {
+    "accessed": "2026-11-23",
+    "cite": "Taglialatela, J. P., Russell, J. L., Pope, S. M., Morton, T., Bogart, S., Reamer, L. A., Schapiro, S. J., & Hopkins, W. D. (2015). Multimodal communication in chimpanzees. American Journal of Primatology, 77(11), 1143–1148. https://doi.org/10.1002/ajp.22449"
+  },
   "https://pmc.ncbi.nlm.nih.gov/articles/PMC5532300/": {
     "accessed": "2026-11-23",
     "cite": "Brinkman, D., Rabi, M., & Zhao, L. (2017). Lower Cretaceous fossils from China shed light on the ancestral body plan of crown softshell turtles (Trionychidae, Cryptodira). Scientific Reports, 7(1). https://doi.org/10.1038/s41598-017-04101-0",
     "license": "CC BY 4.0"
+  },
+  "https://pmc.ncbi.nlm.nih.gov/articles/PMC6032912/": {
+    "accessed": "2026-11-23",
+    "cite": "Fan, P., Liu, X., Liu, R., Li, F., Huang, T., Wu, F., Yao, H., & Liu, D. (2018). Vocal repertoire of free‐ranging adult golden snub‐nosed monkeys (Rhinopithecus roxellana). American Journal of Primatology, 80(6). https://doi.org/10.1002/ajp.22869",
+    "license": "CC BY-NC 4.0"
   },
   "https://pmc.ncbi.nlm.nih.gov/articles/PMC6298445/": {
     "accessed": "2026-11-23",
@@ -834,16 +1029,65 @@
     "cite": "Paluh, D. J., Riddell, K., Early, C. M., Hantak, M. M., Jongsma, G. F., Keeffe, R. M., Magalhães Silva, F., Nielsen, S. V., Vallejo-Pareja, M. C., Stanley, E. L., & Blackburn, D. C. (2021). Rampant tooth loss across 200 million years of frog evolution. eLife, 10. https://doi.org/10.7554/elife.66926",
     "license": "CC BY 4.0"
   },
+  "https://portals.iucn.org/library/sites/library/files/documents/Traf-116.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Sandrine Pantel and Chin Sing Yun (ed.). 2009. Proceedings of the Workshop on Trade and Conservation of Pangolins Native to South and Southeast Asia, 30 June-2 July 2008, Singapore Zoo, Singapore. TRAFFIC Southeast Asia, Petaling Jaya, Selangor, Malaysia."
+  },
+  "https://protectedareas.mg/biodiv/content/documents/da51bb6b-c997-460b-bdd9-15ac591f2475/8f616afb43c24a9fac7cb616e577751e.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Britt, A., Randriamandratonirina, N. J., Glasscock, K. D., & Iambana, B. R. (2003). Diet and Feeding Behaviour of Indri indri in a Low-Altitude Rain Forest. Folia Primatologica, 73(5), 225–239. https://doi.org/10.1159/000067455"
+  },
   "https://protectedareas.mg/content/documents/62fcfaed-b6c3-4f9e-9fa0-55bc84093456/eec6fa953ecb4ebb9a3e188213da3e84.pdf": {
     "accessed": "2026-11-23",
     "cite": "Schmid, J. and L.E. Alonso (eds). 2005. A rapid biological assessment of the Mantadia-Zahamena Corridor, Madagascar. RAP Bulletin of Biological Assessment No. 32. Conservation International. Washington, DC."
+  },
+  "https://publications.gc.ca/collections/collection_2017/eccc/CW69-14-257-2016-eng.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "COSEWIC. 2016. COSEWIC assessment and status report on the Spiny Softshell Apalone spinifera in Canada. Committee on the Status of Endangered Wildlife in Canada. Ottawa. xiii + 38 pp. (http://www.registrelep-sararegistry.gc.ca/default_e.cfm).",
+    "archive": "https://web.archive.org/web/20200902103102/http://publications.gc.ca/collections/collection_2017/eccc/CW69-14-257-2016-eng.pdf"
+  },
+  "https://publish.iupress.indiana.edu/read/how-animals-communicate/section/d229e9d3-de1e-481e-9652-b5d5210fb8c3": {
+    "accessed": "2026-11-23",
+    "cite": "Klingel, H. (1977). Communication in Perissodactyla. In T. A. Sebeok (Ed.), How Animals Communicate (Chapter 27). Indiana University Press. https://doi.org/10.2979/howanimalscommunicat",
+    "license": "CC BY-NC-SA 4.0"
+  },
+  "https://pubmed.ncbi.nlm.nih.gov/15802673/": {
+    "accessed": "2026-11-23",
+    "cite": "Zani, P. A., Gottschall, J. S., & Kram, R. (2005). Giant Galápagos tortoises walk without inverted pendulum mechanical-energy exchange. Journal of Experimental Biology, 208(8), 1489–1494. https://doi.org/10.1242/jeb.01554",
+    "archive": "https://web.archive.org/web/20250204111830/https://pubmed.ncbi.nlm.nih.gov/15802673/"
+  },
+  "https://pubmed.ncbi.nlm.nih.gov/17694533/": {
+    "accessed": "2026-11-23",
+    "cite": "Zhang, Z., Su, Y., Chan, R. C. K., & Reimann, G. (2007). A preliminary study of food transfer in sichuan snub‐nosed monkeys (Rhinopithecus roxellana). American Journal of Primatology, 70(2), 148–152. https://doi.org/10.1002/ajp.20466",
+    "archive": "https://web.archive.org/web/20240607001348/https://pubmed.ncbi.nlm.nih.gov/17694533/"
   },
   "https://pubmed.ncbi.nlm.nih.gov/24339191/": {
     "accessed": "2026-11-23",
     "cite": "Perry, J. M. G., Macneill, K. E., Heckler, A. L., Rakotoarisoa, G., & Hartstone‐Rose, A. (2013). Anatomy and Adaptations of the Chewing Muscles in Daubentonia (Lemuriformes). The Anatomical Record, 297(2), 308–316. https://doi.org/10.1002/ar.22844"
   },
+  "https://pubmed.ncbi.nlm.nih.gov/32929865/": {
+    "accessed": "2026-11-23",
+    "cite": "Yao, H., Bai, Y., Chen, Y., Chen, H., Yang, W., Ruan, X., & Xiang, Z. (2020). Endozoochorous seed dispersal by golden snub‐nosed monkeys in a temperate forest. Integrative Zoology, 16(1), 120–127. https://doi.org/10.1111/1749-4877.12488",
+    "archive": "https://web.archive.org/web/20250121120548/https://pubmed.ncbi.nlm.nih.gov/32929865/"
+  },
   "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content": {
     "accessed": "2026-11-23"
+  },
+  "https://repository.si.edu/server/api/core/bitstreams/c7f5c08e-8561-46ed-b081-eaacaf649db9/content": {
+    "accessed": "2026-11-23",
+    "archive": "https://web.archive.org/web/20260112014633/https://repository.si.edu/server/api/core/bitstreams/c7f5c08e-8561-46ed-b081-eaacaf649db9/content"
+  },
+  "https://repository.si.edu/server/api/core/bitstreams/e7b5fe60-8503-4134-a7e8-6e9fb2f735a6/content": {
+    "accessed": "2026-11-23",
+    "archive": "https://web.archive.org/web/20260420225129/https://repository.si.edu/server/api/core/bitstreams/e7b5fe60-8503-4134-a7e8-6e9fb2f735a6/content"
+  },
+  "https://savepangolins.org/what-is-a-pangolin/": {
+    "accessed": "2026-11-23",
+    "cite": "Save Pangolins. n.d. What is a pangolin?"
+  },
+  "https://semspub.epa.gov/work/03/130484.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Pennsylvania Fish Commission and Pennsylvania Game Commission. 1985. Endangered and threatened species of Pennsylvania (booklet). In: U.S. Environmental Protection Agency Region III. 1991. Comments on Draft Environmental Assessment Report, Raymark Superfund Site."
   },
   "https://tapirs.org/wp-content/uploads/2018/06/TAPIR-TRACKS-A-Curriculum-Guide-for-Educators.pdf": {
     "accessed": "2026-11-23",
@@ -853,6 +1097,20 @@
     "accessed": "2026-11-23",
     "cite": "Russell A. Mittermeier, Anthony B. Rylands, & Don E. Wilson. (2013). Rhinopithecus roxellana. https://doi.org/10.5281/ZENODO.6863428",
     "license": "CC0 1.0"
+  },
+  "https://treatment.plazi.org/GgServer/xhtml/FFF8FF9B2B17FFC26666FF81FF96BE7C": {
+    "accessed": "2026-11-23",
+    "cite": "Russell A. Mittermeier, & Don E. Wilson. (2018). Bradypus tridactylus Linnaeus 1758. https://doi.org/10.5281/ZENODO.6621624",
+    "license": "CC0 1.0"
+  },
+  "https://tropicalconservationscience.mongabay.com/content/v2/09-05-25_140-158_naranjo.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Naranjo, E. J. (2009). Ecology and Conservation of Baird’s Tapir in Mexico. Tropical Conservation Science, 2(2), 140–158. https://doi.org/10.1177/194008290900200203",
+    "license": "CC BY 3.0"
+  },
+  "https://virunga.org/wildlife/mammals/okapi/": {
+    "accessed": "2026-11-23",
+    "cite": "Virunga National Park. 2022. Okapi."
   },
   "https://wwf.ca/stories/19-amazing-tiger-facts-global-tiger-day": {
     "accessed": "2026-09-25",
@@ -865,6 +1123,20 @@
   "https://www-cdn.abcnews.com/US/scientists-confirmed-existence-200-million-year-species-thought/story?id=122773046": {
     "accessed": "2026-09-25",
     "cite": "Jacobo, J. 2025. How scientists confirmed the existence of 200-million-year-old species thought to be extinct. ABC News."
+  },
+  "https://www.afrotheria.net/PDFs/Afrotherian-Conservation-Number-16-September-2020.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Stephenson, P.J. (ed.). 2020. Afrotherian Conservation: Newsletter of the IUCN/SSC Afrotheria Specialist Group, Number 16. IUCN/SSC Afrotheria Specialist Group."
+  },
+  "https://www.agriculture.gov.au/sites/default/files/documents/survey-guidelines-mammals.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Commonwealth of Australia. 2011. Survey guidelines for Australia’s threatened mammals: Guidelines for detecting mammals listed as threatened under the Environment Protection and Biodiversity Conservation Act 1999.",
+    "archive": "https://web.archive.org/web/20250814101703/https://www.agriculture.gov.au/sites/default/files/documents/survey-guidelines-mammals.pdf"
+  },
+  "https://www.aimspress.com/aimspress-data/mbe/2023/8/PDF/mbe-20-08-690.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Liao, Z., Hu, S., Hou, R., Liu, M., Xu, P., Zhang, Z., & Chen, P. (2023). Automatic recognition of giant panda vocalizations using wide spectrum features and deep neural network. Mathematical Biosciences and Engineering, 20(8), 15456–15475. https://doi.org/10.3934/mbe.2023690",
+    "license": "CC BY 4.0"
   },
   "https://www.annzool.net/PDF/anz47-free/anz47-223.pdf": {
     "accessed": "2026-11-23",
@@ -893,6 +1165,10 @@
     "accessed": "2026-09-25",
     "cite": "COSEWIC. 2012. COSEWIC Assessment and Status Report on the Coastal Tailed Frog Ascaphus truei in Canada – 2011. Environment and Climate Change Canada."
   },
+  "https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/recovery-strategies/vancouver-island-marmot-2020.html": {
+    "accessed": "2026-11-23",
+    "cite": "Environment and Climate Change Canada. 2020. Recovery Strategy for the Vancouver Island Marmot (Marmota vancouverensis) in Canada. Species at Risk Act Recovery Strategy Series. Environment and Climate Change Canada, Ottawa. 2 parts. 16 pp. + 41 pp."
+  },
   "https://www.carnivoreconservation.org/files/actionplans/canids.pdf": {
     "accessed": "2026-11-23",
     "cite": "Sillero-Zubiri, C., Hoffmann, M. and Macdonald, D.W. (eds). 2004. Canids: Foxes, Wolves, Jackals and Dogs. Status Survey and Conservation Action Plan. IUCN/SSC Canid Specialist Group. Gland, Switzerland and Cambridge, UK. x + 430 pp."
@@ -900,6 +1176,10 @@
   "https://www.catsg.org/_files/ugd/7a07e2_0f1124fffbd54d6082ffd53e8d1fd2b3.pdf": {
     "accessed": "2026-11-23",
     "cite": "IUCN/SSC Cat Specialist Group. 2011. Cats of the World – snapshots. CATnews Special Issue 6."
+  },
+  "https://www.catsg.org/living-species-cheetah": {
+    "accessed": "2026-11-23",
+    "cite": "IUCN/SSC Cat Specialist Group. n.d. Cheetah."
   },
   "https://www.catsg.org/living-species-jaguar": {
     "accessed": "2026-11-23",
@@ -925,9 +1205,21 @@
     "accessed": "2026-09-25",
     "cite": "U.S. Fish & Wildlife Service. 2024. Q&As: Black-footed Ferret Cloning Research Update."
   },
+  "https://www.fws.gov/sites/default/files/documents/black-footed-ferret-field-operations-manual-2016.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "U.S. Fish and Wildlife Service, Black-footed Ferret Recovery Program. June 15, 2016. Black-footed Ferret Field Operations Manual. 89pp."
+  },
+  "https://www.fws.gov/sites/default/files/documents/black-footed-ferret-managed-care-operations-manual-2017.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "U.S. Fish and Wildlife Service. 2017. Black-footed Ferret Managed Care Operations Manual (BFFMCOM)."
+  },
   "https://www.galapagos.org/newsroom/a-homecoming-for-floreana": {
     "accessed": "2026-09-25",
     "cite": "Galápagos Conservancy. 2026. A Homecoming for Floreana."
+  },
+  "https://www.govinfo.gov/content/pkg/GOVPUB-SI-PURL-gpo55903/pdf/GOVPUB-SI-PURL-gpo55903.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Emmons, Louise H., editor. The Maned Wolves of Noel Kempff Mercado National Park. Smithsonian Contributions to Zoology, number 639, xii + 135 pages, 60 figures, 37 tables, 2012."
   },
   "https://www.iucnredlist.org/species/10826/115565566": {
     "accessed": "2026-09-27",
@@ -1225,11 +1517,32 @@
     "accessed": "2026-09-25",
     "cite": "Cota, M., Guntoro, J., Horne, B.D., Kusrini, M.D., Krishnasamy, K. & Shepherd, C. 2021. Heosemys spinosa. The IUCN Red List of Threatened Species 2021: e.T9942A3152508. https://dx.doi.org/10.2305/IUCN.UK.2021-2.RLTS.T9942A3152508.en."
   },
+  "https://www.mdpi.com/2076-2615/11/4/921": {
+    "accessed": "2026-11-23",
+    "cite": "Bista, D., Lama, S. T., Weerman, J., Sherpa, A. P., Pandey, P., Thapa, M. K., Acharya, H., Hudson, N. J., Baxter, G. S., & Murray, P. J. (2021). Improved Trapping and Handling of an Arboreal, Montane Mammal: Red Panda Ailurus fulgens. Animals, 11(4), 921. https://doi.org/10.3390/ani11040921",
+    "license": "CC BY 4.0",
+    "archive": "https://web.archive.org/web/20260918083241/https://www.mdpi.com/2076-2615/11/4/921"
+  },
+  "https://www.mdpi.com/2673-5636/3/1/9": {
+    "accessed": "2026-11-23",
+    "cite": "Finch, K., & Humphreys, A. (2022). Day Time Activity Budgets, Height Utilization and Husbandry of Two Zoo-Housed Goodfellow’s Tree Kangaroos (Dendrolagus goodfellowi buergersi). Journal of Zoological and Botanical Gardens, 3(1), 102–112. https://doi.org/10.3390/jzbg3010009",
+    "license": "CC BY 4.0",
+    "archive": "https://web.archive.org/web/20260317005619/https://www.mdpi.com/2673-5636/3/1/9"
+  },
+  "https://www.mdpi.com/2673-5636/5/2/16": {
+    "accessed": "2026-11-23",
+    "cite": "Edwards, M. J., Hosie, C. A., Naidenov, L., Price, E., Smith, T. E., Wormell, D., & Stanley, C. R. (2024). In Absentia—Can a Lack of Behaviour Be a Useful Welfare Indicator? An Application to the Captive Management of Livingstone’s Fruit Bats, Pteropus livingstonii. Journal of Zoological and Botanical Gardens, 5(2), 226–237. https://doi.org/10.3390/jzbg5020016",
+    "license": "CC BY 4.0",
+    "archive": "https://web.archive.org/web/20250519043458/https://www.mdpi.com/2673-5636/5/2/16"
+  },
   "https://www.nationalgeographic.com/animals/mammals/facts/sunda-pangolin": {
     "accessed": "2026-09-25",
     "cite": "National Geographic. 2020. Sunda pangolin, facts and photos."
   },
   "https://www.nationalzoo.si.edu/animals/asian-elephant": {
+    "accessed": "2026-11-23"
+  },
+  "https://www.nationalzoo.si.edu/animals/news/red-panda-bear-and-more-red-panda-facts": {
     "accessed": "2026-11-23"
   },
   "https://www.nationalzoo.si.edu/animals/red-panda": {
@@ -1252,6 +1565,15 @@
     "accessed": "2026-11-23",
     "cite": "Nguyen Van Thai, Clark, L and Tran Quang Phuong (2010), Management Guidelines for Sunda pangolin (Manis javanica), Carnivore and Pangolin Conservation Program – Save Vietnam's Wildlife, Vietnam."
   },
+  "https://www.pangolinsg.org/wp-content/uploads/sites/4/2020/05/Guidance-on-the-ecological-monitoring-of-pangolin_EN.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "IUCN SSC Pangolin Specialist Group (2018). Methods for monitoring populations of pangolins (Pholidota: Manidae). IUCN SSC Pangolin Specialist Group, ℅ Zoological Society of London, London, UK.",
+    "archive": "https://web.archive.org/web/20240518144828/https://www.pangolinsg.org/wp-content/uploads/sites/4/2020/05/Guidance-on-the-ecological-monitoring-of-pangolin_EN.pdf"
+  },
+  "https://www.panthera.org/blog-post/which-wild-cats-hiss": {
+    "accessed": "2026-11-23",
+    "cite": "Panthera. 2026. Which Wild Cats Hiss?"
+  },
   "https://www.pib.gov.in/PressReleasePage.aspx?PRID=1860055": {
     "accessed": "2026-09-27",
     "cite": "Press Information Bureau, Government of India. 2022. PM releases wild Cheetahs - which had become extinct from India - in Kuno National Park."
@@ -1265,9 +1587,25 @@
     "accessed": "2026-11-23",
     "cite": "Rainforest Alliance. 2023. Red-Eyed Tree Frog."
   },
+  "https://www.ranitadedarwin.org/_files/ugd/9a1a89_eaefebf8e2de46e388e3daa5dfc7c8bc.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Valenzuela-Sánchez, A., Schmidt, B. R., Pérez, C., Altamirano, T., Toledo, V., Pérez, Í., Teillier, S., Cunningham, A. A., & Soto-Azat, C. (2019). Assessing habitat quality when forest attributes have opposing effects on abundance and detectability: A case study on Darwin’s frogs. Forest Ecology and Management, 432, 942–948. https://doi.org/10.1016/j.foreco.2018.10.022"
+  },
   "https://www.reptilesofecuador.com/chelonoidis_abingdonii.html": {
     "accessed": "2026-11-23",
     "cite": "Arteaga A, Guayasamin JM (2020) Chelonoidis abingdonii. In: Arteaga A, Bustamante L, Vieira J (Eds) Reptiles of Ecuador: Life in the middle of the world. Available from: www.reptilesofecuador.com."
+  },
+  "https://www.reptilesofecuador.com/chelonoidis_niger.html": {
+    "accessed": "2026-11-23",
+    "cite": "Arteaga A, Guayasamin JM (2020) Chelonoidis niger. In: Arteaga A, Bustamante L, Vieira J (Eds) Reptiles of Ecuador: Life in the middle of the world. Available from: www.reptilesofecuador.com."
+  },
+  "https://www.revmexmastozoologia.unam.mx/ojs/index.php/rmm/article/download/300/302": {
+    "accessed": "2026-11-23",
+    "cite": "Gómez-Hoyos, D.A., R. Seisdedos-de-Vergara, F. Castañeda, J. Schipper, R. Amit and J.F. González-Maya. 2020. Short-term measures to avoid retaliatory killing of a tapir (Tapirus bairdii) during a case of human conflict at La Amistad Biosphere Reserve, Costa Rica. Revista Mexicana de Mastozoología, nueva época, 10(1):52-56. https://doi.org/10.22201/ie.20074484e.2020.10.1.300"
+  },
+  "https://www.sanbi.org/animal-of-the-week/african-elephant/": {
+    "accessed": "2026-11-23",
+    "cite": "Selier, J. 2014. African elephant. South African National Biodiversity Institute."
   },
   "https://www.science.org/content/article/watch-ethiopian-wolves-drink-flower-nectar-first-large-carnivore": {
     "accessed": "2026-09-25",
@@ -1285,9 +1623,23 @@
     "accessed": "2026-09-25",
     "cite": "Queensland Government. 2025. Northern Hairy-Nosed Wombat. State of the Environment Report 2024."
   },
+  "https://www.thebhs.org/publications/the-herpetological-bulletin/issue-number-173-autumn-2025/4409-04-a-survey-of-turtles-along-the-da-river-in-vietnam-with-insights-into-the-critically-endangered-i-rafetus-swinhoei-i/file": {
+    "accessed": "2026-11-23",
+    "cite": "Le Duc, O., Leprince, B., Thanh, A. L., Trong, M. N., Ta, D., Van, S. H., & Luiselli, L. (2025). A survey of turtles along the Da River in Vietnam, with insights into the Critically Endangered Rafetus swinhoei. The Herpetological Bulletin, (173), 24–28. https://doi.org/10.33256/hb173.2428"
+  },
   "https://www.theguardian.com/environment/2023/nov/30/back-from-the-brink-de-wintons-golden-mole-feared-extinct-rediscovered-after-86-years-aoe": {
     "accessed": "2026-09-25",
     "cite": "Weston, P. 2023. Back from the brink: sand-swimming golden mole, feared extinct, rediscovered after 86 years. The Guardian."
+  },
+  "https://www.threatenedtaxa.org/JoTT/article/download/7072/7965?inline=1": {
+    "accessed": "2026-11-23",
+    "cite": "Shahrudin, S. (2021). On some additions to the amphibians of Gunung Inas Forest Reserve, Kedah, Peninsular Malaysia. Journal of Threatened Taxa, 13(11), 19527–19539. https://doi.org/10.11609/jott.7072.13.11.19527-19539",
+    "license": "CC BY 4.0"
+  },
+  "https://www.turtle-sanctuary.org/wp-content/uploads/2019/11/RAFETUS_HUNTERS.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Pham Van, T., Le Duc, O., Leprince, B., Bordes, C., Luu, V. Q., & Luiselli, L. (2019). Hunters’ structured questionnaires enhance ecological knowledge and provide circumstantial survival evidence for the world’s rarest turtle. Aquatic Conservation: Marine and Freshwater Ecosystems, 30(1), 183–193. https://doi.org/10.1002/aqc.3225",
+    "archive": "https://web.archive.org/web/20240513134054/http://www.turtle-sanctuary.org/wp-content/uploads/2019/11/RAFETUS_HUNTERS.pdf"
   },
   "https://www.turtleconservancy.org/outreach/death-of-a-mythical-giant": {
     "accessed": "2026-09-25",
@@ -1297,6 +1649,10 @@
     "accessed": "2026-09-25",
     "cite": "WildCRU. 2024. Ethiopian wolves."
   },
+  "https://www.worldlagomorphsociety.org/Content/pdf/news/Proceedings%20WLC5.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Kelly, P., Phillips, S., Smith, A. and Browning, C. (eds). 2016. Proceedings of the 5th World Lagomorph Conference, Turlock, California, July 11-15, 2016. Endangered Species Recovery Program, California State University Stanislaus."
+  },
   "https://www.worldwildlife.org/news/magazine/spring-2021/meet-the-aye-aye-the-worlds-weirdest-primate": {
     "accessed": "2026-09-25",
     "cite": "World Wildlife Fund. 2021. Meet the aye-aye, the world's weirdest primate. World Wildlife magazine, Spring 2021."
@@ -1304,6 +1660,10 @@
   "https://www2.gov.bc.ca/assets/gov/environment/plants-animals-and-ecosystems/invasive-species/alerts/soft_shelled_turtle_alert.pdf": {
     "accessed": "2026-11-23",
     "cite": "Government of British Columbia. n.d. Invasive Species Alert! Softshell Turtles (family Trionychidae)."
+  },
+  "https://www2.gov.bc.ca/assets/gov/environment/plants-animals-and-ecosystems/species-ecosystems-at-risk/brochures/vancouver_island_marmot.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "British Columbia Ministry of Environment, Lands and Parks. n.d. Vancouver Island Marmot."
   },
   "https://xenarthrans.org/species/sloths/brown-throated-three-toed-sloth/": {
     "accessed": "2026-11-23",

@@ -72,10 +72,6 @@
     {
       "category": "behavior",
       "text": "When it is scared, it puffs up and lets out a loud squeak.",
-      "tags": [
-        "squeaker",
-        "puffs_up"
-      ],
       "source": "news"
     },
     {
@@ -160,6 +156,38 @@
         "webbed_feet"
       ],
       "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "news"
     }
   ],
   "facts": [

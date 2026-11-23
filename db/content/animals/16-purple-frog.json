@@ -130,6 +130,22 @@
         "webbed_feet"
       ],
       "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

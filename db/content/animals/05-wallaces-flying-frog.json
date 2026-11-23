@@ -84,9 +84,6 @@
     {
       "category": "behavior",
       "text": "It lives high in the trees and only climbs down to breed.",
-      "tags": [
-        "climber"
-      ],
       "source": "iucn"
     },
     {
@@ -138,6 +135,39 @@
         "webbed_feet"
       ],
       "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by hanging or perching in tree branches.",
+      "tags": [
+        "roosts_in_trees"
+      ],
+      "source": "literature",
+      "url": "https://www.threatenedtaxa.org/JoTT/article/download/7072/7965?inline=1"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives in trees and seldom comes down to the ground.",
+      "tags": [
+        "seldom_on_ground"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps or rests high up in trees.",
+      "tags": [
+        "sleeps_high_in_trees"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

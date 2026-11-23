@@ -124,9 +124,6 @@
     {
       "category": "behavior",
       "text": "It marks trees with urine and scent to leave messages for other pangolins.",
-      "tags": [
-        "scent_marks"
-      ],
       "source": "adw"
     },
     {
@@ -187,6 +184,65 @@
       "text": "Its tongue is very long and can reach far out of its mouth.",
       "tags": [
         "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs up big rocks, boulders or cliffs.",
+      "tags": [
+        "climbs_boulders"
+      ],
+      "source": "ngo",
+      "url": "https://ewt.org/wp-content/uploads/2022/11/Temmincks-Ground-Pangolin-Smutsia-temminckii_VU.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "ngo",
+      "url": "https://savepangolins.org/what-is-a-pangolin/"
+    },
+    {
+      "category": "diet",
+      "text": "It can go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes no calls: no croaks, songs, squeaks or other voice sounds.",
+      "tags": [
+        "voiceless"
+      ],
+      "source": "ngo",
+      "url": "https://www.pangolinsg.org/wp-content/uploads/sites/4/2020/05/Guidance-on-the-ecological-monitoring-of-pangolin_EN.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
       ],
       "source": "adw"
     }

@@ -160,6 +160,31 @@
         "webbed_feet"
       ],
       "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on wet rocks by waterfalls or rapids.",
+      "tags": [
+        "rests_by_waterfalls"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tailed_frog"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

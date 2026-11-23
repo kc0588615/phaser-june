@@ -83,9 +83,6 @@
     {
       "category": "behavior",
       "text": "It grazes the same patches again and again, keeping the plants trimmed short like a lawn mower.",
-      "tags": [
-        "grazer"
-      ],
       "source": "adw"
     },
     {
@@ -131,6 +128,39 @@
       "text": "Its shell or skin has lines that spread out like stars.",
       "tags": [
         "star_pattern"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "literature",
+      "url": "https://ccb.kglmeridian.com/view/journals/ccab/12/1/article-p56.xml"
+    },
+    {
+      "category": "diet",
+      "text": "It mostly eats grass or other low plants that it crops from the ground.",
+      "tags": [
+        "grazer"
       ],
       "source": "adw"
     }

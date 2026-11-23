@@ -137,6 +137,15 @@
         "warning_colors"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It puffs its body up with air when threatened.",
+      "tags": [
+        "puffs_up"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tomato_frog"
     }
   ],
   "facts": [

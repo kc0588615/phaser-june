@@ -161,6 +161,47 @@
       ],
       "source": "tftsg",
       "url": "https://iucn-tftsg.org/wp-content/uploads/file/Accounts/crm_5_009_insculpta_v1_2008.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is a main or favorite part of its food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB_Vol_4_Nos1-4(2001-2005)/Doody_etal_2001.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

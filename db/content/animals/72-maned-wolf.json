@@ -105,10 +105,6 @@
     {
       "category": "diet",
       "text": "Its favorite food is the wolf apple, a tomato-like fruit, and it spreads the seeds in its droppings.",
-      "tags": [
-        "fruit_eater",
-        "seed_spreader"
-      ],
       "source": "wikipedia"
     },
     {
@@ -119,18 +115,11 @@
     {
       "category": "behavior",
       "text": "Pairs mark the borders of their home with urine and droppings, and neighbors stay on their own side.",
-      "tags": [
-        "territorial",
-        "scent_marks"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "After dusk it often gives a single loud, deep bark.",
-      "tags": [
-        "loud_calls"
-      ],
       "source": "adw"
     },
     {
@@ -205,6 +194,99 @@
         "big_ears"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves its dung in piles that it comes back to, as messages to others of its kind.",
+      "tags": [
+        "dung_piles"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "government",
+      "url": "https://www.govinfo.gov/content/pkg/GOVPUB-SI-PURL-gpo55903/pdf/GOVPUB-SI-PURL-gpo55903.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "Rodents are a main part of its prey.",
+      "tags": [
+        "rodent_hunter"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It shares food with, or brings food to, members of its group other than its own young.",
+      "tags": [
+        "shares_food"
+      ],
+      "source": "government",
+      "url": "https://www.govinfo.gov/content/pkg/GOVPUB-SI-PURL-gpo55903/pdf/GOVPUB-SI-PURL-gpo55903.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "At least sometimes, it stands, rears up, hops or runs on its back legs alone.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "government",
+      "url": "https://www.govinfo.gov/content/pkg/GOVPUB-SI-PURL-gpo55903/pdf/GOVPUB-SI-PURL-gpo55903.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It gathers food and stores it to eat later.",
+      "tags": [
+        "stores_food"
+      ],
+      "source": "government",
+      "url": "https://www.govinfo.gov/content/pkg/GOVPUB-SI-PURL-gpo55903/pdf/GOVPUB-SI-PURL-gpo55903.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is a main or favorite part of its food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud calls that carry far, such as songs, hoots, barks, roars or wails.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/maned-wolf"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It spreads plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "wikipedia"
     }
   ],
   "facts": [

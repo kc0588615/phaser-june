@@ -164,6 +164,57 @@
         "camouflage"
       ],
       "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "literature",
+      "url": "https://biozoojournals.ro/nwjz/content/v14n2/nwjz_e171508_Bourke.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "ngo",
+      "url": "https://www.ranitadedarwin.org/_files/ugd/9a1a89_eaefebf8e2de46e388e3daa5dfc7c8bc.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests or sleeps through the winter, inactive for weeks or months.",
+      "tags": [
+        "winter_rest"
+      ],
+      "source": "literature",
+      "url": "https://doi.org/10.1186/s12983-015-0132-y"
     }
   ],
   "facts": [

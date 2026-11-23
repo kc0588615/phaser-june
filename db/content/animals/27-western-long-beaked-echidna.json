@@ -184,6 +184,54 @@
         "long_tongue"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It can feel vibrations or ripples through the ground or water, to sense prey, danger or others.",
+      "tags": [
+        "senses_vibrations"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It moves very slowly, even when disturbed.",
+      "tags": [
+        "slow_mover"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes no calls: no croaks, songs, squeaks or other voice sounds.",
+      "tags": [
+        "voiceless"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

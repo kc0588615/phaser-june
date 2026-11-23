@@ -94,9 +94,6 @@
     {
       "category": "behavior",
       "text": "It defends its area against other ferrets of the same sex.",
-      "tags": [
-        "territorial"
-      ],
       "source": "adw"
     },
     {
@@ -163,6 +160,74 @@
       "text": "A dark band or patch across its eyes looks like a mask.",
       "tags": [
         "face_mask"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "government",
+      "url": "https://www.fws.gov/sites/default/files/documents/black-footed-ferret-field-operations-manual-2016.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "It has strong, long claws that it digs with.",
+      "tags": [
+        "digging_claws"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/black-footed-ferret"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It can go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "government",
+      "url": "https://www.fws.gov/sites/default/files/documents/black-footed-ferret-managed-care-operations-manual-2017.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "Rodents are a main part of its prey.",
+      "tags": [
+        "rodent_hunter"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud, harsh screeches.",
+      "tags": [
+        "screecher"
+      ],
+      "source": "government",
+      "url": "https://www.fws.gov/sites/default/files/documents/black-footed-ferret-managed-care-operations-manual-2017.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
       ],
       "source": "adw"
     }

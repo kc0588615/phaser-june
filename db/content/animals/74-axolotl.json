@@ -108,9 +108,6 @@
     {
       "category": "behavior",
       "text": "It can regrow lost legs, gills, and even parts of its eyes and brain.",
-      "tags": [
-        "regrows_body_parts"
-      ],
       "source": "wikipedia"
     },
     {
@@ -124,9 +121,6 @@
     {
       "category": "diet",
       "text": "It waits for prey to come close instead of chasing it, and its tiny teeth can grip food but not chew it.",
-      "tags": [
-        "ambush_hunter"
-      ],
       "source": "amphibiaweb"
     },
     {
@@ -189,6 +183,65 @@
         "spots"
       ],
       "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/axolotl"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/axolotl/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It can feel vibrations or ripples through the ground or water, to sense prey, danger or others.",
+      "tags": [
+        "senses_vibrations"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/axolotl/characteristics"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It can regrow lost body parts, such as legs, a tail or gills.",
+      "tags": [
+        "regrows_body_parts"
+      ],
+      "source": "wikipedia"
     }
   ],
   "facts": [

@@ -131,17 +131,11 @@
     {
       "category": "behavior",
       "text": "It sees poorly, but its sense of smell is about 40 times better than ours.",
-      "tags": [
-        "poor_eyesight"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "If it can't get away, it rears up on its back legs, leaning on its tail, and swipes with its claws.",
-      "tags": [
-        "stands_on_hind_legs"
-      ],
       "source": "smithsonian"
     },
     {
@@ -197,6 +191,46 @@
         "long_tail"
       ],
       "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "sdzwa"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "At least sometimes, it stands, rears up, hops or runs on its back legs alone.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "smithsonian"
     }
   ],
   "facts": [

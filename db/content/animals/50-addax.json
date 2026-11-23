@@ -98,18 +98,11 @@
     {
       "category": "behavior",
       "text": "It can go most of its life without drinking, getting water from the plants it eats.",
-      "tags": [
-        "rarely_drinks"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "It wanders huge distances across the desert looking for fresh grazing.",
-      "tags": [
-        "nomadic",
-        "grazer"
-      ],
       "source": "iucn"
     },
     {
@@ -166,6 +159,64 @@
       "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
       "tags": [
         "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/addax"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It mostly eats grass or other low plants that it crops from the ground.",
+      "tags": [
+        "grazer"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Addax"
+    },
+    {
+      "category": "behavior",
+      "text": "It has no fixed home area: it wanders or travels long distances, following food, water or rain.",
+      "tags": [
+        "nomadic"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "It can go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
       ],
       "source": "adw"
     }

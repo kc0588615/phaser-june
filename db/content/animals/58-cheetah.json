@@ -125,17 +125,11 @@
     {
       "category": "behavior",
       "text": "It is the fastest land animal, but it can only keep up its top speed for a few hundred meters.",
-      "tags": [
-        "fast_runner"
-      ],
       "source": "iucn"
     },
     {
       "category": "behavior",
       "text": "It can't roar. Instead it purrs and makes a loud chirp, like a bird.",
-      "tags": [
-        "chirps"
-      ],
       "source": "smithsonian"
     },
     {
@@ -217,6 +211,89 @@
         "white_belly"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves its dung in piles that it comes back to, as messages to others of its kind.",
+      "tags": [
+        "dung_piles"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "behavior",
+      "text": "It has no fixed home area: it wanders or travels long distances, following food, water or rain.",
+      "tags": [
+        "nomadic"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It can go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "ngo",
+      "url": "https://www.catsg.org/living-species-cheetah"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "government",
+      "url": "https://libraryir.parliament.go.ke/server/api/core/bitstreams/bc013f65-0cde-471b-b7d3-ff0fb5ae457f/content"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "government",
+      "url": "https://libraryir.parliament.go.ke/server/api/core/bitstreams/bc013f65-0cde-471b-b7d3-ff0fb5ae457f/content"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "behavior",
+      "text": "It can run fast, at about 50 km/h or more.",
+      "tags": [
+        "fast_runner"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

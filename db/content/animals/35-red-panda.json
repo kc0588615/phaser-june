@@ -116,10 +116,6 @@
     {
       "category": "behavior",
       "text": "It sleeps high in the trees and climbs down trunks headfirst.",
-      "tags": [
-        "sleeps_high_in_trees",
-        "climber"
-      ],
       "source": "adw"
     },
     {
@@ -187,6 +183,148 @@
         "reddish_fur"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rests in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/red-panda"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/red-panda"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs up big rocks, boulders or cliffs.",
+      "tags": [
+        "climbs_boulders"
+      ],
+      "source": "smithsonian",
+      "url": "https://www.nationalzoo.si.edu/animals/red-panda"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves its dung in piles that it comes back to, as messages to others of its kind.",
+      "tags": [
+        "dung_piles"
+      ],
+      "source": "literature",
+      "url": "https://www.mdpi.com/2076-2615/11/4/921"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "literature",
+      "url": "https://www.mdpi.com/2076-2615/11/4/921"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/redpanda/behavior"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Red_panda"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by hanging or perching in tree branches.",
+      "tags": [
+        "roosts_in_trees"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Red_panda"
+    },
+    {
+      "category": "diet",
+      "text": "It spreads plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Red_panda"
+    },
+    {
+      "category": "behavior",
+      "text": "It builds a nest or bed of leaves, branches or grass to sleep or rest in.",
+      "tags": [
+        "sleeping_nests"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "At least sometimes, it stands, rears up, hops or runs on its back legs alone.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/redpanda/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/redpanda/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "literature",
+      "url": "https://www.mdpi.com/2076-2615/11/4/921"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "smithsonian",
+      "url": "https://www.nationalzoo.si.edu/animals/news/red-panda-bear-and-more-red-panda-facts"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps or rests high up in trees.",
+      "tags": [
+        "sleeps_high_in_trees"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/red-panda"
     }
   ],
   "facts": [

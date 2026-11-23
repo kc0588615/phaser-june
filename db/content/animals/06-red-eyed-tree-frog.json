@@ -189,6 +189,48 @@
         "white_belly"
       ],
       "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by hanging or perching in tree branches.",
+      "tags": [
+        "roosts_in_trees"
+      ],
+      "source": "ngo",
+      "url": "https://www.rainforest-alliance.org/species/red-eyed-tree-frog/"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives in trees and seldom comes down to the ground.",
+      "tags": [
+        "seldom_on_ground"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps or rests high up in trees.",
+      "tags": [
+        "sleeps_high_in_trees"
+      ],
+      "source": "ngo",
+      "url": "https://www.rainforest-alliance.org/species/red-eyed-tree-frog/"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [

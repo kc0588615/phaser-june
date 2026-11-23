@@ -86,9 +86,6 @@
     {
       "category": "behavior",
       "text": "It rests on wet, mossy rocks by rivers and waterfalls.",
-      "tags": [
-        "rests_by_waterfalls"
-      ],
       "source": "adw"
     },
     {
@@ -158,6 +155,88 @@
         "large_eyes"
       ],
       "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "government",
+      "url": "https://cites.org/sites/default/files/eng/cop/08/prop/E08-Prop-56_Conraua.PDF"
+    },
+    {
+      "category": "behavior",
+      "text": "It can leap several times its own body length in one jump.",
+      "tags": [
+        "big_leaper"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/goliath-frog"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on wet rocks by waterfalls or rapids.",
+      "tags": [
+        "rests_by_waterfalls"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [

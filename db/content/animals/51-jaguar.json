@@ -134,10 +134,6 @@
     {
       "category": "behavior",
       "text": "Each one marks its home area with scent, scratches on trees and calls.",
-      "tags": [
-        "territorial",
-        "scent_marks"
-      ],
       "source": "adw"
     },
     {
@@ -221,6 +217,73 @@
       "text": "It bites or chews with unusual force for its size.",
       "tags": [
         "strong_bite"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "ngo",
+      "url": "https://www.panthera.org/blog-post/which-wild-cats-hiss"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud calls that carry far, such as songs, hoots, barks, roars or wails.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Jaguar"
+    },
+    {
+      "category": "diet",
+      "text": "Rodents are a main part of its prey.",
+      "tags": [
+        "rodent_hunter"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Jaguar"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
       ],
       "source": "adw"
     }

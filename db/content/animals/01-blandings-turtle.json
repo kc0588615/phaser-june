@@ -84,9 +84,6 @@
     {
       "category": "behavior",
       "text": "It often climbs out of the water to bask on logs.",
-      "tags": [
-        "basker"
-      ],
       "source": "adw"
     },
     {
@@ -156,6 +153,64 @@
       "text": "Its legs are yellow.",
       "tags": [
         "yellow_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "government",
+      "url": "https://semspub.epa.gov/work/03/130484.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "government",
+      "url": "https://files.dnr.state.mn.us/eco/nongame/projects/consgrant_reports/1998/1998_sajwaj_etal.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It often eats animals that are already dead.",
+      "tags": [
+        "scavenger"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests or sleeps through the winter, inactive for weeks or months.",
+      "tags": [
+        "winter_rest"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rests in the sun to warm its body.",
+      "tags": [
+        "basker"
       ],
       "source": "adw"
     }

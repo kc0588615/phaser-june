@@ -124,18 +124,12 @@
     {
       "category": "behavior",
       "text": "Males and females mark their home areas with scent.",
-      "tags": [
-        "scent_marks"
-      ],
       "source": "iucn"
     },
     {
       "category": "behavior",
       "text": "Even though it lives in forests, it never climbs trees.",
-      "source": "adw",
-      "tags": [
-        "never_climbs"
-      ]
+      "source": "adw"
     },
     {
       "category": "conservation",
@@ -175,6 +169,38 @@
         "long_tongue"
       ],
       "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [
