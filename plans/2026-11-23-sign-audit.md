@@ -92,7 +92,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -100,6 +100,16 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+- Branch / base: `agent/sign-audit` at `0d02c12e`, cut from `origin/main` `7bce511a`. No uncommitted changes; `/srv/critter-ai/handoff/critter-connect.md` has no open items.
+- Runtime: Node `v24.21.0`, npm `11.19.0`; `node_modules` installed; no DB migrations (baseline `db/schema.sql` already live and on `phaser_june_dev`).
+- `npm run typecheck`: pass (exit 0).
+- `npm run lint` (`eslint` + `check-theme.mjs`): pass (exit 0, 0 warnings).
+- `npm test`: pass (106/106 tests, 3 suites, 0 failed, 4.0 s).
+- `npm run content -- preview`: pass (exit 0, 0 problems across 76 profiles).
+- `npm run content -- check` (live `phaser_june`, read-only): pass — `Pool: 76 playable of 76 species, 2475 clues (2083 deductive), 491 facts. 0 errors, 0 warnings.`
+- `npm run content -- check` (`phaser_june_dev`, guarded): pass — identical pool counts, 0 errors, 0 warnings.
+- `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh` (`phaser_june_dev`, guarded): pass — `1657/1657 checks passed` (Anywhere load median 2295 ms at 1x, 4452 ms at 4x). Artifact: `/srv/critter-ai/agent-state/missions/sign-audit/e2e-baseline/`.
 
 ## Architecture
 
@@ -122,5 +132,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-23 02:20 UTC · Baseline: verified clean `0d02c12e` (`origin/main` `7bce511a`); typecheck, lint, unit tests (106/106), content preview/check (live + dev, 76 species / 2475 clues / 491 facts, 0 errors/warnings), and `e2e:fresh` on `phaser_june_dev` (1657/1657, artifact in `…/sign-audit/e2e-baseline/`) all pass.
 
 ## Summary
