@@ -236,6 +236,14 @@
         "scent_marks"
       ],
       "source": "smithsonian"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "sdzwa"
     }
   ],
   "facts": [

@@ -90,9 +90,6 @@
     {
       "category": "habitat",
       "text": "It lives by fast-flowing rivers in the rainforest; its tadpoles live in rushing water at the foot of waterfalls.",
-      "tags": [
-        "fast_streams"
-      ],
       "source": "iucn"
     },
     {
@@ -139,6 +136,30 @@
         "white_belly"
       ],
       "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly among the fallen leaves (leaf litter) on a forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by fast-flowing streams or rivers with rushing water.",
+      "tags": [
+        "fast_streams"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

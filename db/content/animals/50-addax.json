@@ -219,6 +219,14 @@
         "rarely_drinks"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
+      "tags": [
+        "sand_dunes"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

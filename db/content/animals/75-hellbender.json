@@ -135,9 +135,6 @@
     {
       "category": "habitat",
       "text": "It needs clear, cool, fast-flowing streams, and avoids water warmer than 20 °C.",
-      "tags": [
-        "cold_streams"
-      ],
       "source": "iucn"
     },
     {
@@ -201,6 +198,30 @@
         "territorial"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in large rivers, not only in small streams or ponds.",
+      "tags": [
+        "big_rivers"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by fast-flowing streams or rivers with rushing water.",
+      "tags": [
+        "fast_streams"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by cool or cold, clear streams.",
+      "tags": [
+        "cold_streams"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

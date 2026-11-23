@@ -315,6 +315,14 @@
         "sleeps_high_in_trees"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

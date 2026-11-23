@@ -191,6 +191,15 @@
         "stores_food"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in the open zone high on mountains above the tree line, where it is too cold for trees to grow.",
+      "tags": [
+        "above_tree_line"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Ochotonidae/"
     }
   ],
   "facts": [

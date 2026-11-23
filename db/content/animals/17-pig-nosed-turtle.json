@@ -91,9 +91,6 @@
     {
       "category": "habitat",
       "text": "It lives in rivers, lagoons and even salty water near the coast.",
-      "tags": [
-        "brackish_water"
-      ],
       "source": "adw"
     },
     {
@@ -200,6 +197,40 @@
       "text": "It swims well or often.",
       "tags": [
         "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in large rivers, not only in small streams or ponds.",
+      "tags": [
+        "big_rivers"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB_Vol_4_Nos1-4(2001-2005)/Doody_etal_2001.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Accounts/crm_5_009_insculpta_v1_2008.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in brackish water, part salty and part fresh, as in estuaries, coastal lagoons or mangroves.",
+      "tags": [
+        "brackish_water"
       ],
       "source": "adw"
     }

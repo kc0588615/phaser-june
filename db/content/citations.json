@@ -13,6 +13,11 @@
     "cite": "Carter, T. S., Superina, M., & Leslie, D. M. (2016). Priodontes maximus (Cingulata: Chlamyphoridae). Mammalian Species, 48(932), 21–34. https://doi.org/10.1093/mspecies/sew002",
     "license": "Public domain (US government work)"
   },
+  "https://academic.oup.com/mspecies/article/50/956/1/4968042": {
+    "accessed": "2026-11-23",
+    "cite": "Gaudin, T. J., Hicks, P., & Di Blanco, Y. (2018). Myrmecophaga tridactyla (Pilosa: Myrmecophagidae). Mammalian Species, 50(956), 1–13. https://doi.org/10.1093/mspecies/sey001",
+    "archive": "https://web.archive.org/web/20251207020301/https://academic.oup.com/mspecies/article/50/956/1/4968042"
+  },
   "https://academic.oup.com/mspecies/article/doi/10.1644/792.1/2600527": {
     "accessed": "2026-11-23",
     "cite": "Smith, S. J., & Leslie, D. M. (2006). Pteropus livingstonii. Mammalian Species, 792, 1–5. https://doi.org/10.1644/792.1"
@@ -460,6 +465,10 @@
     "accessed": "2026-11-23",
     "cite": "Rasoma, R. V. J., Raselimanana, A. P., Ratovonamana, Y. R., & Ganzhorn, J. U. (2013). Habitat Use and Diet of Astrochelys radiata in the Subarid Zone of Southern Madagascar. Chelonian Conservation and Biology, 12(1), 56–69. https://doi.org/10.2744/ccb-0909.1"
   },
+  "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%201%20No%203%20%281995%29/Butler_and_Graham_1995.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Butler, B. O., & Graham, T. E. (1995). Early post-emergent behavior and habitat selection in hatchling Blanding's turtles, Emydoidea blandingii, in Massachusetts. Chelonian Conservation and Biology, 1(3), 187–196."
+  },
   "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%202%20No%201%20%281996%29/Moll_and_Klemens_1996.pdf": {
     "accessed": "2026-11-23",
     "cite": "Moll, D., & Klemens, M. W. (1996). Ecological characteristics of the pancake tortoise, Malacochersus tornieri, in Tanzania. Chelonian Conservation and Biology, 2(1), 26–35."
@@ -467,6 +476,10 @@
   "https://chelonian.org/wp-content/uploads/file/CCB_Vol_4_Nos1-4(2001-2005)/Doody_etal_2001.pdf": {
     "accessed": "2026-11-23",
     "cite": "Doody, J. S., Sims, R. A., & Georges, A. (2001). Use of thermal springs for aquatic basking by the pig-nosed turtle, Carettochelys insculpta. Chelonian Conservation and Biology, 4(1), 81–87."
+  },
+  "https://chelonian.org/wp-content/uploads/file/CRM%206/CRM_6_Castellano_etal_2013.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Castellano, C., Rhodin, A., Ogle, M., Mittermeier, R., Randriamahazo, H., Hudson, R., & Lewis, R. (Eds.). (2013). Turtles on the Brink in Madagascar: Proceedings of Two Workshops on the Status, Conservation, and Biology of Malagasy Tortoises and Freshwater Turtles. Chelonian Research Monographs. https://doi.org/10.3854/crm.6"
   },
   "https://chm-thai.onep.go.th/wp-content/uploads/2021/10/ONEP_V14.pdf": {
     "accessed": "2026-11-23",
@@ -476,6 +489,10 @@
     "accessed": "2026-11-23",
     "cite": "CITES. 1992. Inclusion of Conraua goliath in Appendix II (CoP8 Prop. 56; proponent: the United States of America). Eighth Meeting of the Conference of the Parties, Kyoto.",
     "archive": "https://web.archive.org/web/20221006031847/http://cites.org/sites/default/files/eng/cop/08/prop/E08-Prop-56_Conraua.PDF"
+  },
+  "https://digital.library.adelaide.edu.au/server/api/core/bitstreams/ea3f6caa-93f1-4aec-97b2-6b38038d365b/content": {
+    "accessed": "2026-11-23",
+    "cite": "Berris, K. K. (2024). Conservation biology of greater bilby (Macrotis lagotis) populations translocated to the temperate zone of South Australia [PhD thesis, The University of Adelaide]."
   },
   "https://doi.org/10.1002/ajpa.23936": {
     "accessed": "2026-09-25",
@@ -751,6 +768,10 @@
     "accessed": "2026-09-25",
     "cite": "Endangered Wildlife Trust. 2023. FOUND: Iridescent blind mole with super-hearing powers rediscovered ‘swimming’ through sand dunes of South Africa."
   },
+  "https://ewt.org/project/african-wild-dog/": {
+    "accessed": "2026-11-23",
+    "cite": "Endangered Wildlife Trust. n.d. African Wild Dog."
+  },
   "https://ewt.org/wp-content/uploads/2022/11/Temmincks-Ground-Pangolin-Smutsia-temminckii_VU.pdf": {
     "accessed": "2026-11-23",
     "cite": "Pietersen D, Jansen R, Swart J, Kotze A. 2016. A conservation assessment of Smutsia temminckii. In Child MF, Roxburgh L, Do Linh San E, Raimondo D, Davies-Mostert HT, editors. The Red List of Mammals of South Africa, Swaziland and Lesotho. South African National Biodiversity Institute and Endangered Wildlife Trust, South Africa."
@@ -772,6 +793,10 @@
     "cite": "African Elephants (Loxodonta africana and L. cyclotis) Fact Sheet. c2008-2025. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
   "https://ielc.libguides.com/sdzg/factsheets/african_elephant/characteristics": {
+    "accessed": "2026-11-23",
+    "cite": "African Elephants (Loxodonta africana and L. cyclotis) Fact Sheet. c2008-2025. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
+  "https://ielc.libguides.com/sdzg/factsheets/african_elephant/distribution": {
     "accessed": "2026-11-23",
     "cite": "African Elephants (Loxodonta africana and L. cyclotis) Fact Sheet. c2008-2025. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
@@ -896,6 +921,17 @@
     "cite": "Bettoni, S., Stoeger, A., Rodriguez, C., & Fitch, W. T. (2021). Airborne vocal communication in adult neotropical otters (Lontra longicaudis). Plos One, 16(5), e0251974. https://doi.org/10.1371/journal.pone.0251974",
     "license": "CC BY 4.0"
   },
+  "https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0180431": {
+    "accessed": "2026-11-23",
+    "cite": "McLennan, M. R., Hasegawa, H., Bardi, M., & Huffman, M. A. (2017). Gastrointestinal parasite infections and self-medication in wild chimpanzees surviving in degraded forest fragments within an agricultural landscape mosaic in Uganda. Plos One, 12(7), e0180431. https://doi.org/10.1371/journal.pone.0180431",
+    "license": "CC BY 4.0"
+  },
+  "https://journals.sagepub.com/doi/10.1177/194008291000300203": {
+    "accessed": "2026-11-23",
+    "cite": "Kumar, M. A., Mudappa, D., & Raman, T. R. S. (2010). Asian Elephant Elephas Maximus Habitat Use and Ranging in Fragmented Rainforest and Plantations in the Anamalai Hills, India. Tropical Conservation Science, 3(2), 143–158. https://doi.org/10.1177/194008291000300203",
+    "archive": "https://web.archive.org/web/20250730144914/https://journals.sagepub.com/doi/10.1177/194008291000300203",
+    "license": "CC BY 3.0"
+  },
   "https://kids.nationalgeographic.com/animals/mammals/facts/aye-aye": {
     "accessed": "2026-09-25",
     "cite": "National Geographic Kids. n.d. Aye-Aye."
@@ -908,6 +944,10 @@
     "accessed": "2026-11-23",
     "cite": "Klein, N., Konietzko-Meier, D., Kalita, S., Noda, M., Ishikawa, S., Taguchi, Y., Anzai, W., & Hayashi, S. (2024). Unique bone histology of modern giant salamanders: a study on humeri and femora of Andrias spp. Zoological Letters, 10(1). https://doi.org/10.1186/s40851-024-00240-1",
     "license": "CC BY 4.0"
+  },
+  "https://mdc.mo.gov/discover-nature/field-guide/northern-spiny-softshell": {
+    "accessed": "2026-11-23",
+    "cite": "Missouri Department of Conservation. n.d. Northern Spiny Softshell."
   },
   "https://media.rufford.org/media/project_reports/19010-1Biodivers.%20Conserv..pdf": {
     "accessed": "2026-11-23",
@@ -991,9 +1031,19 @@
     "cite": "Chen, F. S. E., Dawson, S. J., & Fleming, P. A. (2023). Housework or vigilance? Bilbies alter their burrowing activity under threat of predation by feral cats. Behavioral Ecology, 35(1). https://doi.org/10.1093/beheco/arad073",
     "license": "CC BY 4.0"
   },
+  "https://pmc.ncbi.nlm.nih.gov/articles/PMC11103843/": {
+    "accessed": "2026-11-23",
+    "cite": "Mandl, I., Houmadi, A., Said, I., Abdou, B. B. A., Mohamed, N., Fardane, A., Soulaïmana, S., Mohamed, M., Anthoy M., B., & Doulton, H. (2024). Seasonal trends and population status of the highly threatened Pteropus livingstonii in the Comoros archipelago. BMC Ecology and Evolution, 24(1). https://doi.org/10.1186/s12862-024-02255-w",
+    "license": "CC BY 4.0"
+  },
   "https://pmc.ncbi.nlm.nih.gov/articles/PMC13431924/": {
     "accessed": "2026-11-23",
     "cite": "Smith, H. F., Rocco, F. A., Felix, M. A., Valdez, D., & Lynch, L. M. (2024). African wild dog (Lycaon pictus) masticatory apparatus and oral cavity morphology. The Anatomical Record, 309(9), 2395–2410. https://doi.org/10.1002/ar.25547"
+  },
+  "https://pmc.ncbi.nlm.nih.gov/articles/PMC3040220/": {
+    "accessed": "2026-11-23",
+    "cite": "Campbell-Smith, G., Campbell-Smith, M., Singleton, I., & Linkie, M. (2011). Apes in Space: Saving an Imperilled Orangutan Population in Sumatra. PLoS ONE, 6(2), e17210. https://doi.org/10.1371/journal.pone.0017210",
+    "license": "CC BY 4.0"
   },
   "https://pmc.ncbi.nlm.nih.gov/articles/PMC4229255/": {
     "accessed": "2026-11-23",
@@ -1019,15 +1069,30 @@
     "cite": "Fan, P., Liu, X., Liu, R., Li, F., Huang, T., Wu, F., Yao, H., & Liu, D. (2018). Vocal repertoire of free‐ranging adult golden snub‐nosed monkeys (Rhinopithecus roxellana). American Journal of Primatology, 80(6). https://doi.org/10.1002/ajp.22869",
     "license": "CC BY-NC 4.0"
   },
+  "https://pmc.ncbi.nlm.nih.gov/articles/PMC6040693/": {
+    "accessed": "2026-11-23",
+    "cite": "Mills, E. C., Poulsen, J. R., Fay, J. M., Morkel, P., Clark, C. J., Meier, A., Beirne, C., & White, L. J. T. (2018). Forest elephant movement and habitat use in a tropical forest-grassland mosaic in Gabon. Plos One, 13(7), e0199387. https://doi.org/10.1371/journal.pone.0199387",
+    "license": "CC BY 4.0"
+  },
   "https://pmc.ncbi.nlm.nih.gov/articles/PMC6298445/": {
     "accessed": "2026-11-23",
     "cite": "Escalona, T., Weadick, C. J., & Antunes, A. (2017). Adaptive Patterns of Mitogenome Evolution Are Associated with the Loss of Shell Scutes in Turtles. Molecular Biology and Evolution, 34(10), 2522–2536. https://doi.org/10.1093/molbev/msx167",
     "license": "CC BY-NC 4.0"
   },
+  "https://pmc.ncbi.nlm.nih.gov/articles/PMC6753930/": {
+    "accessed": "2026-11-23",
+    "cite": "Rojas, B., & Pašukonis, A. (2019). From habitat use to social behavior: natural history of a voiceless poison frog, Dendrobates tinctorius. PeerJ, 7, e7648. https://doi.org/10.7717/peerj.7648",
+    "license": "CC BY 4.0"
+  },
   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8169120/": {
     "accessed": "2026-11-23",
     "cite": "Paluh, D. J., Riddell, K., Early, C. M., Hantak, M. M., Jongsma, G. F., Keeffe, R. M., Magalhães Silva, F., Nielsen, S. V., Vallejo-Pareja, M. C., Stanley, E. L., & Blackburn, D. C. (2021). Rampant tooth loss across 200 million years of frog evolution. eLife, 10. https://doi.org/10.7554/elife.66926",
     "license": "CC BY 4.0"
+  },
+  "https://png-data.sprep.org/system/files/Opiang_2009_homerange_movement_denuse_long-beaked_echindna_PNG.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Opiang, M. D. (2009). Home Ranges, Movement, and Den Use in Long-Beaked Echidnas, Zaglossus bartoni, From Papua New Guinea. Journal of Mammalogy, 90(2), 340–346. https://doi.org/10.1644/08-mamm-a-108.1",
+    "archive": "https://web.archive.org/web/20250910022359/https://png-data.sprep.org/system/files/Opiang_2009_homerange_movement_denuse_long-beaked_echindna_PNG.pdf"
   },
   "https://portals.iucn.org/library/sites/library/files/documents/Traf-116.pdf": {
     "accessed": "2026-11-23",
@@ -1070,6 +1135,10 @@
     "cite": "Yao, H., Bai, Y., Chen, Y., Chen, H., Yang, W., Ruan, X., & Xiang, Z. (2020). Endozoochorous seed dispersal by golden snub‐nosed monkeys in a temperate forest. Integrative Zoology, 16(1), 120–127. https://doi.org/10.1111/1749-4877.12488",
     "archive": "https://web.archive.org/web/20250121120548/https://pubmed.ncbi.nlm.nih.gov/32929865/"
   },
+  "https://pubs.usgs.gov/of/2021/1104/d/ofr20211104d.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Lyons, M.P., Nikiel, C.A., LeDee, O.E., and Boyles, R., 2023, Potential effects of climate change on Emydoidea blandingii (Blanding’s turtle): U.S. Geological Survey Open-File Report 2021–1104–D, 46 p., https://doi.org/10.3133/ofr20211104D."
+  },
   "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content": {
     "accessed": "2026-11-23"
   },
@@ -1108,9 +1177,17 @@
     "cite": "Naranjo, E. J. (2009). Ecology and Conservation of Baird’s Tapir in Mexico. Tropical Conservation Science, 2(2), 140–158. https://doi.org/10.1177/194008290900200203",
     "license": "CC BY 3.0"
   },
+  "https://turtles.linnaeus.naturalis.nl/linnaeus_ng/app/views/species/taxon.php?id=8070": {
+    "accessed": "2026-11-23",
+    "cite": "Naturalis Biodiversity Center. n.d. Turtles of the World: Heosemys spinosa."
+  },
   "https://virunga.org/wildlife/mammals/okapi/": {
     "accessed": "2026-11-23",
     "cite": "Virunga National Park. 2022. Okapi."
+  },
+  "https://wiredspace.wits.ac.za/bitstreams/03c99524-dfd0-4d39-ba5f-618ecfd118d1/download": {
+    "accessed": "2026-11-23",
+    "cite": "Phakoago, M. V. (2024). Myrmecophagous mammals in a changing world: the ecology of aardvarks and temminck’s pangolins in the kalahari [PhD thesis, University of the Witwatersrand, Johannesburg]. WIReDSpace. https://hdl.handle.net/10539/47278"
   },
   "https://wwf.ca/stories/19-amazing-tiger-facts-global-tiger-day": {
     "accessed": "2026-09-25",
@@ -1217,9 +1294,17 @@
     "accessed": "2026-09-25",
     "cite": "Galápagos Conservancy. 2026. A Homecoming for Floreana."
   },
+  "https://www.globalbearconservation.org/Species/species_cls/6": {
+    "accessed": "2026-11-23",
+    "cite": "IUCN SSC Bear Specialist Group. n.d. Andean Bear."
+  },
   "https://www.govinfo.gov/content/pkg/GOVPUB-SI-PURL-gpo55903/pdf/GOVPUB-SI-PURL-gpo55903.pdf": {
     "accessed": "2026-11-23",
     "cite": "Emmons, Louise H., editor. The Maned Wolves of Noel Kempff Mercado National Park. Smithsonian Contributions to Zoology, number 639, xii + 135 pages, 60 figures, 37 tables, 2012."
+  },
+  "https://www.herpconbio.org/Volume_17/Issue_2/Nambinina_etal_2022.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Nambinina, A., Sefczek, T. M., Frasier, C. L., Brown, A., Ratrimomanarivo, F. H., Razafiherison, R., Rene de Roland, L.-A., & Louis, E. E., Jr. (2022). Assessing population density of Radiated Tortoise (Astrochelys radiata) in southwest Madagascar. Herpetological Conservation and Biology, 17(2), 370–377."
   },
   "https://www.iucnredlist.org/species/10826/115565566": {
     "accessed": "2026-09-27",
@@ -1360,6 +1445,10 @@
   "https://www.iucnredlist.org/species/20321/22327218": {
     "accessed": "2026-09-25",
     "cite": "Kennerley, R., Turvey, S.T. & Young, R. 2020. Solenodon paradoxus. The IUCN Red List of Threatened Species 2020: e.T20321A22327218. https://dx.doi.org/10.2305/IUCN.UK.2020-3.RLTS.T20321A22327218.en."
+  },
+  "https://www.iucnredlist.org/species/21471/45173340": {
+    "accessed": "2026-11-23",
+    "cite": "Garcìa, M., Jordan, C., O'Farril, G., Poot, C., Meyer, N., Estrada, N., Leonardo, R., Naranjo, E., Simons, Á., Herrera, A., Urgilés, C., Schank, C., Boshoff, L. & Ruiz-Galeano, M. 2016. Tapirus bairdii. The IUCN Red List of Threatened Species 2016: e.T21471A45173340. https://dx.doi.org/10.2305/IUCN.UK.2016-1.RLTS.T21471A45173340.en."
   },
   "https://www.iucnredlist.org/species/21474/45174127": {
     "accessed": "2026-09-27",
@@ -1517,6 +1606,10 @@
     "accessed": "2026-09-25",
     "cite": "Cota, M., Guntoro, J., Horne, B.D., Kusrini, M.D., Krishnasamy, K. & Shepherd, C. 2021. Heosemys spinosa. The IUCN Red List of Threatened Species 2021: e.T9942A3152508. https://dx.doi.org/10.2305/IUCN.UK.2021-2.RLTS.T9942A3152508.en."
   },
+  "https://www.lccmr.mn.gov/projects/2015/finals/2015_03m.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "McGuire, J. T. 2019. Aquatic and Terrestrial Reptile Habitat: Final Report, M.L. 2015, Chp. 76, Sec. 2, Subd. 03m. Environment and Natural Resources Trust Fund, Legislative-Citizen Commission on Minnesota Resources."
+  },
   "https://www.mdpi.com/2076-2615/11/4/921": {
     "accessed": "2026-11-23",
     "cite": "Bista, D., Lama, S. T., Weerman, J., Sherpa, A. P., Pandey, P., Thapa, M. K., Acharya, H., Hudson, N. J., Baxter, G. S., & Murray, P. J. (2021). Improved Trapping and Handling of an Arboreal, Montane Mammal: Red Panda Ailurus fulgens. Animals, 11(4), 921. https://doi.org/10.3390/ani11040921",
@@ -1607,6 +1700,10 @@
     "accessed": "2026-11-23",
     "cite": "Selier, J. 2014. African elephant. South African National Biodiversity Institute."
   },
+  "https://www.savetheelephants.org/wp-content/uploads/2023/01/2008StatusofKenyasElephants.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Thouless, C., King, J., Omondi, P., Kahumbu, P. and Douglas-Hamilton, I. 2008. The status of Kenya’s elephants 1990–2002. Save the Elephants."
+  },
   "https://www.science.org/content/article/watch-ethiopian-wolves-drink-flower-nectar-first-large-carnivore": {
     "accessed": "2026-09-25",
     "cite": "Wilcox, C. 2024. Watch Ethiopian wolves drink flower nectar, a first for a large carnivore. Science."
@@ -1645,6 +1742,10 @@
     "accessed": "2026-09-25",
     "cite": "Sargent, A. 2019. Death of a Mythical Giant. Turtle Conservancy."
   },
+  "https://www.vigilife.org/wp-content/uploads/mena-et-al-2021-ecolappl.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Mena, J. L., Yagui, H., Tejeda, V., Bonifaz, E., Bellemain, E., Valentini, A., Tobler, M. W., Sánchez‐Vendizú, P., & Lyet, A. (2021). Environmental DNA metabarcoding as a useful tool for evaluating terrestrial mammal diversity in tropical forests. Ecological Applications, 31(5). https://doi.org/10.1002/eap.2335"
+  },
   "https://www.wildcru.org/species/ethiopian-wolves": {
     "accessed": "2026-09-25",
     "cite": "WildCRU. 2024. Ethiopian wolves."
@@ -1657,6 +1758,10 @@
     "accessed": "2026-09-25",
     "cite": "World Wildlife Fund. 2021. Meet the aye-aye, the world's weirdest primate. World Wildlife magazine, Spring 2021."
   },
+  "https://www.wwf.de/fileadmin/fm-wwf/Publikationen-PDF/Asien/Bhutan-National-Tiger-Survey-Report.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "DoFPS 2023. Status of Tigers in Bhutan: The National Tiger Survey Report 2021–2022. Bhutan Tiger Center, Department of Forests and Park Services, Ministry of Energy and Natural Resources, Royal Government of Bhutan, Thimphu, Bhutan."
+  },
   "https://www2.gov.bc.ca/assets/gov/environment/plants-animals-and-ecosystems/invasive-species/alerts/soft_shelled_turtle_alert.pdf": {
     "accessed": "2026-11-23",
     "cite": "Government of British Columbia. n.d. Invasive Species Alert! Softshell Turtles (family Trionychidae)."
@@ -1668,6 +1773,10 @@
   "https://xenarthrans.org/species/sloths/brown-throated-three-toed-sloth/": {
     "accessed": "2026-11-23",
     "cite": "IUCN SSC Anteater, Sloth and Armadillo Specialist Group. n.d. Brown-throated three-toed sloth."
+  },
+  "https://yoderlab.org/cms/wp-content/uploads/2014/05/2011JungeBarrettYoder.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Junge, R. E., Barrett, M. A., & Yoder, A. D. (2011). Effects of anthropogenic disturbance on indri (Indri indri) health in Madagascar. American Journal of Primatology, 73(7), 632–642. https://doi.org/10.1002/ajp.20938"
   },
   "https://zenodo.org/records/5720440": {
     "accessed": "2026-11-23",

@@ -316,6 +316,31 @@
         "mud_bather"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in dry, thorny forest or brush.",
+      "tags": [
+        "spiny_forest"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "literature",
+      "url": "https://journals.sagepub.com/doi/10.1177/194008291000300203"
     }
   ],
   "facts": [

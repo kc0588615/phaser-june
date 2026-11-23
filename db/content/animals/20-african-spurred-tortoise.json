@@ -204,6 +204,31 @@
         "territorial"
       ],
       "source": "tftsg"
+    },
+    {
+      "category": "habitat",
+      "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/crm.5.110.sulcata.v1.2020.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
+      "tags": [
+        "sand_dunes"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

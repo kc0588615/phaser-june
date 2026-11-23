@@ -134,9 +134,6 @@
     {
       "category": "habitat",
       "text": "It lives in New Guinea's mountains, and is still common above 3,000 m, far from villages.",
-      "tags": [
-        "high_mountains"
-      ],
       "source": "iucn"
     },
     {
@@ -212,6 +209,39 @@
         "five_front_claws"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in the open zone high on mountains above the tree line, where it is too cold for trees to grow.",
+      "tags": [
+        "above_tree_line"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly among the fallen leaves (leaf litter) on a forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "literature",
+      "url": "https://png-data.sprep.org/system/files/Opiang_2009_homerange_movement_denuse_long-beaked_echindna_PNG.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in grassy meadows high on mountainsides.",
+      "tags": [
+        "mountain_meadows"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

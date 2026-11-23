@@ -138,9 +138,6 @@
     {
       "category": "habitat",
       "text": "It lives in clear, cool mountain streams in steep valleys, often with forest and caves in the rocky banks.",
-      "tags": [
-        "cold_streams"
-      ],
       "source": "iucn"
     },
     {
@@ -272,6 +269,22 @@
         "senses_vibrations"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by fast-flowing streams or rivers with rushing water.",
+      "tags": [
+        "fast_streams"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by cool or cold, clear streams.",
+      "tags": [
+        "cold_streams"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

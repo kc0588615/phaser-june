@@ -78,9 +78,6 @@
     {
       "category": "habitat",
       "text": "It lives in mountain forests where snow can cover the ground for up to six months.",
-      "tags": [
-        "snowy_winters"
-      ],
       "source": "iucn"
     },
     {
@@ -221,6 +218,30 @@
       "text": "It climbs well or often, in trees, on rocks or both.",
       "tags": [
         "climber"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in forest with a thick undergrowth of bamboo.",
+      "tags": [
+        "bamboo_forest"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
       ],
       "source": "iucn"
     }

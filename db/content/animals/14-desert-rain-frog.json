@@ -85,9 +85,6 @@
     {
       "category": "habitat",
       "text": "It lives only on white sand dunes within about 10 km of the ocean.",
-      "tags": [
-        "sand_dunes"
-      ],
       "source": "iucn"
     },
     {
@@ -188,6 +185,14 @@
         "squeaker"
       ],
       "source": "news"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
+      "tags": [
+        "sand_dunes"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

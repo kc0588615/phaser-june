@@ -286,6 +286,22 @@
         "territorial"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in brackish water, part salty and part fresh, as in estuaries, coastal lagoons or mangroves.",
+      "tags": [
+        "brackish_water"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in dry, thorny forest or brush.",
+      "tags": [
+        "spiny_forest"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

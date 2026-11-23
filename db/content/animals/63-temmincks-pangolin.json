@@ -115,10 +115,6 @@
     {
       "category": "habitat",
       "text": "It can dig its own burrow, but it prefers old ones left by warthogs or aardvarks.",
-      "tags": [
-        "burrower",
-        "borrowed_burrows"
-      ],
       "source": "wikipedia"
     },
     {
@@ -245,6 +241,31 @@
         "scent_marks"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
+      "tags": [
+        "sand_dunes"
+      ],
+      "source": "literature",
+      "url": "https://wiredspace.wits.ac.za/bitstreams/03c99524-dfd0-4d39-ba5f-618ecfd118d1/download"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "habitat",
+      "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "wikipedia"
     }
   ],
   "facts": [

@@ -103,9 +103,6 @@
     {
       "category": "habitat",
       "text": "It lives in steep mountain meadows above the forest.",
-      "tags": [
-        "mountain_meadows"
-      ],
       "source": "iucn"
     },
     {
@@ -252,6 +249,31 @@
         "burrower"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in the open zone high on mountains above the tree line, where it is too cold for trees to grow.",
+      "tags": [
+        "above_tree_line"
+      ],
+      "source": "government",
+      "url": "https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/recovery-strategies/vancouver-island-marmot-2020.html"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in grassy meadows high on mountainsides.",
+      "tags": [
+        "mountain_meadows"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

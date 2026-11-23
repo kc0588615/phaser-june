@@ -76,9 +76,6 @@
     {
       "category": "habitat",
       "text": "It lives in shallow marshes, ponds and bogs full of water plants.",
-      "tags": [
-        "shallow_wetlands"
-      ],
       "source": "adw"
     },
     {
@@ -211,6 +208,49 @@
       "text": "It often rests in the sun to warm its body.",
       "tags": [
         "basker"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%201%20No%203%20%281995%29/Butler_and_Graham_1995.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
+      ],
+      "source": "government",
+      "url": "https://semspub.epa.gov/work/03/130484.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "government",
+      "url": "https://pubs.usgs.gov/of/2021/1104/d/ofr20211104d.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
       ],
       "source": "adw"
     }

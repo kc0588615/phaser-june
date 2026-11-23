@@ -231,6 +231,31 @@
         "stands_on_hind_legs"
       ],
       "source": "smithsonian"
+    },
+    {
+      "category": "habitat",
+      "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in dry, thorny forest or brush.",
+      "tags": [
+        "spiny_forest"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/50/956/1/4968042"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

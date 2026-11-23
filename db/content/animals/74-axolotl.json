@@ -242,6 +242,32 @@
         "regrows_body_parts"
       ],
       "source": "wikipedia"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/axolotl"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/axolotl"
     }
   ],
   "facts": [

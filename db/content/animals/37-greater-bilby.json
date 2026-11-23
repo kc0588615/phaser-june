@@ -247,6 +247,23 @@
         "burrower"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "literature",
+      "url": "https://digital.library.adelaide.edu.au/server/api/core/bitstreams/ea3f6caa-93f1-4aec-97b2-6b38038d365b/content"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
+      "tags": [
+        "sand_dunes"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

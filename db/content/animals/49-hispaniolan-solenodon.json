@@ -202,6 +202,14 @@
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Hispaniolan_solenodon"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly among the fallen leaves (leaf litter) on a forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

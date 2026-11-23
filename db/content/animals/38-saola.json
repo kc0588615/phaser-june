@@ -202,6 +202,15 @@
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Saola"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in forest with a thick undergrowth of bamboo.",
+      "tags": [
+        "bamboo_forest"
+      ],
+      "source": "literature",
+      "url": "https://doi.org/10.1017/S0030605300020974"
     }
   ],
   "facts": [

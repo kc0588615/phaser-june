@@ -254,6 +254,15 @@
         "senses_vibrations"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6040693/"
     }
   ],
   "facts": [

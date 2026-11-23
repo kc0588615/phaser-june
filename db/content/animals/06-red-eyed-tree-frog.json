@@ -231,6 +231,14 @@
         "territorial"
       ],
       "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [

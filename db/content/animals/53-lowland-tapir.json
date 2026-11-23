@@ -297,6 +297,31 @@
         "swimmer"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in forest with a thick undergrowth of bamboo.",
+      "tags": [
+        "bamboo_forest"
+      ],
+      "source": "literature",
+      "url": "https://www.vigilife.org/wp-content/uploads/mena-et-al-2021-ecolappl.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

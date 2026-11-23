@@ -230,6 +230,15 @@
         "territorial"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Black-footed_ferret"
     }
   ],
   "facts": [

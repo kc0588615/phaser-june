@@ -100,9 +100,6 @@
     {
       "category": "habitat",
       "text": "It likes open rivers and lakes with sandy or muddy bottoms.",
-      "tags": [
-        "sandy_bottoms"
-      ],
       "source": "adw"
     },
     {
@@ -238,6 +235,56 @@
       "text": "It rests or sleeps through the winter, inactive for weeks or months.",
       "tags": [
         "winter_rest"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in large rivers, not only in small streams or ponds.",
+      "tags": [
+        "big_rivers"
+      ],
+      "source": "government",
+      "url": "https://mdc.mo.gov/discover-nature/field-guide/northern-spiny-softshell"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in brackish water, part salty and part fresh, as in estuaries, coastal lagoons or mangroves.",
+      "tags": [
+        "brackish_water"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "government",
+      "url": "https://www.lccmr.mn.gov/projects/2015/finals/2015_03m.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
       ],
       "source": "adw"
     }

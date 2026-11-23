@@ -262,6 +262,15 @@
         "stands_on_hind_legs"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
+      "tags": [
+        "sand_dunes"
+      ],
+      "source": "literature",
+      "url": "https://doi.org/10.3389/fphys.2020.00637"
     }
   ],
   "facts": [

@@ -263,6 +263,23 @@
         "walks_on_knuckles"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "literature",
+      "url": "https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0180431"
     }
   ],
   "facts": [

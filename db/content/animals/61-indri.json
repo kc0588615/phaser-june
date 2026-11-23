@@ -265,6 +265,15 @@
         "territorial"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "literature",
+      "url": "https://yoderlab.org/cms/wp-content/uploads/2014/05/2011JungeBarrettYoder.pdf"
     }
   ],
   "facts": [

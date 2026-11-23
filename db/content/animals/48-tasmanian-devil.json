@@ -100,9 +100,6 @@
     {
       "category": "behavior",
       "text": "It sleeps in dens: hollow logs, caves or old wombat burrows.",
-      "tags": [
-        "borrowed_burrows"
-      ],
       "source": "iucn"
     },
     {
@@ -282,6 +279,30 @@
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

@@ -283,6 +283,15 @@
         "shares_food"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in dry, thorny forest or brush.",
+      "tags": [
+        "spiny_forest"
+      ],
+      "source": "ngo",
+      "url": "https://ewt.org/project/african-wild-dog/"
     }
   ],
   "facts": [

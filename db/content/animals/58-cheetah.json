@@ -294,6 +294,15 @@
         "fast_runner"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "ngo",
+      "url": "https://www.catsg.org/living-species-cheetah"
     }
   ],
   "facts": [

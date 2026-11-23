@@ -99,9 +99,6 @@
     {
       "category": "habitat",
       "text": "It lives near the coast, even in drainage ditches and gardens in town.",
-      "tags": [
-        "town_dweller"
-      ],
       "source": "iucn"
     },
     {
@@ -146,6 +143,22 @@
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Tomato_frog"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

@@ -76,9 +76,6 @@
     {
       "category": "habitat",
       "text": "It lives by hilly forest streams, in flooded forest and in lowland swamps.",
-      "tags": [
-        "forest_streams"
-      ],
       "source": "iucn"
     },
     {
@@ -187,6 +184,23 @@
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Spiny_turtle"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by cool or cold, clear streams.",
+      "tags": [
+        "cold_streams"
+      ],
+      "source": "literature",
+      "url": "https://turtles.linnaeus.naturalis.nl/linnaeus_ng/app/views/species/taxon.php?id=8070"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

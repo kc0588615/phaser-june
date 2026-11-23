@@ -297,6 +297,33 @@
         "pushes_over_trees"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in forest with a thick undergrowth of bamboo.",
+      "tags": [
+        "bamboo_forest"
+      ],
+      "source": "ngo",
+      "url": "https://www.savetheelephants.org/wp-content/uploads/2023/01/2008StatusofKenyasElephants.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "ngo",
+      "url": "https://www.savetheelephants.org/wp-content/uploads/2023/01/2008StatusofKenyasElephants.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in dry, thorny forest or brush.",
+      "tags": [
+        "spiny_forest"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/african_elephant/distribution"
     }
   ],
   "facts": [

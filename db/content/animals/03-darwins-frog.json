@@ -99,9 +99,6 @@
     {
       "category": "habitat",
       "text": "It lives in the fallen leaves of southern beech forests.",
-      "tags": [
-        "leaf_litter"
-      ],
       "source": "iucn"
     },
     {
@@ -215,6 +212,14 @@
       ],
       "source": "literature",
       "url": "https://doi.org/10.1186/s12983-015-0132-y"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly among the fallen leaves (leaf litter) on a forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

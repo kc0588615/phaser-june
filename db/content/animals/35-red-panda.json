@@ -325,6 +325,24 @@
       ],
       "source": "sdzwa",
       "url": "https://animals.sandiegozoo.org/animals/red-panda"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/redpanda/behavior"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Red_panda"
     }
   ],
   "facts": [

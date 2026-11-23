@@ -117,9 +117,6 @@
     {
       "category": "habitat",
       "text": "It lives in the Andes, from cloud forest up to the high grassland called páramo.",
-      "tags": [
-        "high_mountains"
-      ],
       "source": "wikipedia"
     },
     {
@@ -255,6 +252,31 @@
         "sleeping_nests"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in the open zone high on mountains above the tree line, where it is too cold for trees to grow.",
+      "tags": [
+        "above_tree_line"
+      ],
+      "source": "ngo",
+      "url": "https://www.globalbearconservation.org/Species/species_cls/6"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in grassy meadows high on mountainsides.",
+      "tags": [
+        "mountain_meadows"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "wikipedia"
     }
   ],
   "facts": [

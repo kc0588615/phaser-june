@@ -82,9 +82,6 @@
     {
       "category": "habitat",
       "text": "It lives in the deep parts of big rivers, in backwaters and in lakes.",
-      "tags": [
-        "big_rivers"
-      ],
       "source": "iucn"
     },
     {
@@ -208,6 +205,32 @@
       "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
       "tags": [
         "buries_itself"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
+      ],
+      "source": "literature",
+      "url": "https://www.thebhs.org/publications/the-herpetological-bulletin/issue-number-173-autumn-2025/4409-04-a-survey-of-turtles-along-the-da-river-in-vietnam-with-insights-into-the-critically-endangered-i-rafetus-swinhoei-i/file"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "literature",
+      "url": "https://www.turtle-sanctuary.org/wp-content/uploads/2019/11/RAFETUS_HUNTERS.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in large rivers, not only in small streams or ponds.",
+      "tags": [
+        "big_rivers"
       ],
       "source": "iucn"
     }

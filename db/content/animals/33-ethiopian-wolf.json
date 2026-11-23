@@ -107,9 +107,6 @@
     {
       "category": "habitat",
       "text": "It lives only on high mountain plateaus, above where trees can grow.",
-      "tags": [
-        "above_tree_line"
-      ],
       "source": "iucn"
     },
     {
@@ -264,6 +261,22 @@
         "territorial"
       ],
       "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in grassy meadows high on mountainsides.",
+      "tags": [
+        "mountain_meadows"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in the open zone high on mountains above the tree line, where it is too cold for trees to grow.",
+      "tags": [
+        "above_tree_line"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [
