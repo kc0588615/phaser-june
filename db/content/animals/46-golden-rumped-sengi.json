@@ -107,8 +107,7 @@
       "category": "diet",
       "text": "It hunts through thick fallen leaves on the forest floor.",
       "tags": [
-        "leaf_litter",
-        "forest_floor"
+        "leaf_litter"
       ],
       "source": "iucn"
     },

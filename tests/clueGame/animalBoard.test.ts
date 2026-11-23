@@ -8,16 +8,18 @@
 //  7. A finished round changes after more phases (a second heart, a find after an escape).
 //  8. Out of moves, a right name saves the round.
 //  9. An order answers before it's full, or answers wrongly.
+// Plan 2026-11-23-sign-audit §1.4-1.5 (A7-A9), further down: one fit predicate, and how animals leave the board.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ANIMAL_RULES, applyPhase, dealClues, endOfMove, fullTable, mark, nameIt, newAnimalRound, newTrail, pickSuspectSet, questionGroups,
-  roundStillFits, scoreRound, starsFor, stillPossible, tellsApart, tileCells, trailAfter, trailFinished, witnessNotes,
-  type AnimalRound, type Clue,
+  ANIMAL_RULES, animalFitsNote, applyPhase, dealClues, endOfMove, fullTable, mark, nameIt, newAnimalRound, newTrail, pickSuspectSet,
+  questionGroups, roundStillFits, scoreRound, starsFor, stillPossible, tellsApart, tileCells, trailAfter, trailFinished, travelOf,
+  witnessNotes, type AnimalRound, type Clue,
 } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import { PREFIX_CATEGORY, makeBook, poolFor, type Animal, type Book } from '@/clueGame/questionMatch';
 import { animalsFromProfiles } from '@/clueGame/questionMatchContent';
+import { SIGNS, type SignEntry } from '@/clueGame/signs';
 import type { ContinentKey } from '@/clueGame/regions';
 import { hash32, mulberry32 } from '@/lib/seededRng';
 import { profiles, sources } from './contentPool';
@@ -82,7 +84,7 @@ test('witness notes fit 2 to 4 suspects, counted from their tags', () => {
   const claws = notes.find(note => note.tags?.includes('digging_claws'));
   assert.equal(claws?.fits, 2); // the Aardvark and the Giant Pangolin
   for (const note of notes) {
-    const fits = africa.filter(suspect => note.tags!.every(tag => book.byId.get(suspect)!.tags?.includes(tag))).length;
+    const fits = africa.filter(suspect => animalFitsNote(book.byId.get(suspect)!, note)).length;
     assert.equal(note.fits, fits);
     assert.ok(fits >= 2 && fits <= 4);
   }
@@ -345,4 +347,105 @@ test('055-1: a saved round with a suspect the book lacks doesn\'t fit, and doesn
     assert.equal(roundStillFits(without(gone), round), false, `missing ${gone}`);
     assert.equal(roundStillFits(without(gone), { ...round, orders: [] }), false, `missing ${gone}, no orders`);
   }
+});
+
+// ---- Plan 2026-11-23-sign-audit: a narrower sign states its broader one (§1.4), and travel reads raw tags (§1.5).
+// Written down first, the ways they could break:
+//  A7 animalFitsNote: a narrower holder doesn't fit a broader note; a broader holder fits a narrower note; a note with
+//     several tags fits when only one is held; a transitive narrower sign (narrow -> mid -> broad) doesn't fit a broad
+//     note; trait tags get a closure, or don't match raw; a suspect with no tags throws.
+//  A8 witnessNotes / stillPossible (a small book around one wired edge read from SIGNS): a note tagged with the broader
+//     sign doesn't count the narrower holder; stillPossible rules the narrower holder out, or keeps a suspect holding
+//     neither; on real content, witnessNotes' fits differ from animalFitsNote.
+//  A9 travelOf: a land-only swimmer swims; a swimmer in fresh or salt water walks; fully_aquatic without a system tag
+//     walks; a glider or a bat doesn't fly; a burrower doesn't dig; the order changes (fly, then swim, then dig); a
+//     sign implied through an edge changes travel. S1/S2 split none of the four travel signs, so no successor tag exists.
+
+const TRAVEL_SIGNS = ['glider', 'fully_aquatic', 'swimmer', 'burrower'];
+const openImplies = (entry: SignEntry): string[] => (entry.retired ? [] : (entry.implies ?? []).filter(target => !target.includes(':')));
+/** A wired open-tag edge from SIGNS: [narrower, broader]. */
+const wired = (): [string, string] => {
+  const edge = Object.entries(SIGNS).flatMap(([tag, entry]) => openImplies(entry).map(broader => [tag, broader] as [string, string]))[0];
+  assert.ok(edge, 'SIGNS wires at least one open-tag edge');
+  return edge;
+};
+const TABLE: Record<string, SignEntry> = {
+  broad: { category: 'body', meaning: 'Broad.' },
+  mid: { category: 'body', meaning: 'Mid.', implies: ['broad'] },
+  narrow: { category: 'body', meaning: 'Narrow.', implies: ['mid'] },
+};
+
+test('A7: a narrower sign fits a note of its broader one, never the reverse', () => {
+  const [narrower, broader] = wired();
+  assert.equal(animalFitsNote({ tags: ['size:large', narrower] }, { tags: [broader] }), true);
+  assert.equal(animalFitsNote({ tags: ['size:large', broader] }, { tags: [narrower] }), false);
+  assert.equal(animalFitsNote({ tags: ['narrow'] }, { tags: ['broad'] }, TABLE), true); // narrow -> mid -> broad
+  assert.equal(animalFitsNote({ tags: ['broad'] }, { tags: ['narrow'] }, TABLE), false);
+});
+
+test('A7: a note with several tags fits only a suspect holding every one', () => {
+  const [narrower, broader] = wired();
+  assert.equal(animalFitsNote({ tags: [narrower, 'size:large'] }, { tags: [broader, 'size:large'] }), true);
+  assert.equal(animalFitsNote({ tags: [narrower, 'size:large'] }, { tags: [broader, 'size:huge'] }), false);
+  assert.equal(animalFitsNote({ tags: ['size:large'] }, { tags: [broader, 'size:large'] }), false);
+});
+
+test('A7: trait tags match as written, with no closure; no tags fit only an untagged note', () => {
+  assert.equal(animalFitsNote({ tags: ['trees:yes'] }, { tags: ['trees:yes'] }), true);
+  assert.ok((SIGNS.seldom_on_ground.retired ? [] : SIGNS.seldom_on_ground.implies ?? []).includes('trees:yes'));
+  assert.equal(animalFitsNote({ tags: ['seldom_on_ground'] }, { tags: ['trees:yes'] }), false);
+  assert.equal(animalFitsNote({ tags: undefined }, { tags: ['burrower'] }), false);
+  assert.equal(animalFitsNote({ tags: undefined }, { tags: [] }), true);
+  assert.equal(animalFitsNote({ tags: ['burrower'] }, { tags: undefined }), true);
+});
+
+test('A8: a broader note counts the narrower holder as a fit, and keeps it possible', () => {
+  const [narrower, broader] = wired();
+  const note = { text: 'Says the broader thing.', source: { name: 'Test', url: null }, tags: [broader] };
+  const held: Record<number, string[]> = { 1: [broader], 2: [narrower], 3: [broader], 4: [], 5: [] };
+  const fixture = makeBook(asiaAnimals().map(animal => ({ ...animal, notes: [note], tags: [...animal.tags!, ...held[animal.id]] })));
+  assert.deepEqual(witnessNotes(fixture, asia.set, 1).map(witness => witness.fits), [3]);
+  const state = { ...newAnimalRound(fixture, ANIMAL_RULES, { suspects: asia.set, mysteryId: 1, place: 'asia' }), notes: [{ ...note, fits: 3 }] };
+  assert.deepEqual(stillPossible(fixture, state), [1, 2, 3]);
+});
+
+test('A8: on real content, every witness note\'s count is the suspects animalFitsNote fits', () => {
+  for (const place of PLACES) for (const set of sets(place)) for (const mysteryId of set) {
+    for (const note of witnessNotes(book, set, mysteryId)) {
+      const fits = set.filter(suspect => animalFitsNote(book.byId.get(suspect)!, note));
+      assert.equal(note.fits, fits.length);
+      assert.ok(fits.includes(mysteryId));
+    }
+  }
+});
+
+const traveler = (tags: string[], order = 'Carnivora') => ({
+  tags, familyTree: { class: rank('Mammalia'), order: rank(order), family: rank('F'), genus: 'G', species: 's' },
+});
+
+test('A9: a swimmer swims only from fresh or salt water; fully_aquatic always swims', () => {
+  assert.equal(travelOf(traveler(['swimmer', 'system:terrestrial'])), 'walk');
+  assert.equal(travelOf(traveler(['swimmer'])), 'walk');
+  assert.equal(travelOf(traveler(['swimmer', 'system:terrestrial', 'system:freshwater'])), 'swim');
+  assert.equal(travelOf(traveler(['swimmer', 'system:marine'])), 'swim');
+  assert.equal(travelOf(traveler(['fully_aquatic'])), 'swim');
+  assert.equal(travelOf(traveler(['system:freshwater'])), 'walk');
+});
+
+test('A9: gliders and bats fly, burrowers dig; fly before swim before dig', () => {
+  assert.equal(travelOf(traveler(['glider'])), 'fly');
+  assert.equal(travelOf(traveler([], 'Chiroptera')), 'fly');
+  assert.equal(travelOf(traveler(['burrower'])), 'dig');
+  assert.equal(travelOf(traveler(['burrower', 'fully_aquatic', 'glider'])), 'fly');
+  assert.equal(travelOf(traveler(['swimmer', 'system:freshwater'], 'Chiroptera')), 'fly');
+  assert.equal(travelOf(traveler(['burrower', 'swimmer', 'system:marine'])), 'swim');
+  assert.equal(travelOf(traveler(['burrower', 'swimmer', 'system:terrestrial'])), 'dig');
+  assert.equal(travelOf(traveler([])), 'walk');
+});
+
+test('A9: no wired edge reaches a travel sign, and each travel sign is still active', () => {
+  for (const [tag, entry] of Object.entries(SIGNS)) {
+    for (const broader of openImplies(entry)) assert.ok(!TRAVEL_SIGNS.includes(broader), `${tag} -> ${broader}`);
+  }
+  for (const tag of TRAVEL_SIGNS) assert.ok(SIGNS[tag] && !SIGNS[tag].retired, tag);
 });
