@@ -227,6 +227,15 @@
         "leaf_litter"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
     }
   ],
   "facts": [

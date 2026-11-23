@@ -210,6 +210,15 @@
       ],
       "source": "literature",
       "url": "https://turtles.linnaeus.naturalis.nl/linnaeus_ng/app/views/species/taxon.php?id=8070"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "government",
+      "url": "https://www.nparks.gov.sg/florafaunaweb/fauna/0/6/06"
     }
   ],
   "facts": [

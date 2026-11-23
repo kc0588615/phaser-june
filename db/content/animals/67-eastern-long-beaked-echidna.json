@@ -250,6 +250,14 @@
         "one_island"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

@@ -228,6 +228,15 @@
         "eggs_on_land"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "ngo",
+      "url": "https://www.ranitadedarwin.org/_files/ugd/9a1a89_eaefebf8e2de46e388e3daa5dfc7c8bc.pdf"
     }
   ],
   "facts": [

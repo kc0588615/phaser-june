@@ -88,9 +88,6 @@
     {
       "category": "behavior",
       "text": "It hides in narrow cracks between and under slabs of rock.",
-      "tags": [
-        "crevice_hider"
-      ],
       "source": "iucn"
     },
     {
@@ -212,6 +209,14 @@
       ],
       "source": "tftsg",
       "url": "https://iucn-tftsg.org/wp-content/uploads/file/Accounts/crm_5_107_tornieri_v1_2018.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides in narrow cracks and gaps between or under rocks.",
+      "tags": [
+        "crevice_hider"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

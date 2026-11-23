@@ -163,11 +163,12 @@
     },
     {
       "category": "behavior",
-      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "text": "It climbs well or often, in trees, on rocks or both.",
       "tags": [
-        "forest_floor"
+        "climber"
       ],
-      "source": "adw"
+      "source": "literature",
+      "url": "https://doi.org/10.1007/s10682-019-09994-z"
     },
     {
       "category": "behavior",

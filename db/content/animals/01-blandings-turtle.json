@@ -146,20 +146,13 @@
       "source": "adw"
     },
     {
-      "category": "morphology",
-      "text": "Its legs are yellow.",
-      "tags": [
-        "yellow_legs"
-      ],
-      "source": "adw"
-    },
-    {
       "category": "behavior",
-      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "text": "It digs into the ground on land, making burrows, tunnels or dens, or (at least when young) digging itself down into soil or sand.",
       "tags": [
         "burrower"
       ],
-      "source": "adw"
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%201%20No%203%20%281995%29/Butler_and_Graham_1995.pdf"
     },
     {
       "category": "behavior",

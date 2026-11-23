@@ -248,6 +248,14 @@
         "leaf_litter"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

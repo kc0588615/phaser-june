@@ -285,6 +285,15 @@
         "cold_streams"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides in narrow cracks and gaps between or under rocks.",
+      "tags": [
+        "crevice_hider"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/behavior"
     }
   ],
   "facts": [

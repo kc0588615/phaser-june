@@ -449,3 +449,27 @@ test('A9: no wired edge reaches a travel sign, and each travel sign is still act
   }
   for (const tag of TRAVEL_SIGNS) assert.ok(SIGNS[tag] && !SIGNS[tag].retired, tag);
 });
+
+// ---- Plan 2026-11-23-sign-audit S25b (Astra SC1): the five deals the final review found, pinned on real content.
+// Ways they could break: a sign's holder loses or never gets its tag (9 climber, 7 town_dweller, 4 and 49
+// crevice_hider), a wrong holder keeps it (1 yellow_legs), or witnessNotes counts fits differently from animalFitsNote.
+const PINNED: Array<{ place: ContinentKey | null; set: number[]; mystery: number; sign: string; fits: number[] }> = [
+  { place: null, set: [5, 6, 8, 9, 13], mystery: 5, sign: 'climber', fits: [5, 6, 9] },
+  { place: 'africa', set: [7, 11, 13, 14, 41], mystery: 13, sign: 'town_dweller', fits: [7, 13, 41] },
+  { place: null, set: [1, 2, 4, 12, 15], mystery: 15, sign: 'crevice_hider', fits: [4, 15] },
+  { place: null, set: [37, 42, 45, 49, 61], mystery: 42, sign: 'crevice_hider', fits: [42, 49] },
+  { place: null, set: [1, 2, 17, 18, 20], mystery: 20, sign: 'yellow_legs', fits: [20] },
+];
+
+for (const { place, set, mystery, sign, fits } of PINNED) {
+  const label = `${place ?? 'world'} ${set} mystery ${mystery} ${sign}`;
+  test(`S25b: ${label} fits exactly ${fits}`, () => {
+    for (const suspect of set) assert.ok(book.byId.has(suspect) && (place === null || book.byId.get(suspect)!.continents.includes(place)), `${label}: ${suspect}`);
+    const note = book.byId.get(mystery)!.notes.find(candidate => candidate.tags?.length === 1 && candidate.tags[0] === sign);
+    assert.ok(note, `${label}: the mystery has a ${sign} note`);
+    assert.deepEqual(set.filter(suspect => animalFitsNote(book.byId.get(suspect)!, note)), fits, label);
+    const dealt = witnessNotes(book, set, mystery).filter(witness => witness.tags?.includes(sign));
+    if (fits.length >= 2) assert.deepEqual(dealt.map(witness => witness.fits), [fits.length], label);
+    else assert.deepEqual(dealt, [], label);
+  });
+}

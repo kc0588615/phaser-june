@@ -222,6 +222,14 @@
         "cold_streams"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides in narrow cracks and gaps between or under rocks.",
+      "tags": [
+        "crevice_hider"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [

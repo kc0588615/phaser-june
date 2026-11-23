@@ -215,6 +215,23 @@
         "one_island"
       ],
       "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "government",
+      "url": "https://pdf.usaid.gov/pdf_docs/Pnadr534.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides in narrow cracks and gaps between or under rocks.",
+      "tags": [
+        "crevice_hider"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [
