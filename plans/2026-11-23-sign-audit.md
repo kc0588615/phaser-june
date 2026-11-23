@@ -97,7 +97,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -615,7 +615,281 @@ SHOULD-CONSIDER:
 
 ## Steps
 
+Conventions for every step:
+- **Who does what.** Opus (`claude-task`, run from the worktree root) writes code, tests, scripts and profile edits, fetches sources and runs cross-checks. Astra (`ASTRA_EFFORT=high astra-review --task <prompt> /srv/critter-ai/worktrees/sign-audit/plans/2026-11-23-sign-audit.md`, run from the state folder) runs the audit batches. The lead writes briefs, prompts, the plan and the handoff file, runs every check named here, and accepts or rejects.
+- **Ruling files** (`definitions.csv` sign-offs, `triage.csv`, `wording.csv`, `rulings.csv`, `ledger-pre.csv`): Opus drafts each one with its evidence and a `proposed` column. The lead rules in a brief `prompts/S<n>-rulings.md` ("accept all proposed except: …"), and Opus copies the rulings in word for word in a short follow-up job. The lead then spot-checks them with `diff`. Each significant ruling also gets one line under **Decisions**.
+- **Folders.** `$SA` = `/srv/critter-ai/agent-state/missions/sign-audit`. Scripts live in `$SA/scripts/`, metrics in `$SA/metrics/`, and Python runs with `python3 -I`. Scratch code trees go in `/tmp/sa-trees/<sha>/` (`git archive`) and are deleted after use, because the disk is tight.
+- **Checks.** The offline checks are `npm run typecheck && npm run lint && npm test && npm run content -- preview`. `phaser_june_dev` is never rebuilt before the final Verification (§2.10).
+- **Commit messages** for profile edits start with `sign-audit S<n> <category>:`. `ledger.py` uses them to fill the `commit` column.
+
+- [ ] S1. **Definitions draft, plus rulings on the hard signs.**
+  - Opus writes `scripts/holders.py`. It reads `git show 7bce511a:db/content/animals/*.json` and `src/clueGame/signs.ts` and writes `defs/holders.md`: for each of the 201 active signs, its category, current `implies`/`denies`, glossary text, and every holder's note text with its clue index.
+  - Opus drafts `definitions.csv` (§2.1 columns, all 201 active signs). Each row gets a proposed `meaning`, a `change`, and proposed `implies`/`denies`. Every candidate open edge from F7 goes in `open_edges` (status `proposed`), and the F7 mutual-exclusion candidates go in as proposed open-tag `denies`. Opus marks each multi-sense sign (F6) with the holders that use it differently.
+  - The lead rules: F1–F4 (`climber`, `never_climbs`, `swimmer`, `above_tree_line`, `sand_dunes`); `snorkel_nose`, `shares_food`, `often_in_trees`, `carries_young_on_back` (with `father_carries_young`), and `never_climbs`' trees-only vs any-climbing meaning (and with it whether `denies: ['climber']` is wired); and every F6 split or redefinition (`burrower`, `stands_on_hind_legs`, `forest_floor`, `one_island`, `town_dweller`/`prairie_dog_towns`). The lead records whether any split or retirement touches `glider`, `fully_aquatic`, `swimmer` or `burrower`, because that changes `travelOf` in S5.
+  - Verify: `python3 -I -c` count shows 201 data rows and none with an empty `meaning`; each ruled row has `edge_sign_off = lead, <date>`.
+- [ ] S2. **Remaining definitions and entailment sign-offs (gate a).**
+  - The lead rules every remaining `meaning`, mostly bulk-accepting Opus's proposals.
+  - The lead signs off gate (a) for every candidate open edge (`proposed` becomes `entailed` or `rejected`), and for every open-tag `denies`.
+  - Opus writes the rulings in and lists each split's successor tags (new active entries) and each retired tag.
+  - Verify: no `proposed` remains; every active sign has a sign-off; every `implies`/`denies` target is an active sign in the CSV or a prefix in `EXCLUSIVE_PREFIXES`/`COMPLETE_PREFIXES`. Decisions: Goal 2's rule (narrower `implies` broader once both gates pass; one sign per fact per note; one badge).
+- [ ] S3. **Witness harness and Snapshot 1.**
+  - Opus writes `scripts/run-ts.sh --code <tree> <entry.ts> [args]`. It works like `cc-clue-design/scripts/run-ts.sh`, but writes a tsconfig per tree that maps `@/*` to `<tree>/src/*`, and resolves bare imports via `NODE_PATH=<worktree>/node_modules`.
+  - Opus writes `metrics/witness.ts --content <animals dir> --out <json> [--edges <definitions.csv>]`. It loads profiles with the tree's `animalsFromProfiles`. It enumerates the dealable sets as `balance-044.ts` does, with the tree's own `pickSuspectSet`, `dealClues` and `witnessNotes`, and records for every (set, mystery, note) the fitting suspect ids, whether the note is eligible, the summary counts, and both SHAs. Fits come from the tree's `animalFitsNote` if it exists (namespace import), otherwise from the literal check.
+  - **Self-check (exits 1 on failure):** for every note, the harness's own fit count equals `witnessNotes`' `fits`, and its eligible set equals what `witnessNotes` returns.
+  - Opus writes `metrics/diff.py <before.json> <after.json> --out <dir> [--wording wording.csv]` (self-test B3 written first). It writes `changed.csv`, `sets.csv` (sets added or gone), `lost.csv` and `newly_matched.csv` (§2.8 columns). With `--wording`, it exits 2 if any newly matched `(mystery, clue_index, suspect)` has no ruling or a `false`.
+  - Lead runs Snapshot 1: `git archive 7bce511a` into `/tmp/sa-trees/7bce511a`, then `bash scripts/run-ts.sh --code /tmp/sa-trees/7bce511a metrics/witness.ts --content /tmp/sa-trees/7bce511a/db/content/animals --out metrics/s1.json`.
+  - Verify: B3 self-test passes; 105 sets (world 49, africa 23, asia 15, north-america 9, south-america 9), 525 combos, 402 with ≥1 eligible note, 940 eligible notes, 2,091 dropped as mystery-only, 22 dropped as fits-all-5; the self-check passes. Record the counts in the Log.
+- [ ] S4. **Candidate Snapshot 2 and wording gate (b).**
+  - `--edges definitions.csv` adds every `entailed` open edge as a closure on top of the old fit check. Its eligibility rule is the dealer's (mystery fits, 2 ≤ fits ≤ 4). The self-check with an empty edge list must match `s1.json` exactly.
+  - Lead runs `… --code /tmp/sa-trees/7bce511a … --edges definitions.csv --out metrics/s2-candidate.json`, then `python3 -I metrics/diff.py metrics/s1.json metrics/s2-candidate.json --out metrics/s2-candidate/`.
+  - Opus drafts `wording.csv` (`mystery, clue_index, suspect, note_text, note_tags, via, proposed (true|false), why, ruling, snapshot`), one row per distinct `(mystery, clue_index, suspect)`.
+  - The lead rules every row. Each edge with a `false` row becomes `deferred-to-witness-signs`, with its blocking notes in `edge_blockers`. Every other entailed edge becomes `wired`. Each edge's status is recorded in `open_edges`.
+  - Verify: `diff.py … --wording wording.csv`, run with only the wired edges (`--edges` filtered to `wired`), exits 0. Decisions: the wired and deferred lists (expected deferrals: `backward_pouch→pouch`, `spiral_horns`/`s_shaped_horns→horns`, `shoulder_stripe→stripes`, `spectacles→face_markings`, `carries_young_on_back→mother_carries_young`).
+- [ ] S5. **Rules code, tests first** (`src/clueGame/signs.ts`, `src/clueGame/animalBoard.ts`, new `tests/clueGame/signs.test.ts`, `tests/clueGame/animalBoard.test.ts`, forced content fixes in `db/content/animals/*.json`).
+  - Opus first writes the tests for Failure modes A1–A10 (below) and runs `npm test` to show them failing, keeping the red output in its reply. Then it implements:
+    - the `SignEntry` union without `restates`, plus `at`/`retired` (§1.1), with `meaning` and rules copied word for word from `definitions.csv` (wired edges only), and the 15 retired tags as `retired(…)`
+    - unused imports dropped
+    - `signTableProblems` plus the load-time throw; `entryOf`; `IMPLIED` (with pure `buildImplied(table)` or optional `table` param defaulting to `SIGNS` where fixture-table tests need transitive/diamond/retired/denies cases); `heldSigns`; `signsOf` dedupe; `signProblems` steps 1–4 (§1.2–1.3)
+    - `animalFitsNote`, used in `witnessNotes` and `stillPossible`, with `witnessNotes`' doc comment updated (§1.4)
+    - `travelOf` on raw tags with the water-system guard, and old-or-successor tags for any split of the four travel signs (§1.5)
+    - the test oracle at `animalBoard.test.ts:84` switched to `animalFitsNote`
+    - the forced content fixes: drop `high_mountains` from 33's note and/or `scent_marks` from 66's note only if those edges are wired; retag split or retired signs
+  - Opus writes each forced fix into `ledger-pre.csv` (`animal_id, clue_index, sign, rules_commit_change`) for `ledger.py`, and the lead verifies it against `git diff` before accepting and committing S5.
+  - Verify: the offline checks pass; `rg "tags\?\.includes\(tag\)" src scripts tests` finds nothing; `content -- preview` shows 0 problems.
+- [ ] S6. **Rules commit, part 2, and the final Snapshot 2** (`src/game/debugBridge.ts`, `scripts/e2e.mjs`, `docs/CONTENT_SOURCES.md`).
+  - Opus adds `signImplies()` to `window.__cc` (each active sign's direct open-tag `implies`, from table data).
+  - In `e2e.mjs`, after `poolData` (`:756-767`), Opus fetches `signImplies()` once, closes it with a local DFS, and at `:1223` sets `want = raw open tags − ⋃ closure(x)`.
+  - In the Signs section of `CONTENT_SOURCES.md`, Opus writes §1.9: `meaning` is the definition; Goal 2's rule; deferred edges with their blocking notes; retired tags rejected; and corrected examples at `:75-77`.
+  - The lead accepts and commits S6. This commit completes the **rules commit**: record its sha in the Log.
+  - Lead archives `<rules sha>` into `/tmp/sa-trees/<rules sha>`, runs `… --code /tmp/sa-trees/<rules sha> … --content /tmp/sa-trees/7bce511a/db/content/animals --out metrics/s2.json` and `diff.py metrics/s1.json metrics/s2.json --out metrics/s2/ --wording wording.csv`, then cleans `/tmp/sa-trees/`. Any row that is newly matched but has no ruling is ruled now. A `false` defers its edge in a fix commit, and S6 reruns.
+  - Verify: the offline checks pass; the S2 snapshot loads `7bce511a` content without `Unknown sign`; `diff.py --wording` exits 0 (**0 `false`**). Record the S2 counts in the plan.
+- [ ] S7. **Pinned export and triage.**
+  - Opus runs `git archive <rules sha>` into `$SA/game/` and writes `game.sha`.
+  - Opus drafts `triage-rules.md`: the fixed rules `class`, `body-plan`, `place` and `no-plausible-holder`, each with its test.
+  - Opus drafts `triage.csv` (`sign, rule, excluded_ids, reason`) for every active sign in `game/`, never excluding a current holder.
+  - The lead rules `triage.csv`.
+  - Verify: `game.sha` equals the rules commit; every active sign has at least one `triage.csv` row or an explicit `none`.
+- [ ] S8. **Pairs, batch plan and budget.**
+  - Opus writes `scripts/common.py`: shared loading of `game/`, `pairs.csv`, sets from `metrics/s2.json`, and the material rule.
+  - Opus writes `scripts/pairs.py` (self-test B1 written first). It writes `pairs.csv` (§2.3 columns) and `batches.csv` (`batch, category, group, animals, signs, pairs, parent, export_sha, status, minutes`). Batches are category (or slice) × `cc-clue-verify` animal group, about 300 pairs, with held pairs included.
+  - The lead estimates the sessions: sessions already used (count in `$SA/../sign-audit.events`) + Astra batches + cross-checks (≈1 per 2 batches) + S14–S24 + 4 for the tail. If the estimate is over 45, apply the §2.11 bundling rule: 2 batches or 2 cross-checks per item.
+  - The lead replaces S13's placeholder with concrete items (format below).
+  - Verify: B1 self-test passes; `pairs.py` exits 0; rows = 76 × active signs in `game/`; 0 triaged held pairs; counts by status in the Log.
+- [ ] S9. **Source index.**
+  - Opus writes `scripts/sources.py`, adapted from `cc-clue-verify/scripts/fetch.py`. It writes `sources/index.csv` (`animal_id, source_key, url, file, status`), pointing at the 259 cached files in `cc-clue-verify/sources/` and `cc-clue-design/sources/` where they are, with no copies.
+  - Opus fetches the 8 missing pages into `sources/`: 7 `literature` DOIs, marked `unavailable` if paywalled, and 1 `sdzwa` page. AmphibiaWeb goes through Wayback, 5 s apart, and IUCN is never fetched.
+  - Verify: `sources.py --check` exits 0; 267 rows; every `file` exists; counts by status in the Log.
+- [ ] S10. **Audit scripts** (Failure modes B2, B4).
+  - `scripts/prompt.py <batch>` renders `astra/<batch>.prompt.md` from `astra/template.md`, and saves the template's sha256 into `batches.csv`. The prompt holds the signs with `meaning` and rules, the pairs (held status never shown), profile paths in `game/`, the source files from `index.csv`, and the row format `animal id, sign, verdict, quote, source file or URL`.
+  - `scripts/validate.py <batch>` is a query (§2.5 checks, self-test B2 written first): exit 2 on a structural fault, exit 0 with `FLAG` lines otherwise.
+  - `scripts/sample.py --triage | --crosscheck <batch>` is seeded. It writes `crosscheck/<batch>.todo.csv` with a `reason` column (`change`, `cant-tell`, `flag`, `sample`, `spotcheck` or `escalation`).
+  - `scripts/ledger.py [--partial]` builds §2.6, reading `ledger-pre.csv`, and lists conflicts in `ledger-conflicts.csv`.
+  - `scripts/reconcile.py --repo <worktree> --from 7bce511a --to <rev|WORKTREE> [--applied <categories>]` is a query (self-test B4 written first) that exits 1 on any discrepancy.
+  - The self-tests in `scripts/selftest/` are written before each script's code.
+  - Verify: every self-test passes; `reconcile.py --to HEAD --applied none` exits 0 (only the `rules_commit_change` rows).
+- [ ] S11. **Pilot batch P01.**
+  - P01 is the first batch in `batches.csv`, about 300 pairs, and its verdicts count toward the audit. The lead runs `prompt.py P01`, then Astra, saves `astra/P01.out.md`, and runs `validate.py P01`.
+  - Size rule, unless the lead decides otherwise: ≤35 min keeps about 300–350; 35–50 min means about 250; >50 min or a timeout means halving. If the size changes, `pairs.py --rebatch` rebatches only the remaining unrun batches (preserving P01) and S13 is re-expanded.
+  - Exits: 3 means commit what's done and end with `MISSION_WAIT_ASTRA`; 4 means a handoff item for `codex login --device-auth`, then continue with work that doesn't need Astra; 5 means one halved rerun, then a handoff item.
+  - Verify: `validate.py P01` exits 0; minutes recorded in `batches.csv`; the chosen size goes under Decisions.
+- [ ] S12. **Triage spot-check T01.**
+  - `sample.py --triage` draws 100–150 same-class `no-plausible-holder` pairs (seed recorded). The lead runs them through Astra as T01 and runs `validate.py T01`.
+  - Opus cross-checks every `has it` into `crosscheck/T01.csv`.
+  - For each verified `has it`, the lead tightens that sign's triage rule, and `pairs.py` reopens its remaining triaged pairs into batches. If that happens, the budget is re-estimated and S13 re-expanded.
+  - Verify: `validate.py T01` exits 0; the reopened pair count is in the Log.
+- [ ] S13. **[Placeholder, replaced at S8] Main audit batches and cross-checks.** S8 replaces this item with concrete items in `batches.csv` order, each cross-check right after the batches it covers:
+  - **`S13.<n> Astra B<k>[+B<k+1>]`**, run by the lead.
+    - `prompt.py`, Astra, save `astra/B<k>.out.md`, then `validate.py`.
+    - Update `batches.csv` (`status`, `minutes`, `export_sha`).
+    - On a timeout or missing rows, split into `B<k>a`/`B<k>b` (`parent`) and rerun.
+    - On exit 3, `MISSION_WAIT_ASTRA`.
+  - **`S13.<n> Opus cross-check B<k>[,B<k+1>]`** (`claude-task`), into `crosscheck/<batch>.csv` (`animal_id, sign, reason, astra_verdict, opus_check, opus_evidence, opus_source`).
+    - Opus checks every add or remove, every material `can't tell` (`ledger.py --partial`), every `validate.py` flag, and the seeded 5–10 unchanged sample.
+    - If 2 or more sample rows get `disagree`, Opus cross-checks every unchanged row of that batch.
+    - Opus fetches and saves any web URL Astra cited, adding it to `index.csv`, before it can back a tag.
+    - Opus applies the removal bar (§2.7) to every proposed removal.
+  - **Re-export (insert only when needed).** If a ruling changes a sign's `meaning`, rules or split, insert `S13.<n> Re-export` before the next batch: the `signs.ts` fix commit (offline checks), then refresh `game/` and `game.sha`, run `pairs.py`, and queue the affected signs' already-run pairs for R01.
+- [ ] S14. **Fallback sources.**
+  - The lead runs `ledger.py --partial`. It lists the material pairs with `source silent` or `can't tell`, plus the pairs it reopens: implied pairs whose narrower sign is `doesn't`/`can't tell`, reopened triaged pairs, and re-export queue pairs.
+  - For each silent material pair, Opus fetches the next source in the `CONTENT_SOURCES.md` ranking into `sources/` and adds it to `index.csv`.
+  - `pairs.py --recheck` assigns R01, halved into R01a/R01b if over the pilot size.
+  - Verify: `sources.py --check` exits 0; R01's pair count by reason is in the Log.
+- [ ] S15. **Re-check batch R01** (Astra, as in S13). Verify: `validate.py R01*` exits 0.
+- [ ] S16. **Opus cross-check of R01**, into `crosscheck/R01*.csv`, under the same rules as S13. Verify: every todo row has an `opus_check`.
+- [ ] S17. **Full ledger and the first rulings.**
+  - The lead runs `ledger.py`; it writes `ledger.csv` (76 × active signs rows) and `ledger-conflicts.csv`.
+  - Opus drafts `rulings.csv` (`animal_id, sign, astra, opus, evidence, proposed, ruling, reason`) for every `disagree`, every Opus `can't tell` on a change, and every conflict.
+  - The lead rules the `body` and `habits` rows.
+  - Verify: those rows have a `ruling`.
+- [ ] S18. **Remaining rulings and the freeze.**
+  - The lead rules the `habitat`, `life` and `range` rows.
+  - The lead confirms the removal bar on every removal (each cites the holding note's own source), confirms `material` against `metrics/s2.json`'s sets, then reruns `ledger.py`.
+  - Verify: `ledger.py` exits 0 with 0 unresolved conflicts and every planned `change` filled; planned adds, new notes and removes per category are in the Log.
+- [ ] S19. **Profile edits: `body`.** Opus (`claude-task`) applies the ledger's `body` adds, new notes and removes (§2.7):
+  - the narrower sign only on a note; new notes appended at the end of `clues`, grade 6–12, with source and URL, one sign, true of every narrower holder
+  - `citations.json` and `sources.json` entries in the same commit, never deleting one; a `glossary.ts` entry for science words; log any give-away note wording met in `$SA/giveaways.md` for `witness-signs`
+  - Before the lead commits, Opus runs `witness.ts --code <worktree>` and `diff.py <previous snapshot> <this>`, and redoes each co-tagging eligibility loss as a new note. The lead pre-rules this step's newly matched rows in `wording.csv` and reviews `lost.csv`.
+  - Verify: the offline checks pass; `reconcile.py --to WORKTREE --applied body` exits 0. Commit as `sign-audit S19 body: …`.
+- [ ] S20. **Profile edits: `habits`.** Same as S19, with `--applied body,habits`.
+- [ ] S21. **Profile edits: `habitat`.** Same as S19, with `--applied body,habits,habitat`.
+- [ ] S22. **Profile edits: `life` + `range`.** Same as S19, with `--applied all`.
+- [ ] S23. **Snapshot 3 and the wording gate.**
+  - The lead archives HEAD into `/tmp/sa-trees/HEAD`, runs `witness.ts --code /tmp/sa-trees/HEAD --content /tmp/sa-trees/HEAD/db/content/animals --out metrics/s3.json` and `diff.py metrics/s1.json metrics/s3.json --out metrics/s3/ --wording wording.csv`, then cleans `/tmp/sa-trees/`.
+  - The lead rules the remaining newly matched rows and reviews every row of `metrics/s3/lost.csv`, writing a reason for each one.
+  - A `false` is fixed by retagging the note or deferring the edge in a fix commit (Opus), then S23 reruns.
+  - Verify: `diff.py --wording` exits 0 (**0 `false`**); every lost note has a reason; the S3 counts and the before/after table go in the plan.
+- [ ] S24. **Sign map, final ledger and counts.**
+  - Opus writes `scripts/sign-map-update.ts`. Run with `run-ts.sh --code <worktree>`, it recomputes `uses`/`holders`/`rule` in `docs/research/2026-11-07-moves-and-signs/sign-map.csv` from HEAD and marks the changed rows. The lead commits it.
+  - The lead reruns `ledger.py`, which fills `commit` from `git log --grep 'sign-audit S'`, then `reconcile.py --to HEAD`.
+  - Verify: `reconcile.py` exits 0. The plan records: counts by `final_verdict` × category; the witness before/after (S1 → S2 → S3); tags added and removed per animal with sources; deferred edges with blocking notes; and any give-away note wording noted in `giveaways.md`, ready for the Summary.
+
+The tail runs automatically once every item above is checked (`~/.claude/CLAUDE.md` steps 6–8 and `mission-lead.md`): final code reviews (Astra **and** Fable), then the full Verification and Summary, then the Release.
+
+**Session estimate** (rerun at S8):
+
+| Work | Sessions |
+|---|---|
+| Already used: Baseline to Steps | 6 |
+| S1–S12 | 12 |
+| S13: ~9–15 batches + 5–8 cross-checks (bundled 2 per item: ~7–12) | 14–23 (7–12) |
+| S14–S24 | 11 |
+| Tail: code reviews, Verification + Summary, Release | 4 |
+| **Total** | **47–56 (40–45 bundled)** |
+
 ## Verification
+
+E2E first. Every command runs from the worktree root unless it says `cd "$SA"`.
+
+1. **E2E against the dev copy** (final Verification and Release only; never `.env.local`):
+   ```
+   ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+     [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+     npm run content -- build && CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh )
+   ```
+   - Never print a connection string or `cat` the secrets file. If the guard exits 1, stop and add a handoff item.
+   - **Pass:** `N/N checks passed` with 0 failed, including the field-guide check `shown … != its signs` in its new form: badges equal the raw open tags in the pool minus the closure of `__cc.signImplies()`.
+   - **Scenarios it covers:** globe → continent → rounds at `/explore`; field-guide badges per suspect (no broad badge beside a wired narrower one); the board's invariants on every move.
+   - **Artifact:** `cp -r e2e-artifacts/<latest run>/. /srv/critter-ai/agent-state/missions/sign-audit/e2e-final/` (`report.json` plus screenshots). Same seed, same run. Delete older intermediate E2E folders; never `e2e-final/` or `e2e-baseline/`.
+2. **Offline checks** (after every code or content step, and in the final Verification):
+   - `npm run typecheck`, `npm run lint` and `npm test` each exit 0.
+   - `npm run content -- preview` exits 0 with 0 problems across 76 profiles.
+   - `cd "$SA" && python3 -I scripts/reconcile.py --repo /srv/critter-ai/worktrees/sign-audit --from 7bce511a --to HEAD` exits 0 with 0 discrepancies: no unexplained tag change, no ledger change missing from the profiles, no note deleted or moved.
+3. **Live database, read-only:** `npm run content -- check` with the mission's `.env.local` prints `Pool: 76 playable of 76 species, …` and `0 errors, 0 warnings`. Never `build`, `ranges` or `iucn`.
+4. **Witness snapshots** (`cd "$SA"`):
+   - S1 (`7bce511a` × `7bce511a`): 105 sets, 525 combos, 402 with ≥1 eligible note, 940 eligible notes, self-check passes.
+   - S2 (rules commit × `7bce511a`): `python3 -I metrics/diff.py metrics/s1.json metrics/s2.json --out metrics/s2/ --wording wording.csv` exits 0 (**0 `false`**, 0 unruled).
+   - S3 (HEAD × HEAD): the same command with `s3` exits 0 (**0 `false`**), and every `metrics/s3/lost.csv` row has the lead's reason.
+   - The plan records for each snapshot: combos with ≥1 eligible note, eligible notes, mystery-only and fits-all-5 drops, and the changed (set, mystery, note) count.
+5. **Ledger completeness** (`cd "$SA"`):
+   - `python3 -I scripts/ledger.py` exits 0. `ledger.csv` has exactly 76 × the active entries in `SIGNS` at HEAD, with no duplicate `(sign, animal_id)` and every `final_verdict` filled.
+   - The plan records counts by verdict × category.
+   - The Summary lists every deferred edge with its blocking notes.
+6. **Release smoke** (after `deploy critter-connect`, which also runs `deploy/check.sh` including `scripts/check-live-board.mjs`):
+   - `curl -s https://play.critterconnect.org/version.txt` shows the merge commit.
+   - `https://play.critterconnect.org/` and `/explore/` return 200 with the globe and the game page's expected content.
+   - `curl -s https://play.critterconnect.org/api/clue-game/pool/` returns 200 and JSON with 76 species and no error. These are the live `7bce511a` rows loading under the new `SIGNS`, so no `Unknown sign`.
+   - After the smoke passes, add a handoff item: from WSL, update `main`, take a fresh dump (`ssh root@play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`), `npm run content -- build`, then `npm run content -- check`, which should print `0 errors, 0 warnings` and the pool line with the counts from the final `content -- preview`.
+
+### Failure modes (tests-first)
+
+**A. Rules commit (S5).** Write these down, then write the tests (`tests/clueGame/signs.test.ts`, `tests/clueGame/animalBoard.test.ts`), then the code.
+
+- **A1 `signTableProblems`** (small fixture tables):
+  - an active entry with an empty `meaning`, or one that is only whitespace, passes
+  - a prefix typo in a trait target (`sytem:freshwater`, a prefix in neither `EXCLUSIVE_PREFIXES` nor `COMPLETE_PREFIXES`) passes
+  - an open target that is missing from the table, or retired, passes
+  - a sign that implies itself, or denies itself, passes
+  - a 2-cycle (`a→b→a`) or a 3-cycle (`a→b→c→a`) passes, or is reported without its path
+  - the real `SIGNS` isn't clean (`signTableProblems(SIGNS)` must be `[]`)
+- **A2 Type guards** (checked by `npm run typecheck` through `// @ts-expect-error` lines in the test): an active entry without `meaning` compiles; a retired entry with `implies`/`denies` or `meaning` compiles.
+- **A3 `IMPLIED`/`heldSigns`:**
+  - a transitive edge (`a→b→c`) isn't closed, so `a` misses `c`
+  - a diamond holds duplicates
+  - a retired tag implies something, or isn't held as itself
+  - trait tags leak into the result
+  - `undefined` input throws
+  - an unknown tag doesn't throw `Unknown sign "<tag>"`
+- **A4 `signsOf`:**
+  - a narrower sign plus its wired broader one on different notes shows two badges
+  - a lone broader sign is dropped
+  - tag order changes
+  - the same tag on two notes shows twice
+  - a retired tag is dropped
+  - a deferred pair (edge not in `implies`) loses a badge
+- **A5 `signProblems`:**
+  - an unknown tag doesn't return early (later checks throw or add messages)
+  - a retired tag is accepted
+  - a trait `implies` conflict reached only through a narrower sign's closure isn't reported, or names the wrong `via`
+  - an implied trait with no record (`unknown`) is wrongly reported
+  - a trait `denies` that the record holds passes
+  - an open `denies` against a sign held directly, or one reached through a narrower sign, passes
+  - a mutual exclusion written in one direction fires only one way
+  - narrower and broader on the **same** note passes
+  - narrower and broader on **different** notes is flagged
+  - a clean profile returns anything
+- **A6 Rule fixes (F1–F4)**, checked on real `SIGNS` with fixture records, each of which must give `[]`: `climber` on `trees:no`; `swimmer` on a terrestrial-only record; `never_climbs` on a non-forest record; `above_tree_line` with `habitat:forest`; `sand_dunes` with `habitat:shrubland`. Also check whatever the S1/S2 rulings decided for `snorkel_nose`, `shares_food` and `often_in_trees`.
+- **A7 `animalFitsNote`:**
+  - a narrower holder doesn't fit a broader note
+  - a broader holder fits a narrower note
+  - a multi-tag note fits when only one tag is held
+  - a transitive narrower sign (`narrow→mid→broad`) doesn't fit a `broad` note
+  - trait tags get closure, or don't match raw
+  - a suspect with `tags: undefined` throws
+- **A8 `witnessNotes`/`stillPossible`** (fixture book around one wired edge read from `SIGNS`, and the test asserts that edge exists):
+  - a note tagged with the broader sign doesn't count the narrower holder in `fits`
+  - `stillPossible` rules out the narrower holder, or keeps a suspect that holds neither sign
+  - on real content, `witnessNotes`' `fits` differs from the `animalFitsNote` oracle (the existing test at `:80`)
+- **A9 `travelOf`:**
+  - a terrestrial-only `swimmer` swims
+  - a `swimmer` with `system:freshwater`, or with `system:marine`, walks
+  - `fully_aquatic` without a `system:` tag walks
+  - `glider` or Chiroptera doesn't fly
+  - `burrower` doesn't dig
+  - precedence changes (fly before swim before dig)
+  - an implied sign changes travel (if any wired edge's broader sign is one of the four travel signs)
+  - a split travel sign's successor travels differently from the old tag
+- **A10 Live compatibility** is not a unit test, because the live rows aren't in the repo. Covered by S2 (the rules code loads `7bce511a` content: `Unknown sign` fails the harness) and the release pool smoke.
+
+**B. Audit gates (S3, S8, S10).** Each script's self-test in `$SA/scripts/selftest/` is written first, with fixtures that must make it fail.
+
+- **B1 `pairs.py`:**
+  - rows ≠ 76 × active signs
+  - a duplicate `(sign, animal)`
+  - a held pair triaged (must exit non-zero)
+  - a pair implied through a deferred edge marked `wired`, or the reverse
+  - a retired sign included
+- **B2 `validate.py`:**
+  - a missing, duplicate or extra row passes
+  - a verdict outside the three passes
+  - a `has it` without a quote, or without a source file or URL, passes
+  - a quote not found in its saved file isn't flagged
+  - a `doesn't` with neither a quote nor `source silent: <why>` passes
+  - a `can't tell` without a reason passes
+- **B3 `diff.py --wording`:**
+  - a newly matched row with no ruling, or with `false`, exits 0
+  - a set that appeared or disappeared is missed
+  - a lost-eligibility note is missed
+  - a row ruled in an earlier snapshot isn't reused for the same `(mystery, clue_index, suspect)`
+- **B4 `reconcile.py`:**
+  - a tag change not in the ledger passes
+  - a ledger change that isn't in the profiles passes
+  - a multi-note change (`remove:2,5,7`) is half applied and passes
+  - a deleted or moved note passes
+  - a `rules_commit_change` is counted twice
+  - `--applied` lets a pending category's change pass as applied
+
+### Risks / open questions
+
+- **R1 Ruling files.** `mission-lead.md` limits the lead to the plan, the handoff file and briefs, so Opus copies the lead's rulings in and the lead verifies with `diff`.
+- **R2 The candidate S2 is an overlay.** It adds edges on top of the old code. The final S2 on the real rules commit is the gate, and S6 rules any newly matched row the overlay missed.
+- **R3 Budget.** The unbundled estimate is about 47–56 sessions, including the 6 already used. S8 will likely apply the bundling rule. A stop at 60 is not fatal (`mission resume`).
+- **R4 Astra limits and timeouts.** `MISSION_WAIT_ASTRA` may idle the run for hours. Halved reruns add items; `batches.csv` tracks each child batch through its `parent` column.
+- **R5 Dev-copy timing.** The final content build writes HEAD content to `phaser_june_dev`, which other PRs' CI reads. If the mission adds new active sign names (splits), branches cut from old `main` hit `Unknown sign` until the merge. Run the final Verification and the Release back to back.
+- **R6 Live delta until the owner's build.** Players see the S2 delta from the deploy and the S3 delta after the owner's build. Both are gated to 0 `false`, but `roundStillFits` drops the affected saved rounds.
+- **R7 Travel change.** Terrestrial animals newly tagged `swimmer` walk off the board (intended). It shows only after the owner's build.
+- **R8 Paywalled sources.** A paywalled DOI becomes `can't tell`, and the held tag stays. That may leave a few material pairs unresolved; they are listed in the Summary.
+- **R9 Material depends on sets.** If a forced trait change shifts the dealable sets, recompute `material` from `metrics/s3.json` at S23, and reopen any pair that becomes material.
+- **R10 Disk.** About 12 GB is free. Scratch trees in `/tmp/sa-trees/` are deleted after each snapshot, `game/` (~14 MB) is the only export kept, and sources are referenced in place.
 
 ## Code review (Astra)
 
@@ -628,6 +902,7 @@ SHOULD-CONSIDER:
 - (lead) Architecture A3 + B2: put strict narrower→broader sign edges in `SIGNS[tag].implies` with `heldSigns` closure in `animalFitsNote` (shared by `witnessNotes`, `stillPossible`, tests, and metrics), split `SignEntry` into a discriminated union (`ActiveSignEntry` with required `meaning` vs `RetiredSignEntry` with `retired: true` and `category` only; drop dead `restates`), enforce retired + closure + per-note one-sign-per-fact mechanically in `signProblems` while deduplicating field-guide badges in `signsOf`, narrow `travelOf` on `system:freshwater`/`system:marine` for `swimmer` using raw tags, keep `ANIMAL_RULES.version` at `055-1`, audit all ~494 held pairs in category × animal-group batches, and record 3 witness-note snapshots via real `witnessNotes`.
 - (lead) Revision — wording-safety gate on `implies` edges: every open-tag `implies` edge requires BOTH strict logical entailment under approved `meaning` AND zero false wording fits across every newly matched suspect in snapshot 2 (live `7bce511a`) AND snapshot 3 (final profiles). Strict edges blocked by narrow wording on live `7bce511a` broad notes (e.g., `backward_pouch -> pouch` blocked by 43's "opens forward") are deferred to `witness-signs` (not wired in `SIGNS.implies` yet, recorded in `definitions.csv` + Summary) while the audit still respects one-sign-per-fact so `witness-signs` can flip them on with zero profile churn.
 - (lead) Revision — per-note one-sign-per-fact + `signsOf` badge dedupe + audit safeguards: check one-sign-per-fact per note (preserving multi-note dealability), dedupe implied broader signs in `signsOf` (and update `scripts/e2e.mjs:1222-1227`), add new short notes instead of narrowing an already-tagged note's eligibility, require reading a held tag's cited source before any removal, sample ~100–150 same-class `no-plausible-holder` triaged pairs via Astra, reopen implied pairs on narrower `doesn't` OR `can't tell`, reconcile the full `7bce511a -> HEAD` tag diff (multi-note indices included) against `ledger.csv`, defer `never_climbs denies climber` until Definitions, and run `phaser_june_dev` content build only at final Verification/Release.
+- (lead) Steps — accepted planner's four structural calls: (1) Opus drafts and updates state-folder ruling CSVs from lead briefs (`prompts/S<n>-rulings.md`) with lead `diff` spot-checks, keeping the lead strictly to briefs/plan/handoff; (2) candidate Snapshot 2 (S4) runs via `--edges` overlay on `7bce511a` with an empty-edges self-check matching S1, and final Snapshot 2 (S6) on the real rules commit is the hard gate; (3) Pilot P01 is a real batch from `batches.csv` (`--rebatch` only touches remaining unrun batches); (4) keep both tests-first failure-mode lists — A1–A10 for the S5 rules commit and B1–B4 for the audit gate scripts (`pairs.py`, `validate.py`, `diff.py --wording`, `reconcile.py`).
 
 ## Log
 
@@ -636,5 +911,6 @@ SHOULD-CONSIDER:
 - 2026-11-23 02:47 UTC · Fable review: `architecture-reviewer` (Fable 5.2 · high) returned `APPROVE_WITH_CHANGES` with 3 MUST-FIX (broad-note narrow wording false fits, `stillPossible` third literal fit check, profile-level one-sign-per-fact hiding true notes), 4 MISSED, 5 SHOULD-CONSIDER. Recorded in plan; no code changed.
 - 2026-11-23 02:51 UTC · Astra review: `astra-review` (Codex GPT-6.2-Astra · xhigh) returned `APPROVE_WITH_CHANGES` with 4 MUST-FIX (gate broader-sign matching on note wording, unify `witnessNotes`/`stillPossible`/metrics fit predicate, keep one-sign-per-fact per-note and dedupe field-guide badges separately, reconcile ledger across pre-export changes and multi-note tags) and 3 SHOULD-CONSIDER. Recorded in plan; no code changed.
 - 2026-11-23 03:01 UTC · Revision: lead ruled on all Fable (3 MUST-FIX, 4 MISSED, 5 SHOULD-CONSIDER) and Astra (4 MUST-FIX, 3 SHOULD-CONSIDER) items in Revision notes (all accepted); `architect` revised Architecture accordingly (wording-safety gate + deferred edges, shared `animalFitsNote` predicate, per-note one-sign-per-fact + `signsOf` badge dedupe + `e2e.mjs` check, drop dead `restates`, defer `never_climbs denies climber`, full `7bce511a -> HEAD` ledger reconciliation with multi-note indices, eligibility/removal/triage-sample/re-export/dev-DB safeguards). Plan updated; no code changed.
+- 2026-11-23 03:09 UTC · Steps: `planner` (Opus 5.5 · xhigh) drafted S1–S24, Verification, Failure modes (A1–A10 rules commit + B1–B4 audit gates) and Risks R1–R10; lead reviewed, accepted all 4 planner calls, tightened S3/S5/S6/S11/S19/S24 details, checked off Steps stage. Plan updated; no code changed.
 
 ## Summary
