@@ -765,6 +765,17 @@ async function main() {
     });
     const poolSpecies = new Map(poolData.species);
     const openTags = new Map(poolData.open);
+    // Wired sign edges (SIGNS' direct open-tag implies); the closure is derived here, not by the app's helpers.
+    const directImplies = await evaluate(() => window.__cc.signImplies());
+    const impliedBy = tag => {
+      const seen = new Set();
+      const stack = [...(directImplies[tag] ?? [])];
+      while (stack.length) {
+        const next = stack.pop();
+        if (!seen.has(next)) { seen.add(next); stack.push(...(directImplies[next] ?? [])); }
+      }
+      return seen;
+    };
     const names = new Map([...poolSpecies].map(([id, species]) => [id, species.name]));
     const sound = await evaluate(async () => {
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -1220,7 +1231,10 @@ async function main() {
           const groupOf = new Map();
           const bad = sheets.flatMap(sheet => {
             const shown = sheet.all.flatMap(group => group.tags).sort().join();
-            const want = [...(openTags.get(sheet.id) ?? [])].sort().join();
+            // Its raw open tags less every broader sign one of them implies (one badge per fact).
+            const raw = openTags.get(sheet.id) ?? [];
+            const implied = new Set(raw.flatMap(tag => [...impliedBy(tag)]));
+            const want = raw.filter(tag => !implied.has(tag)).sort().join();
             const problems = [];
             if (sheet.status !== 'playing') problems.push('not playing');
             if (sheet.outside > 0) problems.push(`${sheet.outside} outside the box beside the photo`);
