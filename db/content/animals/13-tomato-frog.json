@@ -104,9 +104,6 @@
     {
       "category": "reproduction",
       "text": "It breeds after heavy rain, in ditches, swamps and still pools.",
-      "tags": [
-        "rain_breeder"
-      ],
       "source": "adw"
     },
     {
@@ -159,6 +156,22 @@
         "town_dweller"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "It breeds when heavy rains come, often in pools, puddles or streams that the rain fills.",
+      "tags": [
+        "rain_breeder"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

@@ -181,6 +181,31 @@
       ],
       "source": "literature",
       "url": "https://www.herpconbio.org/Volume_17/Issue_2/Nambinina_etal_2022.pdf"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatch as males or females depends on how warm the nest is.",
+      "tags": [
+        "temperature_sex"
+      ],
+      "source": "tftsg",
+      "url": "https://chelonian.org/wp-content/uploads/file/CRM%206/CRM_6_Castellano_etal_2013.pdf"
     }
   ],
   "facts": [

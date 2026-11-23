@@ -98,9 +98,6 @@
     {
       "category": "reproduction",
       "text": "It lays its eggs in an underground chamber, not in water.",
-      "tags": [
-        "eggs_on_land"
-      ],
       "source": "iucn"
     },
     {
@@ -191,6 +188,14 @@
       "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
       "tags": [
         "sand_dunes"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
       ],
       "source": "iucn"
     }

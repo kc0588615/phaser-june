@@ -242,6 +242,14 @@
         "high_mountains"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

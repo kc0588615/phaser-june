@@ -194,6 +194,24 @@
         "climbs_boulders"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/african-pancake-tortoise"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatch as males or females depends on how warm the nest is.",
+      "tags": [
+        "temperature_sex"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Accounts/crm_5_107_tornieri_v1_2018.pdf"
     }
   ],
   "facts": [

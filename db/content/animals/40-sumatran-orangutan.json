@@ -276,6 +276,23 @@
       ],
       "source": "literature",
       "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3040220/"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her eggs or young on her body as she moves about.",
+      "tags": [
+        "mother_carries_young"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/orangutans/reproduction"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

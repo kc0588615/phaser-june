@@ -170,6 +170,14 @@
         "shallow_wetlands"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It breeds when heavy rains come, often in pools, puddles or streams that the rain fills.",
+      "tags": [
+        "rain_breeder"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

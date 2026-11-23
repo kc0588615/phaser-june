@@ -205,6 +205,15 @@
         "cold_streams"
       ],
       "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "literature",
+      "url": "https://oaj.fupress.net/index.php/ah/article/view/1728"
     }
   ],
   "facts": [

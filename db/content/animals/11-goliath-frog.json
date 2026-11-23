@@ -108,9 +108,6 @@
     {
       "category": "reproduction",
       "text": "Adults clear out pools by the river, or dig hollows in the gravel bank, to lay their eggs in, and guard the nests at night.",
-      "tags": [
-        "egg_guarding"
-      ],
       "source": "amphibiaweb"
     },
     {
@@ -274,6 +271,23 @@
         "fast_streams"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its tadpoles cling to rocks in fast water with a sucker-like mouth.",
+      "tags": [
+        "sucker_mouth_tadpoles"
+      ],
+      "source": "literature",
+      "url": "https://media.rufford.org/media/project_reports/Journal%20of%20natural%20History%202019%2C%20Vol.%2053%2C%20No.%2021-22%2C%201263-1276.pdf"
+    },
+    {
+      "category": "reproduction",
+      "text": "A parent stays with its eggs or nest and guards them until they hatch.",
+      "tags": [
+        "egg_guarding"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [

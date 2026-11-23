@@ -490,6 +490,10 @@
     "cite": "CITES. 1992. Inclusion of Conraua goliath in Appendix II (CoP8 Prop. 56; proponent: the United States of America). Eighth Meeting of the Conference of the Parties, Kyoto.",
     "archive": "https://web.archive.org/web/20221006031847/http://cites.org/sites/default/files/eng/cop/08/prop/E08-Prop-56_Conraua.PDF"
   },
+  "https://citizen-conservation.org/wp-content/uploads/2024/10/CC-Breeding-Guidelines_Phyllobates-terribilis_07-2024.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Citizen Conservation. 2024. Basic information and care recommendations for Phyllobates terribilis, Golden Poison frog."
+  },
   "https://digital.library.adelaide.edu.au/server/api/core/bitstreams/ea3f6caa-93f1-4aec-97b2-6b38038d365b/content": {
     "accessed": "2026-11-23",
     "cite": "Berris, K. K. (2024). Conservation biology of greater bilby (Macrotis lagotis) populations translocated to the temperate zone of South Australia [PhD thesis, The University of Adelaide]."
@@ -848,6 +852,10 @@
     "accessed": "2026-11-23",
     "cite": "Orangutans (Pongo spp.) Fact Sheet. c2003-2017. San Diego (CA): San Diego Zoo Wildlife Alliance."
   },
+  "https://ielc.libguides.com/sdzg/factsheets/orangutans/reproduction": {
+    "accessed": "2026-11-23",
+    "cite": "Orangutans (Pongo spp.) Fact Sheet. c2003-2017. San Diego (CA): San Diego Zoo Wildlife Alliance."
+  },
   "https://ielc.libguides.com/sdzg/factsheets/redpanda/behavior": {
     "accessed": "2026-11-23",
     "cite": "Red Panda (Ailurus fulgens) Fact Sheet. c2011–2026. San Diego (CA): San Diego Zoo Wildlife Alliance."
@@ -957,6 +965,10 @@
     "accessed": "2026-11-23",
     "cite": "Namibia Nature Foundation. 2009. Background Information and Species Management Guidelines for Namibia's Rare and Valuable Wildlife: African Wild Dog (Lycaon pictus)."
   },
+  "https://media.rufford.org/media/project_reports/Journal%20of%20natural%20History%202019%2C%20Vol.%2053%2C%20No.%2021-22%2C%201263-1276.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Schäfer, M., Tsekané, S. J., Tchassem, F. A. M., Drakulić, S., Kameni, M., Gonwouo, N. L., & Rödel, M.-O. (2019). Goliath frogs build nests for spawning – the reason for their gigantism? Journal of Natural History, 53(21-22), 1263–1276. https://doi.org/10.1080/00222933.2019.1642528"
+  },
   "https://nas.er.usgs.gov/queries/FactSheet.aspx?speciesID=2728": {
     "accessed": "2026-09-25",
     "cite": "U.S. Geological Survey, 2026, Pipa pipa (Linnaeus, 1758): Nonindigenous Aquatic Species Database, Gainesville, FL, Revision Date: 8/6/2013."
@@ -1012,6 +1024,12 @@
   "https://newsapp.abc.net.au/newsapp/2025-10-27/conservation-success-for-rare-queensland-wombat/105934066": {
     "accessed": "2026-09-25",
     "cite": "McCray, D. 2025. Northern hairy-nosed wombat joeys mark conservation success for rare Queensland animal. ABC News (Australia)."
+  },
+  "https://oaj.fupress.net/index.php/ah/article/view/1728": {
+    "accessed": "2026-11-23",
+    "cite": "Sung, Y.-H., Hau, B., & Karraker, N. (2014). Reproduction of endangered Big-headed Turtle, Platysternon megacephalum (Reptilia: Testudines: Platysternidae). Acta Herpetologica, 9(2), 243–247. https://doi.org/10.13128/acta_herpetol-14184",
+    "archive": "https://web.archive.org/web/20260903123832/https://oaj.fupress.net/index.php/ah/article/view/1728",
+    "license": "CC BY 4.0"
   },
   "https://onlinelibrary.wiley.com/doi/10.1155/2014/795062": {
     "accessed": "2026-11-23",
@@ -1266,6 +1284,10 @@
     "accessed": "2026-11-23",
     "cite": "Johnson, K.A. n.d. 25. Thylacomyidae. Fauna of Australia Volume 1b - Mammalia. Australian Biological Resources Study."
   },
+  "https://www.edgeofexistence.org/species/pygmy-three-toed-sloth/": {
+    "accessed": "2026-11-23",
+    "cite": "ZSL EDGE of Existence. n.d. Pygmy Three-toed Sloth, Bradypus pygmaeus."
+  },
   "https://www.env.gov.bc.ca/fia/documents/fieldguide_speciesatrisk_coast.pdf": {
     "accessed": "2026-11-23",
     "cite": "Proulx, G., Bernier, D., Heron, J.M. and Paige, K.A. 2003. A Field Guide to Species at Risk in the Coast Forest Region of British Columbia. International Forest Products Limited and Ministry of Water, Land and Air Protection."
@@ -1305,6 +1327,11 @@
   "https://www.herpconbio.org/Volume_17/Issue_2/Nambinina_etal_2022.pdf": {
     "accessed": "2026-11-23",
     "cite": "Nambinina, A., Sefczek, T. M., Frasier, C. L., Brown, A., Ratrimomanarivo, F. H., Razafiherison, R., Rene de Roland, L.-A., & Louis, E. E., Jr. (2022). Assessing population density of Radiated Tortoise (Astrochelys radiata) in southwest Madagascar. Herpetological Conservation and Biology, 17(2), 370–377."
+  },
+  "https://www.hutan.org.my/wp-content/uploads/2022/05/Guide-to-frogs-of-the-Lower-Kinabatangan-2021-FINAL-copy.pdf": {
+    "accessed": "2026-11-23",
+    "cite": "Gillespie, G., Ahmad, E., Scriven, S., & Shia, A. 2021. Field Guide to the Frogs of the Lower Kinabatangan Region, Sabah. HUTAN.",
+    "archive": "https://web.archive.org/web/20250430162935/https://www.hutan.org.my/wp-content/uploads/2022/05/Guide-to-frogs-of-the-Lower-Kinabatangan-2021-FINAL-copy.pdf"
   },
   "https://www.iucnredlist.org/species/10826/115565566": {
     "accessed": "2026-09-27",

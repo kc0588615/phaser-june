@@ -149,9 +149,6 @@
     {
       "category": "reproduction",
       "text": "A baby rides on its mother's back for about six months.",
-      "tags": [
-        "carries_young_on_back"
-      ],
       "source": "iucn"
     },
     {
@@ -256,6 +253,14 @@
         "town_dweller"
       ],
       "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her young riding or clinging on her back.",
+      "tags": [
+        "carries_young_on_back"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

@@ -274,6 +274,14 @@
       ],
       "source": "literature",
       "url": "https://yoderlab.org/cms/wp-content/uploads/2014/05/2011JungeBarrettYoder.pdf"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

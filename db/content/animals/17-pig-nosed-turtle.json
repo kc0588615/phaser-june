@@ -96,9 +96,6 @@
     {
       "category": "reproduction",
       "text": "Whether its eggs hatch as males or females depends on nest temperature: half a degree makes the difference.",
-      "tags": [
-        "temperature_sex"
-      ],
       "source": "adw"
     },
     {
@@ -231,6 +228,22 @@
       "text": "It lives at least partly in brackish water, part salty and part fresh, as in estuaries, coastal lagoons or mangroves.",
       "tags": [
         "brackish_water"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatch as males or females depends on how warm the nest is.",
+      "tags": [
+        "temperature_sex"
       ],
       "source": "adw"
     }

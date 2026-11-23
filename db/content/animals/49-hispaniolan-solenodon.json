@@ -106,9 +106,6 @@
     {
       "category": "geography",
       "text": "It lives only on the island of Hispaniola, shared by Haiti and the Dominican Republic.",
-      "tags": [
-        "one_island"
-      ],
       "source": "iucn"
     },
     {
@@ -210,6 +207,14 @@
         "leaf_litter"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

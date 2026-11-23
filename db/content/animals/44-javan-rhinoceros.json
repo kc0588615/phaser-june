@@ -212,6 +212,14 @@
         "mud_bather"
       ],
       "source": "adw"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

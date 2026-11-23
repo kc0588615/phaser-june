@@ -116,9 +116,6 @@
     {
       "category": "reproduction",
       "text": "A mother carries her baby clinging to her belly.",
-      "tags": [
-        "mother_carries_young"
-      ],
       "source": "adw"
     },
     {
@@ -273,6 +270,15 @@
         "town_dweller"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her eggs or young on her body as she moves about.",
+      "tags": [
+        "mother_carries_young"
+      ],
+      "source": "ngo",
+      "url": "https://xenarthrans.org/species/sloths/brown-throated-three-toed-sloth/"
     }
   ],
   "facts": [

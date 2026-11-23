@@ -193,6 +193,14 @@
       ],
       "source": "literature",
       "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6753930/"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

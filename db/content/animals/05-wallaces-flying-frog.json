@@ -176,6 +176,23 @@
         "shallow_wetlands"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs on leaves or branches hanging over water, so the tadpoles drop in when they hatch.",
+      "tags": [
+        "eggs_over_water"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "reproduction",
+      "text": "It breeds when heavy rains come, often in pools, puddles or streams that the rain fills.",
+      "tags": [
+        "rain_breeder"
+      ],
+      "source": "ngo",
+      "url": "https://www.hutan.org.my/wp-content/uploads/2022/05/Guide-to-frogs-of-the-Lower-Kinabatangan-2021-FINAL-copy.pdf"
     }
   ],
   "facts": [

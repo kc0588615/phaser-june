@@ -264,6 +264,15 @@
         "town_dweller"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her young riding or clinging on her back.",
+      "tags": [
+        "carries_young_on_back"
+      ],
+      "source": "literature",
+      "url": "https://onlinelibrary.wiley.com/doi/10.1155/2014/795062"
     }
   ],
   "facts": [

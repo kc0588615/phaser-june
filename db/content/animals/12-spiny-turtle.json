@@ -201,6 +201,15 @@
         "forest_streams"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "literature",
+      "url": "https://turtles.linnaeus.naturalis.nl/linnaeus_ng/app/views/species/taxon.php?id=8070"
     }
   ],
   "facts": [

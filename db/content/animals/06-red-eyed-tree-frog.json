@@ -125,9 +125,6 @@
     {
       "category": "reproduction",
       "text": "It lays its eggs on a leaf over water, so the tadpoles drop into the pond when they hatch.",
-      "tags": [
-        "eggs_over_water"
-      ],
       "source": "amphibiaweb"
     },
     {
@@ -237,6 +234,14 @@
       "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
       "tags": [
         "shallow_wetlands"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs on leaves or branches hanging over water, so the tadpoles drop in when they hatch.",
+      "tags": [
+        "eggs_over_water"
       ],
       "source": "amphibiaweb"
     }

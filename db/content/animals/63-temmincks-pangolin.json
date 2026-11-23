@@ -125,9 +125,6 @@
     {
       "category": "reproduction",
       "text": "Babies ride on their mother's back or tail until they weigh about 3 kg.",
-      "tags": [
-        "carries_young_on_back"
-      ],
       "source": "adw"
     },
     {
@@ -266,6 +263,14 @@
         "borrowed_burrows"
       ],
       "source": "wikipedia"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her young riding or clinging on her back.",
+      "tags": [
+        "carries_young_on_back"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

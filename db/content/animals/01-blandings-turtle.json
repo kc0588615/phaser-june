@@ -253,6 +253,14 @@
         "shallow_wetlands"
       ],
       "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

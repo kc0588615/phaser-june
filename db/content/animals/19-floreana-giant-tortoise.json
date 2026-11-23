@@ -180,6 +180,24 @@
         "seed_spreader"
       ],
       "source": "ngo"
+    },
+    {
+      "category": "reproduction",
+      "text": "It laid its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatched as males or females depended on how warm the nest was.",
+      "tags": [
+        "temperature_sex"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
     }
   ],
   "facts": [

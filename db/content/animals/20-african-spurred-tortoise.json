@@ -229,6 +229,24 @@
         "town_dweller"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Geochelone_sulcata/"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatch as males or females depends on how warm the nest is.",
+      "tags": [
+        "temperature_sex"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/crm.5.110.sulcata.v1.2020.pdf"
     }
   ],
   "facts": [

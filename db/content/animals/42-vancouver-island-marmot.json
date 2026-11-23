@@ -108,9 +108,6 @@
     {
       "category": "habitat",
       "text": "It lives only on Vancouver Island, off the west coast of Canada.",
-      "tags": [
-        "one_island"
-      ],
       "source": "iucn"
     },
     {
@@ -272,6 +269,14 @@
       "text": "It lives at least partly in grassy meadows high on mountainsides.",
       "tags": [
         "mountain_meadows"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
       ],
       "source": "iucn"
     }

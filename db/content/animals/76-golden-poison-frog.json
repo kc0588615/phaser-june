@@ -183,6 +183,23 @@
         "shallow_wetlands"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "A parent stays with its eggs or nest and guards them until they hatch.",
+      "tags": [
+        "egg_guarding"
+      ],
+      "source": "ngo",
+      "url": "https://citizen-conservation.org/wp-content/uploads/2024/10/CC-Breeding-Guidelines_Phyllobates-terribilis_07-2024.pdf"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

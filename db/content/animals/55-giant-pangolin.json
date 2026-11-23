@@ -201,6 +201,14 @@
         "scent_marks"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her young riding or clinging on her back.",
+      "tags": [
+        "carries_young_on_back"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

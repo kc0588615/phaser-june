@@ -114,9 +114,6 @@
     {
       "category": "geography",
       "text": "It survives only on the island of Tasmania, south of mainland Australia.",
-      "tags": [
-        "one_island"
-      ],
       "source": "iucn"
     },
     {
@@ -301,6 +298,23 @@
       "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
       "tags": [
         "borrowed_burrows"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her young riding or clinging on her back.",
+      "tags": [
+        "carries_young_on_back"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
       ],
       "source": "iucn"
     }

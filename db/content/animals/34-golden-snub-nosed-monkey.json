@@ -244,6 +244,15 @@
         "snowy_winters"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her eggs or young on her body as she moves about.",
+      "tags": [
+        "mother_carries_young"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Rhinopithecus/"
     }
   ],
   "facts": [
