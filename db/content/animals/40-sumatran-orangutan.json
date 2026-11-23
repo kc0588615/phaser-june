@@ -75,9 +75,6 @@
     {
       "category": "morphology",
       "text": "Its long reddish hair covers its body and face.",
-      "tags": [
-        "reddish_fur"
-      ],
       "source": "adw"
     },
     {
@@ -138,6 +135,31 @@
       "category": "conservation",
       "text": "Forest cleared for farms and plantations, and illegal killing, are its main threats.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its body is bright red-orange.",
+      "tags": [
+        "red_orange"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "literature",
+      "url": "https://www.nature.com/articles/s41598-019-42856-w"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is mostly red, reddish brown or golden red.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

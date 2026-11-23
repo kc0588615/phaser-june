@@ -119,6 +119,49 @@
       "category": "conservation",
       "text": "New buildings, visitors and tree cutting on its island put it at risk.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its throat is brown, standing out from the color around it.",
+      "tags": [
+        "brown_throat"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Bradypodidae/"
+    },
+    {
+      "category": "morphology",
+      "text": "A dark band or patch across its eyes looks like a mask.",
+      "tags": [
+        "face_mask"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its arms are very long, longer than its legs.",
+      "tags": [
+        "long_arms"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Bradypodidae/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Bradypodidae/"
     }
   ],
   "facts": [

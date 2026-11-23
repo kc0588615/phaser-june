@@ -92,9 +92,6 @@
     {
       "category": "morphology",
       "text": "Big dark scent glands below its eyes earned it the name \"four-eyed antelope\".",
-      "tags": [
-        "eye_glands"
-      ],
       "source": "wikipedia"
     },
     {
@@ -137,6 +134,22 @@
       "category": "conservation",
       "text": "Poaching, drought, disease and too many cattle all threaten it.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has large scent glands just below or in front of its eyes.",
+      "tags": [
+        "eye_glands"
+      ],
+      "source": "wikipedia"
     }
   ],
   "facts": [

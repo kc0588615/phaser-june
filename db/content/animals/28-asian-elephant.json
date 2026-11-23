@@ -144,6 +144,24 @@
       "category": "conservation",
       "text": "Its forests are being cut into pieces too small for herds to live in.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "smithsonian",
+      "url": "https://www.nationalzoo.si.edu/animals/asian-elephant"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "smithsonian",
+      "url": "https://www.nationalzoo.si.edu/animals/asian-elephant"
     }
   ],
   "facts": [

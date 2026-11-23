@@ -106,6 +106,33 @@
       "category": "conservation",
       "text": "Main threats: farms and cattle taking over its land, and people collecting it for food and the pet trade.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/crm.5.110.sulcata.v1.2020.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are yellow.",
+      "tags": [
+        "yellow_legs"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Geochelone_sulcata/"
     }
   ],
   "facts": [

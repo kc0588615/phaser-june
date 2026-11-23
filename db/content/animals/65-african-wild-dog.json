@@ -137,9 +137,6 @@
     {
       "category": "morphology",
       "text": "It has large, rounded ears.",
-      "tags": [
-        "big_ears"
-      ],
       "source": "adw"
     },
     {
@@ -187,6 +184,57 @@
       "category": "conservation",
       "text": "It needs huge areas, so it often wanders out of parks into farmland, snares and busy roads.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "A dark band or patch across its eyes looks like a mask.",
+      "tags": [
+        "face_mask"
+      ],
+      "source": "ngo",
+      "url": "https://media.rufford.org/media/project_reports/B-12.11.06%20Booklet.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13431924/"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/painted-dog-african-hunting-dog"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

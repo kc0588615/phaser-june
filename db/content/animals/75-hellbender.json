@@ -147,6 +147,30 @@
       "category": "conservation",
       "text": "Mud washing in from logging, mining and roads buries the rocks it needs for shelter and nests.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

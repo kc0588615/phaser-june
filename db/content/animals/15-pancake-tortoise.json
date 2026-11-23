@@ -75,9 +75,6 @@
     {
       "category": "morphology",
       "text": "Its shell is so flat it looks like a pancake.",
-      "tags": [
-        "flat_shell"
-      ],
       "source": "iucn"
     },
     {
@@ -112,6 +109,49 @@
     {
       "category": "conservation",
       "text": "International trade in it has been controlled since 1975 (CITES Appendix II).",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Accounts/crm_5_107_tornieri_v1_2018.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its body is very flat, much wider than it is tall.",
+      "tags": [
+        "flat_body"
+      ],
+      "source": "tftsg"
+    },
+    {
+      "category": "morphology",
+      "text": "Its shell or skin has lines that spread out like stars.",
+      "tags": [
+        "star_pattern"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Accounts/crm_5_107_tornieri_v1_2018.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "morphology",
+      "text": "Its shell is very flat and low, not domed.",
+      "tags": [
+        "flat_shell"
+      ],
       "source": "iucn"
     }
   ],

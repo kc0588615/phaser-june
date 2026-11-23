@@ -94,9 +94,6 @@
     {
       "category": "morphology",
       "text": "Each otter has its own pattern of cream patches on its throat.",
-      "tags": [
-        "throat_patch"
-      ],
       "source": "wikipedia"
     },
     {
@@ -142,6 +139,31 @@
       "category": "conservation",
       "text": "Gold mining poisons its rivers with mercury, and new dams change the rivers it needs.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "ngo",
+      "url": "https://wwflac.awsassets.panda.org/downloads/wildlife_guidelines_2023.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "wikipedia"
     }
   ],
   "facts": [

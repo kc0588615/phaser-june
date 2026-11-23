@@ -85,9 +85,6 @@
     {
       "category": "morphology",
       "text": "Its long, bendy snout is held up by a special bone of its own.",
-      "tags": [
-        "pointed_snout"
-      ],
       "source": "adw"
     },
     {
@@ -124,6 +121,41 @@
       "category": "conservation",
       "text": "Dogs, cats and mongooses brought to the island hunt it.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/47/927/100/2609399"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/47/927/100/2609399"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "government",
+      "url": "https://pdf.usaid.gov/pdf_docs/Pnadr534.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

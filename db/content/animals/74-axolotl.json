@@ -138,6 +138,57 @@
       "category": "conservation",
       "text": "Tilapia, fish that people put in its lakes, hunt it and compete for its food.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/axolotl"
+    },
+    {
+      "category": "morphology",
+      "text": "Its head is very large for its body.",
+      "tags": [
+        "huge_head"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/axolotl"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes have no eyelids.",
+      "tags": [
+        "lidless_eyes"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "literature",
+      "url": "https://www.annzool.net/PDF/anz47-free/anz47-223.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is flattened like a paddle, for swimming.",
+      "tags": [
+        "paddle_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [

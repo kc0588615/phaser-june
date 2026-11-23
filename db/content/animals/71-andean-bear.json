@@ -82,9 +82,6 @@
     {
       "category": "morphology",
       "text": "It has the strongest chewing muscles, for its size, of any bear, for grinding tough plants.",
-      "tags": [
-        "strong_bite"
-      ],
       "source": "adw"
     },
     {
@@ -133,6 +130,48 @@
       "category": "conservation",
       "text": "Farms, mining and oil drilling are cutting up its forests.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "ngo",
+      "url": "https://iucn-ctsg.org/wp-content/uploads/2017/12/Andean-Bear-Rehabilitation-Guidelines-1.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/andean-bear"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

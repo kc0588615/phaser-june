@@ -73,17 +73,11 @@
     {
       "category": "morphology",
       "text": "It has huge, rabbit-like ears.",
-      "tags": [
-        "big_ears"
-      ],
       "source": "adw"
     },
     {
       "category": "morphology",
       "text": "It has a long, pointed snout with a pink nose.",
-      "tags": [
-        "pointed_snout"
-      ],
       "source": "adw"
     },
     {
@@ -97,9 +91,6 @@
     {
       "category": "diet",
       "text": "Its long, sticky tongue is perfect for catching termites.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
@@ -128,6 +119,55 @@
       "category": "conservation",
       "text": "Foxes and feral cats brought to Australia are its biggest threat.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "government",
+      "url": "https://www.dcceew.gov.au/sites/default/files/env/pages/a117ced5-9a94-4586-afdb-1f333618e1e3/files/25-ind.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is plain white.",
+      "tags": [
+        "white_belly"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

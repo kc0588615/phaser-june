@@ -78,17 +78,11 @@
     {
       "category": "morphology",
       "text": "It has white patches on its nose, chin, forehead and chest.",
-      "tags": [
-        "face_markings"
-      ],
       "source": "adw"
     },
     {
       "category": "morphology",
       "text": "Its front teeth never stop growing, like all rodents'.",
-      "tags": [
-        "ever_growing_teeth"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Rodent"
     },
@@ -129,6 +123,23 @@
       "category": "conservation",
       "text": "In 2004 only about 35 were left in the wild.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Rodent"
     }
   ],
   "facts": [

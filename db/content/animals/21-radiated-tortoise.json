@@ -70,9 +70,6 @@
     {
       "category": "morphology",
       "text": "Its dark shell is covered in yellow lines that spread out like stars.",
-      "tags": [
-        "star_pattern"
-      ],
       "source": "adw"
     },
     {
@@ -103,6 +100,39 @@
       "category": "conservation",
       "text": "Main threats: collecting for food and the pet trade, and loss of its forest.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are yellow.",
+      "tags": [
+        "yellow_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its shell or skin has lines that spread out like stars.",
+      "tags": [
+        "star_pattern"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

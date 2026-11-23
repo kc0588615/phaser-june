@@ -95,17 +95,11 @@
     {
       "category": "morphology",
       "text": "Its very long, thin legs help it see over tall grass.",
-      "tags": [
-        "long_legs"
-      ],
       "source": "wikipedia"
     },
     {
       "category": "morphology",
       "text": "It has big, upright ears.",
-      "tags": [
-        "big_ears"
-      ],
       "source": "adw"
     },
     {
@@ -143,6 +137,74 @@
       "category": "conservation",
       "text": "Big farms and ranches are replacing its grasslands.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "ngo",
+      "url": "https://www.carnivoreconservation.org/files/actionplans/canids.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Its body is bright red-orange.",
+      "tags": [
+        "red_orange"
+      ],
+      "source": "ngo",
+      "url": "https://www.carnivoreconservation.org/files/actionplans/canids.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/maned-wolf"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail ends in white, or has a white band near the end.",
+      "tags": [
+        "white_tail_tip"
+      ],
+      "source": "ngo",
+      "url": "https://www.carnivoreconservation.org/files/actionplans/canids.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

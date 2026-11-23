@@ -126,6 +126,42 @@
       "category": "conservation",
       "text": "It has already disappeared from Uruguay.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_armadillo"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "ngo",
+      "url": "https://ipe.org.br/images/Giant_Armadillo_Morphology_2019.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/48/932/21/2583986"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/48/932/21/2583986"
     }
   ],
   "facts": [

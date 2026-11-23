@@ -91,9 +91,6 @@
     {
       "category": "morphology",
       "text": "It has big, round ears, a bit like a mule's.",
-      "tags": [
-        "big_ears"
-      ],
       "source": "adw"
     },
     {
@@ -130,6 +127,30 @@
       "category": "conservation",
       "text": "Loss of land, drought and poaching are its main threats.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Adults have a mane: a crest or ruff of longer hair on the neck or back.",
+      "tags": [
+        "mane"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

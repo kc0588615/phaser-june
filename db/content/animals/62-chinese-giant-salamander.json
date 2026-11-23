@@ -90,9 +90,6 @@
     {
       "category": "morphology",
       "text": "Folds of skin along its sides help it take in oxygen from the water through its skin.",
-      "tags": [
-        "underwater_breathing"
-      ],
       "source": "sdzwa",
       "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics"
     },
@@ -157,6 +154,48 @@
       "category": "conservation",
       "text": "Wild ones are caught to stock salamander farms, which raise millions for food.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is flattened like a paddle, for swimming.",
+      "tags": [
+        "paddle_tail"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Chinese_giant_salamander"
+    },
+    {
+      "category": "morphology",
+      "text": "It can take in oxygen from the water while it stays underwater.",
+      "tags": [
+        "underwater_breathing"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics"
     }
   ],
   "facts": [

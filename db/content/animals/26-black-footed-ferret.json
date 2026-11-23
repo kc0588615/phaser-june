@@ -84,9 +84,6 @@
     {
       "category": "morphology",
       "text": "It has a black mask across its eyes, like a bandit.",
-      "tags": [
-        "face_mask"
-      ],
       "source": "adw"
     },
     {
@@ -116,6 +113,58 @@
       "category": "conservation",
       "text": "Farms and towns have replaced much of the grassland where prairie dogs live.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/black-footed-ferret"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/black-footed-ferret"
+    },
+    {
+      "category": "morphology",
+      "text": "The soles of its feet are covered in fur.",
+      "tags": [
+        "furry_feet"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Black-footed_ferret"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/black-footed-ferret"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "A dark band or patch across its eyes looks like a mask.",
+      "tags": [
+        "face_mask"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

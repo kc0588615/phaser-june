@@ -63,18 +63,12 @@
     {
       "category": "morphology",
       "text": "Its fur is chestnut to red-brown, with yellow cheeks and feet.",
-      "tags": [
-        "reddish_fur"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
     },
     {
       "category": "morphology",
       "text": "It has two golden stripes down its back.",
-      "tags": [
-        "stripes"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
     },
@@ -114,6 +108,40 @@
       "category": "conservation",
       "text": "Hunting for food is its biggest threat, and it has vanished from much of its old range.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is mostly red, reddish brown or golden red.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
     }
   ],
   "facts": [

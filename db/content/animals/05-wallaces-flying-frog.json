@@ -58,9 +58,6 @@
     {
       "category": "morphology",
       "text": "Its huge hands and feet are webbed right to the fingertips.",
-      "tags": [
-        "webbed_feet"
-      ],
       "source": "amphibiaweb"
     },
     {
@@ -109,6 +106,38 @@
       "category": "conservation",
       "text": "Main threat: lowland rainforest cut down for timber and oil palm plantations.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [

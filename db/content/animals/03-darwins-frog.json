@@ -86,9 +86,6 @@
     {
       "category": "morphology",
       "text": "It can be brown or bright green, matching the ground where it sits.",
-      "tags": [
-        "camouflage"
-      ],
       "source": "adw"
     },
     {
@@ -134,6 +131,39 @@
       "category": "diet",
       "text": "It sits still and waits for insects to come close.",
       "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8169120/"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

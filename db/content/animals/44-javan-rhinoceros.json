@@ -124,6 +124,15 @@
       "category": "conservation",
       "text": "Only a few dozen are left, all in one place.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toes end in hard hooves that it walks on.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Rhinocerotidae/"
     }
   ],
   "facts": [

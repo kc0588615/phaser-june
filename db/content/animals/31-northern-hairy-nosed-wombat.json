@@ -71,9 +71,6 @@
     {
       "category": "morphology",
       "text": "Its teeth keep growing all its life, worn down by tough grass.",
-      "tags": [
-        "ever_growing_teeth"
-      ],
       "source": "ngo"
     },
     {
@@ -140,6 +137,31 @@
       "text": "In the 1980s only about 35 were left.",
       "source": "government",
       "url": "https://www.stateoftheenvironment.detsi.qld.gov.au/biodiversity/case-studies/northern-hairy-nosed-wombat"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "ngo",
+      "url": "https://www.australianwildlife.org/media/12382/download"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "ngo"
     }
   ],
   "facts": [

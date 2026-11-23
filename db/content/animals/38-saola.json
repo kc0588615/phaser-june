@@ -74,9 +74,6 @@
     {
       "category": "morphology",
       "text": "White bands circle its legs just above its hooves.",
-      "tags": [
-        "hooves"
-      ],
       "source": "adw"
     },
     {
@@ -108,6 +105,57 @@
       "category": "conservation",
       "text": "Maybe only 50 to 300 adults are left.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "literature",
+      "url": "https://doi.org/10.1017/S0030605300020974"
+    },
+    {
+      "category": "morphology",
+      "text": "It has large scent glands just below or in front of its eyes.",
+      "tags": [
+        "eye_glands"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Saola"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Saola"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toes end in hard hooves that it walks on.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

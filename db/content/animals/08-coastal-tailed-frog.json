@@ -127,6 +127,39 @@
       "category": "conservation",
       "text": "In Canada it is listed as a species of Special Concern.",
       "source": "government"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "government",
+      "url": "https://www.env.gov.bc.ca/fia/documents/fieldguide_speciesatrisk_coast.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

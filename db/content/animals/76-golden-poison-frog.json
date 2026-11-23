@@ -135,6 +135,30 @@
       "category": "conservation",
       "text": "Illegal crops, logging, mining and pollution are destroying its small forest.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its head is mostly yellow.",
+      "tags": [
+        "yellow_head"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are yellow.",
+      "tags": [
+        "yellow_legs"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

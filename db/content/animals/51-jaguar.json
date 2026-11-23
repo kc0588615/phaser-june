@@ -111,17 +111,11 @@
     {
       "category": "morphology",
       "text": "Some jaguars are all black, but up close you can still see their spots.",
-      "tags": [
-        "black_coat"
-      ],
       "source": "adw"
     },
     {
       "category": "diet",
       "text": "Its bite is strong enough to crack turtle shells and caiman skin.",
-      "tags": [
-        "strong_bite"
-      ],
       "source": "adw"
     },
     {
@@ -160,6 +154,75 @@
       "category": "conservation",
       "text": "Forests cleared and broken up for farms and ranches are its main threat.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/jaguar"
+    },
+    {
+      "category": "morphology",
+      "text": "The back of each ear has a bold spot of a contrasting color.",
+      "tags": [
+        "ear_spots"
+      ],
+      "source": "ngo",
+      "url": "https://www.catsg.org/_files/ugd/7a07e2_0f1124fffbd54d6082ffd53e8d1fd2b3.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its head is very large for its body.",
+      "tags": [
+        "huge_head"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail has rings of alternating colors.",
+      "tags": [
+        "ringed_tail"
+      ],
+      "source": "ngo",
+      "url": "https://www.catsg.org/living-species-jaguar"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is spotted.",
+      "tags": [
+        "spotted_belly"
+      ],
+      "source": "ngo",
+      "url": "https://www.catsg.org/living-species-jaguar"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "ngo",
+      "url": "https://www.catsg.org/_files/ugd/7a07e2_0f1124fffbd54d6082ffd53e8d1fd2b3.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

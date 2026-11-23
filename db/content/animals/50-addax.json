@@ -88,17 +88,11 @@
     {
       "category": "morphology",
       "text": "Its wide, spread-out hooves help it walk on soft sand.",
-      "tags": [
-        "hooves"
-      ],
       "source": "adw"
     },
     {
       "category": "morphology",
       "text": "It has a dark tuft of hair on its forehead and white markings on its face.",
-      "tags": [
-        "face_markings"
-      ],
       "source": "adw"
     },
     {
@@ -132,6 +126,48 @@
       "category": "conservation",
       "text": "Only about 30 to 90 adults are left in the wild.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Adults have a mane: a crest or ruff of longer hair on the neck or back.",
+      "tags": [
+        "mane"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/addax"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "government",
+      "url": "https://cb.naturalsciences.be/antelopes/Aridlands_Antelopes/addax_description_en.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is plain white.",
+      "tags": [
+        "white_belly"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toes end in hard hooves that it walks on.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

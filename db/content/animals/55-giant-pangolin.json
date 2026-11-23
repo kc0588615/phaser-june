@@ -84,9 +84,6 @@
     {
       "category": "morphology",
       "text": "Its sticky tongue is up to 70 cm long.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
@@ -144,6 +141,40 @@
       "category": "conservation",
       "text": "It is hunted and sold for its scales and meat.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "literature",
+      "url": "https://zenodo.org/records/5720446"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "literature",
+      "url": "https://zenodo.org/records/5720446"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

@@ -91,9 +91,6 @@
     {
       "category": "morphology",
       "text": "It has a very strong bite, with big jaw muscles and wide, flat back teeth for crushing bamboo.",
-      "tags": [
-        "strong_bite"
-      ],
       "source": "smithsonian"
     },
     {
@@ -138,6 +135,56 @@
       "category": "conservation",
       "text": "A network of 67 nature reserves now protects about two thirds of wild pandas.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_panda"
+    },
+    {
+      "category": "morphology",
+      "text": "Its head is very large for its body.",
+      "tags": [
+        "huge_head"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/giantpanda/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "smithsonian"
     }
   ],
   "facts": [

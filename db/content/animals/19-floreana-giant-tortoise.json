@@ -94,6 +94,24 @@
       "category": "conservation",
       "text": "In February 2026, 158 young tortoises with Floreana ancestry were released on the island.",
       "source": "ngo"
+    },
+    {
+      "category": "morphology",
+      "text": "It had five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Gal%C3%A1pagos_tortoise"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it had no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
     }
   ],
   "facts": [

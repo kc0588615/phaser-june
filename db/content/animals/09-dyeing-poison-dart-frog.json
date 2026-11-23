@@ -78,9 +78,6 @@
     {
       "category": "morphology",
       "text": "Its bright colors, like blue, or yellow and black, warn predators that it is poisonous.",
-      "tags": [
-        "warning_colors"
-      ],
       "source": "adw"
     },
     {
@@ -136,6 +133,31 @@
       "category": "habitat",
       "text": "It needs cool, rocky streams in wet forest, and hides under rocks and moss nearby.",
       "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8169120/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its bright colors warn predators that it is poisonous or bad to eat.",
+      "tags": [
+        "warning_colors"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

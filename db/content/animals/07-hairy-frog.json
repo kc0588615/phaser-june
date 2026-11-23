@@ -107,6 +107,38 @@
       "category": "conservation",
       "text": "Main threats: people hunt it for food, and forests are cleared for farms.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is plain white.",
+      "tags": [
+        "white_belly"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [

@@ -138,6 +138,22 @@
       "category": "conservation",
       "text": "Illegal hunting is its biggest threat, along with forests cleared for farms, logging and mines.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

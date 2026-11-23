@@ -97,17 +97,11 @@
     {
       "category": "morphology",
       "text": "It has stripes, and no two have the same pattern, like fingerprints.",
-      "tags": [
-        "stripes"
-      ],
       "source": "smithsonian"
     },
     {
       "category": "morphology",
       "text": "It has a white spot on the back of each ear.",
-      "tags": [
-        "ear_spots"
-      ],
       "source": "smithsonian"
     },
     {
@@ -154,6 +148,97 @@
       "category": "conservation",
       "text": "Poaching for its skin and bones, and the loss of its prey, are the main threats.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tiger"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/tiger/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is mostly red, reddish brown or golden red.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail has rings of alternating colors.",
+      "tags": [
+        "ringed_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/tiger"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "The back of each ear has a bold spot of a contrasting color.",
+      "tags": [
+        "ear_spots"
+      ],
+      "source": "smithsonian"
     }
   ],
   "facts": [

@@ -104,9 +104,6 @@
     {
       "category": "morphology",
       "text": "Its huge ears help it cool down on hot days.",
-      "tags": [
-        "big_ears"
-      ],
       "source": "adw"
     },
     {
@@ -153,6 +150,31 @@
       "category": "conservation",
       "text": "Farms and towns taking its land, and poaching for ivory, are its main threats.",
       "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/african_elephant/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

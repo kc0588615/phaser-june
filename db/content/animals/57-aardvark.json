@@ -103,9 +103,6 @@
     {
       "category": "morphology",
       "text": "Its long snout looks like a stretched-out pig's snout.",
-      "tags": [
-        "pointed_snout"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Aardvark"
     },
@@ -121,9 +118,6 @@
     {
       "category": "diet",
       "text": "It licks up ants and termites with its long, sticky tongue and swallows them without chewing.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
@@ -164,6 +158,31 @@
       "category": "conservation",
       "text": "Hunting for bushmeat may be a real threat to it in some countries, like Zambia and Mozambique.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Aardvark"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

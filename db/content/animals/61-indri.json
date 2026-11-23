@@ -72,9 +72,6 @@
     {
       "category": "morphology",
       "text": "Its tail is just a tiny stub, only about 5 cm long.",
-      "tags": [
-        "stubby_tail"
-      ],
       "source": "adw"
     },
     {
@@ -137,6 +134,57 @@
       "category": "conservation",
       "text": "Forest cleared for slash-and-burn farming, logging and firewood is its main threat.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Indri"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Indri"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "ngo",
+      "url": "https://protectedareas.mg/content/documents/62fcfaed-b6c3-4f9e-9fa0-55bc84093456/eec6fa953ecb4ebb9a3e188213da3e84.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

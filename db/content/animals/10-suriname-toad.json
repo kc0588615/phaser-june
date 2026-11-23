@@ -81,9 +81,6 @@
     {
       "category": "morphology",
       "text": "Its tiny black eyes have no eyelids.",
-      "tags": [
-        "lidless_eyes"
-      ],
       "source": "adw"
     },
     {
@@ -94,9 +91,6 @@
     {
       "category": "morphology",
       "text": "Its front legs are short and weak, with long thin fingers. Its back legs are long and strong, with webbed feet.",
-      "tags": [
-        "webbed_feet"
-      ],
       "source": "amphibiaweb"
     },
     {
@@ -131,6 +125,48 @@
     {
       "category": "habitat",
       "text": "It lives in slow rivers and canals with muddy bottoms.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/surinam-toad"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8169120/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes have no eyelids.",
+      "tags": [
+        "lidless_eyes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
       "source": "amphibiaweb"
     }
   ],

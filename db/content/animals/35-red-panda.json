@@ -77,9 +77,6 @@
     {
       "category": "morphology",
       "text": "Its fur is reddish brown on its back and black on its belly and legs.",
-      "tags": [
-        "reddish_fur"
-      ],
       "source": "adw"
     },
     {
@@ -138,6 +135,58 @@
       "category": "conservation",
       "text": "Losing and breaking up its forests is its main threat.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/red-panda"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Red_panda"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/redpanda/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "Dark lines run from the inner corner of each eye down to its mouth, like tear tracks.",
+      "tags": [
+        "tear_lines"
+      ],
+      "source": "smithsonian",
+      "url": "https://www.nationalzoo.si.edu/animals/red-panda"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is mostly red, reddish brown or golden red.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

@@ -91,9 +91,6 @@
     {
       "category": "morphology",
       "text": "It has big, rounded ears and fans them to cool off.",
-      "tags": [
-        "big_ears"
-      ],
       "source": "adw"
     },
     {
@@ -132,6 +129,31 @@
       "category": "conservation",
       "text": "Its numbers fell by more than 80% in 93 years.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/african_elephant/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

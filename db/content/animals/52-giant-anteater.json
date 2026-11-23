@@ -104,9 +104,6 @@
     {
       "category": "morphology",
       "text": "Its sticky tongue is about 60 cm long and flicks in and out up to 150 times a minute.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "smithsonian"
     },
     {
@@ -120,9 +117,6 @@
     {
       "category": "morphology",
       "text": "Its big, bushy tail is almost as long as its body.",
-      "tags": [
-        "long_tail"
-      ],
       "source": "adw"
     },
     {
@@ -170,6 +164,39 @@
       "category": "conservation",
       "text": "Wildfires, road crashes and farms replacing its grasslands and forests all threaten it.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Adults have a mane: a crest or ruff of longer hair on the neck or back.",
+      "tags": [
+        "mane"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "government",
+      "url": "https://www.biodiversidad.gob.mx/media/1/planeta/cites/files/CITES_mamiferos_12.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

@@ -73,9 +73,6 @@
     {
       "category": "morphology",
       "text": "Its throat is brown, which gives it its name.",
-      "tags": [
-        "brown_throat"
-      ],
       "source": "adw"
     },
     {
@@ -139,6 +136,59 @@
       "category": "conservation",
       "text": "Forest loss, wildfires and road accidents threaten it in parts of its range.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Bradypodidae/"
+    },
+    {
+      "category": "morphology",
+      "text": "A dark band or patch across its eyes looks like a mask.",
+      "tags": [
+        "face_mask"
+      ],
+      "source": "ngo",
+      "url": "https://xenarthrans.org/species/sloths/brown-throated-three-toed-sloth/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its arms are very long, longer than its legs.",
+      "tags": [
+        "long_arms"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Bradypodidae/"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "ngo",
+      "url": "https://xenarthrans.org/species/sloths/brown-throated-three-toed-sloth/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "ngo",
+      "url": "https://xenarthrans.org/species/sloths/brown-throated-three-toed-sloth/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its throat is brown, standing out from the color around it.",
+      "tags": [
+        "brown_throat"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

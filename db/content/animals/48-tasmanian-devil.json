@@ -84,9 +84,6 @@
     {
       "category": "morphology",
       "text": "Its huge head and jaws give it one of the strongest bites for its size of any land predator.",
-      "tags": [
-        "strong_bite"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
     },
@@ -132,6 +129,58 @@
       "category": "conservation",
       "text": "Since the 1990s, a disease that causes lumps on devils' faces has spread and wiped out many of them.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "morphology",
+      "text": "Its head is very large for its body.",
+      "tags": [
+        "huge_head"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
     }
   ],
   "facts": [

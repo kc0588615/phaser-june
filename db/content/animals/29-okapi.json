@@ -84,17 +84,11 @@
     {
       "category": "morphology",
       "text": "Its legs have white and brown stripes, like a zebra's.",
-      "tags": [
-        "stripes"
-      ],
       "source": "adw"
     },
     {
       "category": "morphology",
       "text": "Its long, dark tongue can reach more than 30 cm.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
@@ -138,6 +132,66 @@
       "category": "conservation",
       "text": "Logging and people settling in its forests, even in protected areas, are its main threats.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/okapi"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/okapi"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/okapi/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/okapi/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

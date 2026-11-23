@@ -131,6 +131,15 @@
       "category": "conservation",
       "text": "Poaching for its horn is the biggest threat, though it has been falling since 2015.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toes end in hard hooves that it walks on.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/blackrhino/characteristics"
     }
   ],
   "facts": [

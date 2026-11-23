@@ -160,6 +160,63 @@
       "category": "conservation",
       "text": "Most cheetahs live outside protected parks, where they lose land and prey and come into conflict with farmers.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/news/why-do-cheetahs-have-spots-and-other-cheetah-facts"
+    },
+    {
+      "category": "morphology",
+      "text": "The back of each ear has a bold spot of a contrasting color.",
+      "tags": [
+        "ear_spots"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Adults have a mane: a crest or ruff of longer hair on the neck or back.",
+      "tags": [
+        "mane"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is plain white.",
+      "tags": [
+        "white_belly"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

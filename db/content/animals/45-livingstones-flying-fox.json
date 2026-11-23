@@ -79,9 +79,6 @@
     {
       "category": "morphology",
       "text": "It has large, rounded ears.",
-      "tags": [
-        "big_ears"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Livingstone%27s_fruit_bat"
     },
@@ -124,6 +121,42 @@
       "category": "conservation",
       "text": "Only about 1,200 to 1,500 adults are left.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/doi/10.1644/792.1/2600527"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Livingstone%27s_fruit_bat"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Pteropodidae/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Livingstone%27s_fruit_bat"
     }
   ],
   "facts": [

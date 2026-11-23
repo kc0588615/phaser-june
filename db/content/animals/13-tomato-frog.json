@@ -121,6 +121,22 @@
       "category": "conservation",
       "text": "Collecting wild frogs for pets has stopped; pet tomato frogs are now bred in captivity.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its bright colors warn predators that it is poisonous or bad to eat.",
+      "tags": [
+        "warning_colors"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

@@ -68,9 +68,6 @@
     {
       "category": "morphology",
       "text": "Its eyes can be almost 2.5 cm across.",
-      "tags": [
-        "large_eyes"
-      ],
       "source": "adw"
     },
     {
@@ -121,6 +118,46 @@
         "egg_guarding"
       ],
       "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

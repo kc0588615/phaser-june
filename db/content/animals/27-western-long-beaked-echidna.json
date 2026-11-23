@@ -76,9 +76,6 @@
     {
       "category": "morphology",
       "text": "Its long snout curves down like a beak.",
-      "tags": [
-        "pointed_snout"
-      ],
       "source": "adw"
     },
     {
@@ -92,9 +89,6 @@
     {
       "category": "morphology",
       "text": "Its long, sticky tongue is covered in tiny spines for catching worms.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
@@ -140,6 +134,56 @@
       "category": "conservation",
       "text": "Hunters use trained dogs that can follow its scent to where it sleeps during the day.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has pointed spurs, or big spur-like scales, on its legs.",
+      "tags": [
+        "leg_spurs"
+      ],
+      "source": "literature",
+      "url": "https://doi.org/10.3897/zookeys.255.3774"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/echidna"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

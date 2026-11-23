@@ -97,6 +97,51 @@
       "category": "conservation",
       "text": "More sheep grazing and a warming climate are harming its home.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Ochotonidae/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Ochotonidae/"
+    },
+    {
+      "category": "morphology",
+      "text": "The soles of its feet are covered in fur.",
+      "tags": [
+        "furry_feet"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Ochotonidae/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Ochotonidae/"
     }
   ],
   "facts": [

@@ -81,10 +81,6 @@
     {
       "category": "morphology",
       "text": "It has a red coat with a white throat and a white crescent under each eye.",
-      "tags": [
-        "reddish_fur",
-        "face_markings"
-      ],
       "source": "adw"
     },
     {
@@ -137,6 +133,71 @@
       "category": "conservation",
       "text": "About 60% of the land above 3,200 m in its range has become farmland.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "ngo",
+      "url": "https://www.carnivoreconservation.org/files/actionplans/canids.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is plain white.",
+      "tags": [
+        "white_belly"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is mostly red, reddish brown or golden red.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

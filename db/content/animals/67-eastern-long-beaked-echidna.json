@@ -79,9 +79,6 @@
     {
       "category": "morphology",
       "text": "Its snout is a long tube, about 12 cm long.",
-      "tags": [
-        "pointed_snout"
-      ],
       "source": "adw"
     },
     {
@@ -95,9 +92,6 @@
     {
       "category": "morphology",
       "text": "Its tongue has rows of tiny spines for gripping earthworms.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
@@ -148,6 +142,48 @@
         "high_mountains"
       ],
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/echidna"
+    },
+    {
+      "category": "morphology",
+      "text": "It has pointed spurs, or big spur-like scales, on its legs.",
+      "tags": [
+        "leg_spurs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/echidna"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

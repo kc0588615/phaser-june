@@ -99,9 +99,6 @@
     {
       "category": "morphology",
       "text": "Its large, oval ears have white edges, and its lips are white.",
-      "tags": [
-        "white_ear_rims"
-      ],
       "source": "adw"
     },
     {
@@ -155,6 +152,63 @@
     {
       "category": "conservation",
       "text": "People hunting it are its biggest danger.",
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toes end in hard hooves that it walks on.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/tapirs/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears have white edges.",
+      "tags": [
+        "white_ear_rims"
+      ],
       "source": "adw"
     }
   ],

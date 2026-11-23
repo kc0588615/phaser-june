@@ -69,9 +69,6 @@
     {
       "category": "morphology",
       "text": "It has a long, bendy snout, which is why sengis are also called elephant shrews.",
-      "tags": [
-        "pointed_snout"
-      ],
       "source": "adw"
     },
     {
@@ -120,6 +117,76 @@
       "category": "conservation",
       "text": "Tree cutting and clearing for farms are shrinking its small forests.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is mostly red, reddish brown or golden red.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden-rumped_sengi"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

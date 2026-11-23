@@ -113,6 +113,41 @@
       "category": "conservation",
       "text": "Forest cleared for farming is its biggest threat.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "literature",
+      "url": "https://treatment.plazi.org/GgServer/xhtml/CE199B17FFA5FFA1FAFF62BFF64BFCE0"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Adults have a mane: a crest or ruff of longer hair on the neck or back.",
+      "tags": [
+        "mane"
+      ],
+      "source": "literature",
+      "url": "https://treatment.plazi.org/GgServer/xhtml/CE199B17FFA5FFA1FAFF62BFF64BFCE0"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is mostly red, reddish brown or golden red.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "literature",
+      "url": "https://treatment.plazi.org/GgServer/xhtml/CE199B17FFA5FFA1FAFF62BFF64BFCE0"
     }
   ],
   "facts": [

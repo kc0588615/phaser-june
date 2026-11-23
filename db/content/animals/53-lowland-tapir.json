@@ -98,9 +98,6 @@
     {
       "category": "morphology",
       "text": "It has four hoofed toes on each front foot and three on each back foot.",
-      "tags": [
-        "hooves"
-      ],
       "source": "sdzwa"
     },
     {
@@ -156,6 +153,40 @@
       "category": "conservation",
       "text": "Hunting, forest loss and road accidents are its main threats.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "sdzwa"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "ngo",
+      "url": "https://tapirs.org/wp-content/uploads/2018/06/TAPIR-TRACKS-A-Curriculum-Guide-for-Educators.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears have white edges.",
+      "tags": [
+        "white_ear_rims"
+      ],
+      "source": "ngo",
+      "url": "https://tapirs.org/wp-content/uploads/2018/06/TAPIR-TRACKS-A-Curriculum-Guide-for-Educators.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toes end in hard hooves that it walks on.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "sdzwa"
     }
   ],
   "facts": [

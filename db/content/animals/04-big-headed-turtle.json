@@ -65,9 +65,6 @@
     {
       "category": "morphology",
       "text": "Its head is huge and can't be pulled into its shell.",
-      "tags": [
-        "huge_head"
-      ],
       "source": "adw"
     },
     {
@@ -95,6 +92,65 @@
       "category": "conservation",
       "text": "Main threat: huge numbers are caught for food and the pet trade.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "literature",
+      "url": "https://doi.org/10.1002/ece3.10633"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "government",
+      "url": "https://chm-thai.onep.go.th/wp-content/uploads/2021/10/ONEP_V14.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its shell is very flat and low, not domed.",
+      "tags": [
+        "flat_shell"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "britannica",
+      "url": "https://www.britannica.com/animal/turtle-reptile"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its head is very large for its body.",
+      "tags": [
+        "huge_head"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

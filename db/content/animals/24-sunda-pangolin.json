@@ -85,9 +85,6 @@
     {
       "category": "morphology",
       "text": "Its sticky tongue can stretch about 25 cm out of its mouth.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
@@ -156,6 +153,31 @@
       "category": "conservation",
       "text": "It is protected from all international trade under CITES.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "ngo",
+      "url": "https://www.pangolinsg.org/wp-content/uploads/sites/4/2018/06/SVW_Sunda-Pangolin-Husbandry-Guidelines-2014.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [
