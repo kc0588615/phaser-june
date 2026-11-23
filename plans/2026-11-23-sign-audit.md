@@ -94,7 +94,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -469,6 +469,68 @@ Choosing **A3 + B2** with four lead refinements:
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. The closure brings back plan 059's false fits, and the plan only lists them for witness-signs.
+   §1.4 lets a broad-tagged note fit narrower holders, but several broad-tagged notes have narrower
+   words. 43's "Its pouch opens forward" (`pouch`) will fit 31/37/48, whose pouches open backward.
+   66's "two horns, one behind the other" (`horns`) will fit 50/69. With the proposed
+   `carries_young_on_back`→`mother_carries_young` edge, 54's "clinging to her belly" and 24/59's
+   "on her tail" will fit 52/56/61/63. Plan 059 measured this set: 43 pairs, 39 false
+   (`059-sign-dupes.md:21,45-61`), and Astra made it a MUST-FIX then. Players read the note's
+   words with "N of 5" from the deploy until witness-signs ships, so this teaches wrong biology.
+   Fix: gate each edge on its broad notes. Before an edge is wired, the lead rules every note
+   tagged with the broad sign: are its words true of every narrower holder? If not, retag or untag
+   that note in the rules commit, or don't wire the edge. Add to the Definition of done: every
+   fit that snapshot 2 and snapshot 3 add is ruled true of the note's words, with zero false.
+
+2. `stillPossible` is a third literal fit check; F9 is wrong that only `witnessNotes` and
+   `travelOf` read `Animal.tags`. `animalBoard.ts:575` repeats `note.tags.every(tag =>
+   animal.tags.includes(tag))`. It feeds `scripts/balance-044.ts:112,146,176,196` and
+   `tests/clueGame/animalBoard.test.ts:102-104`. After §1.4 the bot would rule out suspects the
+   note's count includes. Fix: one exported predicate (a suspect fits a note) used by
+   `witnessNotes`, `stillPossible` and the test oracle at `:85`, in the rules commit.
+
+3. Profile-level one-sign-per-fact (§1.3 step 4, §2.7) makes true notes undealable. When the
+   audit adds a narrower sign to an animal whose other note carries the broader one, that note
+   must lose its tag, and an untagged note is never dealt (`animalBoard.ts:233`). Example: an
+   animal with a `horns` note gains `spiral_horns` elsewhere; its "has horns" note disappears.
+   No profile holds such a pair across notes today, so only the audit would create this. Fix:
+   flag narrower + broader on the same note only, and drop implied signs where `Animal.signs`
+   is built (`questionMatchContent.ts:136`) so the badge stays single. Check the e2e sign-list
+   assertion near `scripts/e2e.mjs:1222` still holds.
+
+MISSED:
+1. Adding a sign to an already-tagged note narrows its fits, because a fit needs every tag.
+   Tagging `swimmer` on 54's note beside `seldom_on_ground` likely leaves it fitting only the
+   mystery, so it is no longer dealt. §2.7 needs a rule: put the sign on a new short note when
+   adding it would cost the note its eligibility, and have the lead review every note that
+   loses eligibility in snapshot 3.
+2. No evidence bar for removing an existing tag. §2.5 lets `doesn't` rest on "source silent".
+   A held tag's own note cites a source, and 8 cited pages are not cached. A removal should
+   need that cited page read and a contradiction, or the page not saying it; otherwise
+   `can't tell` and the tag stays.
+3. Triage is unchecked general knowledge on about 75–85% of open pairs. A wrong
+   `no-plausible-holder` is a silent missing tag, which is the defect this mission exists to
+   find. Nothing samples triaged pairs.
+4. After the 15 retirements no active entry uses `restates` (only `tree_dweller` has it,
+   `signs.ts:222`). The field, its table check and `signProblems` step 5 become dead code.
+
+SHOULD-CONSIDER:
+1. Send a seeded sample of triaged pairs (same class, `no-plausible-holder`) through one Astra
+   batch. If any come back `has it`, tighten that rule.
+2. Run the dev-copy content build only at the final Verification, close to release. CI for
+   other PRs reads `phaser_june_dev`, and a split or new sign there throws `Unknown sign` on
+   branches cut from old `main`.
+3. If a ruling changes a definition or edge mid-audit, re-export `game/` and re-run the
+   affected signs' pairs. §2.2 pins one export and gives no rule for this.
+4. Drop `restates` from `ActiveSignEntry`, or say why it stays as a guard.
+5. Record `material` after the closure and proposed adds, not only current holders, so two
+   animals that both gain a sign are not marked immaterial.
+
+*(Saved: `/srv/critter-ai/agent-state/missions/sign-audit/tasks/20261123-024423-architecture-reviewer.md`)*
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -491,5 +553,6 @@ Choosing **A3 + B2** with four lead refinements:
 
 - 2026-11-23 02:20 UTC · Baseline: verified clean `0d02c12e` (`origin/main` `7bce511a`); typecheck, lint, unit tests (106/106), content preview/check (live + dev, 76 species / 2475 clues / 491 facts, 0 errors/warnings), and `e2e:fresh` on `phaser_june_dev` (1657/1657, artifact in `…/sign-audit/e2e-baseline/`) all pass.
 - 2026-11-23 02:42 UTC · Architecture: `architect` audited `SIGNS`/content/sources/witness baseline (F1–F9, 105 sets, 402/525 combos, 940 notes, 259/267 cached sources) and proposed options; lead chose A3 + B2 with 4 refinements (`SignEntry` union, `travelOf` water-system guard, auditing held pairs, 3-snapshot witness metrics); `architect` finalized the single target design. Plan updated; no code changed.
+- 2026-11-23 02:47 UTC · Fable review: `architecture-reviewer` (Fable 5.2 · high) returned `APPROVE_WITH_CHANGES` with 3 MUST-FIX (broad-note narrow wording false fits, `stillPossible` third literal fit check, profile-level one-sign-per-fact hiding true notes), 4 MISSED, 5 SHOULD-CONSIDER. Recorded in plan; no code changed.
 
 ## Summary
