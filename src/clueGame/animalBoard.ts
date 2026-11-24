@@ -58,6 +58,8 @@ export interface AnimalRules {
  * Tuned by the balance bot (plans 044, 045 and 047; toy scouting 047-1 adds 1-3 points; the double 053-1 adds 0.6-0.8 moves left at the find): with scouting, wandering and reward toys, orders of 20 gems and
  * 30 moves (careful finds 91-95%, one who knows every trait on sight 100%, one who knows none 87-92%, one who reasons
  * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
+ * 055-2 (per-sign witness notes, 10 wired edges, startWitness 1; vs 055-1, 200 rounds/place, seed 44, world/africa/asia): careful +0.4-0.9 moves
+ * left at the find (0-6 pts ★★★, +0.2-0.3 notes/round); startWitness 1 alone (vs 0) +0.5-0.9; starMoves kept (careful 20th pct 16/16/14, shift ≤ 2).
  */
 export const ANIMAL_RULES: AnimalRules = {
   version: '055-2', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, startWitness: 1, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
