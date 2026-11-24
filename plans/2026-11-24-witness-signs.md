@@ -85,7 +85,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -603,7 +603,337 @@ SHOULD-CONSIDER:
 
 ## Steps
 
+How each step runs (`~/.gemini/mission-lead.md`):
+- The lead writes Opus a brief at `$STATE/prompts/sN.md` and runs `claude-task -f $STATE/prompts/sN.md` from the worktree root.
+- The lead then reviews `git status` and `git diff`, runs the step's checks itself, and either commits code and plan together and pushes, or rejects as the rules say.
+- `$STATE` = `/srv/critter-ai/agent-state/missions/witness-signs`.
+- **CHECKS**, which must all pass before every commit: `npm run typecheck && npm run lint && npm test && npm run content -- preview > /tmp/ws-preview.txt && ! grep -n PROBLEM /tmp/ws-preview.txt`
+- **E2E-DEV** runs on the dev copy and never prints the connection string:
+  ```
+  ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+    [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+    CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh )
+  ```
+  - If the guard fails: stop, add a handoff item, and block.
+  - After a pass, move the newest `e2e-artifacts/<run>/` to `$STATE/e2e-sN/`, clear any remaining `e2e-artifacts/*`, and delete the previous `$STATE/e2e-s*` (disk is 92% full). Keep `e2e-baseline/`.
+- **RUN-TS** runs a `$STATE` script: `bash $STATE/scripts/run-ts.sh --code <tree> <entry.ts> [args]`.
+  - It is a copy of `/srv/critter-ai/agent-state/missions/sign-audit/scripts/run-ts.sh`, made in S1, with `modules=` set to `/srv/critter-ai/worktrees/witness-signs/node_modules`.
+- **Trees:**
+  - "base" is `/tmp/ws-base` (`mkdir -p /tmp/ws-base && git archive 8d246c70 src db/content | tar -x -C /tmp/ws-base`).
+  - "live content" is `/tmp/ws-c7b/db/content` (`mkdir -p /tmp/ws-c7b && git archive 7bce511a db/content | tar -x -C /tmp/ws-c7b`).
+- **Testing rule:** in any step that touches `signs.ts`, `questionMatchContent.ts`, `animalBoard.ts` or `BoardModel.ts`, Opus writes the failure-mode header comment and failing tests FIRST, runs `npm test` (and `npm run typecheck` for compile-time checks) to confirm the new tests are red for the right reason, and ONLY THEN implements the code. Opus cites the red output in its report, and the lead verifies the failure-mode comment and tests cover every listed failure mode before accepting.
+
+- [ ] S1. **Witness field, helpers, table checks, and the 88 body + range sentences.**
+  - **Files:** `src/clueGame/signs.ts`, `tests/clueGame/signs.test.ts`, `tests/clueGame/animalBoard.test.ts` (the `TABLE` fixture only).
+  - **State files:** `$STATE/scripts/run-ts.sh`; `$STATE/scripts/sign-holders.ts` (read-only), which writes `$STATE/sign-holders.csv`.
+    - Columns: sign, category, meaning, direct implies, HEAD holders (id name), and each holder's note texts tagged with the sign.
+    - Holders come from `heldSigns` over a copy of `SIGNS` that has the 10 deferred edges added. That way each broader sign's sentence is written against its future holders: `horns` with the spiral- and S-shaped-horn holders; `face_markings` with face mask, spectacles and tear lines; and so on.
+  - **Failure modes first** (header of `signs.test.ts`, blocks A1-W, A2-W and A10):
+    - A1-W: these all pass `signTableProblems` when they shouldn't:
+      - an empty, whitespace-only or untrimmed sentence;
+      - a sentence containing `_`;
+      - a sentence containing its label as a whole phrase (one word like `mane`, several words like `digging claws`, the hyphen form `S-shaped horns`, any case).
+    - A1-W also fails if the check wrongly flags any of these:
+      - a label inside another word ("remains" for `mane`);
+      - a `null` sentence;
+      - a retired entry.
+    - A2-W (`@ts-expect-error`): an active entry without `witness` compiles; a retired entry with `witness` compiles.
+    - A10: `witnessSentence` throws, or returns text, for a retired or unknown tag or for an inherited key like `constructor`. `isKnownSign` is `true` for an unknown tag or `constructor`, `false` for a retired one, or throws.
+    - The real table: `signTableProblems(SIGNS)` isn't empty.
+  - **Then implement:**
+    - `witness: string | null` on `ActiveSignEntry`, with `at(category, meaning, witness, rules)`.
+    - `isKnownSign` and `witnessSentence` (both go through `lookup`, so they never throw).
+    - The three `signTableProblems` checks, with the label regex exactly as in the Architecture section.
+    - The test fixtures `sign(meaning, rules, witness = null)` and `T`, and `witness: null` on each `TABLE` entry in `animalBoard.test.ts`.
+  - **Sentences:** write the 87 `body` sentences and the 1 `range` sentence. Every other active entry gets `null` for now, with a `// S2` comment. S2 replaces all of them, and nothing deals them before S4.
+    - Each sentence is one short sentence, present tense, starting with "It"/"Its".
+    - It agrees with `meaning` and is never stronger than it ("in at least one sex", "some individuals").
+    - It is true of every HEAD holder in `sign-holders.csv`.
+    - It reads at grades 6–12, read solo.
+    - It names no animal, group noun (frog, turtle, monkey, cat), country, region or island.
+    - It avoids the label's words and their inflections.
+  - **Verify:**
+    - CHECKS.
+    - The lead reads 20 random body rows of `sign-holders.csv` against their sentences, and logs any it sends back.
+
+- [ ] S2. **The remaining 113 sentences (75 habits, 22 habitat, 16 life) and the exact `null` list.**
+  - **Files:** `src/clueGame/signs.ts`, `tests/clueGame/signs.test.ts`.
+  - **Failure mode first** (A1 on the real table): the active signs with `witness === null` aren't exactly `['floreana_island', 'pinta_island', 'prairie_dog_towns']`.
+  - **Then:** replace every `// S2` `null` with a sentence under S1's rules, using `$STATE/sign-holders.csv` (regenerate it with RUN-TS if needed). The three deliberate nulls each get a one-line comment on why. `kopjes` and `one_island` get sentences that name no place.
+  - **Verify:**
+    - CHECKS.
+    - `git grep -n "// S2" src/clueGame/signs.ts` is empty.
+    - The lead spot-checks 20 rows, as in S1.
+
+- [ ] S3. **Name guard and the pool door's unknown-tag filter.**
+  - **Files:** `src/clueGame/questionMatchContent.ts`, `scripts/content.ts`, `tests/clueGame/content.test.ts`. If the guard flags any HEAD sentence, it is reworded in `src/clueGame/signs.ts` in this step.
+  - **Failure modes first** (header of `content.test.ts`):
+    - `witnessNameProblems` misses a holder's name word in the sentence of a sign it holds. The name word can be:
+      - a word of its common name;
+      - a group noun or its singular;
+      - its genus or species epithet;
+      - a country or region it lives in.
+    - It misses a broader sign the holder has only by implication.
+    - It reports a sign the animal doesn't hold, reports or throws on a `null` sentence, or gives a message that doesn't name the animal and the sign.
+    - It reports anything on HEAD profiles.
+    - `animalsFromPool` has any of these faults:
+      - it throws on an unknown open tag;
+      - it drops a known, retired or trait tag;
+      - it doesn't warn once for each tag it drops;
+      - its `isHandWrittenClue` stops reading the raw tags.
+    - `animalsFromProfiles` stops throwing on an unknown open tag.
+  - **Then implement:**
+    - Pull the list of name words that `buildAnimal` builds into one private helper. `buildAnimal` keeps using it until S8, and `witnessNameProblems(profiles, table = SIGNS)` uses it too (DRY).
+    - Add the pool-door filter with `warn`, as the Architecture section says.
+    - In `content.ts`, `preview` prints `  PROBLEM …` for each hit of `witnessNameProblems([profile])`.
+  - **Verify:** CHECKS. Preview reports 0 problems.
+
+- [ ] S4. **Per-sign dealer, the 10 edges wired, and the save guard.**
+  - **Files:**
+    - `src/clueGame/signs.ts`: wire the 10 `implies` edges, remove `noteCategories` (and reword any broader sign's sentence if wiring the 10 edges triggers `witnessNameProblems` on a newly implied holder).
+    - `src/clueGame/animalBoard.ts`:
+      - `WitnessNote { sign, text, fits, also }`, `witnessNotes`, `roundStillFits` (with the `round.log` check) and `stillPossible`;
+      - the header comment.
+    - `tests/clueGame/signs.test.ts`:
+      - replace the deferred-pair test with "the 10 former deferred edges are wired";
+      - drop the `noteCategories` assertion and its import.
+    - `tests/clueGame/animalBoard.test.ts`: `:82-91` keyed on `note.sign`, A8, S25b, the W-block, the `roundStillFits` cases, and `HELD_BACK = []`.
+    - `src/components/animalBoard/AnimalSheets.tsx`: only the swap `noteCategories(note.tags)` → `[signCategory(note.sign)]` so it compiles. S7 rewrites `NotesList`.
+    - `scripts/balance-044.ts`: `--explain` prints `"${note.text}" (${note.sign}) fits …`.
+    - `scripts/e2e.mjs`, the stale save only:
+      - the fixture becomes `{ sign: 'tree_dweller', text: 'It sleeps high in the trees.', fits: 2, also: [] }`;
+      - the predicate at `:2325` becomes `note.sign === 'tree_dweller'`.
+  - **Failure modes first** (header of `animalBoard.test.ts`):
+    - W1: a sign repeats.
+    - W2: `text !== witnessSentence(sign)`, or it is null.
+    - W3: `fits` isn't the count of suspects that hold the sign, or isn't between 2 and n−1, or the mystery isn't among them.
+    - W4: a dealt sign is implied by another dealt sign.
+    - W5: `also` isn't sorted, or I4 fails (a fitter shows neither `sign` nor an `also` chip, or a non-fitter shows one).
+    - W6: a held sign that fits 2 to n−1 suspects has a `null` sentence and isn't in `HELD_BACK`.
+    - W7: the notes' order isn't a subsequence of `heldSigns(mystery.tags)`.
+    - W8: a retired `tree_dweller` mystery shared by 2 or more suspects gets a note for it, or throws.
+    - A4: an edge isn't wired, or `badges(['backward_pouch','pouch'])` isn't `['backward_pouch']`.
+    - `roundStillFits` returns `true` for any of these:
+      - (R1) a note that differs only in `sign`;
+      - (R2) a note that differs only in `also`;
+      - (R3) a note in `notes` with `also` missing or not an array;
+      - (R4) a `{ kind: 'note' }` log entry that is missing, extra, out of order or malformed.
+    - It throws for R3 or R4.
+    - (R5) A valid 055-2 round stops fitting (`:336-348` stay green).
+  - **Verify:**
+    - CHECKS.
+    - `node scripts/run-typescript.mjs scripts/balance-044.ts --places world --explain 0` prints sentence + sign lines.
+    - E2E-DEV passes every check: the existing notes checks still hold, with one mark per note. Artifact: `$STATE/e2e-s4/`.
+
+- [ ] S5. **Fable sentence-review gate, part 1: list, review, rulings (blocking; no code).**
+  - **Who:** Opus writes `$STATE/scripts/witness-list.ts`, extending S1's helper, and runs it on the worktree to write `$STATE/witness-sentences.csv`.
+    - Columns: `sign, category, meaning, witness, HEAD holders (id name), live-only holders, dealt in N HEAD combos, label hit, label_word_hits, censor blanks per holder`.
+    - HEAD holders come from the real wired `heldSigns`.
+    - Live-only holders come from `/tmp/ws-c7b`.
+    - The `dealt in N` count uses the real `witnessNotes` over the 105 sets / 525 combos, enumerated as `balance-044.ts reportDeals` does. The script asserts both totals.
+    - `label hit` uses the `signTableProblems` regex.
+    - `label_word_hits` holds the tag's words or stems of 3 or more letters that appear in the sentence.
+    - `censor blanks per holder` comes from `witnessNameProblems`.
+  - **The review:** the lead writes `$STATE/prompts/fable-sentences.md` and runs `claude-task --model claude-fable-5-2 --effort high -f $STATE/prompts/fable-sentences.md`.
+    - Fable reviews every row for truth of every HEAD holder (the 4 live-only pairs are for information only), reading level for grades 6–12 read solo, no animal, group or place named, and no label word or inflection used (`label_word_hits`).
+    - For each sign it answers `OK`, `FIX: <sentence> — why` or `NULL — why`.
+    - If Fable exits 3: do not skip. Run `astra-review --task $STATE/prompts/fable-sentences.md plans/2026-11-24-witness-signs.md` from `$STATE`, and save its stdout beside the prompt. If Astra is out too, end per the rules and retry in a later session.
+  - **Rulings:** the lead rules on every item under **Decisions**: one line for each FIX or NULL (accepted or rejected, and why), plus one line listing how many rows were accepted as OK.
+  - **Verify:**
+    - The CSV has 201 rows; `label hit` and `censor blanks` are 0 on every row.
+    - Fable's (or Astra's) reply is saved under `$STATE/tasks/`.
+    - Every FIX or NULL has a ruling. Plan-only commit.
+
+- [ ] S6. **Fable gate, part 2: apply the accepted fixes.**
+  - **Files:**
+    - `src/clueGame/signs.ts` (accepted rewordings and nulls).
+    - `tests/clueGame/signs.test.ts` (the exact `null` list, if changed).
+    - `tests/clueGame/animalBoard.test.ts` (a `HELD_BACK` entry for each new `null`, with its Decision cited).
+    - Only if a ruling proved a tag wrong: the one profile JSON. Record it under Decisions, and note that a content build will be needed (a handoff item after the deploy, as the Brief's Notes say).
+    - (If S5 accepted 0 changes, check off as "none needed" with a plan-only commit.)
+  - **Verify:**
+    - CHECKS.
+    - Regenerate `$STATE/witness-sentences.csv`: every `witness` equals the accepted text, and `label hit` and `censor blanks` are 0.
+    - If a profile changed: `npm run content -- build` on the guarded dev copy (the E2E-DEV guard, then the build) before the next E2E. Never with `.env.local`.
+
+- [ ] S7. **Label UI and debug bridge.**
+  - **Files:**
+    - `src/components/animalBoard/AnimalSheets.tsx`:
+      - module-local `SignChip`, which `SignGroups` reuses with the same DOM;
+      - the `NotesList` item: `data-witness-sign`, `GlossaryText`, a label row with `CategoryMark` + `SignChip` + "or" + `also` chips (outside `MARK_CAPTION`), and the fits row unchanged.
+    - `src/components/animalBoard/AnimalGame.tsx`: the `LogText` note `(…sign or also…)` as plain text; drop the `WithBlanks` import; fix the comment at `:499`.
+    - `src/game/debugBridge.ts`: `signWitness()`.
+    - Delete `src/components/clueGame/WithBlanks.tsx`; both of its callers are gone.
+  - **Verify:**
+    - CHECKS.
+    - `git grep -n "WithBlanks" src scripts tests` is empty.
+    - E2E-DEV passes every check. Artifact: `$STATE/e2e-s7/`; delete `e2e-s4/`.
+    - The lead looks at `02c-notes.png` (and DOM checks): the chips match the guide's, aren't uppercase, and show "or" between alternatives.
+
+- [ ] S8. **Remove the dead censoring; reveal card and `animalDebugSummary.witness`.**
+  - **Files:**
+    - `src/clueGame/questionMatch.ts`: `FieldNote` loses `full`; `Animal` loses `revealNotes`; the docs on `notes`.
+    - `src/clueGame/questionMatchContent.ts`:
+      - `buildAnimal` pushes every item whole;
+      - `MAX_BLANKS` goes;
+      - `BLANK` becomes module-local;
+      - `censor` and the name-word list stay only for `witnessNameProblems`;
+      - the header comments `:1-6`, `:109-110`.
+    - `src/components/animalBoard/AnimalSheets.tsx` reveal card: `const notes = animal.notes`, `text: note.text`.
+    - `src/clueGame/animalSession.ts`: `witness: [{ sign, text, also, behind }]`.
+    - `tests/clueGame/animalBoard.test.ts`: the synth fixture drops `revealNotes`.
+  - **Failure modes first:**
+    - In `content.test.ts`: a profile's `notes` aren't exactly its hand-written clues then its facts, in profile order and whole; a note contains `____`; one of the 16 former `revealNotes` is missing.
+    - In `animalBoard.test.ts` (W9): a dealt sign has no mystery note whose `heldSigns(tags)` holds it, so `behind` would be empty.
+  - **Verify:**
+    - CHECKS.
+    - `git grep -n -E "revealNotes|MAX_BLANKS|\.full\b|noteCategories" src tests scripts` is empty.
+    - E2E-DEV passes. Artifact: `$STATE/e2e-s8/`; delete `e2e-s7/`.
+
+- [ ] S9. **Starting witness gem, rules `055-2`, and the bot's flag.**
+  - **Files:**
+    - `src/game/BoardModel.ts`: `RareGem.atLeast`; `newBoard` validation and the 20-attempt loop; private `topUpRare`.
+    - `src/game/EventBus.ts`: `rare?: RareGem`.
+    - `src/components/animalBoard/useAnimalSession.ts`: `atLeast: round.rules.startWitness`.
+    - `src/clueGame/animalBoard.ts`: `AnimalRules.startWitness`; `ANIMAL_RULES` gets `version: '055-2'`, `startWitness: 1`.
+    - `scripts/balance-044.ts`:
+      - `--start-witness`, plus its usage line;
+      - `atLeast` at `:387`, while `:385` stays at 0;
+      - the start count in the header;
+      - one line per place: "starting boards with a witness gem: X% (mean Y)", counted on free cells after `newBoard`.
+    - `tests/game/boardModel.test.ts`.
+  - **Failure modes first** (header of `boardModel.test.ts`):
+    - G1: for seeds 0–1,999 with `tileCells` pins and `atLeast: 1`, a board has no rare gem on a free cell, a standing match, or no valid move.
+    - G2: a seed whose `atLeast: 0` board already has a free rare gem gives a different grid with `atLeast: 1`.
+    - G3: a seed whose only rolled gem sits on a pin gets no extra gem on a free cell.
+    - G4: the same seed gives two different grids.
+    - G5: `loadBoard` tops up.
+    - G6: a negative, non-integer or infeasible (`freeCount − atLeast < 3`) `atLeast` doesn't throw `RangeError`.
+    - G7: a tight but feasible `atLeast` gives a board without that many free rare gems, or with a standing match, or with no valid move.
+    - G8: a rare gem dropped because its type is a normal gem still tops up or throws.
+  - **Verify:**
+    - CHECKS.
+    - `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 20 --places world --players careful --start-witness 1` prints 100%; the same with `--start-witness 0` prints about 74%.
+    - E2E-DEV passes (old-version saves are dropped through the version check). Artifact: `$STATE/e2e-s9/`; delete `e2e-s8/`.
+
+- [ ] S10. **E2E checks for the new behavior** (no new rounds; DOM reads only).
+  - **File:** `scripts/e2e.mjs`.
+  - **Checks to add:**
+    1. Every round start (`:904-910`) has at least one `grid[x][y] === 'purple'` on a cell not in `pins`, with `movesUsed === 0`.
+    2. The notes check (`:2011-2029`), for each `li[data-witness-sign]`:
+       - the first `<p>`'s trimmed text equals `__cc.signWitness()[sign]` and `clue().witness[i].text`;
+       - it holds `[data-sign=sign]`, plus one `[data-sign=alt]` and an "or" for each `also`;
+       - it has exactly one `[data-category-mark]`;
+       - the count equals `state.notes`;
+       - the dialog has no `____`.
+    3. Every round end with `state.notes > 0` (next to `checkSources`): for each `clue().witness` entry, some `section[aria-labelledby="end-notes"] [data-sourced-facts] > li` starts with one of its `behind` texts, and the section has no `____`.
+    4. `check('the run collected and checked a witness note', notesChecked)`.
+  - **Verify:**
+    - E2E-DEV passes, and `report.json` holds all four new check names.
+    - If check 4 fails, make the player prefer a move next to a purple gem (as `shots/take.mjs:180` does) until a note is collected. Never weaken the check.
+    - The run's time is in the Log (CI's job allows 15 min).
+    - CHECKS. Artifact: `$STATE/e2e-s10/`; delete older `e2e-s*`.
+
+- [ ] S11. **Goal 4 metrics script, counts and the "after = 0" check.**
+  - **State files:** `$STATE/scripts/witness-metrics.ts` and `$STATE/witness-metrics.md`. No repo change.
+  - **Runs:** RUN-TS on the base tree and on the worktree, each with `--content` set to HEAD's `db/content` and then `/tmp/ws-c7b/db/content`.
+  - **It reports:** sets, combos, combos with at least one note, notes dealt, notes needing `also` chips, and dealt texts that aren't the sign's standard sentence.
+    - For the worktree, it asserts that every dealt `text === witnessSentence(sign)` across all 525 combos on both content versions, with nothing thrown. The live-row run is the proof that the code works with the rows as they are today.
+    - It reports the exact starting-gem share (73.82% → 100%); S13 adds the empirical figure from the bot's line.
+  - **Verify:**
+    - The numbers match the Pre-change facts table: base 525/525 and 403/525; after 525/525 and 458/525. If the S6 nulls move them, explain why.
+    - The lead adds the table under a new `## Results` section, above `## Code review (Astra)`.
+
+- [ ] S12. **Goal 4 "before" giveaway count.**
+  - **Who:** Opus classifies HEAD's 157 distinct non-shared dealt texts (base tree) against the fitting suspects of each combo they appear in. It reuses the rulings in `/srv/critter-ai/agent-state/missions/sign-audit/wording.csv` where a mystery/clue/suspect pair was already ruled, and marks the rest as newly judged.
+  - **Output:** `$STATE/before-wording.csv` (text, sign, mystery, fitting suspects, gives it away by its words yes/no, why, source of the ruling). `witness-metrics.ts` reads it to count giveaway notes over the 525 combos (after = 0).
+  - **Verify:**
+    - The lead samples 15 rulings; the table in `## Results` gets its before/after row.
+    - Delete `/tmp/ws-base` and `/tmp/ws-c7b` afterwards (disk).
+
+- [ ] S13. **Paired balance runs and the tuning comment.**
+  - **Runs:** `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 200 --seed 44 --places world,africa,asia --start-witness 0 > $STATE/balance-run1.txt`, then the same with `--start-witness 1` into `$STATE/balance-run2.txt`.
+  - **Comparison:** the lead compares Run 2 against Baseline using the pre-registered limits.
+    - Explorers (careful, novice, expert, reader): Found −1 to +2 points; ★★★ −2 to +8 points; moves left −0.5 to +2.0; notes 0 to +0.8.
+    - Guesser and random: Found and ★★★ ±4 points.
+    - Oracle: Found and ★★★ 100%; moves left ±0.3.
+    - The `starMoves` rule applies (careful's 20th percentile moves by more than 2).
+    - Run 1 against Baseline measures the dealer and the edges; Run 2 against Run 1 measures the starting gem.
+    - Any result out of limits gets a Decision, or the rules are adjusted.
+  - **Then Opus:** one line on the 055-2 result in `ANIMAL_RULES`'s tuning comment (`src/clueGame/animalBoard.ts`).
+  - **Verify:**
+    - CHECKS.
+    - Both tables and the empirical starting-gem lines go into `## Results`.
+
+- [ ] S14. **Docs.**
+  - **Files and what changes:**
+    - `docs/CLUE_MATCH.md`:
+      - `:20`, `:22`, `:51` ("up to 055-2"), `:53`;
+      - `:61`: whole notes in profile order on the reveal card, and sentences in `SIGNS`;
+      - `:90`: the new E2E checks.
+    - `CONTEXT.md` `:58-59`, `:100-101`.
+    - `docs/ANIMAL_BOARD_PAPER.md`: `:3`, plus the `> **Rules 055-2 (2026-11-24) …**` note with the bot result.
+    - `docs/CONTENT_SOURCES.md`:
+      - `:81`;
+      - `:84-98`: the edges are wired, and the table becomes history;
+      - the `witness` field and its checks;
+      - `:102`.
+  - **Verify:**
+    - CHECKS.
+    - `git grep -n -E "WithBlanks|revealNotes|____|blanked" docs CONTEXT.md` shows only history lines.
+
 ## Verification
+
+Run these one at a time, after both final code reviews are recorded and their accepted MUST-FIX steps are done. Run them from the worktree root and record each result in **Log** and `## Results`.
+
+1. **E2E (the Definition of done).** A dev content build, then the E2E:
+   ```
+   ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+     [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1
+     npm run content -- build && CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh )
+   ```
+   - Never `cat` or print the dev-copy file or `DATABASE_URL`. If the guard fails: stop, add a handoff item, end with `MISSION_BLOCKED`.
+   - **It must show:**
+     - The build's row counts match Baseline: `species: 76`, `species_deduction_clues: 3653`, `species_facts: 491` (unless S6 changed a tag).
+     - `N/N checks passed`, with N at or above Baseline's 1554 plus the new checks.
+     - Every round starts with a free purple gem.
+     - Each collected note's text equals `signWitness()[sign]`, with its `SignChip`, the "or" `also` chips and one category mark, and no `____`.
+     - Each round end's `#end-notes` starts with a `behind` text, with no `____`.
+     - `the run collected and checked a witness note` passes.
+     - The stale-save and A16 checks pass.
+     - The run time is recorded (CI allows 15 min).
+   - **Artifact:** move the newest `e2e-artifacts/<run>/` to `/srv/critter-ai/agent-state/missions/witness-signs/e2e-final/` (`report.json` + screenshots; re-run the same command with the same seed to reproduce it), clear any remaining `e2e-artifacts/*`, and delete every `$STATE/e2e-s*`. Keep `e2e-baseline/` and `e2e-final/`.
+2. **Static checks:** `npm run typecheck`, `npm run lint` (0 warnings), `npm test` (all pass, more than Baseline's 147), and `npm run content -- preview > /tmp/ws-preview.txt && ! grep -n PROBLEM /tmp/ws-preview.txt`.
+3. **Live database, read-only:** `npm run content -- check` with the worktree's `.env.local`.
+   - Expected: `Pool: 76 playable of 76 species, 2475 clues (2083 deductive), 491 facts. 0 errors, 0 warnings.` (or the 3653-clue line if H22 has run).
+   - Never `build`, `ranges` or `iucn`.
+4. **Production build:** `npm run build` (typecheck + `next build`) passes with no errors. Run it alone, since memory is tight.
+5. **Balance:** `## Results` shows Baseline, Run 1 (`--start-witness 0`) and Run 2 (`--start-witness 1`) on `--rounds 200 --seed 44 --places world,africa,asia`.
+   - Every Run 2 result is within the pre-registered limits, or has a Decision.
+   - The starting-gem line reads 100% in Run 2.
+   - `starMoves` is unchanged, or there is a Decision.
+6. **Goal 4:** `## Results` has the before and after table for HEAD content and live `7bce511a`:
+   - combos with at least one note: 525→525 and 403→458, or explained;
+   - dealt notes that give the mystery away by their words: before from `$STATE/before-wording.csv`, after 0;
+   - rounds starting with a witness gem: 73.82%→100%.
+   - Re-run `witness-metrics.ts` on the final tree (re-extracting `/tmp/ws-c7b` from `7bce511a` and deleting it right after); its "after" check passes on both content versions.
+7. **Fable gate is complete:**
+   - `$STATE/witness-sentences.csv` was regenerated from the final tree; `label hit` and `censor blanks` are 0.
+   - Every FIX or NULL from Fable (or Astra) has a ruling under Decisions, and the accepted ones are in `signs.ts`.
+   - Every `HELD_BACK` entry has a Decision and a Summary line.
+8. **Dead code is gone:** `git grep -n -E "WithBlanks|revealNotes|noteCategories|MAX_BLANKS|\.full\b" src tests scripts` is empty.
+9. **Owner's content build:** not needed if no profile changed (pure code: the sentences are in `SIGNS`), and the Summary says so. If S6 changed a tag, add the handoff item after the deploy's smoke tests (WSL: update `main`, take a fresh dump, `npm run content -- build`, `npm run content -- check`, with the expected summary line).
+
+### Risks / open questions
+
+- **Fable may hold signs back.** Each `null` it forces shrinks coverage; W6 and `HELD_BACK` make each one a recorded decision. If many signs fall, the 525/525 figure drops; report it.
+- **E2E time.** `e2e:fresh` is close to CI's 15 minutes. The new checks are DOM reads only, but the steering for check 4 may add moves; watch the run time.
+- **Disk is at 92%** (3.8 GB free). Keep one intermediate E2E folder, clear `e2e-artifacts/*` after moving, and delete the `/tmp/ws-*` trees after S12.
+- **Before H22, live rows** keep 4 untrue pairs (`1:yellow_legs`, `9:forest_floor`, `14:puffs_up`, `39:rarely_drinks`), and 67/525 combos get a starting witness gem that gives no note. Both were accepted; the Summary must say so.
+- **The starting gem** raises the mean number of witness gems from 1.32 to 1.58, which may push reader or novice above the ★★★ limit (+8 points). Decide that in S13 against the limits, not afterwards.
+- **For the Summary, outside this mission:**
+  - the website's `witnessNote` shot and alt text are now stale (`src/site/shots.ts:46-48`, `Teachers.tsx:89`);
+  - the untagged note 14:2 ("puffs up") is left for a content PR.
 
 ## Code review (Astra)
 
@@ -626,5 +956,6 @@ SHOULD-CONSIDER:
 - 2026-11-24 01:46 UTC — Fable review stage: `architecture-reviewer` returned `APPROVE_WITH_CHANGES` (1 MUST-FIX, 3 MISSED, 4 SHOULD-CONSIDER; saved at `$STATE/tasks/20261124-014241-architecture-reviewer.md`), recorded under `## Architecture review (Fable)`. Plan-only commit.
 - 2026-11-24 01:50 UTC — Astra review stage: `astra-review` returned `APPROVE_WITH_CHANGES` (4 MUST-FIX, 1 SHOULD-CONSIDER; saved at `$STATE/tasks/20261124-014749-astra-architecture.md`), recorded under `## Architecture review (Astra)`. Plan-only commit.
 - 2026-11-24 01:58 UTC — Revision stage: ruled on all 13 items from Fable (8) and Astra (5) under Revision notes (11 accepted, 2 rejected: Astra MF1, Astra SC1); updated Architecture, invariants, tests, Fable gate CSV, and Decision to match. Plan-only commit.
+- 2026-11-24 02:08 UTC — Steps stage: `planner` drafted S1–S14 and E2E-first Verification (`$STATE/tasks/20261124-015853-planner.md`); lead reviewed and refined (`git grep` for missing `rg`, single-session TDD red-first check, `e2e-artifacts/` move/cleanup for 92% disk, S4 edge-triggered name-reword note, S11/S13 bot-line ordering, Verification step 6 `/tmp/ws-c7b` re-extract). Plan-only commit.
 
 ## Summary
