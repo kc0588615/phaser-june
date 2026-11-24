@@ -3,7 +3,7 @@
 // round's end over the board (and the trail's; the grid above replays the evidence, plan 052), and how to play (with a worked
 // comparison on made-up answers, never the live round's). Players see the mystery as "the one caught on camera".
 import Link from 'next/link';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { ArrowUpRight, Ban, BookOpen, Camera, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
 import { animate, AnimatePresence, motion, useIsPresent, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
@@ -12,10 +12,9 @@ import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace } from '@/clueGame/clueFaces';
 import type { CluePool, PoolSpecies } from '@/clueGame/pool';
 import { CATEGORY_LABELS, CHARGE_CATEGORIES, categoryOf, prefixOf, type Animal, type ChargeCategory, type Sign } from '@/clueGame/questionMatch';
-import { signCategory } from '@/clueGame/signs';
+import { signCategory, signPhrase } from '@/clueGame/signs';
 import { FactsWithSources } from '@/components/clueGame/FactsWithSources';
 import { GlossaryText } from '@/components/clueGame/GlossaryText';
-import { WithBlanks } from '@/components/clueGame/WithBlanks';
 import { Sheet } from '@/components/clueGame/Sheet';
 import { PhotoCredit } from '@/components/clueGame/SpeciesPortrait';
 import { useEscapeKey } from '@/components/clueGame/useEscapeKey';
@@ -278,6 +277,10 @@ const SIGN_PAGE_MS = 5000;
 const CHIP = 'rounded-xs bg-neutral-3 px-xs text-xs font-medium text-neutral-8';
 /** One category's signs, in the guide's category order. */
 type SignGroup = { category: ChargeCategory; signs: readonly Sign[] };
+/** A sign's chip (its label), shared by the field guide and the witness notes. */
+function SignChip({ tag, as: Tag = 'li' }: { tag: string; as?: 'li' | 'span' }) {
+  return <Tag data-sign={tag} className={CHIP}>{signPhrase(tag)}</Tag>;
+}
 /** A sign chip's box in the measuring list (px from its top). */
 type ChipBox = { top: number; bottom: number };
 
@@ -329,7 +332,7 @@ function SignGroups({ groups }: { groups: readonly SignGroup[] }) {
     <li key={category} data-sign-group={category} className="flex items-start gap-xxs">
       <CategoryMark category={category} word={false} className="h-(--line-xs) shrink-0 text-neutral-7" />
       <ul className="m-0 flex min-w-0 flex-1 list-none flex-wrap gap-xxs p-0">
-        {signs.map(sign => <li key={sign.tag} data-sign={sign.tag} className={CHIP}>{sign.text}</li>)}
+        {signs.map(sign => <SignChip key={sign.tag} tag={sign.tag} />)}
       </ul>
     </li>
   ));
@@ -442,11 +445,19 @@ export function NotesList({ round }: { round: AnimalRound }) {
   }
   return (
     <ol className="m-0 flex list-none flex-col gap-xs p-0">
-      {round.notes.map((note, index) => (
-        <li key={index} className="flex flex-col gap-xs rounded-s bg-notes/15 p-s">
-          <p className="m-0 text-m"><WithBlanks text={note.text} /></p>
-          <p className={`m-0 flex flex-wrap gap-x-s gap-y-xxs ${MARK_CAPTION}`}>
-            <CategoryMark category={signCategory(note.sign)} small />
+      {round.notes.map(note => (
+        <li key={note.sign} data-witness-sign={note.sign} className="flex flex-col gap-xs rounded-s bg-notes/15 p-s">
+          <p className="m-0 text-m"><GlossaryText text={note.text} /></p>
+          {/* The chips sit outside MARK_CAPTION, so they match the field guide's (not uppercase); "or" keeps alternatives from reading as AND. */}
+          <p className="m-0 flex flex-wrap items-center gap-xxs">
+            <CategoryMark category={signCategory(note.sign)} small className={MARK_CAPTION} />
+            <SignChip tag={note.sign} as="span" />
+            {note.also.map(alt => (
+              <Fragment key={alt}>
+                <span className="text-xxs text-neutral-7">or</span>
+                <SignChip tag={alt} as="span" />
+              </Fragment>
+            ))}
           </p>
           <p className="m-0 flex items-center gap-xs text-xs text-neutral-7">
             <span className="flex gap-xxs" aria-hidden="true">
