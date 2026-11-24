@@ -82,7 +82,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -534,6 +534,38 @@ Choosing **A1(a) + U1 + B3 + C1**, wiring all 10 deferred open-tag `implies` edg
 
 ## Architecture review (Fable)
 
+Saved reply: `/srv/critter-ai/agent-state/missions/witness-signs/tasks/20261124-014241-architecture-reviewer.md`
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. **The plan contradicts itself on live-row holders, and the brief's "true for every holder, or not dealt" rule depends on the answer.** The Architecture's Fable gate treats live-only holders as "for information only"; the lead's Decision 4 says Fable checks truth "across every HEAD and live holder". I computed the gap: 4 animal/sign pairs are held on the `7bce511a` rows but not on HEAD (`1:yellow_legs`, `9:forest_floor`, `14:puffs_up`, `39:rarely_drinks`). Until H22 runs, a round with one of those animals as the mystery can deal a sentence sign-audit ruled untrue of it. Pick one and record it under Decisions: accept it until H22 (the live guides already show those chips today), or have the gate cover those 4 pairs.
+
+MISSED:
+1. **The note's new label chip can name a suspect, and nothing guards it.** The name guard checks only the sentence. On HEAD, 10 animal/sign pairs have a name word in the label itself:
+   - `red_eyes` on Red-eyed Tree Frog, `pig_nose` on Pig-nosed Turtle, `snub_nose` on Golden Snub-nosed Monkey;
+   - `brown_throat` on Brown-throated Sloth, `purple_gray` on Purple Frog;
+   - `giant_tortoise` on three tortoises, `giant_turtle` on Yangtze Giant Softshell Turtle;
+   - `forest_floor` on African Forest Elephant.
+
+   The brief requires the label, and the guides already show these chips, so this is not a blocker. But Goal 4's "after: 0" should say it counts sentences only, and the lead should rule on these labels (accept, or hold the sign back when a suspect's name contains a label word).
+2. **The name guard will reject natural sentences for those same signs.** "Its eyes are red" warns for the Red-eyed Tree Frog while the chip beside it says "red eyes". Decide before writing the sentences whether a word in the sign's own label is exempt; otherwise the content test forces awkward wording or `null`.
+3. **The website's witness-note screenshot goes stale.** `src/site/shots.ts:46-48` has a `witnessNote` shot whose alt text quotes an old hand-written note ("Its long snout looks like a stretched-out pig's snout"), shown on `Teachers.tsx:89`. After this change the game no longer shows that. The site is outside the brief's scope, so either retake the shot and alt text or put it in the Summary for the owner.
+
+SHOULD-CONSIDER:
+1. The name check in `buildAnimal` runs on every page load in the browser, but the game calls `animalsFromPool(pool)` with a no-op `warn` (`useAnimalSession.ts:93`), so its result is discarded. That is finding 2's own smell (work nobody reads). A content check that `content -- preview` and the unit test call would take `censor` and `giveaways` out of the runtime path.
+2. The reveal card's order changes slightly: the 16 facts now in `revealNotes` are shown last today and will move to profile order. It is harmless, but say so in the docs line for the reveal card.
+3. The label regex misses inflections and reordered words ("horn", "striped", "eyes that are red"). The plan leaves that to the Fable review; make it an explicit column in the review CSV so it isn't skipped.
+4. E2E check 4 (`the run collected and checked a witness note`) depends on how the seeded player happens to play on the new boards. Confirm it on the first run, and steer the player toward a purple gem if it fails rather than weakening the check.
+
+**What checked out against the code**
+- Line references and callers match, including `WithBlanks`, `noteCategories`, `revealNotes`, `full` and `BLANK`.
+- The version check runs before `roundStillFits`.
+- `shuffle()` moves only unpinned cells, so the top-up count survives it.
+- A rare gem never matches.
+- The `also` chips depend only on the sign and the set.
+- `behind` is never empty on HEAD: no profile clue carrying an open tag is classed as not hand-written at the pool door.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -559,5 +591,6 @@ Choosing **A1(a) + U1 + B3 + C1**, wiring all 10 deferred open-tag `implies` edg
 
 - 2026-11-24 01:08 UTC — Baseline stage: verified typecheck, lint (0 warnings), unit tests (147/147), `content -- preview` (0 problems), live `content -- check` (2475 clues, 0 errors/warnings), guarded `phaser_june_dev` `content -- build && check` (3653 clues, 0 errors/warnings) + `e2e:fresh` (1554/1554 pass; saved at `$STATE/e2e-baseline/`), and baseline `balance-044.ts` (`--rounds 200 --seed 44 --places world,africa,asia`).
 - 2026-11-24 01:40 UTC — Architecture stage: `architect` Pass 1 findings/options (`$STATE/tasks/20261124-011126-architect.md`), lead Decision (`A1(a) + U1 + B3 + C1`, 10 deferred edges wired, version `'055-2'`, pure code), and `architect` Pass 2 single-design rewrite (`$STATE/tasks/20261124-012648-architect.md`) recorded in plan. No code changes; plan-only commit.
+- 2026-11-24 01:46 UTC — Fable review stage: `architecture-reviewer` returned `APPROVE_WITH_CHANGES` (1 MUST-FIX, 3 MISSED, 4 SHOULD-CONSIDER; saved at `$STATE/tasks/20261124-014241-architecture-reviewer.md`), recorded under `## Architecture review (Fable)`. Plan-only commit.
 
 ## Summary
