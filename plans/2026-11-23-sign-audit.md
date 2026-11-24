@@ -2,7 +2,7 @@
 mission: sign-audit
 project: critter-connect
 branch: agent/sign-audit
-status: active
+status: done
 started: 2026-11-23 02:03 UTC
 ---
 
@@ -1197,6 +1197,7 @@ Reviewed `origin/main` (`7bce511a`) ... `HEAD` (`963615b9`). The code is sound a
 - (lead) Final code reviews (Astra `REJECT`, 5 MUST-FIX; Fable `APPROVE_WITH_CHANGES`, 1 MUST-FIX): accepted all 5 Astra MUST-FIX items (drop `leaf_litter→forest_floor`, remove `9 forest_floor` / add `9 climber` / restore `46` & check `7` `forest_floor`; add `7 town_dweller` & check sibling IUCN `14.3` `16`/`51`; drop `crevice_hider implies habitat:rocky` and reopen `4`/`49`/`62`/`75`/`8`/`35`; overrule `1 yellow_legs` → `doesn't`; fix `1 burrower` citation to Butler & Graham 1995 with qualified wording), Astra SC1 (pinned deal-fit assertions in `animalBoard.test.ts`), Fable MUST-FIX 1 (explicit scope-deviation, balance-bot, round-end card, and full `travelOf` disclosures in Summary + Release handoff), and Fable SC1/SC3 (`above_tree_line` drops `trees:no`; align `"at least partly"` meanings), queued as steps S25–S26. Rejected Fable SC2 as profile edits (each marginal badge rests on a verified ranked quote; surfaced in Summary for owner) and logged Fable SC4 (name-blanking) for `witness-signs`.
 - (lead) S25 source-verified rulings across all reopened/unimplied candidates (recorded in `$SA/prompts/S25-review-fixes.md`): (1) dropping `leaf_litter→forest_floor` affects all 10 `leaf_litter` holders — `9` overruled to `forest_floor=doesn't` / `climber=has it` (Pašukonis et al. 2019 `doi:10.1007/s10682-019-09994-z`, Rojas & Pašukonis 2019 `PMC6753930`); `3` Darwin Frog (`ngo`/`iucn`) and `12` Spiny Hill Turtle (`government` NParks / `wikipedia`, previously `implied` by `leaf_litter`) ruled `forest_floor=has it`; `21`, `27`, `49`, `67` (already Astra `has it` + Opus `agree`, previously `none (implied by leaf_litter)`) now get explicit `forest_floor` `new_note`s; `46` (already holds `forest_floor` on `46:4` co-tagged with `sleeping_nests`) gets a standalone `smithsonian` `forest_floor` `new_note` keeping `46:4` untouched; `7` keeps S17 ruling `can't tell` (aquatic breeding males, only females documented in leaf litter); `76` already held directly. (2) `town_dweller` IUCN `14.3`/plantation scan across all 76 species: reopened and ruled `has it` on `7` Hairy Frog (IUCN tea plantations, `14.3 Suitable`), `16` Purple Frog (AmphibiaWeb rubber plantations), and `51` Jaguar (IUCN `14.3 Suitable` + NGO eucalyptus plantations); left `32` (`14.5 Marginal`) and `49` (`14.3 Marginal`, already `can't tell`) unchanged. (3) `crevice_hider` exhaustive scan after dropping `habitat:rocky`: reopened and ruled `has it` on `4` Big-headed Turtle (Kirkpatrick 1996), `8` Coastal Tailed Frog (COSEWIC 2011 + Wikipedia), `49` Hispaniolan Solenodon (ADW/IUCN/USAID), `62` Chinese Giant Salamander (SDZWA/Wikipedia), and `75` Hellbender (AmphibiaWeb/IUCN); ruled `can't tell` on `35` Red Panda, `60` Giant Panda, `67` Eastern Long-beaked Echidna, and `72` Maned Wolf under the exact S17 `33` Ethiopian Wolf bar (occasional birth-den/cold-weather shelter option, not routine rock-crack hiding). Split S25 into `S25a` (accepted rules/meanings/docs/`signs.test.ts`) and `S25b` (profile edits/`citations.json`/`animalBoard.test.ts`/`$SA` ledger updates) after `claude-task` hit its 5-hour usage limit (exit 3, resets 23:20 UTC).
 - (lead) S25b wording gate & historical `triage.csv`: ruled `15:2 → 4` (`crevice_hider`, `"It hides in narrow cracks between and under slabs of rock."`) `false` because `"slabs of rock"` is kopje-specific rather than stream rock crevices; moved `crevice_hider` off `15:2` onto clean standard-sentence `15:18` (`remove:2;new_note:18 (wording gate)`) and ruled all 49 S25b newly matched keys `true` in `$SA/wording.csv` (`5,108` keys, `0 false`). Left `$SA/triage.csv` and `$SA/pairs.csv` at their historical S7/S12 batch snapshot (`pairs.py --check` diffs them directly), with `$SA/rulings.csv` overriding all 14 reopened/overruled pairs cleanly in `ledger.py`.
+- (lead) Final Verification `scripts/e2e.mjs` paging-test update: `e2e:fresh` on rebuilt `phaser_june_dev` failed 3 pre-existing test-harness assumptions in `scripts/e2e.mjs` (`1551/1554`; app `AnimalSheets.tsx` rendered cleanly with `0` bad breaks and `0` overflows, confirmed visually in `02d`/`02f` screenshots) from when round-1 suspects had 4–6 signs: (1) `02d` assumed `#7` Hairy Frog fits on 1 page (`pages === 1`), now 11 signs / 2 pages → relaxed to `onePage.signs > 0 && onePage.pages >= 1`; (2) `FORCED = [144, 40]` (2 chip lines) yielded `splits: 25, moves: 0, bad: 0` → changed to `[144, 64]` (3 chip lines: 56 px vs 4-line 76 px) so 2-line groups move whole while 4+-line groups split (`splits: 17, moves: 1, bad: 0`); (3) `turns` returned early on `guideSigns > 1` because `#11` Goliath Frog already paged (`4`) before forcing, resetting the 5 s interval mid-timeout → waited for `clientHeight === force[1] && guideSigns === wantPages` + 2 animation frames and allowed `6200` ms (`5000` + `160` ms exit + slack). Opus applied all 3 edits; `e2e:fresh` then passed `1554/1554`.
 
 ## Log
 
@@ -1247,5 +1248,287 @@ Reviewed `origin/main` (`7bce511a`) ... `HEAD` (`963615b9`). The code is sound a
 - 2026-11-23 22:23 UTC · S25a (split from S25 on Claude usage limit): lead scanned all 76 cached sources for `leaf_litter`/`forest_floor`, `town_dweller` (IUCN `14.3`–`14.5`/plantations), and `crevice_hider` candidates, issued complete rulings in `$SA/prompts/S25-review-fixes.md`, and launched Opus (`claude-task`); Opus completed part 1 (`src/clueGame/signs.ts`, `docs/CONTENT_SOURCES.md`, `tests/clueGame/signs.test.ts`, `$SA/definitions.csv`, `$SA/scripts/defs_draft.py`, `$SA/game/src/clueGame/signs.ts`) and drafted Astra SC1 tests in `tests/clueGame/animalBoard.test.ts` before exiting 3 (5-hour usage limit, resets 23:20 UTC; saved `$SA/tasks/20261123-221700-opus-5-5-high.md`). Lead discarded unready `tests/clueGame/animalBoard.test.ts` (profile edits deferred to S25b), verified accepted S25a (`npm run typecheck` exit 0, `npm run lint` exit 0, `npm test` 142/142 pass, `npm run content -- preview` exit 0 / 0 problems, `$SA/scripts/defs_check.py --edges wired` exit 0 [201 rows, 12 wired edges], `game/src/clueGame/signs.ts` byte-identical to `src/clueGame/signs.ts`), split S25 into checked `S25a` and pending `S25b`, committed and pushed, ending with `MISSION_WAIT_CLAUDE`.
 - 2026-11-23 23:39 UTC · S25b: Opus (`claude-task`, 2 passes) wrote Astra SC1 pinned deal-fit tests first in `tests/clueGame/animalBoard.test.ts` (5/5 red before profile fixes, 5/5 green after), then applied all Astra MF1–5 profile & citation edits across 17 profiles + `db/content/citations.json` (+2 entries: Pašukonis et al. 2019 CC BY 4.0, SDZWA Chinese Giant Salamander `/behavior`, 0 deleted/altered): `9` `forest_floor` overruled `doesn't` (`remove:3`) & `climber` `has it` in-place at `9:14`; `forest_floor` `new_note`s on `3:21`, `12:18`, `21:18`, `27:23`, `46:21` (standalone `smithsonian`, keeping `46:4` untouched), `49:19`, `67:23`; `town_dweller` `new_note`s on `7:15`, `16:17`, `51:27`; `crevice_hider` `new_note`s on `4:20`, `8:22`, `49:20`, `62:29`, `75:21` (`35`/`60`/`67`/`72` ruled `can't tell`); `1` `yellow_legs` overruled `doesn't` (deleted S19 `1:12`, shifted `1` indices `13..25 → 12..24` in `$SA/changes.csv` & `$SA/wording.csv`) and `1:12` `burrower` updated to Butler & Graham 1995 (`literature`) with qualified wording; lead ruled `15:2 → 4` (`"slabs of rock"`) `false` at the wording gate, moving `15` `crevice_hider` off `15:2` to standard-sentence `15:18` (`remove:2;new_note:18 (wording gate)`) and appending all 49 S25b newly matched keys (`true`) to `$SA/wording.csv` (`5,108` keys, `0 false`). Lead independently verified every diff (`git diff`, `$SA/rulings.csv`, `$SA/changes.csv`, `$SA/wording.csv`), `npm run typecheck` exit 0, `npm run lint` exit 0, `npm test` 147/147 pass, `npm run content -- preview` exit 0 (0 problems, 0 cite warn), `$SA/scripts/ledger.py` exit 0 (`15,276` rows, `3` `rules_commit_change`, 0 without `final_verdict`, 0 `add:pending`, 0 conflicts), and `$SA/scripts/reconcile.py --from 7bce511a --to WORKTREE --applied all` exit 0 (`1,433` actual ops match ledger). Committed as `sign-audit S25b review-fixes: …` and pushed.
 - 2026-11-23 23:49 UTC · S26: Lead re-ran Snapshot 2 (`eadc8c16` code × `7bce511a` content: 0 `Unknown sign`, 403/525 combos, 943 eligible notes, 3 changed, 0 lost, `diff.py --wording` exit 0 with `2 true / 0 false`) and Snapshot 3 (`eadc8c16` × `eadc8c16`: 105 identical sets, 525/525 combos [100.0%], 5,803 eligible notes [min 3 / median 10 / max 24], 541 lost, `diff.py --wording` exit 0 with **5,108 `true` / 0 `false`** / 0 unruled), cleaned `/tmp/sa-trees/` & `/tmp/sa-build/`, and computed exact Fable MUST-FIX 1 owner-disclosure metrics (`balance-044.ts --rounds 60` seed 44: Africa careful ★★★ `62%→90%` / notes `1.8→3.5`, Asia `47%→73%` / `1.0→3.2`; clues/animal median `8→23` / max `36`; badges median `6→19` / max `30`; `travelOf` 0 deploy-window changes and 9 post-build changes [5 `walk→swim`, 4 `walk→dig`]). Opus (`claude-task`) updated `$SA/scripts/lost_reasons.py` → `$SA/metrics/s3/lost-reasons.csv` (`541/541` rows: `424/34/64/10/7/2`) and re-ran `$SA/scripts/sign-map-update.ts` on `docs/research/2026-11-07-moves-and-signs/sign-map.csv` (7-line post-S25 diff; 156 changed / 60 unchanged vs `7bce511a`, idempotent sha256 `964a5a4b…`). Lead verified idempotency, `lost_reasons.py`, `ledger.py` (15,276 rows, 0 conflicts, `eadc8c16` 32 rows), `reconcile.py --from 7bce511a --to HEAD` (`1,433` ops match), `typecheck`, `lint`, `npm test` (147/147 pass), and `content -- preview` (0 problems / 0 cite warn). Updated plan S1→S2→S3, S24/S26 counts, 76-animal table, and Fable disclosure metrics; committed `sign-map.csv` + plan and pushed.
+- 2026-11-24 00:25 UTC · Final Verification & Summary: ran full offline checks (`typecheck`, `lint`, `npm test` 147/147, `content -- preview` 0 problems/warnings), read-only live `content -- check` (`Pool: 76 playable of 76 species, 2475 clues (2083 deductive), 491 facts. 0 errors, 0 warnings.`), `ledger.py` (15,276 rows, 0 conflicts), `reconcile.py` (`1,433` ops match), S1→S2 (`2 true / 0 false`) and S1→S3 (`5,108 true / 0 false`) wording diffs, and guarded `phaser_june_dev` `content -- build` + `content -- check` (`Pool: 76 playable of 76 species, 3653 clues (3041 deductive), 491 facts. 0 errors, 0 warnings.`). Initial `e2e:fresh` on HEAD content passed `1551/1554`, exposing 3 pre-existing paging-test assumptions in `scripts/e2e.mjs` (`02d` 1-page check, `FORCED` height `40→64` for `moves`, `turns` `ResizeObserver` race on already-paged sheets); Opus (`claude-task`) fixed all 3 in `scripts/e2e.mjs`, after which `e2e:fresh` passed **`1554/1554`** (Anywhere load median 2369 ms at 1×, 4651 ms at 4×; `splits: 17, moves: 1, bad: 0`; artifact saved to `/srv/critter-ai/agent-state/missions/sign-audit/e2e-final/`), and `typecheck`/`lint`/`npm test` re-passed (147/147). Wrote `## Summary`, set `status: done`, committed `scripts/e2e.mjs` + plan, and pushed.
 
 ## Summary
+
+### Overview & Goal 2 Rule
+
+Audited all **201 active signs × 76 animals (15,276 pairs)** using Astra (`GPT-6.2-Astra` at high effort across 21 batches: `P01`, `T01`, `B01`–`B14`, `R01a`–`R01e`), Opus (`claude-task`) cross-checks and source fetches (703 ranked source index entries, 0 ND licences, 0 deleted citations), and lead rulings.
+
+- **Code & rules (`src/clueGame/signs.ts`, `src/clueGame/animalBoard.ts`, `src/clueGame/glossary.ts`, `src/game/debugBridge.ts`, `scripts/e2e.mjs`, `docs/CONTENT_SOURCES.md`, `docs/research/2026-11-07-moves-and-signs/sign-map.csv`, `tests/clueGame/signs.test.ts`, `tests/clueGame/animalBoard.test.ts`):**
+  - Replaced `SignEntry` with a discriminated union (`ActiveSignEntry` with required `meaning`, `RetiredSignEntry` with `retired: true` and no rules; dropped dead `restates`; kept all 15 retired entries so live `7bce511a` rows still load with 0 `Unknown sign`).
+  - Added load-time `signTableProblems(SIGNS)` validation, transitive open-tag closure `IMPLIED` / `heldSigns`, per-note one-sign-per-fact + retired + closure checks in `signProblems`, and implied-badge deduplication in `signsOf` (checked in `e2e.mjs` via `window.__cc.signImplies()`).
+  - Fixed over-narrow sign rules (`climber`, `never_climbs`, `swimmer`, `above_tree_line`, `sand_dunes`, `snorkel_nose`, `often_in_trees`, `fully_aquatic`, `climbs_boulders`, `crevice_hider`) and guarded `travelOf` so terrestrial-only `swimmer`s keep walking.
+  - Unified note-fit logic in exported `animalFitsNote` (shared across `witnessNotes`, `stillPossible`, tests, and witness metrics). `ANIMAL_RULES.version` stays `055-1`.
+  - **Goal 2 rule (narrower/broader signs):** A narrower sign lists its broader sign in `SIGNS[tag].implies` only after passing **both** gate (a) strict entailment under approved `meaning` and gate (b) zero false wording fits across every newly matched suspect in Snapshot 2 (`7bce511a` live content) and Snapshot 3 (final content). `animalFitsNote` closes over wired edges via `heldSigns`; `signProblems` enforces one sign per fact per note; `signsOf` deduplicates implied broader signs so the field guide shows one badge.
+  - **12 wired open-tag `implies` edges:** `above_tree_line→high_mountains`, `brown_throat→throat_patch`, `cecropia_leaves→leaf_eater`, `climbs_boulders→climber`, `dung_piles→scent_marks`, `floreana_island→one_island`, `hangs_upside_down→often_in_trees`, `mountain_meadows→high_mountains`, `pinta_island→one_island`, `roosts_in_trees→often_in_trees`, `seldom_on_ground→often_in_trees`, `sleeps_high_in_trees→often_in_trees`.
+  - **10 deferred edges (for `witness-signs`, blocking live notes listed in `### Deferred edges and blocking notes` above):** `backward_pouch→pouch`, `carries_young_on_back→mother_carries_young`, `face_mask→face_markings`, `feathery_gills→underwater_breathing`, `s_shaped_horns→horns`, `shoulder_stripe→stripes`, `spectacles→face_markings`, `spiral_horns→horns`, `tear_lines→face_markings`, `walks_upright→stands_on_hind_legs`. One-sign-per-fact is already enforced on all 10 so `witness-signs` can wire them with zero profile churn.
+  - Added 8 habitat terms to `src/clueGame/glossary.ts` and updated `scripts/e2e.mjs` for full-tag field-guide paging (`02d`, `FORCED = [144, 64]`, `turns` `ResizeObserver` wait).
+
+### Audit Results, Witness Delta & Per-Animal Changes
+
+- **Ledger (`/srv/critter-ai/agent-state/missions/sign-audit/ledger.csv`, 15,276 rows = 76 × 201 active signs, 0 conflicts):**
+  - `1,449` `has it`, `698` `doesn't`, `795` `can't tell` (`785` material; only `1` held `can't tell`, `11 large_eyes`, kept under §2.7 removal bar), `14` `implied (wired)`, `16` `implied (deferred)`, `12,304` `no (triage)` (`class` 1,412, `body-plan` 1,686, `place` 1,219, `no-plausible-holder` 7,987). Full breakdown by category is in `## Final ledger and audit record (S24 / S26)`.
+  - **Profile changes (`reconcile.py --from 7bce511a --to HEAD`: `1,433` actual ops match ledger, exit 0):** **934 `new_note` adds** (`933` newly added tags across all 76 animals + `46:21` standalone `forest_floor`), **4 removed held tags** (`1 yellow_legs`, `9 forest_floor`, `14 puffs_up`, `39 rarely_drinks`), **244 wording-gate moves** (`remove:<i>;new_note:<j> (wording gate)`), and **3 S5 one-sign-per-fact drops** (`33:5 high_mountains`, `46:5 forest_floor`, `66:5 scent_marks`). Added 198 new `db/content/citations.json` entries (261→459, 0 deleted/modified, 0 ND licences).
+  - **Tags added and removed per animal (with sources):** Complete 76-animal table with every added sign's source key and every removed/dropped sign is recorded above in `### Tags added and removed per animal (with sources)` (lines 1025–1106); exact URLs/quotes/commits are in `db/content/animals/*.json`, `db/content/citations.json`, and `$SA/ledger.csv`.
+- **Witness notes before and after (105 identical dealable sets, 525 combos; full table in `## Witness before and after (S1 → S2 → S3)`):**
+  - **S1 baseline (`7bce511a` × `7bce511a`):** `402/525` (76.6%) combos with ≥1 eligible note, `940` eligible notes (`min 0 / median 1 / max 7`).
+  - **S2 deploy window (HEAD code × `7bce511a` live DB):** `403/525` (76.8%) combos, `943` eligible notes, `0` `Unknown sign`, `0` lost notes, `3` changed rows (`2 true, 0 false` in `wording.csv`).
+  - **S3 after owner's content build (HEAD × HEAD):** **`525/525` (100.0%)** combos with ≥1 eligible note (`+123`), **`5,803`** eligible notes (`6.17×`, `min 3 / median 10 / max 24`), `10,032` changed rows, `541` lost rows (all `541/541` reasoned in `$SA/metrics/s3/lost-reasons.csv`, `0` co-tagging losses), **`5,108 true / 0 false`** distinct newly matched wording-gate keys.
+
+### Owner Disclosures Before `content -- build` (Fable MUST-FIX 1 & SC2)
+
+Review these four effects before running the production `npm run content -- build` (the deploy itself only shows the tiny S2 delta above on existing live rows):
+
+1. **Scope deviation (standard-sentence notes):** All 934 `new_note` adds are one-sign standard-sentence notes restating each sign's `meaning`, and 244 existing tags were moved off hand-written notes onto clean standard-sentence notes (`remove:<i>;new_note:<j>`) to pass the zero-false-fit wording gate without losing eligibility from co-tagging. Original hand-written clue text stays verbatim (untagged) so no existing clue was deleted or rewritten; `witness-signs` will unify witness display text globally.
+2. **Balance impact (`scripts/balance-044.ts --rounds 60`, seed 44, `7bce511a` vs HEAD):** Richer witness notes make rounds noticeably easier once `content -- build` loads the new rows (0 balance change during the deploy window):
+   - `africa` (23 sets): `careful` Found `98% → 100%`, ★★★ **`62% → 90%`**, moves left `16.1 → 19.4`, notes/round **`1.8 → 3.5`**, orders filled `2.6 → 1.9`; `novice` ★★★ `62% → 87%`; `expert` ★★★ `80% → 88%`; `reader` ★★★ `37% → 60%`.
+   - `asia` (15 sets): `careful` Found `97% → 98%`, ★★★ **`47% → 73%`**, moves left `13.9 → 17.2`, notes/round **`1.0 → 3.2`**, orders filled `2.9 → 1.9`; `novice` ★★★ `47% → 83%`; `expert` ★★★ `63% → 87%`; `reader` ★★★ `25% → 57%`.
+3. **Round-end card & field-guide length:**
+   - Notes per animal: `628 → 1,806` total; `min / median / mean / max` **`4 / 8 / 8.26 / 12` → `14 / 23 / 23.76 / 36`** (max `#25` Tiger `36`, `#70` Baird's Tapir `36`, `#23` Aye-aye `34`, `#28` Asian Elephant `33`, `#11` Goliath Frog `32`).
+   - Field-guide sign badges (`signsOf`) per animal: **`2 / 6 / 6.50 / 11` → `8 / 19 / 18.55 / 30`** (`#35` Red Panda; raw signs max `31`). Verified cleanly under `e2e:fresh` paging (`1554/1554`).
+   - Near-duplicate untagged originals remain beside moved standard sentences (e.g., `64` African Savanna Elephant ears/mud/rumbles/trees; `15` Pancake Tortoise flat shell/crevices/boulders).
+4. **Complete `travelOf` delta:** **0 animals change during the deploy window.** After `content -- build`, **9 animals change**: **5 `walk → swim`** (`1` Blanding's Turtle, `2` Spiny Softshell Turtle, `10` Suriname Toad, `11` Goliath Frog, `17` Pig-nosed Turtle — all `system:freshwater`) and **4 `walk → dig`** (`26` Black-footed Ferret, `33` Ethiopian Wolf, `48` Tasmanian Devil, `65` African Wild Dog — new `burrower`). Newly tagged terrestrial-only `swimmer`s (`24`, `25`, `28`, `30`, `35`, `41`, `44`, `51`, `52`, `54`, `63`, `64`, `71`) keep walking thanks to the `inWater` guard.
+5. **Marginal `has it` badges & paywalled sources (Fable SC2, Risk R8):** Each tag has a verified ranked source matching the approved `meaning`, though a few are edge cases the owner may want tighter in `witness-signs`: `25` Tiger (`above_tree_line`, `town_dweller`, `black_coat` via Wikipedia's Simlipal pseudomelanistic tigers), `58` Cheetah (`high_mountains`), `57` Aardvark (`forest_floor`), `64` Savanna Elephant (`bamboo_forest`), and `town_dweller` (`has it` on documented plantation/garden residence for `25`/`28`/`56`/`7`/`16`/`51`, `can't tell` on crop-raiding only for `64`/`70`/`71`). Across all 76 species, 52 closed/paywalled source URLs (`31` animals) are marked `unavailable` in `$SA/sources/index.csv`; `785` material pairs remain `can't tell` (including held `11 large_eyes`, kept under §2.7).
+
+### Notes for `witness-signs` (Mission 2b)
+
+- **10 deferred edges** with exact blocking notes are listed in `### Deferred edges and blocking notes` above.
+- **43 give-away notes** logged in `/srv/critter-ai/agent-state/missions/sign-audit/giveaways.md` (`12` still tagged at HEAD, `31` now untagged). Notably, `14:2` (Desert Rain Frog) is untagged after removing `puffs_up` and moving `squeaker`, but its verbatim text still mentions `"puffs up"` — drop or reword where untagged text is displayed.
+- **Name-blanking (Fable SC4):** standard sentences using color/habitat words that match an animal's common name can get mangled by `WithBlanks` (e.g., `35` Red Panda `reddish_fur` `"Its fur is mostly ____, reddish brown or golden ____."` and `41` African Forest Elephant `forest_floor` `"the ____ floor"`).
+
+### Code Reviews & Verification
+
+- **Astra final code review (`origin/main`…`963615b9`):** `REJECT` (5 MUST-FIX, 2 SHOULD-CONSIDER) — all 5 MUST-FIX (`leaf_litter→forest_floor` dropped + `9` `forest_floor`/`climber` + unimplied `leaf_litter` holders; `town_dweller` `7`/`16`/`51`; `crevice_hider` drops `habitat:rocky` + `4`/`8`/`49`/`62`/`75`; `1 yellow_legs` removed; `1 burrower` Butler & Graham 1995 citation/wording) and SC1 (pinned deal-fit assertions in `animalBoard.test.ts`) fixed in S25a/S25b/S26; SC2 verified below.
+- **Fable final code review (`origin/main`…`963615b9`):** `APPROVE_WITH_CHANGES` (1 MUST-FIX, 5 SHOULD-CONSIDER) — MUST-FIX 1 (owner disclosures), SC1 (`above_tree_line` drops `trees:no`), SC3 (`"at least partly"` meanings), SC4 (blanking note), and SC5 (dev E2E on HEAD content) all addressed; SC2 surfaced above.
+- **Full Verification results (all exit 0):**
+  - `npm run typecheck`, `npm run lint` (0 warnings), `npm test` (**147/147** pass across 3 suites).
+  - `npm run content -- preview`: 0 problems, 0 citation warnings across 76 profiles.
+  - `npm run content -- check` (live `phaser_june`, read-only): `Pool: 76 playable of 76 species, 2475 clues (2083 deductive), 491 facts. 0 errors, 0 warnings.`
+  - Guarded `phaser_june_dev` `npm run content -- build && npm run content -- check`: `content_sources: 16 rows`, `species: 76 rows`, `species_deduction_clues: 3653 rows`, `species_facts: 491 rows`; **`Pool: 76 playable of 76 species, 3653 clues (3041 deductive), 491 facts. 0 errors, 0 warnings.`**
+  - Guarded `phaser_june_dev` `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh`: **`1554/1554 checks passed`**, 0 failed (Anywhere load median 2369 ms at 1×, 4651 ms at 4×; field-guide signs & paging verified including `splits: 17, moves: 1, bad: 0` and auto-turn/pause/resume). **Artifact:** `/srv/critter-ai/agent-state/missions/sign-audit/e2e-final/` (`report.json` + screenshots).
+  - `$SA/scripts/ledger.py`: 15,276 rows, 0 without `final_verdict`, 0 `add:pending`, 0 conflicts.
+  - `$SA/scripts/reconcile.py --from 7bce511a --to HEAD`: `1,433` actual ops match ledger.
+  - `$SA/metrics/diff.py`: S1→S2 (`2 true / 0 false`), S1→S3 (`5,108 true / 0 false`, `541/541` lost rows reasoned).
+
+### Owner's Production Content Build (Handoff Item Queued for Release)
+
+This change requires the owner's production content build from WSL after the Release session merges and deploys `main` (handoff item to be added to `/srv/critter-ai/handoff/critter-connect.md` once deploy smoke tests pass, repeating the Fable MUST-FIX 1 disclosures above):
+1. `git checkout main && git pull --ff-only`
+2. Fresh production dump: `ssh root@play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`
+3. `npm run content -- build`
+4. `npm run content -- check` — expected summary: `Pool: 76 playable of 76 species, 3653 clues (3041 deductive), 491 facts.` and `0 errors, 0 warnings.`
+
+### Sign Definitions (201 Active Signs; Authoritative Copy in `src/clueGame/signs.ts`)
+
+15 retired tags kept only for live-row loading (no rules/meaning, rejected on new notes): `builds_nests`, `climbing_tail`, `coalitions`, `coastal_dunes`, `giant_frog`, `hair_like_frills`, `internal_fertilization`, `no_tadpoles`, `rock_basker`, `rock_climber`, `sand_swimmer`, `seasonal_streams`, `stays_underground`, `tree_dweller`, `yellow_scales`.
+
+<details>
+<summary>All 201 active sign definitions, categories, and active rules (click to expand)</summary>
+
+| Sign | Category | Meaning | Implies / Denies |
+|---|---|---|---|
+| `above_tree_line` | habitat | Lives at least partly in the open high-mountain zone above the tree line, where it is too high and cold for trees to grow (living only in forest below it doesn't count). | implies: `high_mountains` |
+| `algae_fur` | body | Algae grow in its fur or hair and tint it green (algae on a shell or skin don't count). | implies: `covering:fur` |
+| `ambush_hunter` | habits | Catches prey mainly by hiding or waiting still and striking when prey comes close, rather than chasing it down. | denies: `diet:plants` |
+| `backward_pouch` | life | The female's pouch opens toward her back legs (rear-facing), not toward her head. | — (deferred: `pouch`) |
+| `bamboo_eater` | habits | Bamboo (leaves, stems or shoots) is its main food. | denies: `diet:meat`, `diet:insects` |
+| `bamboo_forest` | habitat | Lives at least partly in forest with a thick undergrowth of bamboo (eating bamboo elsewhere doesn't count). | implies: `habitat:forest` |
+| `basker` | habits | Regularly lies in the sun to warm its body, on logs, rocks, banks or at the water's surface. | denies: `activity:night` |
+| `big_ears` | body | Its ears are large for its head, clearly bigger than most relatives' (sources call them big, large or huge). | — |
+| `big_leaper` | habits | Moves or attacks with long leaps, covering several times its own body length in one jump. | — |
+| `big_rivers` | habitat | Lives in large rivers (main channels, deep pools or backwaters), not only in small streams or ponds. | implies: `system:freshwater`, `habitat:wetlands` |
+| `black_and_white` | body | Its coat or skin is mainly black and white, in large bold patches (a striped coat doesn't count, see stripes). | — |
+| `black_coat` | body | Its fur is black or nearly black all over, in all or some individuals (a black color form counts). | implies: `covering:fur` |
+| `bone_claws` | habits | Can push sharp bones out through the skin of its toes as claws when grabbed (ordinary claws don't count). | — |
+| `borrowed_burrows` | habitat | Sleeps, hides or raises young in burrows or dens that other animals dug (holes it digs itself don't count). | — |
+| `brackish_water` | habitat | Lives at least partly in brackish water, part salty and part fresh, as in estuaries, coastal lagoons or mangroves. | — |
+| `bright_green` | body | Its body is mostly bright, leaf green. | — |
+| `bromeliad_eater` | habits | Bromeliads (spiky plants of the pineapple family) are one of its main foods. | denies: `diet:meat`, `diet:insects` |
+| `brown_throat` | body | Its throat is brown, standing out from the different color around it. | implies: `throat_patch` |
+| `buries_itself` | habits | Hides or rests buried, covered by sand, mud, soil or fallen leaves, often with only its head out (resting inside a burrow doesn't count). | — |
+| `burrower` | habits | Digs into the ground on land: digs burrows, tunnels or dens, or digs its body down into soil or sand (only resting in burrows others dug, or burying itself in leaves or underwater sand/mud, doesn't count). | — |
+| `camouflage` | body | Its color or pattern helps it blend in with its surroundings so it is hard to see. | — |
+| `carries_young_on_back` | life | A mother carries her baby riding or clinging on her back (eggs embedded in skin and fathers carrying tadpoles don't count, see mother_carries_young and father_carries_young). | — (deferred: `mother_carries_young`) |
+| `cecropia_leaves` | habits | Leaves of Cecropia trees are a main part of its food. | implies: `leaf_eater`; denies: `diet:meat`, `diet:insects` |
+| `chirps` | habits | Makes short, high, bird-like chirping calls. | — |
+| `climber` | habits | Climbs well or often, in trees, on rocks or both (only scrambling onto logs or banks doesn't count). | — |
+| `climbs_boulders` | habits | Climbs up big rocks, boulders or cliffs. | implies: `climber` |
+| `cold_streams` | habitat | Lives in or by cool or cold, clear streams, often mountain streams. | implies: `system:freshwater`, `habitat:wetlands` |
+| `crevice_hider` | habits | Hides in narrow cracks and gaps between or under rocks. | — |
+| `cub_mane` | life | Its cubs or young have a mane or cape of long fur on the neck and back, which adults lose. | implies: `covering:fur`, `birth:live` |
+| `digging_claws` | habits | Has strong, long claws that it digs with (soil, ant or termite nests, or rotten wood). | — |
+| `dung_piles` | habits | Leaves its dung in piles it comes back to (middens), as messages to others of its kind. | implies: `scent_marks` |
+| `ear_spots` | body | Has a bold spot of contrasting color on the back of each ear. | — |
+| `eats_lichen` | habits | Lichens are a regular part of its food. | denies: `diet:meat`, `diet:insects` |
+| `egg_guarding` | life | A parent stays with its eggs or nest and guards them until they hatch. | implies: `birth:eggs` |
+| `eggs_on_land` | life | Lays its eggs out of the water, on land or underground, away from water. | implies: `birth:eggs`, `system:terrestrial` |
+| `eggs_over_water` | life | Lays its eggs on leaves or branches hanging over water, so the hatching tadpoles drop in. | implies: `birth:eggs` |
+| `electric_sense` | habits | Can sense the weak electric signals of other animals' bodies, to find prey. | — |
+| `ever_growing_teeth` | body | Some of its teeth keep growing all its life, worn down by use. | — |
+| `eye_glands` | body | Has large scent glands just below or in front of its eyes. | — |
+| `face_markings` | body | Has bold markings of a contrasting color on its face: patches, rings, a mask, crescents or lines. | — |
+| `face_mask` | body | A dark band or patch across its eyes looks like a mask. | — (deferred: `face_markings`) |
+| `false_thumb` | body | Has a "false thumb": an enlarged wrist bone or extra digit that it uses like a thumb to grip. | — |
+| `fast_runner` | habits | Runs fast: it can sprint or chase at about 50 km/h or more. | — |
+| `fast_streams` | habitat | Lives in or by fast-flowing streams or rivers with rushing water. | implies: `system:freshwater`, `habitat:wetlands` |
+| `father_carries_young` | life | The father carries the eggs or young (such as tadpoles) on or in his body. | — |
+| `feathery_gills` | body | Has feathery gills sticking out from its body (outside gills) as an adult. | implies: `habitat:wetlands` (deferred: `underwater_breathing`) |
+| `feeds_on_ground` | habits | Finds most of its food on the ground, even if it can climb. | — |
+| `fish_eater` | habits | Fish are a main part of its food. | denies: `diet:plants` |
+| `five_front_claws` | body | Has five claws on each front foot. | — |
+| `flat_body` | body | Its body (and often its head) is very flat, much wider than it is tall. | — |
+| `flat_shell` | body | Its shell is very flat and low, not domed. | implies: `covering:shell` |
+| `flippers` | body | Its legs (at least its front legs) are flat, paddle-shaped flippers (webbed feet alone don't count). | implies: `habitat:wetlands` |
+| `floreana_island` | habitat | Lives (or lived) wild only on Floreana Island in the Galápagos. | implies: `one_island` |
+| `foam_nest` | life | Makes a nest of foam for its eggs. | implies: `birth:eggs` |
+| `fog_drinker` | habitat | Gets much of the water it needs from fog or mist. | — |
+| `forest_floor` | habits | Lives and feeds on the ground of a forest, rarely if ever climbing up into the trees. | implies: `trees:no`, `habitat:forest`; denies: `often_in_trees`, `seldom_on_ground` |
+| `forest_streams` | habitat | Lives in or by streams that run through forest. | implies: `system:freshwater`, `habitat:wetlands`, `habitat:forest` |
+| `four_toes` | body | Has only four toes on each foot, front and back. | — |
+| `fruit_eater` | habits | Fruit is a main or favorite part of its food. | denies: `diet:meat`, `diet:insects` |
+| `fully_aquatic` | habits | Spends its whole life in water and rarely or never comes out onto land. | implies: `habitat:wetlands`; denies: `trees:yes`, `eggs_on_land` |
+| `furry_feet` | body | The soles of its feet are covered in fur. | implies: `covering:fur` |
+| `giant_tortoise` | body | A giant tortoise: a land tortoise whose shell grows to about 70 cm long or more. | implies: `covering:shell`, `birth:eggs`, `system:terrestrial`, `lifespan:long`; denies: `size:tiny`, `size:small`, `size:medium` |
+| `giant_turtle` | body | A giant turtle: a water turtle whose shell grows to about 80 cm long or more. | implies: `covering:shell`, `birth:eggs`, `lifespan:long`; denies: `size:tiny`, `size:small`, `size:medium` |
+| `glider` | habits | Glides through the air from tree to tree on skin flaps or webbed feet, without flapping wings. | implies: `trees:yes` |
+| `grasping_lip` | body | Its upper lip is pointed and grabs leaves and twigs like a finger. | — |
+| `grazer` | habits | Mostly eats grass or other low plants it crops from the ground, rather than leaves of shrubs and trees. | denies: `diet:meat`, `diet:insects` |
+| `hangs_upside_down` | habits | Often hangs upside down from branches. | implies: `trees:yes`, `often_in_trees` |
+| `hard_toe_tips` | body | Its toe tips are hard (horny) for gripping. | — |
+| `high_mountains` | habitat | Lives at least partly high up in mountains: upper slopes, high plateaus or alpine zones (foothills and low hills don't count). | — |
+| `hinged_shell` | body | Its shell has a hinge, so it can close up. | implies: `covering:shell` |
+| `hisses` | habits | Makes a loud hissing sound. | — |
+| `hooves` | body | Walks on hooves: toes that end in hard hoof, including tapirs' and rhinos' hoofed toes. | — |
+| `horns` | body | Has horns on its head, in at least one sex: bony horns, rhino horns, or skin-covered horns like the okapi's (antlers and tusks don't count). | — |
+| `huge_head` | body | Its head is very large for its body. | — |
+| `kopjes` | habitat | Lives on kopjes: rocky hills or rock piles rising from the African plains. | implies: `habitat:rocky` |
+| `large_eyes` | body | Its eyes are large for its head (sources call them big or large). | — |
+| `leaf_eater` | habits | Leaves are a main part of its food. | denies: `diet:meat`, `diet:insects` |
+| `leaf_litter` | habitat | Lives at least partly among the fallen leaves (leaf litter) on a forest floor. | implies: `habitat:forest` |
+| `leg_spurs` | body | Has big, pointed, spur-like scales or spurs on its legs. | — |
+| `lidless_eyes` | body | Its eyes have no eyelids. | — |
+| `long_arms` | body | Its arms are very long, longer than its legs. | — |
+| `long_finger` | body | One finger on each hand is much longer and thinner than the others. | — |
+| `long_legs` | body | Its legs are very long for its body. | — |
+| `long_tail` | body | Its tail is long: about as long as its head and body, or at least two-thirds of that. | — |
+| `long_tongue` | body | Its tongue is very long and reaches far out of its mouth, often sticky, for catching insects or grabbing leaves. | — |
+| `loud_calls` | habits | Makes loud calls that carry far: songs, hoots, barks, roars or wails. | — |
+| `low_rumbles` | habits | Calls with deep, low rumbles, some too low for people to hear. | — |
+| `mane` | body | Adults have a mane: a crest or ruff of longer hair on the neck or back. | implies: `covering:fur` |
+| `many_teeth` | body | Has an unusually large number of teeth, far more than most animals of its kind. | — |
+| `mother_carries_young` | life | The mother carries her eggs or young on her body as she moves about: on her back, belly or tail, or in pockets in her skin (young in a pouch don't count, see pouch). | — |
+| `mountain_meadows` | habitat | Lives at least partly in grassy meadows high on mountainsides. | implies: `habitat:grassland`, `high_mountains` |
+| `mud_bather` | habits | Wallows in mud, or coats itself with mud, to cool off or protect its skin. | — |
+| `neck_hump` | body | Has a raised hump or crest on the back of its head and neck. | — |
+| `nectar_drinker` | habits | Drinks nectar from flowers. | denies: `diet:meat` |
+| `never_climbs` | habits | Never climbs trees: it stays on or under the ground, or in water. | implies: `trees:no`; denies: `often_in_trees`, `seldom_on_ground`, `hangs_upside_down`, `roosts_in_trees`, `sleeps_high_in_trees` |
+| `no_tongue` | habits | Has no tongue. | denies: `long_tongue` |
+| `nomadic` | habits | Has no fixed home area: it wanders or migrates over long distances, following food, water or rain. | — |
+| `often_in_trees` | habits | Spends much of its time up in trees, feeding, resting or sleeping there, even if it also travels on the ground. | — |
+| `one_island` | range | Its whole wild range today (or when it was last alive, if extinct) is on one island, of any size (Madagascar, New Guinea or Tasmania count; a continent like Australia doesn't; two or more islands don't). | — |
+| `orange_feet` | body | Its feet (toes or toe pads) are orange. | — |
+| `pack_hunter` | habits | Hunts together with others of its group to catch prey. | implies: `social:groups`; denies: `diet:plants` |
+| `paddle_tail` | body | Its tail is flattened like a paddle or oar, for swimming. | implies: `habitat:wetlands` |
+| `patchy_coat` | body | Its coat is a blotchy patchwork of several colors, different on each animal. | implies: `covering:fur` |
+| `pig_nose` | body | Its nose ends in a flat, round, pig-like snout disc with the nostrils at the front. | — |
+| `pinta_island` | habitat | Lives (or lived) wild only on Pinta Island in the Galápagos. | implies: `one_island` |
+| `pointed_snout` | body | Its snout is long, or ends in a narrow, pointed tip. | — |
+| `poor_eyesight` | habits | Sees poorly or is blind, and relies mainly on other senses (smell, hearing or touch). | — |
+| `pouch` | life | The female has a pouch on her belly where her baby (or egg) grows. | — |
+| `prairie_dog_towns` | habitat | Lives in prairie dog colonies ("towns") and uses their burrows (not the same as living near people, see town_dweller). | implies: `habitat:grassland` |
+| `puffs_up` | habits | Puffs its body up with air when threatened. | — |
+| `purple_gray` | body | Its body is dark purplish gray. | — |
+| `pushes_over_trees` | habits | Pushes or knocks over whole trees to feed. | — |
+| `raids_termite_mounds` | habits | Breaks open ant or termite nests or mounds with its claws or snout to eat the insects inside (poking tools into openings doesn't count). | denies: `diet:plants` |
+| `rain_breeder` | life | Breeds when heavy rains come, often in pools or puddles the rain fills. | — |
+| `rarely_drinks` | habits | Can go days or longer without drinking, getting most of its water from its food. | — |
+| `red_eyes` | body | Its eyes are red. | — |
+| `red_orange` | body | Its body is bright red-orange. | — |
+| `reddish_fur` | body | Its fur is mostly red, reddish brown or golden red. | implies: `covering:fur` |
+| `regrows_body_parts` | habits | Can regrow lost body parts such as legs, tail or gills. | — |
+| `rests_by_waterfalls` | habits | Rests on wet rocks by waterfalls or rapids. | implies: `system:freshwater`, `habitat:wetlands` |
+| `rests_on_bottom` | habits | Rests on the bottom of a river, lake or pond, under water. | implies: `habitat:wetlands` |
+| `ringed_tail` | body | Its tail has rings of alternating colors. | — |
+| `rodent_hunter` | habits | Rodents are a main part of its prey. | denies: `diet:plants` |
+| `rolls_into_ball` | habits | Curls up into a tight ball to protect itself. | — |
+| `roosts_in_trees` | habits | Rests (roosts) hanging or perching in tree branches, often in groups. | implies: `trees:yes`, `habitat:forest`, `often_in_trees` |
+| `round_body` | body | Its body is round and puffy. | — |
+| `s_shaped_horns` | body | Its horns curve back and then up or forward, making an S shape seen from the side. | — (deferred: `horns`) |
+| `saddleback_shell` | body | Its shell is a "saddleback": raised high at the front, above the neck. | implies: `covering:shell` |
+| `salt_licks` | habits | Seeks out salt licks, or mineral-rich soil, clay or water, to get minerals. | — |
+| `sand_dunes` | habitat | Lives on or in sand dunes, coastal or inland. | — |
+| `sandy_bottoms` | habitat | Lives in rivers or lakes with soft, sandy or muddy bottoms. | implies: `system:freshwater`, `habitat:wetlands` |
+| `scavenger` | habits | Often eats animals that are already dead (carrion). | denies: `diet:plants` |
+| `scent_marks` | habits | Marks its home area, paths or objects with scent: urine, dung or rubbed-on gland scent (just having scent glands doesn't count). | — |
+| `screecher` | habits | Makes loud, harsh screeches. | — |
+| `seed_spreader` | habits | Spreads plant seeds to new places, mostly by eating fruit and passing the seeds in its droppings. | denies: `diet:meat`, `diet:insects` |
+| `seldom_on_ground` | habits | Lives in trees and seldom comes down to the ground. | implies: `trees:yes`, `often_in_trees` |
+| `senses_vibrations` | habits | Feels vibrations or ripples through the ground or water, to sense prey, danger or others. | — |
+| `shallow_wetlands` | habitat | Lives in shallow, still water such as marshes, ponds and bogs. | implies: `system:freshwater`, `habitat:wetlands` |
+| `shares_food` | habits | Shares food with, or brings food to, other members of its group beyond its own young (a parent feeding only its own young doesn't count). | denies: `social:alone` |
+| `shell_spines` | body | Has small spines or pointed bumps on its shell, mainly along the front edge. | implies: `covering:shell` |
+| `shoulder_stripe` | body | A single bold stripe runs across its shoulders. | — (deferred: `stripes`) |
+| `side_frills` | body | Grows thin, hair-like flaps of skin on its sides (and thighs). | — |
+| `skin_folds` | body | Its skin has deep folds, like plates of armor. | implies: `covering:skin` |
+| `sleeping_nests` | habits | Builds a nest or bed (of leaves, branches or grass) to sleep or rest in, in a tree or on the ground. | — |
+| `sleeps_high_in_trees` | habits | Sleeps or rests high up in trees. | implies: `trees:yes`, `often_in_trees` |
+| `slow_mover` | habits | Moves very slowly, even when disturbed. | denies: `fast_runner` |
+| `snorkel_nose` | habits | Can breathe through the tip of its raised nose, snout or trunk while the rest of its body stays under water. | — |
+| `snowy_winters` | habitat | Lives where snow covers the ground for weeks or months in winter. | — |
+| `snub_nose` | body | Its nose is short, flat and turned up. | — |
+| `soars` | habits | Soars: glides on rising warm air without flapping. | — |
+| `spectacles` | body | Pale rings or markings around its eyes look like glasses. | — (deferred: `face_markings`) |
+| `spiky_shell` | body | Its shell has spikes or sharp points around its edge. | implies: `covering:shell` |
+| `spiny_forest` | habitat | Lives in dry spiny forest: thorny, cactus-like forest and brush. | implies: `habitat:forest` |
+| `spiral_horns` | body | Its horns twist in a spiral, like a corkscrew, along their length. | — (deferred: `horns`) |
+| `spots` | body | Its coat or skin is covered with spots or rosettes. | — |
+| `spotted_belly` | body | Its belly is spotted. | — |
+| `squeaker` | habits | Makes high squeaking calls. | — |
+| `stands_on_hind_legs` | habits | Rises up or moves on its back legs alone, at least sometimes: standing, rearing up, hopping or running upright. | — |
+| `star_fingers` | body | Each fingertip ends in a tiny star shape. | — |
+| `star_pattern` | body | Its shell or skin has lines spreading out like stars. | — |
+| `startle_display` | habits | Suddenly flashes bright colors (eyes or body) to startle a predator. | — |
+| `stays_larval` | life | Grows up and breeds while keeping its larval body (gills, life in water), never changing into a land form. | — |
+| `sticky_skin` | habits | Its skin oozes a sticky glue when it is grabbed. | implies: `covering:skin` |
+| `stores_food` | habits | Gathers food and stores it for later, such as haypiles for winter. | — |
+| `striped_young` | life | Its young have stripes (and sometimes spots) that fade as they grow up. | — |
+| `stripes` | body | Has stripes: one or more long bands of contrasting color on its body or legs (tail rings don't count, see ringed_tail). | — |
+| `strong_bite` | body | Bites or chews with unusual force for its size. | — |
+| `stubby_tail` | body | Its tail is very short, just a stub. | denies: `long_tail` |
+| `sucker_mouth_tadpoles` | life | Its tadpoles cling to rocks in fast water with a sucker-like mouth. | implies: `birth:eggs` |
+| `super_hearing` | body | Has exceptionally sharp hearing that it relies on. | — |
+| `surfaces_to_breed` | life | Lives underground and comes to the surface only briefly, to breed. | — |
+| `swimmer` | habits | Swims well or often, by choice, in water (moving through sand or soil doesn't count). | — |
+| `tail_organ` | body | Males have a tail-like body part used for mating. | — |
+| `tap_forager` | habits | Taps on wood or bark and listens for hollow spots to find hidden food. | — |
+| `tear_lines` | body | Dark lines run from the inner corner of each eye down to its mouth, like tear tracks. | — (deferred: `face_markings`) |
+| `temperature_sex` | life | Whether its eggs hatch male or female depends on the nest's temperature. | — |
+| `territorial` | habits | Defends an area (a territory, home patch or den site) against others of its kind (fights over mates alone don't count). | — |
+| `throat_patch` | body | Has a patch or patches of contrasting color on its throat. | — |
+| `tooth_plate` | body | Has a bony, tooth-like plate in its jaw. | — |
+| `toothless` | body | Has no teeth at all as an adult. | denies: `many_teeth`, `tube_teeth`, `ever_growing_teeth`, `tusks` |
+| `town_dweller` | habitat | Lives in or near human settlements: towns, villages, gardens, parks or plantations (not the same as prairie dog towns). | — |
+| `trunk` | body | Has a trunk: a long, bendy nose joined with its upper lip (an elephant's long trunk or a tapir's short one). | — |
+| `tube_teeth` | body | Its teeth are made of many tiny tubes and have no enamel. | — |
+| `tusks` | body | Has tusks: long teeth that stick out of its mouth, in at least one sex. | — |
+| `underwater_breathing` | body | Can take in oxygen from the water (through gills, skin or throat) while it stays under water. | implies: `habitat:wetlands` |
+| `uses_tools` | habits | Uses objects such as sticks or stones as tools to get food or do tasks. | — |
+| `venomous` | body | Can inject venom with a bite, sting or spur. | — |
+| `vertical_pupils` | body | Its pupils are vertical slits. | — |
+| `voiceless` | habits | Makes no calls: no croaks, songs, squeaks or other voice sounds (a hiss of breath doesn't count as a call). | denies: `chirps`, `loud_calls`, `low_rumbles`, `screecher`, `squeaker`, `whistle_calls` |
+| `walks_on_knuckles` | habits | Walks on its knuckles or the sides of its curled front feet, keeping its claws or fingers off the ground. | — |
+| `walks_upright` | habits | Usually walks on its back legs, using its front legs only now and then. | — (deferred: `stands_on_hind_legs`) |
+| `warning_colors` | body | Has bright colors that warn predators it is poisonous or bad to eat. | — |
+| `webbed_feet` | body | Has webbed feet: skin joins its toes. | — |
+| `whistle_calls` | habits | Calls with high whistles. | — |
+| `white_belly` | body | Its belly is plain white. | — |
+| `white_ear_rims` | body | Its ears have white edges. | — |
+| `white_tail_tip` | body | Its tail ends in white, or has a white band near its end. | — |
+| `wings` | body | Has wings it flies with. | — |
+| `winter_rest` | habits | Rests or sleeps through the winter, inactive for weeks or months (hibernation or brumation). | — |
+| `yellow_head` | body | Its head is mostly yellow. | — |
+| `yellow_legs` | body | Its legs are yellow (yellow skin or scales). | — |
+
+</details>
