@@ -1171,6 +1171,21 @@ Reviewed `origin/main` (`7bce511a`) ... `HEAD` (`963615b9`). The code is sound a
 
 ## Release
 
+- **PR:** https://github.com/kc0588615/phaser-june/pull/86 (`agent/sign-audit` `c9d8da15` → `main`, already cleanly ahead of `origin/main` `7bce511a`, rebase no-op).
+- **CI:** both jobs passed on first run — `CI/check` (3m46s) and `CI/e2e` (11m50s).
+- **Merge commit:** `8d246c70e440919c85a7a9fe987bc7cc5ab811f4` (`Merge pull request #86 from kc0588615/agent/sign-audit`).
+- **Deploy output last line:** `deploy critter-connect: live at https://critterconnect.org`
+- **Deploy log:** `/srv/critter-ai/agent-state/missions/sign-audit/release-deploy.log`
+- **Live smoke results (`2026-11-24 00:43 UTC`):**
+  - `https://play.critterconnect.org/version.txt`: HTTP 200, `8d246c70e440919c85a7a9fe987bc7cc5ab811f4`.
+  - `https://play.critterconnect.org/`: HTTP 200 (`4,460` B, globe `<title>Critter Connect</title>` + `__NEXT_DATA__`).
+  - `https://play.critterconnect.org/explore/`: HTTP 200 (`2,524` B, game page shell; `deploy/check.sh` also confirmed `https://play.critterconnect.org/explore/?seed=1 board drawn (390x390 canvas, 5 animals, attempt 1, 6.6 s)`).
+  - `https://play.critterconnect.org/api/clue-game/pool/`: HTTP 200 JSON — `76` species, `2,475` clues, `491` facts, `271` citations, 0 errors (live `7bce511a` rows loading cleanly under the new `SIGNS`).
+  - `https://critterconnect.org/` (+ `/teachers/`, `/privacy/`, `/terms/`, redirects): all OK per `deploy/check.sh`.
+- **Owner handoff:** added `H22` (`Production content build for sign-audit`, with Fable MUST-FIX 1 disclosures and WSL steps) to `/srv/critter-ai/handoff/critter-connect.md`.
+
+Result: done
+
 ## Decisions
 
 - (lead) Architecture A3 + B2: put strict narrower→broader sign edges in `SIGNS[tag].implies` with `heldSigns` closure in `animalFitsNote` (shared by `witnessNotes`, `stillPossible`, tests, and metrics), split `SignEntry` into a discriminated union (`ActiveSignEntry` with required `meaning` vs `RetiredSignEntry` with `retired: true` and `category` only; drop dead `restates`), enforce retired + closure + per-note one-sign-per-fact mechanically in `signProblems` while deduplicating field-guide badges in `signsOf`, narrow `travelOf` on `system:freshwater`/`system:marine` for `swimmer` using raw tags, keep `ANIMAL_RULES.version` at `055-1`, audit all ~494 held pairs in category × animal-group batches, and record 3 witness-note snapshots via real `witnessNotes`.
@@ -1249,6 +1264,7 @@ Reviewed `origin/main` (`7bce511a`) ... `HEAD` (`963615b9`). The code is sound a
 - 2026-11-23 23:39 UTC · S25b: Opus (`claude-task`, 2 passes) wrote Astra SC1 pinned deal-fit tests first in `tests/clueGame/animalBoard.test.ts` (5/5 red before profile fixes, 5/5 green after), then applied all Astra MF1–5 profile & citation edits across 17 profiles + `db/content/citations.json` (+2 entries: Pašukonis et al. 2019 CC BY 4.0, SDZWA Chinese Giant Salamander `/behavior`, 0 deleted/altered): `9` `forest_floor` overruled `doesn't` (`remove:3`) & `climber` `has it` in-place at `9:14`; `forest_floor` `new_note`s on `3:21`, `12:18`, `21:18`, `27:23`, `46:21` (standalone `smithsonian`, keeping `46:4` untouched), `49:19`, `67:23`; `town_dweller` `new_note`s on `7:15`, `16:17`, `51:27`; `crevice_hider` `new_note`s on `4:20`, `8:22`, `49:20`, `62:29`, `75:21` (`35`/`60`/`67`/`72` ruled `can't tell`); `1` `yellow_legs` overruled `doesn't` (deleted S19 `1:12`, shifted `1` indices `13..25 → 12..24` in `$SA/changes.csv` & `$SA/wording.csv`) and `1:12` `burrower` updated to Butler & Graham 1995 (`literature`) with qualified wording; lead ruled `15:2 → 4` (`"slabs of rock"`) `false` at the wording gate, moving `15` `crevice_hider` off `15:2` to standard-sentence `15:18` (`remove:2;new_note:18 (wording gate)`) and appending all 49 S25b newly matched keys (`true`) to `$SA/wording.csv` (`5,108` keys, `0 false`). Lead independently verified every diff (`git diff`, `$SA/rulings.csv`, `$SA/changes.csv`, `$SA/wording.csv`), `npm run typecheck` exit 0, `npm run lint` exit 0, `npm test` 147/147 pass, `npm run content -- preview` exit 0 (0 problems, 0 cite warn), `$SA/scripts/ledger.py` exit 0 (`15,276` rows, `3` `rules_commit_change`, 0 without `final_verdict`, 0 `add:pending`, 0 conflicts), and `$SA/scripts/reconcile.py --from 7bce511a --to WORKTREE --applied all` exit 0 (`1,433` actual ops match ledger). Committed as `sign-audit S25b review-fixes: …` and pushed.
 - 2026-11-23 23:49 UTC · S26: Lead re-ran Snapshot 2 (`eadc8c16` code × `7bce511a` content: 0 `Unknown sign`, 403/525 combos, 943 eligible notes, 3 changed, 0 lost, `diff.py --wording` exit 0 with `2 true / 0 false`) and Snapshot 3 (`eadc8c16` × `eadc8c16`: 105 identical sets, 525/525 combos [100.0%], 5,803 eligible notes [min 3 / median 10 / max 24], 541 lost, `diff.py --wording` exit 0 with **5,108 `true` / 0 `false`** / 0 unruled), cleaned `/tmp/sa-trees/` & `/tmp/sa-build/`, and computed exact Fable MUST-FIX 1 owner-disclosure metrics (`balance-044.ts --rounds 60` seed 44: Africa careful ★★★ `62%→90%` / notes `1.8→3.5`, Asia `47%→73%` / `1.0→3.2`; clues/animal median `8→23` / max `36`; badges median `6→19` / max `30`; `travelOf` 0 deploy-window changes and 9 post-build changes [5 `walk→swim`, 4 `walk→dig`]). Opus (`claude-task`) updated `$SA/scripts/lost_reasons.py` → `$SA/metrics/s3/lost-reasons.csv` (`541/541` rows: `424/34/64/10/7/2`) and re-ran `$SA/scripts/sign-map-update.ts` on `docs/research/2026-11-07-moves-and-signs/sign-map.csv` (7-line post-S25 diff; 156 changed / 60 unchanged vs `7bce511a`, idempotent sha256 `964a5a4b…`). Lead verified idempotency, `lost_reasons.py`, `ledger.py` (15,276 rows, 0 conflicts, `eadc8c16` 32 rows), `reconcile.py --from 7bce511a --to HEAD` (`1,433` ops match), `typecheck`, `lint`, `npm test` (147/147 pass), and `content -- preview` (0 problems / 0 cite warn). Updated plan S1→S2→S3, S24/S26 counts, 76-animal table, and Fable disclosure metrics; committed `sign-map.csv` + plan and pushed.
 - 2026-11-24 00:25 UTC · Final Verification & Summary: ran full offline checks (`typecheck`, `lint`, `npm test` 147/147, `content -- preview` 0 problems/warnings), read-only live `content -- check` (`Pool: 76 playable of 76 species, 2475 clues (2083 deductive), 491 facts. 0 errors, 0 warnings.`), `ledger.py` (15,276 rows, 0 conflicts), `reconcile.py` (`1,433` ops match), S1→S2 (`2 true / 0 false`) and S1→S3 (`5,108 true / 0 false`) wording diffs, and guarded `phaser_june_dev` `content -- build` + `content -- check` (`Pool: 76 playable of 76 species, 3653 clues (3041 deductive), 491 facts. 0 errors, 0 warnings.`). Initial `e2e:fresh` on HEAD content passed `1551/1554`, exposing 3 pre-existing paging-test assumptions in `scripts/e2e.mjs` (`02d` 1-page check, `FORCED` height `40→64` for `moves`, `turns` `ResizeObserver` race on already-paged sheets); Opus (`claude-task`) fixed all 3 in `scripts/e2e.mjs`, after which `e2e:fresh` passed **`1554/1554`** (Anywhere load median 2369 ms at 1×, 4651 ms at 4×; `splits: 17, moves: 1, bad: 0`; artifact saved to `/srv/critter-ai/agent-state/missions/sign-audit/e2e-final/`), and `typecheck`/`lint`/`npm test` re-passed (147/147). Wrote `## Summary`, set `status: done`, committed `scripts/e2e.mjs` + plan, and pushed.
+- 2026-11-24 00:45 UTC · Release: confirmed `agent/sign-audit` (`c9d8da15`) up to date with `origin/main` (`7bce511a`), re-verified `typecheck`/`lint`/`npm test`/`content -- preview`/`content -- check` (live), opened PR #86 (`CI/check` 3m46s + `CI/e2e` 11m50s both passed), merged as `8d246c70`, ran `deploy critter-connect` (exit 0, `deploy critter-connect: live at https://critterconnect.org`, log at `…/sign-audit/release-deploy.log`), passed live smoke (`version.txt` = `8d246c70`, `/` + `/explore/` HTTP 200 + live board drawn, `/api/clue-game/pool/` 76 species / 2475 clues / 0 errors), filed handoff item `H22` in `/srv/critter-ai/handoff/critter-connect.md`, recorded `## Release` (`Result: done`), commented on PR #86, committed plan and pushed.
 
 ## Summary
 
@@ -1312,13 +1328,14 @@ Review these four effects before running the production `npm run content -- buil
   - `$SA/scripts/reconcile.py --from 7bce511a --to HEAD`: `1,433` actual ops match ledger.
   - `$SA/metrics/diff.py`: S1→S2 (`2 true / 0 false`), S1→S3 (`5,108 true / 0 false`, `541/541` lost rows reasoned).
 
-### Owner's Production Content Build (Handoff Item Queued for Release)
+### Release & Owner's Production Content Build (Handoff H22)
 
-This change requires the owner's production content build from WSL after the Release session merges and deploys `main` (handoff item to be added to `/srv/critter-ai/handoff/critter-connect.md` once deploy smoke tests pass, repeating the Fable MUST-FIX 1 disclosures above):
-1. `git checkout main && git pull --ff-only`
-2. Fresh production dump: `ssh root@play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`
-3. `npm run content -- build`
-4. `npm run content -- check` — expected summary: `Pool: 76 playable of 76 species, 3653 clues (3041 deductive), 491 facts.` and `0 errors, 0 warnings.`
+- **Released (`2026-11-24`):** PR #86 passed `CI/check` + `CI/e2e`, merged to `main` as `8d246c70`, deployed via `deploy critter-connect` (`deploy critter-connect: live at https://critterconnect.org`), and passed live smoke (`version.txt` = `8d246c70`, `/`, `/explore/`, `/api/clue-game/pool/` 76 species / 0 errors).
+- **Production content build (`H22` in `/srv/critter-ai/handoff/critter-connect.md`):** This change requires the owner's production content build from WSL (after reviewing the Fable MUST-FIX 1 disclosures above):
+  1. `git checkout main && git pull --ff-only`
+  2. Fresh production dump: `ssh root@play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`
+  3. `npm run content -- build`
+  4. `npm run content -- check` — expected summary: `Pool: 76 playable of 76 species, 3653 clues (3041 deductive), 491 facts.` and `0 errors, 0 warnings.`
 
 ### Sign Definitions (201 Active Signs; Authoritative Copy in `src/clueGame/signs.ts`)
 
