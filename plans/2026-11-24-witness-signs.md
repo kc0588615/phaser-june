@@ -80,7 +80,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -88,6 +88,43 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+- Branch / base: `agent/witness-signs` at `a1a33d3d`, cut from `origin/main` `8d246c70` (PR #86 `sign-audit`). Clean working tree; `/srv/critter-ai/handoff/critter-connect.md` has one open item `H22` (`Status: waiting on you`, `sign-audit` production content build; no `Status: done` items).
+- Runtime: Node `v24.21.0`, npm `11.19.0`; `node_modules` installed; no DB migrations (baseline `db/schema.sql` already live and on `phaser_june_dev`).
+- `npm run typecheck`: pass (exit 0).
+- `npm run lint` (`eslint` + `check-theme.mjs`): pass (exit 0, 0 warnings).
+- `npm test`: pass (147/147 tests, 3 suites, 0 failed, 5.5 s).
+- `npm run content -- preview`: pass (exit 0, 0 problems across 76 profiles).
+- `npm run content -- check` (live `phaser_june`, read-only): pass — `Pool: 76 playable of 76 species, 2475 clues (2083 deductive), 491 facts. 0 errors, 0 warnings.` (live DB still holds `7bce511a` rows pending H22).
+- Guarded `phaser_june_dev` `npm run content -- build && npm run content -- check`: pass — `content_sources: 16 rows`, `species: 76 rows`, `species_deduction_clues: 3653 rows`, `species_facts: 491 rows`; `Pool: 76 playable of 76 species, 3653 clues (3041 deductive), 491 facts. 0 errors, 0 warnings.`
+- Guarded `phaser_june_dev` `CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh`: pass — `1554/1554 checks passed` (Anywhere load median 2374 ms at 1x, 4800 ms at 4x). Artifact: `/srv/critter-ai/agent-state/missions/witness-signs/e2e-baseline/`.
+- Balance bot before (`node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 200 --seed 44 --places world,africa,asia`, rules `055-1`, `witnessChance 0.03`, full table at `/srv/critter-ai/agent-state/missions/witness-signs/balance-before.txt`):
+
+| Place | Player | Found | ★★★ | Escaped | Ran out | Identified | Moves left | Orders | Notes | Points |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| world (76, 49 sets) | careful | 99% ±1 | 82% | 0% | 2% | 98% | 19.4 | 1.6 | 3.2 | 330.6 |
+| world | novice | 99% ±1 | 84% | 0% | 2% | 99% | 19.4 | 1.5 | 3.2 | 331.8 |
+| world | expert | 100% ±0 | 91% | 0% | 0% | 100% | 20.4 | 1.3 | 3.0 | 348.3 |
+| world | reader | 97% ±2 | 60% | 0% | 6% | 96% | 15.6 | 1.7 | 3.5 | 270.6 |
+| world | guesser | 20% ±6 | 20% | 80% | 0% | - | 27.7 | 0.0 | 0.8 | 85.5 |
+| world | random | 22% ±6 | 0% | 0% | 100% | - | 0.0 | 3.9 | 5.1 | 10.8 |
+| world | oracle | 100% ±0 | 100% | 0% | 0% | - | 27.8 | 0.0 | 0.9 | 428.3 |
+| africa (26, 23 sets) | careful | 100% ±0 | 87% | 0% | 3% | 97% | 19.3 | 1.8 | 3.2 | 333.8 |
+| africa | novice | 98% ±2 | 85% | 0% | 3% | 98% | 19.6 | 1.8 | 3.3 | 331.9 |
+| africa | expert | 100% ±0 | 91% | 0% | 0% | 100% | 20.0 | 1.5 | 3.0 | 345.9 |
+| africa | reader | 97% ±2 | 62% | 0% | 9% | 94% | 15.2 | 1.9 | 3.6 | 268.7 |
+| africa | guesser | 20% ±6 | 20% | 80% | 0% | - | 27.9 | 0.0 | 0.7 | 85.8 |
+| africa | random | 22% ±6 | 0% | 0% | 100% | - | 0.0 | 3.9 | 5.3 | 10.8 |
+| africa | oracle | 100% ±0 | 100% | 0% | 0% | - | 27.8 | 0.0 | 1.0 | 428.3 |
+| asia (17, 15 sets) | careful | 99% ±1 | 81% | 0% | 3% | 98% | 18.2 | 1.8 | 3.1 | 316.2 |
+| asia | novice | 100% ±1 | 81% | 0% | 1% | 99% | 18.2 | 2.0 | 3.2 | 317.6 |
+| asia | expert | 100% ±0 | 89% | 0% | 0% | 100% | 19.4 | 1.6 | 2.9 | 336.8 |
+| asia | reader | 98% ±2 | 58% | 0% | 4% | 96% | 14.8 | 2.0 | 3.2 | 265.6 |
+| asia | guesser | 20% ±6 | 20% | 80% | 0% | - | 27.9 | 0.0 | 0.6 | 85.8 |
+| asia | random | 22% ±6 | 0% | 0% | 100% | - | 0.0 | 3.9 | 4.8 | 10.8 |
+| asia | oracle | 100% ±0 | 100% | 0% | 0% | - | 27.8 | 0.0 | 0.8 | 428.2 |
+
+Careful moves left at find (20th/40th/60th pct): world `14/19/22`, africa `15/19/21`, asia `14/17/21`.
 
 ## Architecture
 
@@ -110,5 +147,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-24 01:08 UTC — Baseline stage: verified typecheck, lint (0 warnings), unit tests (147/147), `content -- preview` (0 problems), live `content -- check` (2475 clues, 0 errors/warnings), guarded `phaser_june_dev` `content -- build && check` (3653 clues, 0 errors/warnings) + `e2e:fresh` (1554/1554 pass; saved at `$STATE/e2e-baseline/`), and baseline `balance-044.ts` (`--rounds 200 --seed 44 --places world,africa,asia`).
 
 ## Summary
