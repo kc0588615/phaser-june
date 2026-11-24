@@ -152,15 +152,17 @@ describe('redList.notPresent', () => {
 //   2. misses a broader sign the holder has only by implication (heldSigns);
 //   3. reports a sign the animal doesn't hold, reports or throws on a null sentence, or gives a message that doesn't
 //      name both the animal (commonName) and the sign;
-//   4. reports anything on the real (HEAD) profiles.
+//   4. reports anything on the real (HEAD) profiles;
+//   5. throws on a profile carrying an unknown open tag (aborting `content -- preview` before its citations and later
+//      profiles), or skips the profile's known or implied signs when one is present (checkProfile reports it instead).
 // animalsFromPool
-//   5. throws on an unknown open tag;
-//   6. drops a known active sign, a retired sign or a trait tag (prefix:value);
-//   7. doesn't warn once for each unknown open tag it drops;
-//   8. stops passing the raw compareTags to isHandWrittenClue (a generated trait clue with an unknown open tag stays
+//   6. throws on an unknown open tag;
+//   7. drops a known active sign, a retired sign or a trait tag (prefix:value);
+//   8. doesn't warn once for each unknown open tag it drops;
+//   9. stops passing the raw compareTags to isHandWrittenClue (a generated trait clue with an unknown open tag stays
 //      generated; a hand-written clue whose only tag is an unknown open tag stays hand-written).
 // animalsFromProfiles
-//   9. stops throwing on an unknown open tag.
+//   10. stops throwing on an unknown open tag.
 describe('witnessNameProblems', () => {
   const sign = (witness: string | null, implies?: string[]) => ({ category: 'body' as const, meaning: 'test sign', witness, ...(implies ? { implies } : {}) });
   // One sign per kind of name word, each sentence naming the fixture by that word alone.
@@ -216,6 +218,18 @@ describe('witnessNameProblems', () => {
 
   test('finds nothing on the real profiles', () => {
     assert.deepEqual(witnessNameProblems(profiles), []);
+  });
+
+  test('skips an unknown open tag without throwing and still checks the known and implied signs', () => {
+    assert.deepEqual(reported(witnessNameProblems([fixture(['zz_unknown_sign', 'common_word', 'narrow', 'clean'])], table)), ['broad', 'common_word']);
+  });
+
+  test('the content -- preview checks run through a real profile with an unknown open tag', () => {
+    const profile = structuredClone(profiles.find(entry => entry.commonName === "Blanding's Turtle")!);
+    profile.clues[0].tags = [...(profile.clues[0].tags ?? []), 'zz_new_sign'];
+    assert.ok(checkProfile(profile, sources).some(problem => problem.includes('"zz_new_sign"') && problem.includes('not in SIGNS')), 'checkProfile reports the unknown sign');
+    assert.deepEqual(witnessNameProblems([profile]), []);
+    assert.doesNotThrow(() => checkCitations(profile, sources, citedPages));
   });
 });
 

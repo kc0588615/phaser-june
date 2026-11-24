@@ -84,11 +84,13 @@ function giveawaysOf(animal: { commonName: string; scientificName: string; taxon
 /**
  * Each held sign whose witness sentence names one of its holders (giveawaysOf, no exemptions), as a message naming the
  * animal and the sign; empty when every sentence is safe to deal. Signs held by implication count; null sentences don't.
+ * Unknown open tags are skipped (checkProfile reports them), so the known signs are still checked and preview runs on.
  */
 export function witnessNameProblems(profiles: readonly AnimalProfile[], table: SignTable = SIGNS): string[] {
   return profiles.flatMap(profile => {
     const words = giveawaysOf({ ...profile, countries: presentCountries(profile) });
-    return [...heldSigns(profileClues(profile).flatMap(clue => clue.tags), table)].flatMap(sign => {
+    const tags = profileClues(profile).flatMap(clue => clue.tags).filter(tag => tag.includes(':') || isKnownSign(tag, table));
+    return [...heldSigns(tags, table)].flatMap(sign => {
       const text = witnessSentence(sign, table);
       if (text === null) return [];
       const named = censor(text, words);
