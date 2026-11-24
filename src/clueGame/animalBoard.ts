@@ -35,6 +35,8 @@ export interface AnimalRules {
   orderSize: number;
   /** Chance a new gem is a witness gem. */
   witnessChance: number;
+  /** Witness gems a new board's free cells hold at least. */
+  startWitness: number;
   /** Moves left at the find for ★★ and for ★★★. */
   starMoves: [two: number, three: number];
   hearts: number;
@@ -58,7 +60,7 @@ export interface AnimalRules {
  * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '055-1', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
+  version: '055-2', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, startWitness: 1, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 

@@ -30,10 +30,26 @@
 // Toy scouting (rules 047-1). The ways it could break:
 // 20. A line or blast gem whose clear reaches a tile doesn't show the toy's own color there, shows it with
 //     `toyScout` off, shows it on a tile the clear didn't reach, or changes which tiles are `touched`.
+//
+// Starting witness gem (rules 055-2, `RareGem.atLeast`). Written before the code; the ways it could break:
+// G1. For seeds 0-1,999 with `tileCells(7, 7, 5)` pins, `BOARD_GEMS` and `{ type: WITNESS_GEM, chance: 0.03,
+//     atLeast: 1 }`, a board has no rare gem on a free (unpinned) cell, a standing match, or no valid move.
+// G2. A seed whose `atLeast: 0` board already has a free rare gem gives a different grid with `atLeast: 1`
+//     (or a different rng state after it: the bot's paired comparison breaks).
+// G3. A seed whose only rolled rare gem sits on a pinned cell gets no extra gem on a free cell.
+// G4. The same seed gives two different grids (on a seed that needed a top-up).
+// G5. `loadBoard` tops up (a loaded grid with no rare gem must keep none).
+// G6. A negative, non-integer or infeasible (`freeCount - atLeast < 3`) `atLeast` doesn't throw `RangeError`;
+//     nor does a board whose geometry can't be made playable.
+// G7. A tight but feasible `atLeast` gives a board without that many free rare gems, or with a standing match, or
+//     with no valid move.
+// G8. A rare gem dropped because its type is a normal gem still tops up or throws.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Grid, type Move, type Special } from '@/game/BoardModel';
 import { GEM_TYPES, type GemType } from '@/game/constants';
+import { BOARD_GEMS, WITNESS_GEM, tileCells } from '@/clueGame/animalBoard';
+import { mulberry32 } from '@/lib/seededRng';
 
 const W = 6;
 const H = 6;
@@ -430,6 +446,112 @@ test('pinned tiles never move, double or vanish through play and reshuffles', ()
       assert.ok(pins.every(([[x, y]]) => toys[x][y] === null), 'no toy on a tile');
       const grid = model.getGrid();
       assert.ok(grid.every((column, x) => column.every((gem, y) => model.isPinned([x, y]) || [...COLORS, NOTE.type].includes(gem))));
+    }
+  }
+});
+
+// ---- Starting witness gem (G1-G8) ----
+
+const WITNESS = { type: WITNESS_GEM, chance: 0.03 };
+/** The app's pins for a seed: `tileCells` on the 7×7 board with 5 tiles, as useAnimalSession deals them. */
+const dealtPins = (seed: number): Array<[Cell, number]> => tileCells(7, 7, 5, mulberry32(seed))!.map((cell, i): [Cell, number] => [cell, i + 1]);
+function startBoard(seed: number, atLeast?: number, pins = dealtPins(seed), size = 7, gems: readonly GemType[] = BOARD_GEMS): BoardModel {
+  const model = new BoardModel(size, size);
+  model.newBoard(seed, gems, { ...WITNESS, ...(atLeast === undefined ? {} : { atLeast }) }, pins);
+  return model;
+}
+/** Rare gems on free cells, and on pinned cells. */
+function rareCounts(model: BoardModel, type: GemType = WITNESS_GEM): { free: number; pinned: number } {
+  const grid = model.getGrid();
+  let free = 0, pinned = 0;
+  grid.forEach((column, x) => column.forEach((gem, y) => { if (gem === type) { if (model.isPinned([x, y])) pinned++; else free++; } }));
+  return { free, pinned };
+}
+const playable = (model: BoardModel) => model.nextPhase().groups.length === 0 && model.hasAnyValidMove();
+
+test('G1: every dealt start board has a free witness gem, no standing match and a valid move', () => {
+  for (let seed = 0; seed < 2000; seed++) {
+    const model = startBoard(seed, 1);
+    assert.ok(rareCounts(model).free >= 1, `seed ${seed}: no free witness gem`);
+    assert.ok(model.hasAnyValidMove(), `seed ${seed}: no valid move`);
+    assert.equal(model.nextPhase().groups.length, 0, `seed ${seed}: a standing match`);
+  }
+});
+
+test('G2: a board that already rolled a free witness gem is unchanged, rng included', () => {
+  let checked = 0;
+  for (let seed = 0; seed < 200; seed++) {
+    if (rareCounts(startBoard(seed, 0)).free === 0) continue;
+    const [plain, topped] = [startBoard(seed, 0), startBoard(seed, 1)];
+    assert.deepEqual(topped.getGrid(), plain.getGrid(), `seed ${seed}`);
+    const move = neighborSwaps(7, 7).find(swap => plain.canSwap(swap))!;
+    assert.deepEqual(topped.nextPhase(move), plain.nextPhase(move), `seed ${seed}: the refills differ`);
+    checked++;
+  }
+  assert.ok(checked >= 10, `only ${checked} seeds rolled a free witness gem`);
+});
+
+test('G3: a witness gem rolled only on a pinned cell still gets one on a free cell', () => {
+  let checked = 0;
+  for (let seed = 0; seed < 2000; seed++) {
+    const counts = rareCounts(startBoard(seed, 0));
+    if (counts.free > 0 || counts.pinned === 0) continue;
+    assert.ok(rareCounts(startBoard(seed, 1)).free >= 1, `seed ${seed}`);
+    checked++;
+  }
+  assert.ok(checked >= 1, 'no seed rolled its only witness gem on a pin');
+});
+
+test('G4: a topped-up board replays exactly from its seed', () => {
+  const seeds = Array.from({ length: 200 }, (_seed, i) => i).filter(seed => rareCounts(startBoard(seed, 0)).free === 0).slice(0, 5);
+  assert.ok(seeds.length > 0, 'no seed needed a top-up');
+  for (const seed of seeds) {
+    const [a, b] = [startBoard(seed, 1), startBoard(seed, 1)];
+    assert.deepEqual(a.getGrid(), b.getGrid(), `seed ${seed}`);
+    assert.notDeepEqual(a.getGrid(), startBoard(seed, 0).getGrid(), `seed ${seed}: no top-up happened`);
+  }
+});
+
+test('G5: loadBoard never tops up', () => {
+  const model = startBoard(3, 1);
+  const grid: Grid = Array.from({ length: 7 }, (_column, x) => Array.from({ length: 7 }, (_cell, y): GemType => BOARD_GEMS[(x + 2 * y) % BOARD_GEMS.length]));
+  model.loadBoard(grid);
+  assert.deepEqual(rareCounts(model), { free: 0, pinned: 0 });
+});
+
+test('G6: a bad or infeasible atLeast, or an unplayable layout, throws RangeError', () => {
+  const pins = dealtPins(7);
+  const freeCount = 49 - pins.length;
+  for (const atLeast of [-1, 1.5, NaN, freeCount - 2, freeCount, freeCount + 1]) {
+    assert.throws(() => startBoard(7, atLeast, pins), RangeError, `atLeast ${atLeast}`);
+  }
+  // A 3×3 cross of tiles leaves four corners that touch nothing: no move can exist.
+  const cross: Array<[Cell, number]> = [[[1, 0], 1], [[0, 1], 2], [[1, 1], 3], [[2, 1], 4], [[1, 2], 5]];
+  assert.throws(() => startBoard(1, 1, cross, 3, COLORS), RangeError);
+});
+
+test('G7: a tight but feasible atLeast still gives a playable board with that many free witness gems', () => {
+  const cases: Array<{ size: number; atLeast: number; pins: (seed: number) => Array<[Cell, number]>; gems: readonly GemType[] }> = [
+    { size: 7, atLeast: 30, pins: dealtPins, gems: ['orange', 'yellow', 'green'] },
+    { size: 5, atLeast: 15, pins: () => [], gems: BOARD_GEMS },
+  ];
+  for (const { size, atLeast, pins, gems } of cases) {
+    for (let seed = 0; seed < 20; seed++) {
+      const model = startBoard(seed, atLeast, pins(seed), size, gems);
+      assert.ok(rareCounts(model).free >= atLeast, `${size}×${size} seed ${seed}: too few witness gems`);
+      assert.ok(playable(model), `${size}×${size} seed ${seed}: not playable`);
+    }
+  }
+});
+
+test('G8: a rare gem dropped for being a normal color neither tops up nor throws', () => {
+  for (let seed = 0; seed < 20; seed++) {
+    const plain = new BoardModel(7, 7);
+    plain.newBoard(seed, BOARD_GEMS, null, dealtPins(seed));
+    for (const atLeast of [1, 99]) {
+      const model = new BoardModel(7, 7);
+      model.newBoard(seed, BOARD_GEMS, { type: 'orange', chance: 0.03, atLeast }, dealtPins(seed));
+      assert.deepEqual(model.getGrid(), plain.getGrid(), `seed ${seed} atLeast ${atLeast}`);
     }
   }
 });

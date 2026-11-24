@@ -6,7 +6,7 @@
 // refills or answers not yet earned, except the oracle, a diagnostic that knows the
 // mystery from the start. Plan 054: locker, autoguess and scribbler name early (scribbler pencils at random).
 //   node scripts/run-typescript.mjs scripts/balance-044.ts [--rounds 400] [--seed 44] [--places africa,asia]
-//     [--moves 30] [--order 20] [--board 7] [--witness 0.03] [--stars 8,14] [--players careful,novice,expert,reader,guesser,random,oracle,locker,autoguess,scribbler,dabbler] [--dab 1]
+//     [--moves 30] [--order 20] [--board 7] [--witness 0.03] [--start-witness 1] [--stars 8,14] [--players careful,novice,expert,reader,guesser,random,oracle,locker,autoguess,scribbler,dabbler] [--dab 1]
 //     [--explain N]   (print round N's suspects, clue table and notes instead)
 //     [--scout on|off] [--knows size,covering]   (plan 045 scouting, on in the rules: suspects' answers start hidden
 //     and a move's clear next to an unmarked tile shows them; careful and reader know the --knows traits on sight,
@@ -324,6 +324,7 @@ async function main() {
     moves: Number(arg('moves', String(ANIMAL_RULES.moves))),
     orderSize: Number(arg('order', String(ANIMAL_RULES.orderSize))),
     witnessChance: Number(arg('witness', String(ANIMAL_RULES.witnessChance))),
+    startWitness: Number(arg('start-witness', String(ANIMAL_RULES.startWitness))),
     starMoves: arg('stars', ANIMAL_RULES.starMoves.join(',')).split(',').map(Number) as AnimalRules['starMoves'],
     scout: arg('scout', ANIMAL_RULES.scout ? 'on' : 'off') === 'on',
     wander: arg('wander', ANIMAL_RULES.wander ? 'on' : 'off') === 'on',
@@ -343,13 +344,14 @@ async function main() {
 
   const explain = process.argv.includes('--explain') ? Number(arg('explain', '0')) : null;
   if (explain === null) {
-    console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance}, setup seed ${setupSeed}${rules.scout ? `, scouting (careful and reader know ${options.knows.join(', ') || 'nothing'})` : ''}${rules.wander ? `, wander${rules.wanderToy ? ' with reward toys' : ''}` : ''}${rules.toyScout ? ', toy scouting' : ''}.`);
+    console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance} (start ≥${rules.startWitness}), setup seed ${setupSeed}${rules.scout ? `, scouting (careful and reader know ${options.knows.join(', ') || 'nothing'})` : ''}${rules.wander ? `, wander${rules.wanderToy ? ' with reward toys' : ''}` : ''}${rules.toyScout ? ', toy scouting' : ''}.`);
     for (const player of players) console.log(`- ${player}: ${PLAYER_NOTES[player]}`);
     console.log('\n| Place | Player | Found | ★★★ | Escaped | Ran out of moves | Named right at timeout (a find, 053) | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Toy releases | Walked off | Blocked steps | Reward toys | Out of moves once identified | Trail finished | Finds a trail | Named early (054) | Pencil bonus at a find | Sharp eye (2★ by name) | Points a round (no streak) |');
     console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   }
 
   const starLines: string[] = [];
+  const startLines: string[] = [];
   for (const placeName of arg('places', 'africa,asia').split(',')) {
     const place = placeName === 'world' ? null : placeName as ContinentKey;
     const pool = poolFor(animals, place);
@@ -383,8 +385,11 @@ async function main() {
       const scratch = new BoardModel(size, size);
       board.toyScout = scratch.toyScout = rules.toyScout;
       scratch.newBoard(1, BOARD_GEMS, { type: WITNESS_GEM, chance: rules.witnessChance });
+      // Witness gems on free cells of each new board, counted once a place (every player gets the same boards).
+      const starts: number[] = [];
       const results = deals.map((deal, r) => {
-        board.newBoard(deal.boardSeed, BOARD_GEMS, { type: WITNESS_GEM, chance: rules.witnessChance }, deal.pins);
+        board.newBoard(deal.boardSeed, BOARD_GEMS, { type: WITNESS_GEM, chance: rules.witnessChance, atLeast: rules.startWitness }, deal.pins);
+        if (player === players[0]) starts.push(board.getGrid().flat().filter((gem, i) => gem === WITNESS_GEM && !board.isPinned([Math.floor(i / size), i % size])).length);
         // Seeded per deal, so runs under different rules pair up round by round.
         return play(book, rules, board, scratch, deal, player, mulberry32(hash32(`${player}:${setupSeed}:${r}`)), options);
       });
@@ -397,6 +402,7 @@ async function main() {
       }
       const n = results.length;
       const count = (test: (r: Result) => boolean) => results.filter(test).length;
+      if (starts.length) startLines.push(`${placeName}: starting boards with a witness gem: ${pct(starts.filter(gems => gems > 0).length, n)} (mean ${(starts.reduce((a, b) => a + b, 0) / n).toFixed(2)})`);
       console.log([
         `| ${placeName} (${pool.length}, ${new Set([...sets.values()].map(set => set.join())).size} sets)`, player,
         `${pct(found.length, n)} ${pm(found.length, n)}`,
@@ -431,7 +437,7 @@ async function main() {
       }
     }
   }
-  if (starLines.length) console.log(`\n${starLines.join('\n')}`);
+  if (starLines.length || startLines.length) console.log(`\n${[...starLines, ...startLines].join('\n')}`);
 }
 
 main().catch(error => { console.error(error); process.exit(1); });
