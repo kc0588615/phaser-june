@@ -7,6 +7,7 @@ import {
 } from '@/clueGame/animalBoard';
 import type { GemType } from '@/game/constants';
 import type { Book } from '@/clueGame/questionMatch';
+import { heldSigns } from '@/clueGame/signs';
 
 export interface AnimalRoundEnd {
   outcome: 'found' | 'lost';
@@ -138,6 +139,7 @@ export function liveHighlights(round: AnimalRound, highlight: readonly string[])
 /** A JSON-safe summary for the dev bridge (window.__cc.clue()) and playtests. `possible` is for checks only, never shown. */
 export function animalDebugSummary(session: AnimalSession, seed: number) {
   const { round } = session;
+  const mystery = session.book.byId.get(round.mysteryId);
   return {
     seed, rulesVersion: round.rules.version, trailNo: session.trailNo, roundNo: session.roundNo, status: round.status, lostBy: round.lostBy, pencilBonus: round.pencilBonus, sharp: round.sharp,
     mysteryId: round.mysteryId, suspects: round.suspects, marked: round.marked, headings: round.headings, released: round.released,
@@ -145,6 +147,12 @@ export function animalDebugSummary(session: AnimalSession, seed: number) {
     orders: round.orders.map(order => ({ tag: order.tag, gem: order.gem, have: order.have, answer: order.answer, row: order.row, seen: order.seen })),
     pencil: session.pencil, highlight: session.highlight,
     notes: round.notes.length, possible: stillPossible(session.book, round),
+    witness: round.notes.map(note => ({
+      sign: note.sign,
+      text: note.text,
+      also: note.also,
+      behind: (mystery?.notes ?? []).filter(entry => heldSigns(entry.tags).has(note.sign)).map(entry => entry.text),
+    })),
     score: session.score, streak: session.streak, trail: session.trail, end: session.end, logTail: round.log.slice(-5),
   };
 }

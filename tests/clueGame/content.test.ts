@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { validatePool } from '@/clueGame/validatePool';
 import { checkCitations, checkProfile, contentRowsFromProfiles, presentCountries, profileClues, type AnimalProfile } from '@/clueGame/profiles';
 import { poolFromRows } from '@/clueGame/pool';
-import { animalsFromPool, animalsFromProfiles } from '@/clueGame/questionMatchContent';
+import { animalsFromPool, animalsFromProfiles, witnessNameProblems } from '@/clueGame/questionMatchContent';
 import { continentOf, countryName, regionOfCountry } from '@/clueGame/regions';
 import { citedPages, contentPool as pool, profiles, sources } from './contentPool';
 
@@ -141,5 +141,155 @@ describe('redList.notPresent', () => {
 
   test('checkProfile accepts a valid sourced code the range maps no longer list', () => {
     assert.deepEqual(checkProfile(withNotPresent('Yangtze Giant Softshell Turtle', [{ code: 'JPN', status: 'extinct' }, { code: 'CHN', status: 'possibly-extinct' }]), sources), []);
+  });
+});
+
+// witnessNameProblems (plan 2026-11-24-witness-signs, S3): the authoring check that no held sign's witness sentence
+// names its holder; and the pool door's unknown-tag filter. Ways they can fail:
+// witnessNameProblems
+//   1. misses a holder's name word in the sentence of a sign it holds: a word of its common name; a group noun or its
+//      singular; its genus or species epithet; a country or region it lives in;
+//   2. misses a broader sign the holder has only by implication (heldSigns);
+//   3. reports a sign the animal doesn't hold, reports or throws on a null sentence, or gives a message that doesn't
+//      name both the animal (commonName) and the sign;
+//   4. reports anything on the real (HEAD) profiles;
+//   5. throws on a profile carrying an unknown open tag (aborting `content -- preview` before its citations and later
+//      profiles), or skips the profile's known or implied signs when one is present (checkProfile reports it instead).
+// animalsFromPool
+//   6. throws on an unknown open tag;
+//   7. drops a known active sign, a retired sign or a trait tag (prefix:value);
+//   8. doesn't warn once for each unknown open tag it drops;
+//   9. stops passing the raw compareTags to isHandWrittenClue (a generated trait clue with an unknown open tag stays
+//      generated; a hand-written clue whose only tag is an unknown open tag stays hand-written).
+// animalsFromProfiles
+//   10. stops throwing on an unknown open tag.
+describe('witnessNameProblems', () => {
+  const sign = (witness: string | null, implies?: string[]) => ({ category: 'body' as const, meaning: 'test sign', witness, ...(implies ? { implies } : {}) });
+  // One sign per kind of name word, each sentence naming the fixture by that word alone.
+  const NAMING: Record<string, string> = {
+    common_word: 'It has a mossback ridge.',
+    group_singular: 'It is a reptile.',
+    group_plural: 'It basks like other tortoises.',
+    genus_word: 'It is an Emydoidea.',
+    epithet_word: 'Its name ends in quaxensis.',
+    country_word: 'It is seen on Bermuda.',
+    region_word: 'It ranges over the USA and Canada.',
+  };
+  const table = {
+    ...Object.fromEntries(Object.entries(NAMING).map(([tag, witness]) => [tag, sign(witness)])),
+    broad: sign('It wanders about Bermuda.'),
+    narrow: sign('It has a small ridge.', ['broad']),
+    unheld: sign('It is a mossback.'),
+    quiet: sign(null),
+    clean: sign('It has a plain ridge.'),
+  };
+  const fixture = (tags: string[]): AnimalProfile => {
+    const profile = structuredClone(profiles.find(entry => entry.commonName === "Blanding's Turtle")!);
+    profile.commonName = 'Mossback Slider';
+    profile.scientificName = 'Emydoidea quaxensis';
+    profile.range = { realms: [], countries: [{ code: 'BMU', name: 'Bermuda' }] };
+    profile.clues = tags.map(tag => ({ category: 'morphology', text: 'It has a ridge.', tags: [tag], source: 'adw' }));
+    profile.facts = [];
+    return profile;
+  };
+  const reported = (problems: string[]) => problems.map(problem => /the witness sentence of "([^"]+)"/.exec(problem)?.[1]).sort();
+
+  for (const [tag, witness] of Object.entries(NAMING)) {
+    test(`reports ${tag} ("${witness}") with the animal and the sign`, () => {
+      const problems = witnessNameProblems([fixture([tag])], table);
+      assert.equal(problems.length, 1, problems.join('\n'));
+      assert.ok(problems[0].startsWith('Mossback Slider: '), problems[0]);
+      assert.ok(problems[0].includes(`"${tag}"`), problems[0]);
+      assert.ok(problems[0].includes('____'), problems[0]);
+    });
+  }
+
+  test('reports a broader sign held only by implication, not the clean narrow one', () => {
+    assert.deepEqual(reported(witnessNameProblems([fixture(['narrow'])], table)), ['broad']);
+  });
+
+  test('skips unheld signs and null sentences, and passes clean ones', () => {
+    assert.deepEqual(witnessNameProblems([fixture(['quiet', 'clean'])], table), []);
+  });
+
+  test('checks every profile it is given', () => {
+    assert.deepEqual(reported(witnessNameProblems([fixture(['common_word', 'clean']), fixture(['narrow', 'quiet'])], table)), ['broad', 'common_word']);
+  });
+
+  test('finds nothing on the real profiles', () => {
+    assert.deepEqual(witnessNameProblems(profiles), []);
+  });
+
+  test('skips an unknown open tag without throwing and still checks the known and implied signs', () => {
+    assert.deepEqual(reported(witnessNameProblems([fixture(['zz_unknown_sign', 'common_word', 'narrow', 'clean'])], table)), ['broad', 'common_word']);
+  });
+
+  test('the content -- preview checks run through a real profile with an unknown open tag', () => {
+    const profile = structuredClone(profiles.find(entry => entry.commonName === "Blanding's Turtle")!);
+    profile.clues[0].tags = [...(profile.clues[0].tags ?? []), 'zz_new_sign'];
+    assert.ok(checkProfile(profile, sources).some(problem => problem.includes('"zz_new_sign"') && problem.includes('not in SIGNS')), 'checkProfile reports the unknown sign');
+    assert.deepEqual(witnessNameProblems([profile]), []);
+    assert.doesNotThrow(() => checkCitations(profile, sources, citedPages));
+  });
+});
+
+// Plan 2026-11-24-witness-signs S8: field notes are whole (no censoring). Written down first, the ways it could break:
+//   1. A profile's `animal.notes` aren't exactly its hand-written clues (`profile.clues`) then its facts
+//      (`profile.facts`), in profile order and whole, through animalsFromProfiles or animalsFromPool.
+//   2. A note in `animal.notes` contains `____`.
+//   3. One of the 16 facts once held for the reveal card (more than 2 blanks under censoring) is missing from
+//      `animal.notes`, or out of profile order (1's exact match covers it).
+describe('Whole field notes', () => {
+  const viaProfiles = animalsFromProfiles(profiles, sources);
+  const viaPool = new Map(animalsFromPool(pool).map(animal => [animal.id, animal]));
+  const expected = (profile: AnimalProfile) => [...profile.clues.map(clue => clue.text), ...profile.facts.map(fact => fact.text)];
+
+  test('notes are the hand-written clues then the facts, whole and in profile order, through both doors', () => {
+    assert.equal(viaProfiles.length, profiles.length);
+    assert.equal(viaPool.size, profiles.length);
+    profiles.forEach((profile, i) => {
+      const fromProfile = viaProfiles[i];
+      const fromPool = viaPool.get(profile.id);
+      assert.ok(fromPool, `${profile.commonName}: in the pool`);
+      assert.deepEqual(fromProfile.notes.map(note => note.text), expected(profile), `1 ${profile.commonName} (profiles)`);
+      assert.deepEqual(fromPool.notes.map(note => note.text), expected(profile), `1 ${profile.commonName} (pool)`);
+      assert.deepEqual(fromPool.notes.map(note => [note.text, note.tags]), fromProfile.notes.map(note => [note.text, note.tags]), `1 ${profile.commonName}: doors agree`);
+      for (const note of [...fromProfile.notes, ...fromPool.notes]) assert.ok(!note.text.includes('____'), `2 ${profile.commonName}: "${note.text}"`);
+    });
+  });
+});
+
+describe('Unknown signs at the doors', () => {
+  const blanding = () => structuredClone(profiles.find(profile => profile.commonName === "Blanding's Turtle")!);
+  const poolOf = (profile: AnimalProfile) => poolFromRows(contentRowsFromProfiles([profile]), { registry: sources, pages: citedPages });
+
+  test('animalsFromPool skips unknown open tags with one warning each and keeps every known, retired and trait tag', () => {
+    const pool = poolOf(blanding());
+    const hinge = pool.clues.find(clue => clue.compareTags.includes('hinged_shell'))!;
+    const scales = pool.clues.find(clue => clue.label === 'It has yellow scales on its legs and tail.')!;
+    const size = pool.clues.find(clue => clue.compareTags.includes('size:small'))!;
+    assert.deepEqual(scales.compareTags, [], 'fixture: a hand-written clue with no tags');
+    hinge.compareTags = [...hinge.compareTags, 'tree_dweller', 'zz_unknown_one'];
+    scales.compareTags = ['zz_unknown_two'];
+    size.compareTags = [...size.compareTags, 'zz_unknown_three'];
+
+    const warnings: string[] = [];
+    const [animal] = animalsFromPool(pool, text => warnings.push(text));
+    assert.deepEqual(warnings.sort(), ['zz_unknown_one', 'zz_unknown_three', 'zz_unknown_two'].map(tag => `Blanding's Turtle: skipping unknown sign "${tag}" from pool`));
+    const tags = animal.tags ?? [];
+    for (const tag of ['hinged_shell', 'tree_dweller', 'size:small', 'covering:shell']) assert.ok(tags.includes(tag), tag);
+    assert.ok(!tags.some(tag => tag.startsWith('zz_')), tags.join(', '));
+    // The generated size clue stays in the guide, not the notes; the tagless hand-written clue stays a note, its tag gone.
+    assert.ok(animal.guide.body.some(line => line.text === size.label), 'size clue in the guide');
+    assert.ok(!animal.notes.some(note => note.text === size.label), 'size clue not a note');
+    const note = animal.notes.find(entry => entry.text === scales.label);
+    assert.ok(note, 'hand-written clue still a note');
+    assert.equal(note.tags, undefined);
+  });
+
+  test('animalsFromProfiles still throws on an unknown open tag', () => {
+    const profile = blanding();
+    profile.clues[0].tags = ['zz_unknown'];
+    assert.throws(() => animalsFromProfiles([profile], sources), /Unknown sign "zz_unknown"/);
   });
 });

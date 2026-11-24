@@ -27,8 +27,8 @@ export const FAMILY_TREE_RANKS = ['class', 'order', 'family'] as const;
 export type FamilyTreeRank = typeof FAMILY_TREE_RANKS[number];
 
 export interface Source { name: string; url: string | null }
-/** `text` may have blanks where a word would name the animal; `full` is the whole note, for after the round; `tags`: the hand-written clue's tags (plan 044 witness notes). */
-export interface FieldNote { text: string; full?: string; source: Source; tags?: readonly string[] }
+/** `text`: the whole note (for the reveal card); `tags`: the hand-written clue's tags. */
+export interface FieldNote { text: string; source: Source; tags?: readonly string[] }
 /** A sign: one open tag of an animal's clues (digging_claws), as a phrase, under the question category it bears on (plan 055). */
 export interface Sign { tag: string; text: string; category: ChargeCategory }
 export interface RankName { latin: string; plain: string | null }
@@ -42,10 +42,8 @@ export interface Animal {
   /** Trait tags by prefix (size: ['size:large'], region: ['region:east-africa', ...]). No prefix = no record. */
   traits: Record<string, string[]>;
   familyTree: Record<FamilyTreeRank, RankName> & { genus: string; species: string };
-  /** Hand-written notes for a round, in order, with blanks where a word would name the animal. */
+  /** Hand-written clues then facts, in profile order, whole: the reveal card's Field notes. */
   notes: FieldNote[];
-  /** Notes held for the reveal card (too many blanks to read). */
-  revealNotes: FieldNote[];
   /** Field guide lines by category, plus 'family' (class, order, family; never the genus), each with the question tags it records. */
   guide: Record<ChargeCategory | 'family', Array<{ text: string; tags: readonly string[] }>>;
   /** Its signs, in tag order; every one shows beside the guide's photo in its category's group, never hidden (plans 055, 058). */

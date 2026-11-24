@@ -5,6 +5,7 @@
 //  4. A dealt deck lacks a record for some suspect, or two suspects answer every clue alike.
 //  5. Two look-alikes no full question can tell apart end up in one set.
 //  6. A witness note's count disagrees with the suspects' tags, or a note fits only the mystery.
+//     (Per-sign witness notes, W1-W8, and the save guard R1-R5: further down, plan 2026-11-24-witness-signs.)
 //  7. A finished round changes after more phases (a second heart, a find after an escape).
 //  8. Out of moves, a right name saves the round.
 //  9. An order answers before it's full, or answers wrongly.
@@ -19,7 +20,8 @@ import {
 import { clueFace } from '@/clueGame/clueFaces';
 import { PREFIX_CATEGORY, makeBook, poolFor, type Animal, type Book } from '@/clueGame/questionMatch';
 import { animalsFromProfiles } from '@/clueGame/questionMatchContent';
-import { SIGNS, type SignEntry } from '@/clueGame/signs';
+import { animalDebugSummary, animalSessionReducer } from '@/clueGame/animalSession';
+import { SIGNS, heldSigns, signsOf, witnessSentence, type SignEntry } from '@/clueGame/signs';
 import type { ContinentKey } from '@/clueGame/regions';
 import { hash32, mulberry32 } from '@/lib/seededRng';
 import { profiles, sources } from './contentPool';
@@ -81,10 +83,10 @@ test('tile cells are at least 3 apart and never in a corner', () => {
 
 test('witness notes fit 2 to 4 suspects, counted from their tags', () => {
   const notes = witnessNotes(book, africa, id('Aardvark'));
-  const claws = notes.find(note => note.tags?.includes('digging_claws'));
+  const claws = notes.find(note => note.sign === 'digging_claws');
   assert.equal(claws?.fits, 2); // the Aardvark and the Giant Pangolin
   for (const note of notes) {
-    const fits = africa.filter(suspect => animalFitsNote(book.byId.get(suspect)!, note)).length;
+    const fits = africa.filter(suspect => animalFitsNote(book.byId.get(suspect)!, { tags: [note.sign] })).length;
     assert.equal(note.fits, fits);
     assert.ok(fits >= 2 && fits <= 4);
   }
@@ -185,7 +187,7 @@ function synth(columns: Record<string, Array<string | string[]>>, continents: Co
     return {
       id: animalId, name: `Synth ${animalId}`, scientificName: `Synthus ${animalId}`, photo: null, continents: [...continents], traits,
       familyTree: { class: rank('C'), order: rank('O'), family: rank('F'), genus: 'G', species: `s${animalId}` },
-      notes: [NOTE], revealNotes: [], guide: { body: [], habits: [], habitat: [], range: [], life: [], family: [] }, signs: [],
+      notes: [NOTE], guide: { body: [], habits: [], habitat: [], range: [], life: [], family: [] }, signs: [],
       tags: Object.values(traits).flat(),
     };
   });
@@ -370,9 +372,9 @@ const wired = (): [string, string] => {
   return edge;
 };
 const TABLE: Record<string, SignEntry> = {
-  broad: { category: 'body', meaning: 'Broad.' },
-  mid: { category: 'body', meaning: 'Mid.', implies: ['broad'] },
-  narrow: { category: 'body', meaning: 'Narrow.', implies: ['mid'] },
+  broad: { category: 'body', meaning: 'Broad.', witness: null },
+  mid: { category: 'body', meaning: 'Mid.', witness: null, implies: ['broad'] },
+  narrow: { category: 'body', meaning: 'Narrow.', witness: null, implies: ['mid'] },
 };
 
 test('A7: a narrower sign fits a note of its broader one, never the reverse', () => {
@@ -400,19 +402,26 @@ test('A7: trait tags match as written, with no closure; no tags fit only an unta
 });
 
 test('A8: a broader note counts the narrower holder as a fit, and keeps it possible', () => {
-  const [narrower, broader] = wired();
+  // A wired edge whose broader sign has a standard sentence, so the dealer can deal it.
+  const [narrower, broader] = Object.entries(SIGNS)
+    .flatMap(([tag, entry]) => openImplies(entry).map(target => [tag, target] as [string, string]))
+    .find(([, target]) => witnessSentence(target) !== null)!;
+  const text = witnessSentence(broader)!;
   const note = { text: 'Says the broader thing.', source: { name: 'Test', url: null }, tags: [broader] };
   const held: Record<number, string[]> = { 1: [broader], 2: [narrower], 3: [broader], 4: [], 5: [] };
-  const fixture = makeBook(asiaAnimals().map(animal => ({ ...animal, notes: [note], tags: [...animal.tags!, ...held[animal.id]] })));
-  assert.deepEqual(witnessNotes(fixture, asia.set, 1).map(witness => witness.fits), [3]);
-  const state = { ...newAnimalRound(fixture, ANIMAL_RULES, { suspects: asia.set, mysteryId: 1, place: 'asia' }), notes: [{ ...note, fits: 3 }] };
+  const fixture = makeBook(asiaAnimals().map(animal => {
+    const tags = [...animal.tags!, ...held[animal.id]];
+    return { ...animal, notes: [note], tags, signs: signsOf(tags) };
+  }));
+  assert.deepEqual(witnessNotes(fixture, asia.set, 1).filter(witness => witness.sign === broader), [{ sign: broader, text, fits: 3, also: [narrower] }]);
+  const state = { ...newAnimalRound(fixture, ANIMAL_RULES, { suspects: asia.set, mysteryId: 1, place: 'asia' }), notes: [{ sign: broader, text, fits: 3, also: [narrower] }] };
   assert.deepEqual(stillPossible(fixture, state), [1, 2, 3]);
 });
 
 test('A8: on real content, every witness note\'s count is the suspects animalFitsNote fits', () => {
   for (const place of PLACES) for (const set of sets(place)) for (const mysteryId of set) {
     for (const note of witnessNotes(book, set, mysteryId)) {
-      const fits = set.filter(suspect => animalFitsNote(book.byId.get(suspect)!, note));
+      const fits = set.filter(suspect => animalFitsNote(book.byId.get(suspect)!, { tags: [note.sign] }));
       assert.equal(note.fits, fits.length);
       assert.ok(fits.includes(mysteryId));
     }
@@ -465,11 +474,235 @@ for (const { place, set, mystery, sign, fits } of PINNED) {
   const label = `${place ?? 'world'} ${set} mystery ${mystery} ${sign}`;
   test(`S25b: ${label} fits exactly ${fits}`, () => {
     for (const suspect of set) assert.ok(book.byId.has(suspect) && (place === null || book.byId.get(suspect)!.continents.includes(place)), `${label}: ${suspect}`);
-    const note = book.byId.get(mystery)!.notes.find(candidate => candidate.tags?.length === 1 && candidate.tags[0] === sign);
-    assert.ok(note, `${label}: the mystery has a ${sign} note`);
-    assert.deepEqual(set.filter(suspect => animalFitsNote(book.byId.get(suspect)!, note)), fits, label);
-    const dealt = witnessNotes(book, set, mystery).filter(witness => witness.tags?.includes(sign));
+    assert.ok(heldSigns(book.byId.get(mystery)!.tags).has(sign), `${label}: the mystery holds ${sign}`);
+    assert.deepEqual(set.filter(suspect => animalFitsNote(book.byId.get(suspect)!, { tags: [sign] })), fits, label);
+    const dealt = witnessNotes(book, set, mystery).filter(witness => witness.sign === sign);
     if (fits.length >= 2) assert.deepEqual(dealt.map(witness => witness.fits), [fits.length], label);
     else assert.deepEqual(dealt, [], label);
   });
 }
+
+// ---- Plan 2026-11-24-witness-signs: witness gems deal the mystery's signs as standard sentences, and the save guard.
+// Written down first, the ways they could break:
+//  W1 A sign repeats in a round's dealt witness notes.
+//  W2 A note's `text` isn't `witnessSentence(sign)`, or is null.
+//  W3 `fits` isn't the count of suspects holding `sign` (heldSigns / animalFitsNote), or isn't between 2 and
+//     suspects.length - 1, or the mystery isn't among the fitters.
+//  W4 A dealt sign is implied by another dealt sign (`other !== sign && heldSigns([other]).has(sign)`).
+//  W5 `also` isn't sorted, or I4 fails: a fitter's `signs` shows neither `sign` nor any `also` chip, or a non-fitter's
+//     `signs` shows `sign` or an `also` chip.
+//  W6 A held sign of the mystery that fits 2 to n - 1 suspects has a null sentence and isn't in HELD_BACK; or one with a
+//     sentence is neither dealt nor implied by a dealt sign (a dealer that deals nothing passes W1-W5).
+//  W7 The dealt notes' signs aren't a subsequence of `[...heldSigns(mystery.tags)]`.
+//  W8 A fixture mystery holding retired `tree_dweller`, shared by 2+ suspects, gets a note for it, or throws.
+//  W9 A dealt sign has no mystery note in `mystery.notes` whose `heldSigns(note.tags)` holds it (so `behind` would be
+//     empty), or a `behind` text contains `____`, or `animalDebugSummary(...).witness` disagrees with `round.notes` /
+//     `mystery.notes` (or `notes` stops being a count).
+//  R1 roundStillFits is true for a saved note that differs only in `sign`.
+//  R2 roundStillFits is true for a saved note that differs only in `also`: incl. `also: ['']` against a fresh `[]`, or
+//     one delimiter-colliding string (`[`${a}|${b}`]` against `[a, b]`), which a `join('|')` compare lets through.
+//  R3 roundStillFits is true, or throws, for a note in `notes` (or `notesLeft`) with `also` missing or not an array.
+//  R4 roundStillFits is true, or throws, for a `{ kind: 'note' }` entry in `round.log` that is missing, extra, out of
+//     order or malformed (no `note`, or a note without `also`); or is true, or throws, for any `round.log` entry that
+//     isn't a plain object with a string `kind` (`null`, `'note'`, `42`, `[]`, `{}`, `{ kind: 123 }`).
+//  R5 A valid round stops fitting (the 055-1 cases above, and a round with collected notes and their log entries).
+
+/** Held signs that fit 2 to n - 1 suspects yet are never dealt (each needs a recorded Decision in the plan). */
+const HELD_BACK: readonly string[] = [];
+
+test('W1-W7: on real content, witness notes deal the mystery\'s signs as standard sentences', () => {
+  let dealtAny = 0;
+  for (const place of PLACES) for (const set of sets(place)) for (const mysteryId of set) {
+    const label = `${place ?? 'world'} ${set} mystery ${mysteryId}`;
+    const notes = witnessNotes(book, set, mysteryId);
+    dealtAny += notes.length;
+    const dealt = notes.map(note => note.sign);
+    assert.equal(new Set(dealt).size, dealt.length, `W1 ${label}: ${dealt}`);
+    const holders = (sign: string) => set.filter(suspect => heldSigns(book.byId.get(suspect)!.tags).has(sign));
+    for (const note of notes) {
+      const at = `${label} ${note.sign}`;
+      assert.equal(typeof note.text, 'string', `W2 ${at}`);
+      assert.equal(note.text, witnessSentence(note.sign), `W2 ${at}`);
+      const fitters = holders(note.sign);
+      assert.deepEqual(fitters, set.filter(suspect => animalFitsNote(book.byId.get(suspect)!, { tags: [note.sign] })), `W3 ${at}`);
+      assert.equal(note.fits, fitters.length, `W3 ${at}`);
+      assert.ok(note.fits >= 2 && note.fits < set.length, `W3 ${at}: fits ${note.fits}`);
+      assert.ok(fitters.includes(mysteryId), `W3 ${at}`);
+      for (const other of dealt) assert.ok(other === note.sign || !heldSigns([other]).has(note.sign), `W4 ${at} implied by ${other}`);
+      assert.deepEqual(note.also, [...note.also].sort(), `W5 ${at}: also sorted`);
+      for (const suspect of set) {
+        const chips = book.byId.get(suspect)!.signs.map(chip => chip.tag);
+        const shows = chips.includes(note.sign) || note.also.some(alt => chips.includes(alt));
+        assert.equal(shows, fitters.includes(suspect), `W5 ${at}: suspect ${suspect} shows ${chips}`);
+      }
+    }
+    const held = [...heldSigns(book.byId.get(mysteryId)!.tags)];
+    for (const sign of held) {
+      const fits = holders(sign).length;
+      if (fits < 2 || fits >= set.length) continue;
+      if (witnessSentence(sign) === null) assert.ok(HELD_BACK.includes(sign), `W6 ${label}: ${sign} fits ${fits} but has no sentence`);
+      else assert.ok(dealt.some(other => heldSigns([other]).has(sign)), `W6 ${label}: ${sign} fits ${fits} but isn't dealt`);
+    }
+    let from = 0;
+    for (const sign of dealt) {
+      const at = held.indexOf(sign, from);
+      assert.ok(at >= 0, `W7 ${label}: ${dealt} not in the order of ${held}`);
+      from = at + 1;
+    }
+  }
+  assert.ok(dealtAny > 0, 'some note is dealt');
+});
+
+test('W8: a retired sign shared by several suspects gets no witness note, and nothing throws', () => {
+  assert.ok(SIGNS.tree_dweller?.retired, 'tree_dweller is retired');
+  const note = { text: 'Sleeps high in the trees.', source: { name: 'Test', url: null }, tags: ['tree_dweller'] };
+  const held: Record<number, string[]> = { 1: ['tree_dweller'], 2: ['tree_dweller'], 3: ['tree_dweller'], 4: [], 5: [] };
+  const fixture = makeBook(asiaAnimals().map(animal => {
+    const tags = [...animal.tags!, ...held[animal.id]];
+    return { ...animal, notes: [note], tags, signs: signsOf(tags) };
+  }));
+  assert.doesNotThrow(() => witnessNotes(fixture, asia.set, 1));
+  assert.deepEqual(witnessNotes(fixture, asia.set, 1), []);
+});
+
+/** A real round with 2 notes collected through applyPhase and at least one still to come. */
+function collectedRound(): AnimalRound {
+  for (const place of PLACES) for (const set of sets(place)) for (const mysteryId of set) {
+    if (witnessNotes(book, set, mysteryId).length < 3) continue;
+    const fresh = newAnimalRound(book, ANIMAL_RULES, { suspects: set, mysteryId, place });
+    const played = applyPhase(book, fresh, { collected: {}, witness: 2, touched: [] }, false);
+    assert.equal(played.notes.length, 2);
+    assert.ok(played.notesLeft.length >= 1);
+    assert.equal(played.log.filter(entry => entry.kind === 'note').length, 2);
+    return played;
+  }
+  throw new Error('no real round deals 3 or more witness notes');
+}
+type LooseRound = Omit<AnimalRound, 'notes' | 'notesLeft' | 'log'> & { notes: unknown[]; notesLeft: unknown[]; log: unknown[] };
+/** roundStillFits on a round edited past its types, as a corrupt save could be. */
+const fitsLoose = (round: LooseRound): boolean => roundStillFits(book, round as AnimalRound);
+/** The round with notes[i] replaced by `note`, in `notes` and in its log entry alike (so only the fresh check can fail). */
+function withNote(round: AnimalRound, i: number, note: unknown): LooseRound {
+  let seen = -1;
+  const log = round.log.map(entry => (entry.kind === 'note' && ++seen === i ? { kind: 'note', note } : entry));
+  return { ...round, notes: round.notes.map((old, j) => (j === i ? note : old)), log };
+}
+const noteEntries = (round: AnimalRound) => round.log.filter(entry => entry.kind === 'note');
+const otherEntries = (round: AnimalRound) => round.log.filter(entry => entry.kind !== 'note');
+
+test('R5: a valid round with collected notes and their log entries still fits', () => {
+  const round = collectedRound();
+  assert.equal(roundStillFits(book, round), true);
+  assert.equal(roundStillFits(book, newAnimalRound(book, ANIMAL_RULES, { suspects: round.suspects, mysteryId: round.mysteryId, place: round.place })), true);
+});
+
+test('R1-R2: a saved note that differs only in sign, or only in also, doesn\'t fit', () => {
+  const round = collectedRound();
+  const [first] = round.notes;
+  const otherSign = round.notes[1].sign;
+  assert.equal(fitsLoose(withNote(round, 0, { ...first, sign: otherSign })), false, 'R1 notes');
+  assert.equal(fitsLoose({ ...round, notesLeft: [{ ...round.notesLeft[0], sign: otherSign }, ...round.notesLeft.slice(1)] }), false, 'R1 notesLeft');
+  assert.equal(fitsLoose(withNote(round, 0, { ...first, also: [...first.also, 'zz_extra'] })), false, 'R2 notes');
+  assert.equal(fitsLoose({ ...round, notesLeft: [{ ...round.notesLeft[0], also: ['zz_extra'] }, ...round.notesLeft.slice(1)] }), false, 'R2 notesLeft');
+  if (first.also.length) assert.equal(fitsLoose(withNote(round, 0, { ...first, also: [] })), false, 'R2 notes, also dropped');
+  const bare = round.notes.findIndex(note => note.also.length === 0);
+  const bareLeft = round.notesLeft.findIndex(note => note.also.length === 0);
+  assert.ok(bare >= 0 && bareLeft >= 0, 'a collected note and a note left with no also');
+  assert.equal(fitsLoose(withNote(round, bare, { ...round.notes[bare], also: [''] })), false, "R2 notes, also ['']");
+  const notesLeft = round.notesLeft.map((note, i) => (i === bareLeft ? { ...note, also: [''] } : note));
+  assert.equal(fitsLoose({ ...round, notesLeft }), false, "R2 notesLeft, also ['']");
+});
+
+test('R2: a saved also joined into one string doesn\'t fit a fresh also of 2 or more chips', () => {
+  for (const place of PLACES) for (const set of sets(place)) for (const mysteryId of set) {
+    const notes = witnessNotes(book, set, mysteryId);
+    const i = notes.findIndex(note => note.also.length >= 2);
+    if (i < 0) continue;
+    const fresh = newAnimalRound(book, ANIMAL_RULES, { suspects: set, mysteryId, place });
+    const collected = applyPhase(book, fresh, { collected: {}, witness: notes.length, touched: [] }, false);
+    assert.equal(collected.notes.length, notes.length);
+    assert.equal(roundStillFits(book, collected), true);
+    const joined = { ...notes[i], also: [notes[i].also.join('|')] };
+    assert.equal(fitsLoose(withNote(collected, i, joined)), false, 'R2 notes, also joined');
+    const notesLeft = fresh.notesLeft.map((note, j) => (j === i ? joined : note));
+    assert.equal(fitsLoose({ ...fresh, notesLeft }), false, 'R2 notesLeft, also joined');
+    return;
+  }
+  throw new Error('no real witness note has 2 or more also chips');
+});
+
+test('R3: a saved note with also missing or not an array doesn\'t fit, and doesn\'t throw', () => {
+  const round = collectedRound();
+  const { also: _also, ...bare } = round.notes[0];
+  const { also: _left, ...bareLeft } = round.notesLeft[0];
+  const cases: Array<[string, LooseRound]> = [
+    ['notes, also missing', withNote(round, 0, bare)],
+    ['notes, also a string', withNote(round, 0, { ...bare, also: round.notes[0].also.join('|') })],
+    ['notes, also null', withNote(round, 0, { ...bare, also: null })],
+    ['notes, note null', withNote(round, 0, null)],
+    ['notesLeft, also missing', { ...round, notesLeft: [bareLeft, ...round.notesLeft.slice(1)] }],
+    ['notesLeft, also a string', { ...round, notesLeft: [{ ...bareLeft, also: 'x' }, ...round.notesLeft.slice(1)] }],
+    ['notesLeft, note null', { ...round, notesLeft: [null, ...round.notesLeft.slice(1)] }],
+  ];
+  for (const [label, loose] of cases) {
+    assert.doesNotThrow(() => fitsLoose(loose), label);
+    assert.equal(fitsLoose(loose), false, label);
+  }
+});
+
+test('R4: a note log entry missing, extra, out of order or malformed doesn\'t fit, and doesn\'t throw', () => {
+  const round = collectedRound();
+  const [a, b] = noteEntries(round);
+  const { also: _also, ...bare } = round.notes[0];
+  const cases: Array<[string, LooseRound]> = [
+    ['missing', { ...round, log: [...otherEntries(round), a] }],
+    ['none', { ...round, log: otherEntries(round) }],
+    ['extra', { ...round, log: [...round.log, b] }],
+    ['out of order', { ...round, log: [...otherEntries(round), b, a] }],
+    ['no note', { ...round, log: [...otherEntries(round), { kind: 'note' }, b] }],
+    ['note null', { ...round, log: [...otherEntries(round), { kind: 'note', note: null }, b] }],
+    ['note without also', { ...round, log: [...otherEntries(round), { kind: 'note', note: bare }, b] }],
+    ['log not an array', { ...round, log: null as unknown as unknown[] }],
+  ];
+  for (const [label, loose] of cases) {
+    assert.doesNotThrow(() => fitsLoose(loose), label);
+    assert.equal(fitsLoose(loose), false, label);
+  }
+  const junk: Array<[string, unknown[]]> = [
+    ['null first', [null, ...round.log]],
+    ['null last', [...round.log, null]],
+    ['a string', ['note', ...round.log]],
+    ['a number', [42, ...round.log]],
+    ['an array', [[], ...round.log]],
+    ['no kind', [{}, ...round.log]],
+    ['kind not a string', [{ kind: 123 }, ...round.log]],
+  ];
+  for (const [label, log] of junk) {
+    assert.doesNotThrow(() => fitsLoose({ ...round, log }), label);
+    assert.equal(fitsLoose({ ...round, log }), false, label);
+  }
+});
+
+/** The mystery's whole notes holding `sign`: what a witness note stands behind. */
+const behindOf = (mysteryId: number, sign: string) =>
+  book.byId.get(mysteryId)!.notes.filter(entry => heldSigns(entry.tags).has(sign)).map(entry => entry.text);
+
+test('W9: every dealt sign stands behind a whole mystery note, and the debug summary shows it', () => {
+  for (const place of PLACES) for (const set of sets(place)) for (const mysteryId of set) {
+    for (const note of witnessNotes(book, set, mysteryId)) {
+      const behind = behindOf(mysteryId, note.sign);
+      const at = `${place ?? 'world'} ${set} mystery ${mysteryId} ${note.sign}`;
+      assert.ok(behind.length > 0, `W9 ${at}: no mystery note holds it`);
+      for (const text of behind) assert.ok(!text.includes('____'), `W9 ${at}: "${text}"`);
+    }
+  }
+  const round = collectedRound();
+  const session = animalSessionReducer(null, { type: 'load', book, round, boardSeed: 1, trail: newTrail(ANIMAL_RULES) })!;
+  const summary = animalDebugSummary(session, 44);
+  assert.equal(summary.notes, round.notes.length, 'W9 notes is a count');
+  assert.deepEqual(summary.witness, round.notes.map(note => ({ sign: note.sign, text: note.text, also: note.also, behind: behindOf(round.mysteryId, note.sign) })));
+  for (const entry of summary.witness) {
+    assert.ok(entry.behind.length > 0, `W9 summary ${entry.sign}: behind empty`);
+    for (const text of entry.behind) assert.ok(!text.includes('____'), `W9 summary ${entry.sign}: "${text}"`);
+  }
+});

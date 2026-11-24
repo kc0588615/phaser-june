@@ -6,7 +6,7 @@
 import { EventBus, type EventPayloads } from './EventBus';
 import type { GemType } from './constants';
 import { neighborSwaps, type BoardModel, type Cell, type Grid, type Move, type Toys } from './BoardModel';
-import { SIGNS } from '@/clueGame/signs';
+import { SIGNS, witnessSentence } from '@/clueGame/signs';
 
 export interface DebugBoardSnapshot {
   ready: boolean;
@@ -195,6 +195,14 @@ function signImplies(): Record<string, string[]> {
     entry.retired ? [] : [[tag, (entry.implies ?? []).filter(target => !target.includes(':'))]]));
 }
 
+/** Each active sign that has a standard witness sentence -> that sentence. */
+function signWitness(): Record<string, string> {
+  return Object.fromEntries(Object.keys(SIGNS).flatMap(tag => {
+    const sentence = witnessSentence(tag);
+    return sentence === null ? [] : [[tag, sentence]];
+  }));
+}
+
 /** Scale animation speed (1 = normal). The game clock stays real: it times input (long press, idle hint), so a test sees a player's timing. */
 function speed(scale: number): number {
   requireScene().tweens.timeScale = scale;
@@ -231,6 +239,8 @@ function install(): void {
     answer: (tag: string) => EventBus.emit('clue-board-answer', { tag, yes: true }),
     /** Sign audit: the direct open-tag `implies` edges, so e2e can check the field guide drops implied broader signs. */
     signImplies,
+    /** Witness signs: each active sign's standard sentence, so e2e can check a dealt note's text. */
+    signWitness,
   };
 }
 

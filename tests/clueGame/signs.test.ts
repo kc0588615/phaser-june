@@ -1,27 +1,38 @@
 // The sign table and its rules (plan 2026-11-23-sign-audit §1.1-1.3, 1.6). Written down first, the ways they could break:
 //  A1 signTableProblems: an empty or whitespace-only meaning passes; a trait target with a prefix typo (`sytem:freshwater`,
 //     `:foo`) passes; an open target missing from the table, or retired, passes; a sign implying or denying itself passes;
-//     a 2- or 3-cycle of open-tag implies passes, or is reported without its path; the real SIGNS isn't clean.
+//     a 2- or 3-cycle of open-tag implies passes, or is reported without its path; the real SIGNS isn't clean, or its
+//     active signs with a null witness aren't exactly floreana_island, pinta_island and prairie_dog_towns.
 //  A2 Types: an active entry without a meaning compiles; a retired entry with implies, denies or a meaning compiles.
 //  A3 buildImplied / heldSigns: a transitive edge isn't closed; a diamond holds duplicates; a retired tag implies
 //     something or isn't held as itself; trait tags leak in; undefined input throws; an unknown tag doesn't throw.
 //  A4 signsOf: a narrower sign and its wired broader one (on different notes) show two badges; a lone broader sign is
-//     dropped; tag order changes; one tag on two notes shows twice; a retired tag is dropped; a deferred pair loses one.
+//     dropped; tag order changes; one tag on two notes shows twice; a retired tag is dropped; one of the 10 former
+//     deferred edges isn't wired, or `badges(['backward_pouch', 'pouch'])` isn't `['backward_pouch']`.
 //  A5 signProblems: an unknown tag doesn't return early; a retired tag passes; a trait implies conflict reached only
 //     through a narrower sign isn't reported, or names the wrong `via`; an implied trait with no record is reported; a
 //     trait denies the record holds passes; an open denies against a sign held directly, or reached through a narrower
 //     one, passes; a one-way mutual exclusion fires only in one clue order; narrower and broader on the same note pass;
 //     on different notes they're flagged; a clean profile returns anything.
 //  A6 Rule fixes F1-F4 and the S1/S2 rulings: each fixed rule still blocks a true holder on real SIGNS.
+//  A1-W signTableProblems (witness, plan 2026-11-24-witness-signs): an empty, whitespace-only or untrimmed witness
+//     passes; one containing `_` passes; one containing its label as a whole phrase (one word like `mane`, several like
+//     `digging claws`, the hyphen form `S-shaped horns`, any case) passes. Or it wrongly flags a label inside another
+//     word ("remains" for `mane`), a `null` witness, or a retired entry.
+//  A2-W Types: an active entry without `witness` compiles; a retired entry with `witness` (string or null) compiles.
+//  A10 witnessSentence / isKnownSign: witnessSentence throws, or returns text, for a retired tag, an unknown tag or an
+//     inherited key (`constructor`); isKnownSign is true for an unknown tag or `constructor`, false for a retired tag,
+//     or throws.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  SIGNS, buildImplied, heldSigns, noteCategories, signCategory, signProblems, signTableProblems, signsOf,
+  SIGNS, buildImplied, heldSigns, isKnownSign, signCategory, signProblems, signTableProblems, signsOf,
+  witnessSentence,
   type ActiveSignEntry, type SignEntry,
 } from '@/clueGame/signs';
 
 type Table = Record<string, SignEntry>;
-const sign = (meaning: string, rules: Pick<ActiveSignEntry, 'implies' | 'denies'> = {}): SignEntry => ({ category: 'body', meaning, ...rules });
+const sign = (meaning: string, rules: Pick<ActiveSignEntry, 'implies' | 'denies'> = {}, witness: string | null = null): SignEntry => ({ category: 'body', meaning, witness, ...rules });
 const old: SignEntry = { category: 'habits', retired: true };
 /** The one problem a fixture table has. */
 const onlyProblem = (table: Table): string => {
@@ -88,6 +99,66 @@ test('A1: the real SIGNS is clean, and its retired tags are the 15 no note may u
     'no_tadpoles', 'rock_basker', 'rock_climber', 'sand_swimmer', 'seasonal_streams', 'stays_underground', 'tree_dweller', 'yellow_scales',
   ]);
   assert.equal(Object.values(SIGNS).filter(entry => !entry.retired).length, 201);
+  assert.deepEqual(
+    Object.keys(SIGNS).filter(tag => !SIGNS[tag].retired && SIGNS[tag].witness === null).sort(),
+    ['floreana_island', 'pinta_island', 'prairie_dog_towns'],
+  );
+});
+
+// ---- A1-W
+
+const withWitness = (tag: string, witness: string | null): Table => ({ [tag]: sign('A meaning.', {}, witness) });
+
+test('A1-W: an empty, whitespace-only or untrimmed witness is a problem', () => {
+  assert.match(onlyProblem(withWitness('quill', '')), /"quill"/);
+  assert.match(onlyProblem(withWitness('quill', '  \t ')), /"quill"/);
+  assert.match(onlyProblem(withWitness('quill', ' It has a trait.')), /"quill"/);
+  assert.match(onlyProblem(withWitness('quill', 'It has a trait. ')), /"quill"/);
+  assert.deepEqual(signTableProblems(withWitness('quill', 'It has a trait.')), []);
+});
+
+test('A1-W: a witness with a blank (_) is a problem', () => {
+  assert.match(onlyProblem(withWitness('quill', 'It has a ___.')), /"quill"/);
+});
+
+test('A1-W: a witness that repeats its label, as a whole phrase in any case or hyphen form, is a problem', () => {
+  assert.match(onlyProblem(withWitness('mane', 'It has a mane on its neck.')), /"mane"/);
+  assert.match(onlyProblem(withWitness('mane', 'Its MANE is long.')), /"mane"/);
+  assert.match(onlyProblem(withWitness('digging_claws', 'It has digging claws.')), /"digging_claws"/);
+  assert.match(onlyProblem(withWitness('digging_claws', 'Its Digging  Claws are long.')), /"digging_claws"/);
+  assert.match(onlyProblem(withWitness('s_shaped_horns', 'It has S-shaped horns.')), /"s_shaped_horns"/);
+  assert.match(onlyProblem(withWitness('s_shaped_horns', 'It has s shaped horns.')), /"s_shaped_horns"/);
+});
+
+test('A1-W: a label inside another word, a null witness and a retired entry pass', () => {
+  assert.deepEqual(signTableProblems(withWitness('mane', 'Its long hair remains on its neck.')), []);
+  assert.deepEqual(signTableProblems(withWitness('mane', null)), []);
+  assert.deepEqual(signTableProblems({ mane: old }), []);
+});
+
+// ---- A10
+
+test('A10: witnessSentence returns an active sign\'s text, else null, and never throws', () => {
+  const table: Table = { said: sign('Said.', {}, 'It says so.'), unsaid: sign('Unsaid.'), old };
+  assert.equal(witnessSentence('said', table), 'It says so.');
+  assert.equal(witnessSentence('unsaid', table), null);
+  assert.equal(witnessSentence('old', table), null);
+  assert.equal(witnessSentence('tree_dweller'), null);
+  for (const tag of ['nope', 'constructor', 'toString']) {
+    assert.equal(witnessSentence(tag, table), null);
+    assert.equal(witnessSentence(tag), null);
+  }
+});
+
+test('A10: isKnownSign is true for any tag in the table, retired included, and false otherwise', () => {
+  const table: Table = { said: sign('Said.', {}, 'It says so.'), unsaid: sign('Unsaid.'), old };
+  for (const tag of ['said', 'unsaid', 'old']) assert.equal(isKnownSign(tag, table), true);
+  assert.equal(isKnownSign('tree_dweller'), true);
+  assert.equal(isKnownSign('big_ears'), true);
+  for (const tag of ['nope', 'constructor', 'toString']) {
+    assert.equal(isKnownSign(tag, table), false);
+    assert.equal(isKnownSign(tag), false);
+  }
 });
 
 // ---- A2 (checked by `npm run typecheck`)
@@ -104,8 +175,14 @@ test('A2: an active sign needs a meaning; a retired one takes no meaning and no 
     { category: 'body', retired: true, denies: ['trees:yes'] },
     // @ts-expect-error a retired sign has no meaning
     { category: 'body', retired: true, meaning: 'Old.' },
+    // @ts-expect-error an active sign needs its witness (A2-W)
+    { category: 'body', meaning: 'Has a trait.' },
+    // @ts-expect-error a retired sign has no witness (A2-W)
+    { category: 'body', retired: true, witness: 'It has a trait.' },
+    // @ts-expect-error a retired sign has no witness, not even null (A2-W)
+    { category: 'body', retired: true, witness: null },
   ];
-  assert.equal(wrong.length, 5);
+  assert.equal(wrong.length, 8);
 });
 
 // ---- A3
@@ -157,12 +234,23 @@ test('A4: a narrower sign hides its wired broader one; a lone broader sign shows
 test('A4: badges keep tag order, show each tag once, and keep retired tags as themselves', () => {
   assert.deepEqual(badges(['burrower', 'diet:insects', 'digging_claws', 'burrower']), ['burrower', 'digging_claws']);
   assert.deepEqual(signsOf(['tree_dweller']), [{ tag: 'tree_dweller', text: 'tree dweller', category: 'habits' }]);
-  assert.deepEqual(noteCategories(['tree_dweller', 'big_ears']), ['body', 'habits']);
 });
 
-test('A4: a deferred pair (edge not wired) keeps both badges', () => {
-  assert.ok(!impliesOf('backward_pouch').includes('pouch'));
-  assert.deepEqual(badges(['backward_pouch', 'pouch']), ['backward_pouch', 'pouch']);
+test('A4: the 10 former deferred edges are wired', () => {
+  const edges: Array<[string, string]> = [
+    ['backward_pouch', 'pouch'],
+    ['carries_young_on_back', 'mother_carries_young'],
+    ['face_mask', 'face_markings'],
+    ['feathery_gills', 'underwater_breathing'],
+    ['s_shaped_horns', 'horns'],
+    ['shoulder_stripe', 'stripes'],
+    ['spectacles', 'face_markings'],
+    ['spiral_horns', 'horns'],
+    ['tear_lines', 'face_markings'],
+    ['walks_upright', 'stands_on_hind_legs'],
+  ];
+  for (const [narrower, broader] of edges) assert.ok(impliesOf(narrower).includes(broader), `${narrower} -> ${broader}`);
+  assert.deepEqual(badges(['backward_pouch', 'pouch']), ['backward_pouch']);
 });
 
 // ---- A5

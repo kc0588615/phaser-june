@@ -69,7 +69,13 @@ Trait values (templates in `profiles.ts`):
 
 ### Signs
 
-A clue's open tags are its **signs**: each shows as a phrase (`digging_claws` → "digging claws") beside the field guide's photo, in its question category's group, and is never hidden during play. `SIGNS` in `src/clueGame/signs.ts` is the vocabulary and is authoritative: each active entry gives its category, its `meaning` (the one-line definition: what counts and what doesn't) and its rules, `implies` and `denies`. Tag a note only with signs whose `meaning` its words state. A new tag needs its entry there; `checkProfile` (so `content -- preview` and `build`) runs `signProblems`, which flags an open tag missing from `SIGNS`, a retired tag, a sign whose rules (or those of a broader sign it implies) contradict its holder's traits or other signs, and a narrower and broader sign on the same note. `docs/research/2026-11-07-moves-and-signs/sign-map.csv` is the research record it came from; the definitions' sign-off is plan `plans/2026-11-23-sign-audit.md`.
+A clue's open tags are its **signs**: each shows as a phrase (`digging_claws` → "digging claws") beside the field guide's photo, in its question category's group, and is never hidden during play. `SIGNS` in `src/clueGame/signs.ts` is the vocabulary and is authoritative: each active entry gives its category, its `meaning` (the one-line definition: what counts and what doesn't), its `witness` (`string | null`, the standard witness sentence) and its rules, `implies` and `denies`. Tag a note only with signs whose `meaning` its words state. A new tag needs its entry there; `checkProfile` (so `content -- preview` and `build`) runs `signProblems`, which flags an open tag missing from `SIGNS`, a retired tag, a sign whose rules (or those of a broader sign it implies) contradict its holder's traits or other signs, and a narrower and broader sign on the same note. `docs/research/2026-11-07-moves-and-signs/sign-map.csv` is the research record it came from; the definitions' sign-off is plan `plans/2026-11-23-sign-audit.md`.
+
+Witness sentences (rules 055-2, `plans/2026-11-24-witness-signs.md`):
+- Every active entry has `witness: string | null`; a retired entry has none. A sentence is one short present-tense line for grades 6–12, true of every holder under the `meaning`, naming no animal, group or place, and saying the sign in other words than its label. `null`, with a comment saying why, keeps the sign out of witness notes (today `floreana_island`, `pinta_island`, `prairie_dog_towns`).
+- `signTableProblems` (at load and in `npm test`) flags an empty or untrimmed sentence, a `_` blank, or the sign's label (`signPhrase`) as a whole phrase, any case.
+- `witnessNameProblems` (`npm run content -- preview` and `tests/clueGame/content.test.ts`) flags a sentence that names a holder (common name, group noun, genus or species, country or region), including holders by implication.
+- The live pool door (`animalsFromPool`) skips an unknown open tag with a warning, and `witnessSentence` returns `null` for a retired, unknown or `null` sign, so rows an older content build wrote still load; the authoring checks (`animalsFromProfiles`, `checkProfile`) stay strict.
 
 Rules, from `SIGNS`:
 - Trait `implies`: the holder's record must not rule it out (`algae_fur` implies `covering:fur`; `never_climbs` implies `trees:no`). Trait `denies`: the holder must not hold it (`leaf_eater` denies `diet:meat` and `diet:insects`).
@@ -77,11 +83,11 @@ Rules, from `SIGNS`:
 - `climber` and `swimmer` carry no trait `implies`: climbing rocks isn't living in trees, and swimming isn't fresh water.
 
 Narrower and broader signs (Goal 2 of the sign audit):
-- A narrower sign lists its strictly broader sign in `implies` (`climbs_boulders` → `climber`, `dung_piles` → `scent_marks`) once the edge passes both gates: entailment under the approved `meaning`s, and the wording gate (zero false fits on every live and audited note tagged with the broader sign).
-- `animalFitsNote` closes over wired `implies` edges, so a holder of the narrower sign fits a note tagged with the broader one, for witness fits and deduction (`witnessNotes`, `stillPossible`).
+- A narrower sign lists its strictly broader sign in `implies` (`climbs_boulders` → `climber`, `dung_piles` → `scent_marks`) once the edge passes entailment under the approved `meaning`s. The sign audit's second gate, wording (zero false fits on notes tagged with the broader sign), now holds by construction: since rules 055-2 a witness note is the broader sign's standard sentence, true of every holder.
+- Fits are counted per sign, and `animalFitsNote` closes over wired `implies` edges: a holder of the narrower sign fits a witness note for the broader one, for witness fits and deduction (`witnessNotes`, `stillPossible`).
 - One sign per fact **per note**: never tag one note with a narrower sign and a broader sign it implies (`signProblems` flags it); keep the narrower one its words state. A broad tag on a **different** note stays, so that note can still be dealt. `signsOf` drops implied broader signs, so the field guide shows one badge per fact.
 
-Ten edges are entailed but deferred to mission witness-signs: live notes tagged with the broader sign use narrower wording that the narrower sign's holders don't match. They are not in `implies`, but the one-sign-per-fact tagging rule already applies to them. Blocking notes (`speciesId:clue`, from the audit's `definitions.csv`):
+Ten edges the sign audit deferred are **wired in rules 055-2** (`plans/2026-11-24-witness-signs.md`), once per-sign standard sentences replaced hand-written witness text. Historical blocking notes from `sign-audit` (`speciesId:clue`, from the audit's `definitions.csv`): live notes tagged with the broader sign used narrower wording that the narrower sign's holders didn't match.
 
 | Edge | Blocking notes |
 |---|---|
@@ -99,7 +105,7 @@ Ten edges are entailed but deferred to mission witness-signs: live notes tagged 
 The sign rule:
 - A sign names evidence from its own note, in the note's own words ("sleeps high in trees", "seldom on ground"), never a question's answer (`tree_dweller` is "Lives in trees: yes" and is retired).
 - If no active sign's `meaning` fits the note's evidence, leave the note untagged; never invent one.
-- Reuse a shared tag where notes say the same thing: a witness note shows only when two suspects share its tag (plan 044).
+- Reuse a shared tag where notes say the same thing: a witness note shows when 2 to 4 suspects hold its sign (and no narrower dealt sign already implies it; rules 055-2).
 - Retired tags (`retired: true`, no rules and no `meaning`) stay in `SIGNS` only so new code still loads rows an older content build wrote; `signProblems` rejects one on any profile.
 
 Look-alike suspects come from `pickSuspectSet` in `src/clueGame/animalBoard.ts`: relatives first (the most shared family-tree ranks), then `likeness` in `src/clueGame/questionMatch.ts` (+1 for each trait category two animals share, -1 for each they differ on; no weight for rare traits).

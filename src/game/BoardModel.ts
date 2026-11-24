@@ -23,7 +23,12 @@ export interface Move { from: Cell; to: Cell }
  */
 export interface MatchGroup { gemType: GemType; cells: Cell[]; blast?: true }
 /** A gem that never matches by itself: it's collected when a match happens next to it. `chance` per new gem. */
-export interface RareGem { type: GemType; chance: number }
+export interface RareGem {
+  type: GemType;
+  chance: number;
+  /** A new board's free cells hold at least this many. */
+  atLeast?: number;
+}
 /**
  * A toy a big match leaves on the board, riding on a gem: a line gem (a straight 4) clears its row or column, a
  * blast gem (an L or T) the 3×3 around it, a color gem (a straight 5) every gem of one color. A matched toy goes off;
@@ -128,7 +133,10 @@ export class BoardModel {
     return this.moves;
   }
 
-  /** A new board from a uint32 seed and at least three colors: no ready-made matches, at least one valid move. `pins`: tiles to pin. */
+  /**
+   * A new board from a uint32 seed and at least three colors: no ready-made matches, at least one valid move, and
+   * `rare.atLeast` rare gems on free cells. `pins`: tiles to pin. RangeError when no such board can be made.
+   */
   newBoard(seed: number, gemTypes: readonly GemType[] = GEM_TYPES, rare: RareGem | null = null, pins: ReadonlyArray<[Cell, number]> = []): void {
     if (!Number.isInteger(seed) || seed < 0 || seed > 0xffff_ffff) throw new RangeError('Board seed must be a uint32.');
     const types = [...new Set(gemTypes.filter(type => GEM_TYPES.includes(type)))];
@@ -137,10 +145,76 @@ export class BoardModel {
     this.rare = rare && !types.includes(rare.type) ? rare : null;
     this.rng = mulberry32(seed);
     this.moves = 0;
-    this.grid = this.freshGrid();
     this.toys = this.noToys();
     this.setPins(pins);
-    if (!this.hasAnyValidMove()) this.shuffle();
+    const minRare = this.rare?.atLeast ?? 0;
+    const freeCount = this.width * this.height - this.pinnedCells().length;
+    if (!Number.isInteger(minRare) || minRare < 0 || (minRare > 0 && freeCount - minRare < 3)) throw new RangeError('Rare gems wanted must be a whole number that leaves three free cells.');
+    for (let attempt = 0; attempt < 20; attempt++) {
+      this.grid = this.freshGrid();
+      this.topUpRare();
+      if (!this.hasAnyValidMove()) this.shuffle();
+      if (this.findMatches(this.grid, this.toys).length === 0 && this.hasAnyValidMove()) return;
+    }
+    // Tight boards (many rare gems on few cells): random fills may hold no three of a color, so no move can exist.
+    // Seed three of one color, then shuffle. Runs only after the loop above fails, so normal boards are unchanged.
+    for (let attempt = 0; attempt < 20; attempt++) {
+      this.grid = this.freshGrid();
+      this.topUpRare();
+      this.ensureThreeOfAColor();
+      if (this.findMatches(this.grid, this.toys).length > 0 || !this.hasAnyValidMove()) this.shuffle();
+      if (this.findMatches(this.grid, this.toys).length === 0 && this.hasAnyValidMove()) return;
+    }
+    throw new RangeError('Could not build a playable board with the requested rare gems.');
+  }
+
+  /**
+   * Make the free cells hold three gems of one normal color (a move needs three), keeping `rare.atLeast` rare gems:
+   * newBoard checked `freeCount - atLeast >= 3`, so surplus rolled rare gems cover any shortfall of normal ones.
+   */
+  private ensureThreeOfAColor(): void {
+    const freeNormal: Cell[] = [];
+    const freeRare: Cell[] = [];
+    this.grid.forEach((column, x) => column.forEach((gem, y) => {
+      if (!this.isPinned([x, y])) (gem === this.rare?.type ? freeRare : freeNormal).push([x, y]);
+    }));
+    if (freeNormal.length + freeRare.length < 3) return;
+    const counts = new Map<GemType, number>();
+    for (const [x, y] of freeNormal) counts.set(this.grid[x][y], (counts.get(this.grid[x][y]) ?? 0) + 1);
+    if (this.gemTypes.some(type => (counts.get(type) ?? 0) >= 3)) return;
+    const color = this.gemTypes[Math.floor(this.rng() * this.gemTypes.length)];
+    while (freeNormal.length < 3) {
+      const [x, y] = freeRare.splice(Math.floor(this.rng() * freeRare.length), 1)[0];
+      this.grid[x][y] = color;
+      freeNormal.push([x, y]);
+    }
+    let have = freeNormal.filter(([x, y]) => this.grid[x][y] === color).length;
+    while (have < 3) {
+      const others = freeNormal.filter(([x, y]) => this.grid[x][y] !== color);
+      const [x, y] = others[Math.floor(this.rng() * others.length)];
+      this.grid[x][y] = color;
+      have++;
+    }
+  }
+
+  /**
+   * Turn random free gems into rare ones until the free cells hold `rare.atLeast` (a rare gem never matches, so this
+   * makes no match). Uses no rng when the board already has enough, so those boards replay byte for byte.
+   */
+  private topUpRare(): void {
+    if (!this.rare || !this.rare.atLeast) return;
+    let count = 0;
+    const free: Cell[] = [];
+    this.grid.forEach((column, x) => column.forEach((gem, y) => {
+      if (this.isPinned([x, y])) return;
+      if (gem === this.rare!.type) count++;
+      else free.push([x, y]);
+    }));
+    while (count < this.rare.atLeast && free.length > 0) {
+      const [x, y] = free.splice(Math.floor(this.rng() * free.length), 1)[0];
+      this.grid[x][y] = this.rare.type;
+      count++;
+    }
   }
 
   /** Replace the board with these gems, toys and pins (tests, the bot's scratch board, the dev bridge); the rng and colors stay. */

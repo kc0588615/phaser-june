@@ -20,7 +20,7 @@
 //   page  -> board 'clue-board-highlight' gems to glow: a held column's color board-wide, a held cell's next to its animal
 import Phaser from 'phaser';
 import type { Heading } from '@/clueGame/animalBoard';
-import type { Cell, Grid, Toys } from './BoardModel';
+import type { Cell, Grid, RareGem, Toys } from './BoardModel';
 import type { GemType } from './constants';
 
 /** How a released animal's card leaves the board (plan 046), from how the animal moves. */
@@ -52,7 +52,7 @@ export interface EventPayloads {
      * `escapes`: the mystery's id, only so its card bolts off if it's released (plan 046); the board decides no rules.
      * `wander` (plan 047): marked animals step after each move; `toy`: a release by the move's own run leaves a line toy.
      */
-    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; labels?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys }; escapes?: number; wander?: { toy: boolean }; toyScout?: boolean;
+    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: RareGem; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; labels?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys }; escapes?: number; wander?: { toy: boolean }; toyScout?: boolean;
         /** Rules 053-1: the gems a double adds to each clue order it hits (the board calls it out). */
         double?: number };
     'clue-board-lock': { locked: boolean };

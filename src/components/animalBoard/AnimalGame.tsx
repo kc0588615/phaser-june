@@ -13,11 +13,11 @@ import { AnimatePresence } from 'motion/react';
 import { sharpEye, type AnimalLogEntry, type Pencil } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import { CONTINENT_NAMES } from '@/clueGame/regions';
+import { signPhrase } from '@/clueGame/signs';
 import { EventBus, type BoardKey } from '@/game/EventBus';
 import { reducedMotion } from '@/game/motion';
 import { isSoundOn, setSoundOn, sfx, wakeOnFirstGesture } from '@/game/sfx';
 import { JournalSheet } from '@/components/clueGame/JournalSheet';
-import { WithBlanks } from '@/components/clueGame/WithBlanks';
 import { PhaserGame } from '@/components/clueGame/PhaserGame';
 import { useJournal } from '@/components/clueGame/useJournal';
 import { ANIMAL_HOW_TO_KEY, AnimalHowToPlay, GameMenu, NotesList, NotesSheet, OutOfMovesSheet, RoundEndSheet, roundEndAnnouncement, SuspectSheet } from './AnimalSheets';
@@ -52,7 +52,7 @@ function LogText({ entry, nameOf, count, pencil = {} }: { entry: AnimalLogEntry;
         </span>
       );
     }
-    case 'note': return <span><NotebookPen className="inline h-4 w-4 align-[-3px] text-notes" aria-hidden="true" /> <WithBlanks text={entry.note.text} /> <span className="text-neutral-7">Fits {entry.note.fits} of {count}.</span></span>;
+    case 'note': return <span><NotebookPen className="inline h-4 w-4 align-[-3px] text-notes" aria-hidden="true" /> {entry.note.text} <span className="text-neutral-7">({[entry.note.sign, ...entry.note.also].map(signPhrase).join(' or ')}) Fits {entry.note.fits} of {count}.</span></span>;
     case 'released': return <span>The {nameOf(entry.id)} {entry.walked ? 'wandered off' : 'left'} the board.</span>;
     case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the one caught on camera. It escaped!</span>;
     case 'found': return <span className="font-medium text-color-1">Found it: the {nameOf(entry.id)}!</span>;
@@ -498,7 +498,7 @@ export function AnimalGame() {
 
         <StatusTicker key={reviewing ? `end-${roundNo}` : roundNo ?? 0} keys={boardFocus} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={reviewing ? [] : facts} idle={round ? `Which of these ${round.suspects.length} was caught on camera? Match gems to find out.` : ''} />
 
-        {/* During review the card is where facts are read (with sources); these are only blanked copies of its notes. */}
+        {/* Hidden during review: the card then shows the animal's own field notes (with sources); this list is the round's witness notes, one standard sentence per sign. */}
         {wide && round && !reviewing && (
           <section ref={sideNotes} aria-labelledby="side-notes" className="min-h-0 overflow-y-auto overscroll-contain px-m pb-m pt-xs [grid-area:side]">
             <h2 id="side-notes" className="m-0 mb-xs text-xs font-medium uppercase text-neutral-7">📓 Witness notes</h2>

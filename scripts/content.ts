@@ -14,6 +14,7 @@ import type postgres from 'postgres';
 import { buildCluePool } from '../src/lib/cluePool';
 import { validatePool } from '../src/clueGame/validatePool';
 import { checkCitations, checkProfile, contentRowsFromProfiles, type AnimalProfile } from '../src/clueGame/profiles';
+import { witnessNameProblems } from '../src/clueGame/questionMatchContent';
 import { citedPages, contentSources as sources } from '../src/lib/contentCitations';
 import { ANIMALS_DIR, readProfiles } from '../src/lib/contentProfiles';
 import { connect, run } from './connect';
@@ -147,6 +148,7 @@ run(async () => {
     for (const profile of profiles) {
       console.log(`\n## ${profile.id} ${profile.commonName}`);
       for (const problem of checkProfile(profile, sources)) console.log(`  PROBLEM ${problem}`);
+      for (const problem of witnessNameProblems([profile])) console.log(`  PROBLEM ${problem}`);
       const { errors, warnings } = checkCitations(profile, sources, citedPages);
       for (const problem of errors) console.log(`  PROBLEM ${problem}`);
       for (const warning of warnings) console.log(`  cite warn ${warning}`);
