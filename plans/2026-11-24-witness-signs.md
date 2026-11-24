@@ -84,7 +84,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -204,7 +204,7 @@ Pass 2: one design. Code at `7f1f5dd2` (HEAD = `origin/main` `8d246c70` plus the
    - The stale-save fixture pushes the old shape (`:2309`), and the predicate `note.tags.includes(...)` (`:2325`) would throw on the new shape. Inside `waitFor(...).catch(() => null)` that error is hidden, and the later A16 checks fail with a confusing message.
 9. **No guard keeps a sentence from naming a holder.**
    - The only per-animal name-word list is built inside `buildAnimal` (`questionMatchContent.ts:111-119`, which needs countries; `Animal` doesn't keep them).
-   - Fix: check there, report through the existing `warn` channel, and assert no such warning in a unit test. That fails loud in CI and never throws for players.
+   - Fix: extract into `witnessNameProblems(profiles)` in `questionMatchContent.ts`, called by `scripts/content.ts` (`preview`) and a unit test. Fails loud in CI and authoring without burning regexes on browser page load.
 10. **Stale docs and comments.**
     - `CLUE_MATCH.md:20,22,51,53,61,90`; `CONTEXT.md:58-59,100-101`; `ANIMAL_BOARD_PAPER.md:3` (plus a new later-rules note); `CONTENT_SOURCES.md:81,84-98,102`.
     - The comment at `AnimalGame.tsx:499` says the side notes are "only blanked copies".
@@ -234,6 +234,8 @@ New field and helper:
 ```ts
 export interface ActiveSignEntry { category; meaning; /** The standard witness sentence: true of every holder, names no animal, group or place, doesn't repeat the label; null = never dealt (comment why). */ witness: string | null; implies?; denies?; retired?: never }
 const at = (category: ChargeCategory, meaning: string, witness: string | null, rules: Pick<ActiveSignEntry, 'implies' | 'denies'> = {}): ActiveSignEntry => ({ category, meaning, witness, ...rules });
+/** Whether `tag` exists in `table` (active or retired). */
+export function isKnownSign(tag: string, table: SignTable = SIGNS): boolean
 /** A sign's standard sentence; null for a retired, unknown or deliberately unwritten sign (never throws: old live rows load). */
 export function witnessSentence(tag: string, table: SignTable = SIGNS): string | null
 ```
@@ -258,17 +260,13 @@ Removed: `noteCategories` (dead).
 
 **`src/clueGame/questionMatchContent.ts`**
 - `buildAnimal` pushes every item into `notes` whole.
-- `MAX_BLANKS` and the `BLANK` export go. `BLANK` stays as a module-local constant inside `censor`, which stays private.
-- After `const signs = signsOf(allTags)`, so unknown tags still throw first, with today's message:
-  ```ts
-  for (const sign of heldSigns(allTags)) {
-    const sentence = witnessSentence(sign);
-    const named = sentence === null ? null : censor(sentence, giveaways);
-    if (named?.blanks) warn(`${input.commonName}: the witness sentence of "${sign}" names it ("${named.text}"): reword it in SIGNS (src/clueGame/signs.ts)`);
-  }
-  ```
-- Cost: about 1,458 sentence checks on HEAD (506 live), against about 2,300 note checks today, so loading gets cheaper.
+- `MAX_BLANKS` and the `BLANK` export go. `BLANK` stays module-local inside private `censor`, and `censor`/`giveaways` are removed from `buildAnimal`'s runtime path (zero page-load regex work in the browser).
+- New exported authoring/CI check `witnessNameProblems(profiles: readonly AnimalProfile[], table: SignTable = SIGNS): string[]`: builds each profile's `giveaways` list and checks `witnessSentence(sign, table)` for every `sign` in `heldSigns(allTags, table)` via private `censor` (no blanket label-word exemption, so animal/group nouns like `tortoise`, `turtle`, `pig` stay blocked). Returns one message per hit (`${profile.commonName}: the witness sentence of "${sign}" names it ("${named.text}"): reword it in SIGNS (src/clueGame/signs.ts)`). Called by `tests/clueGame/content.test.ts` and `scripts/content.ts` (`preview`).
+- Live pool resilience (`animalsFromPool`): before passing clues to `buildAnimal`, filter out any unknown open tag (`!tag.includes(':') && !isKnownSign(tag)`), calling `warn(`${species.commonName}: skipping unknown sign "${tag}" from pool`)` for each dropped tag, while keeping trait tags and known/retired signs. `isHandWrittenClue` still inspects raw `compareTags` (trait prefixes only). `animalsFromProfiles`, `signsOf`, `heldSigns`, and `signProblems`/`checkProfile` remain strict (throw on unknown signs).
 - Header comments at `:1-6` and `:109-110` are updated.
+
+**`scripts/content.ts`**
+- In `preview` mode, also print any problems from `witnessNameProblems([profile])` as `  PROBLEM ...`.
 
 **`src/clueGame/animalBoard.ts`**
 ```ts
@@ -289,7 +287,7 @@ What this guarantees:
 - No new export: `heldSigns` covers both "implies" tests. `narrowerSigns` isn't needed.
 
 Other changes in the file:
-- `roundStillFits`: `same = a.sign === b.sign && a.text === b.text && a.fits === b.fits && a.also.join('|') === b.also.join('|')`; doc updated.
+- `roundStillFits`: guard `same` so malformed/missing fields return `false` cleanly (`typeof a?.sign === 'string' && typeof a?.text === 'string' && typeof a?.fits === 'number' && Array.isArray(a?.also) && a.sign === b.sign && a.text === b.text && a.fits === b.fits && a.also.join('|') === b.also.join('|')`), check `[...round.notes, ...round.notesLeft]` against `fresh`, AND verify every `{ kind: 'note' }` entry in `round.log` matches `round.notes` in order (`logged.length === round.notes.length && logged.every((note, i) => same(note, round.notes[i]))`); doc updated.
 - `stillPossible`: `animalFitsNote(animal(book, id), { tags: [note.sign] })`.
 - `animalFitsNote` stays.
 - `AnimalRules.startWitness: number` ("witness gems a new board's free cells hold at least").
@@ -298,11 +296,11 @@ Other changes in the file:
 
 **`src/game/BoardModel.ts`**
 - `RareGem { type; chance; /** a new board's free cells hold at least this many */ atLeast?: number }`.
-- `newBoard`: `freshGrid()` → `noToys()` → `setPins(pins)` → `this.topUpRare()` → `if (!this.hasAnyValidMove()) this.shuffle()`.
+- `newBoard`: `noToys()` → `setPins(pins)` → validate `minRare = this.rare?.atLeast ?? 0` (throw `RangeError` if `!Number.isInteger(minRare) || minRare < 0 || (minRare > 0 && freeCount - minRare < 3)`, where `freeCount = width * height - pinnedCells().length`) → loop up to 20 attempts: `freshGrid()` → `this.topUpRare()` → `if (!this.hasAnyValidMove()) this.shuffle()` → return once `this.findMatches(this.grid, this.toys).length === 0 && this.hasAnyValidMove()`; if all 20 attempts fail (impossible geometry), throw `RangeError`.
 - Private command `topUpRare()`:
   - count rare gems on unpinned cells;
   - while the count is under `rare.atLeast ?? 0` and unpinned non-rare cells remain, turn `free.splice(Math.floor(this.rng() * free.length), 1)[0]` into the rare gem.
-- It uses the rng only when it places a gem, so the 73.8% of boards that already roll a gem come out byte-identical, which keeps the bot comparison paired. It stops when the free cells run out (no endless loop).
+- On normal boards it finishes on attempt 0 and uses the rng only when it places a gem, so the 73.8% of boards that already roll a gem come out byte-identical, which keeps the bot comparison paired.
 - A rare gem never matches, so placing one can't create a standing match.
 - `loadBoard` and refills don't change; `pickGem` keeps `chance`.
 
@@ -351,14 +349,14 @@ Other changes in the file:
 
 | # | Invariant | Held by |
 |---|---|---|
-| I1 | Every dealt note's text is `SIGNS[sign].witness`, true of every HEAD holder, names none, and isn't blanked | dealer, `signTableProblems`, buildAnimal guard + test, Fable gate |
+| I1 | Every dealt note's text is `SIGNS[sign].witness`, true of every HEAD holder, names none, and isn't blanked | dealer, `signTableProblems`, `witnessNameProblems` (`content -- preview` + test), Fable gate |
 | I2 | No two notes in a round share a sign, and none is implied by another | dealer step 3, unit test |
 | I3 | `fits` = suspects holding the sign by `heldSigns`, between 2 and n−1, mystery included; the bot and `stillPossible` use the same predicate | `animalFitsNote`, unit test |
 | I4 | Every fitter shows `sign` or an `also` chip; no non-fitter does | dealer step 4, unit test |
-| I5 | Retired, unknown or `null`-sentence signs are skipped and never throw; live rows load | `witnessSentence`, unit test |
-| I6 | A new board has ≥ `startWitness` witness gems on unpinned cells, no standing match and a valid move; same seed gives the same board; boards that rolled one are unchanged | `topUpRare`, board tests |
+| I5 | Retired, unknown or `null`-sentence signs are skipped and never throw on the live pool door; authoring/tests stay strict | `isKnownSign` filter in `animalsFromPool`, `witnessSentence`, unit tests |
+| I6 | A new board has ≥ `startWitness` witness gems on unpinned cells, no standing match and a valid move; infeasible `atLeast` fails fast with `RangeError`; same seed gives the same board; boards that rolled one are unchanged | `newBoard` validation + retry loop, `topUpRare`, board tests |
 | I7 | The board doesn't depend on the mystery | `atLeast` comes from rules |
-| I8 | 055-1 saves are dropped; a malformed 055-2 note throws inside the guarded restore and is dropped | `useAnimalSession.ts:117-133` |
+| I8 | 055-1 saves are dropped; a malformed or mismatched 055-2 note in `notes`, `notesLeft`, or `log` returns `false` from `roundStillFits` and is dropped cleanly | `roundStillFits`, `useAnimalSession.ts:117-133` |
 
 #### Tests (failure modes written first, in each block's header comment)
 
@@ -374,7 +372,7 @@ Other changes in the file:
   - `signTableProblems(SIGNS)` is empty;
   - the `null` signs are exactly `['floreana_island', 'pinta_island', 'prairie_dog_towns']`.
 - A2 (`@ts-expect-error`): an active entry without `witness`; a retired entry with `witness`.
-- `witnessSentence`: retired → null; unknown → null, with no throw; null entry → null; active → its text.
+- `witnessSentence` & `isKnownSign`: retired → `null` / `true`; unknown → `null` / `false`, with no throw; `null` entry → `null` / `true`; active → its text / `true`.
 - A4: the deferred-pair test (`:163-166`) is replaced by "the 10 former deferred edges are wired": each in `implies`, and `badges(['backward_pouch', 'pouch'])` → `['backward_pouch']`.
 - The `noteCategories` assertion (`:160`) goes.
 
@@ -392,11 +390,12 @@ Other changes in the file:
   - W6: every held sign that fits 2 to n−1 has a non-null sentence, against an explicit `HELD_BACK` list that starts empty (an entry needs a recorded Decision);
   - W7: the order is a subsequence of `heldSigns(mystery.tags)`;
   - W8: a fixture mystery holding retired `tree_dweller`, shared by 2 or more suspects, gets no note for it and nothing throws.
-- `roundStillFits`: a saved note that differs only in `sign`, or only in `also`, doesn't fit.
+- `roundStillFits`: a saved note that differs only in `sign`, or only in `also`, doesn't fit; a malformed note missing `also` in `notes` or a mismatched/malformed `{ kind: 'note' }` entry in `round.log` returns `false` cleanly without throwing.
 
 **`tests/clueGame/content.test.ts`**
-- `animalsFromProfiles(profiles, sources, w => warnings.push(w))` gives no warning matching `/witness sentence/`.
-- Negative case: clone a profile and rename it with a 4-letter-or-longer word taken from one of its held signs' sentences. That warns and names the sign.
+- `witnessNameProblems(profiles)` is empty on HEAD.
+- Negative case: clone a profile and rename it with a 4-letter-or-longer word taken from one of its held signs' sentences. `witnessNameProblems` reports it and names the sign.
+- Pool resilience: an unknown open tag in a pool clue is skipped by `animalsFromPool` with a warning (and loads cleanly with no throw), whereas `animalsFromProfiles` still throws on an unknown open tag.
 
 **`tests/game/boardModel.test.ts`**
 - For seeds 0–1,999 with `tileCells` pins and `atLeast: 1`: ≥1 rare gem on unpinned cells, no standing match, a valid move.
@@ -404,7 +403,7 @@ Other changes in the file:
 - A seed whose only rolled gem lands on a pinned cell gets one more on a free cell.
 - Same seed twice gives the same grid.
 - `loadBoard` never tops up.
-- `atLeast` larger than the free cells stops without looping.
+- Infeasible `atLeast` (negative, non-integer, or `freeCount - atLeast < 3`) throws `RangeError`; a tight but feasible `atLeast` still returns a playable board with no standing match, a valid move, and ≥ `atLeast` rare gems on free cells.
 
 **`tests/animalBoard/savedGame.test.ts`**: no change (it builds from `ANIMAL_RULES`).
 
@@ -418,19 +417,19 @@ Other changes in the file:
    - the count equals `state.notes`;
    - the dialog text has no `____`.
 3. **Every round end with `state.notes > 0`**, next to `checkSources`: for each `clue().witness` entry, some `section[aria-labelledby="end-notes"] [data-sourced-facts] > li` starts with one of its `behind` texts, and the section has no `____`.
-4. **The run as a whole**: `check('the run collected and checked a witness note', notesChecked)`. The baseline run collected notes in 3 of its 4 rounds.
+4. **The run as a whole**: `check('the run collected and checked a witness note', notesChecked)`. The baseline run collected notes in 3 of its 4 rounds; confirm on the first E2E run and steer one move next to a purple gem if the new boards don't collect one naturally (never weaken the check).
 5. **The stale save**: push `{ sign: 'tree_dweller', text: 'It sleeps high in the trees.', fits: 2, also: [] }`; the predicate at `:2325` becomes `note.sign === 'tree_dweller'`.
 
 #### Fable sentence-review gate (blocks shipping)
 
-1. A read-only `$STATE/scripts/witness-list.ts` (esbuild with the `@/` paths, like Pass 1's runner) writes `$STATE/witness-sentences.csv` with these columns: `sign, category, meaning, witness, HEAD holders (id name), live-only holders, dealt in N HEAD combos, label hit, censor blanks per holder`.
+1. A read-only `$STATE/scripts/witness-list.ts` (esbuild with the `@/` paths, like Pass 1's runner) writes `$STATE/witness-sentences.csv` with these columns: `sign, category, meaning, witness, HEAD holders (id name), live-only holders, dealt in N HEAD combos, label hit, label_word_hits (3+ letter tag words/stems in witness), censor blanks per holder`.
 2. Fable (`claude-task --model claude-fable-5-2 --effort high`) reviews:
-   - truth for every HEAD holder (live-only holders are tags sign-audit already ruled wrong; listed for information only);
+   - truth for every **HEAD** holder (live-only pre-H22 holders — `1:yellow_legs`, `9:forest_floor`, `14:puffs_up`, `39:rarely_drinks` — are tags sign-audit already removed pending H22; listed for visibility only, accepted until H22 runs);
    - reading level for grades 6–12, read solo;
    - no animal, group or place named;
-   - other words than the label.
+   - other words than the label (using `label_word_hits` to catch inflections and reordered words).
 3. The lead rules on every item in **Decisions**.
-   - A sign with no sentence true of all holders gets `null`, a `HELD_BACK` entry, and a line in the Summary.
+   - A sign with no sentence true of all HEAD holders gets `null`, a `HELD_BACK` entry, and a line in the Summary.
    - A proven wrong tag is fixed and recorded, which makes a content build needed.
 4. If Fable is out of usage: wait, or use `astra-review --task`. Never ship unreviewed.
 
@@ -438,7 +437,7 @@ Other changes in the file:
 
 `$STATE/scripts/witness-metrics.ts` runs on HEAD and on the `7bce511a` copy, on the 105 sets × 5 mysteries:
 - **Combos with ≥1 note.** HEAD 525 → 525; live 403 → 458.
-- **Dealt notes that fit only the mystery by their words.**
+- **Dealt notes that fit only the mystery by their words (sentences only; required sign label chips already appear on field guides and always fit 2–4 suspects).**
   - Before: Opus classifies HEAD's 157 distinct non-shared dealt texts against their fitting suspects, reusing sign-audit's `wording.csv` rulings where a pair is already ruled. Saved as `$STATE/before-wording.csv`; the count is reported over 525 combos.
   - After: 0. The script asserts every dealt text equals `witnessSentence(sign)` across all combos; Fable's truth review covers the rest.
 - **Rounds starting with a witness gem.** 73.82% → 100% exactly. The bot's line gives the empirical figure on the 200 × 3 seeded deals.
@@ -464,7 +463,7 @@ Other changes in the file:
   - `:22` "field notes (whole)";
   - `:51` "notes up to 055-2";
   - `:53` witness gems show the sign's standard sentence and chip, and every board starts with at least one;
-  - `:61` profiles' notes show whole on the reveal card, and witness sentences live in `SIGNS`;
+  - `:61` profiles' notes show in profile order, whole, on the reveal card (moving the 16 former `revealNotes` from end to profile order), and witness sentences live in `SIGNS`;
   - `:90` the new E2E checks.
 - `CONTEXT.md`:
   - `:58-59` witness gem: at least one on every starting board;
@@ -514,15 +513,15 @@ Choosing **A1(a) + U1 + B3 + C1**, wiring all 10 deferred open-tag `implies` edg
    - Extract `SignChip` from `SignGroups` (`AnimalSheets.tsx`) so witness notes and field-guide signs share one component and chip shape (`data-sign`).
    - Render each note's sentence with `<GlossaryText text={note.text} />` (never `WithBlanks`). Render the label row as `<CategoryMark>` + `<SignChip tag={note.sign} />`, followed by `<span className="text-xxs text-neutral-7">or</span> <SignChip tag={alt} />` for each entry in `note.also` so players never misread alternative narrower chips as AND.
    - Status line (`AnimalGame.tsx` `LogText`): show the plain standard sentence plus `(${[note.sign, ...note.also].map(signPhrase).join(' or ')})` (accepting architect's Pass 2 consistency refinement so the status line matches `NotesList`'s "or" chips).
-   - Remove dead `WithBlanks.tsx`, `noteCategories`, `FieldNote.full`, `Animal.revealNotes`, `MAX_BLANKS`, and the `BLANK` export (confirmed dead once witness notes stop showing blanked profile text; keep `censor` private in `questionMatchContent.ts` for the `buildAnimal` witness-sentence giveaway warning).
+   - Remove dead `WithBlanks.tsx`, `noteCategories`, `FieldNote.full`, `Animal.revealNotes`, `MAX_BLANKS`, and the `BLANK` export (confirmed dead once witness notes stop showing blanked profile text); move the `censor`/`giveaways` witness-sentence giveaway check out of runtime `buildAnimal` into `witnessNameProblems` (called by `content -- preview` and unit tests), with no blanket label-word exemption.
 3. **Starting witness gem — B3 ("at least one", always, mystery-independent):**
    - Add `startWitness: number` (`1`) to `AnimalRules` and optional `atLeast?: number` to `RareGem` (`BoardModel.ts`, reused by `EventPayloads['clue-board-setup'].rare`).
-   - In `BoardModel.newBoard`: `freshGrid()` → `noToys()` → `setPins(pins)` → top-up unpinned non-rare cells using the board's seeded `rng` until `rareCount >= atLeast` (clamped to free cells) → `if (!this.hasAnyValidMove()) this.shuffle()`. Random `witnessChance` rolls stay as today (only the 26.2% of boards rolling 0 witness gems gain 1; mean rises 1.32 → 1.58; the other 73.8% replay identically for clean paired bot comparisons). `shuffle()` preserves placed gems; resumed boards load saved grids without re-placing.
+   - In `BoardModel.newBoard`: `noToys()` → `setPins(pins)` → reject infeasible `atLeast` (`< 0`, non-integer, or `freeCount - atLeast < 3`) with `RangeError` → loop up to 20 attempts (`freshGrid()` → top-up unpinned non-rare cells using the board's seeded `rng` until `rareCount >= atLeast` → `if (!this.hasAnyValidMove()) this.shuffle()` → return once no standing match and a valid move exist, else throw `RangeError`). Random `witnessChance` rolls stay as today (only the 26.2% of boards rolling 0 witness gems gain 1; mean rises 1.32 → 1.58; the other 73.8% replay identically for clean paired bot comparisons). `shuffle()` preserves placed gems; resumed boards load saved grids without re-placing.
    - **Mystery independence preserved:** On HEAD profiles, `525/525` combos have ≥1 eligible note (min 3), so B3 and B1 are 100% identical on HEAD. Keeping the board independent of the mystery preserves the invariant at `useAnimalSession.ts:72,82` and `balance-044.ts:363-364`. On the temporary 67/525 pre-H22 live combos with 0 eligible notes, witness gems still appear as they already do on 74% of boards today and yield no note when collected.
 4. **Scope, edge cases & review gate — C1 (all 201 active signs):**
    - Write standard sentences for all 201 active signs except deliberate `null` entries where no place-/animal-free sentence exists: `floreana_island`, `pinta_island`, and `prairie_dog_towns` (all 1-holder, non-dealable signs). `kopjes` and `one_island` get place-free sentences.
-   - Unit test on real profiles enforces: (a) every dealable sign across the 105 sets has a non-null `witness` sentence (explicit empty allowlist unless a Fable truth failure forces a recorded `null`), and (b) `buildAnimal` emits zero witness-sentence giveaway warnings via the private `censor` check across all 76 animals.
-   - Every sentence is reviewed by Fable (`claude-task --model claude-fable-5-2 --effort high`) for biological truth across every HEAD and live holder and grade 6–12 reading level (with the lead ruling on every item; never shipped unreviewed, falling back to waiting or `astra-review --task` if Fable hits usage limit).
+   - Unit test on real profiles enforces: (a) every dealable sign across the 105 sets has a non-null `witness` sentence (explicit empty allowlist unless a Fable truth failure forces a recorded `null`), and (b) `witnessNameProblems(profiles)` is empty across all 76 animals (strict, no blanket label-word exemption).
+   - Every sentence is reviewed by Fable (`claude-task --model claude-fable-5-2 --effort high`) for biological truth across every **HEAD** holder and grade 6–12 reading level (with the lead ruling on every item; never shipped unreviewed, falling back to waiting or `astra-review --task` if Fable hits usage limit). Live-only pre-H22 holders (`1:yellow_legs`, `9:forest_floor`, `14:puffs_up`, `39:rarely_drinks`) are listed for visibility only and accepted until H22 runs.
 5. **10 deferred open-tag `implies` edges:** Wire all 10 in `src/clueGame/signs.ts` with A1 (zero profile churn, 0 `signProblems` on HEAD, safe on live `7bce511a` rows).
 6. **Reveal card & `14:2`:** Keep `RoundEndSheet` rendering unchanged (Goal 2 is met cleanly; E2E verifies `#end-notes` contains the full text of an underlying note for each collected sign). Do not edit `14:2` in profiles (out of scope, already untagged, avoids triggering a new content build); note it in Summary for a future content PR.
 7. **Before/after metrics (Goal 4):** Run a reproducible script + Opus classification of HEAD's 157 distinct non-shared dealt texts against their fitting suspects (reusing `sign-audit`'s `wording.csv` where already ruled), saved to `$STATE/before-wording.csv`, to report exact before vs after (0) counts on the 525 combos.
@@ -585,6 +584,23 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+**Fable review (`APPROVE_WITH_CHANGES`)**
+- **MUST-FIX 1 (live-only holder contradiction):** **Accepted.** Aligned Decision 4 with Architecture: Fable's truth gate checks every **HEAD** holder (post-`sign-audit` truth, matching Goal 1); the 4 stale pre-H22 live-only pairs (`1:yellow_legs`, `9:forest_floor`, `14:puffs_up`, `39:rarely_drinks`) are already displayed on live field guides today, are listed in the review CSV for visibility only, and are accepted until the owner runs H22 rather than disabling valid HEAD signs.
+- **MISSED 1 (sign label chip can share a word with a suspect's common name):** **Accepted.** Keep existing sign label chips as-is (the brief requires showing the sign label, field guides already show those chips, and every dealt note fits 2–4 suspects); clarified Goal 4's "after: 0" metric counts witness sentences.
+- **MISSED 2 (name guard vs natural sentences for label-overlapping signs):** **Accepted.** Keep the giveaway guard strict with no blanket label-word exemption (which would permit animal/group nouns like `tortoise`, `turtle`, `pig`); reword affected sentences using natural grade 6–12 synonyms (e.g. woodland/woods, crimson/scarlet, chestnut/tan, violet-slate, flat round disc), also satisfying Goal 1's "other words than the sign's short label".
+- **MISSED 3 (website `src/site/shots.ts` `witnessNote` shot & alt text go stale):** **Accepted.** Out of brief scope; will note in Summary for the owner to retake `npm run site:shots` and refresh `Teachers.tsx` alt text.
+- **SHOULD-CONSIDER 1 (move name check off runtime `buildAnimal` path):** **Accepted.** Extracted into `witnessNameProblems(profiles, table = SIGNS)` in `questionMatchContent.ts`, called by `tests/clueGame/content.test.ts` and `scripts/content.ts` (`preview`), removing ~20k regex compilations from browser page load.
+- **SHOULD-CONSIDER 2 (reveal-card ordering change for 16 former `revealNotes`):** **Accepted.** Added "in profile order, whole" to the `docs/CLUE_MATCH.md:61` update.
+- **SHOULD-CONSIDER 3 (explicit inflection/word-overlap column in Fable review CSV):** **Accepted.** Added `label_word_hits` (3+ letter tag words/stems in `witness`) to `$STATE/witness-sentences.csv` so Fable audits inflections and reordered label words on every row.
+- **SHOULD-CONSIDER 4 (confirm E2E check 4 collects a witness note on new boards):** **Accepted.** Added to E2E spec: confirm on first E2E run and steer a move next to a purple gem if needed rather than weakening the check.
+
+**Astra review (`APPROVE_WITH_CHANGES`)**
+- **MUST-FIX 1 (withhold signs whenever an incorrect `7bce511a` holder would be counted):** **Rejected** (resolved via Fable MF1). Withholding `forest_floor`, `rarely_drinks`, `yellow_legs`, or `puffs_up` globally would break valid HEAD signs permanently, and hardcoding species-ID denylists in game rules violates KISS for 4 stale rows pending H22 (already shown on live guides today); will note in Summary.
+- **MUST-FIX 2 (guarantee playable board after witness placement; reject infeasible `atLeast`):** **Accepted.** `BoardModel.newBoard` now rejects negative, non-integer, or infeasible `atLeast` (`freeCount - atLeast < 3`) with `RangeError`, and retries `freshGrid` + `topUpRare` + `shuffle` up to 20 times before throwing `RangeError` if no legal, match-free board can be built (preserving byte-identical RNG on normal boards).
+- **MUST-FIX 3 (handle unknown signs at pool ingestion):** **Accepted.** Exported `isKnownSign(tag, table = SIGNS)` in `signs.ts`; `animalsFromPool` (live DB door only) filters unknown open tags with a `warn` so an unsupported DB tag never crashes the app, while `animalsFromProfiles`, `signsOf`, `heldSigns`, and `signProblems`/`checkProfile` remain strict.
+- **MUST-FIX 4 (cover persisted `round.log` note entries in `roundStillFits`):** **Accepted.** `roundStillFits` now guards `same` against missing/non-array `also` (returning `false` cleanly) and validates every `{ kind: 'note' }` entry in `round.log` against `round.notes` in order, with unit tests for both.
+- **SHOULD-CONSIDER 1 (counterfactual dealer-rule deduction on 6 HEAD deals where only 1 suspect can receive the broader sign):** **Rejected.** Keep simple per-mystery implied-sign deduplication: solo grade 6–12 players read the note and `also` chips at face value ("Fits 3 of 5"), and simulating counterfactual deals for all 5 suspects in `witnessNotes` violates KISS for a 1.1% (6/525) theoretical source-code meta-exploit.
+
 ## Steps
 
 ## Verification
@@ -598,9 +614,10 @@ SHOULD-CONSIDER:
 ## Decisions
 
 - (lead) Architecture **A1(a) + U1 + B3 + C1**: store `witness: string | null` directly on `ActiveSignEntry` in `src/clueGame/signs.ts` and deal witness notes per sign (`{ sign, text, fits, also }`), wiring all 10 deferred open-tag `implies` edges from `sign-audit`. Eliminates duplicate-sign notes, multi-sign coupling, and `revealNotes` coupling; fixes every giveaway on live `7bce511a` rows immediately on deploy (`403 → 458/525` live combos) with zero content build needed.
-- (lead) **Label UI & dead-code cleanup**: share `SignChip` between `GuideSigns` and `NotesList`, render sentences with `GlossaryText`, join `also` chips with explicit `"or"` (in both `NotesList` and `LogText`) so players never read narrower alternatives as AND, and remove dead `WithBlanks.tsx`, `noteCategories`, `FieldNote.full`, `Animal.revealNotes`, `MAX_BLANKS`, and the `BLANK` export while repurposing private `censor` inside `buildAnimal` to warn on witness-sentence giveaways.
+- (lead) **Label UI & dead-code cleanup**: share `SignChip` between `GuideSigns` and `NotesList`, render sentences with `GlossaryText`, join `also` chips with explicit `"or"` (in both `NotesList` and `LogText`) so players never read narrower alternatives as AND, and remove dead `WithBlanks.tsx`, `noteCategories`, `FieldNote.full`, `Animal.revealNotes`, `MAX_BLANKS`, and the `BLANK` export while moving private `censor` into `witnessNameProblems` (`content -- preview` + unit tests).
 - (lead) **Starting witness gem (B3)**: guarantee `>= 1` witness gem on unpinned starting cells on every board (`ANIMAL_RULES.startWitness = 1`, `RareGem.atLeast`), keeping random `witnessChance` rolls and strict board independence from the mystery (identical to conditional B1 on HEAD's `525/525` combos; preserves paired-round bot comparisons on the 73.8% of boards that already roll a witness gem).
 - (lead) **Scope, reveal card, `14:2`, version & balance limits**: write sentences for all 201 active signs (`null` only for `floreana_island`, `pinta_island`, `prairie_dog_towns`, plus any sign Fable's truth review flags); keep reveal-card markup unchanged and defer untagged `14:2` to Summary so the mission stays pure code; bump `ANIMAL_RULES.version` to `'055-2'` and pre-register Run 2 vs Baseline balance limits (`--rounds 200 --seed 44 --places world,africa,asia`).
+- (lead) **Revision rulings (Fable + Astra)**: Fable truth gate targets HEAD holders only (4 stale pre-H22 live pairs accepted until H22 runs; Astra MF1 rejected); keep sign labels as-is and keep `witnessNameProblems` strict (no label-word exemption) off the runtime path (`content -- preview` + tests); reject infeasible `RareGem.atLeast` and guarantee a playable board after `topUpRare` in `BoardModel.newBoard`; filter unknown open tags on the live `animalsFromPool` door only (authoring stays strict); validate `{ kind: 'note' }` entries in `round.log` inside `roundStillFits`; reject counterfactual multi-mystery filtering (Astra SC1, KISS).
 
 ## Log
 
@@ -608,5 +625,6 @@ SHOULD-CONSIDER:
 - 2026-11-24 01:40 UTC — Architecture stage: `architect` Pass 1 findings/options (`$STATE/tasks/20261124-011126-architect.md`), lead Decision (`A1(a) + U1 + B3 + C1`, 10 deferred edges wired, version `'055-2'`, pure code), and `architect` Pass 2 single-design rewrite (`$STATE/tasks/20261124-012648-architect.md`) recorded in plan. No code changes; plan-only commit.
 - 2026-11-24 01:46 UTC — Fable review stage: `architecture-reviewer` returned `APPROVE_WITH_CHANGES` (1 MUST-FIX, 3 MISSED, 4 SHOULD-CONSIDER; saved at `$STATE/tasks/20261124-014241-architecture-reviewer.md`), recorded under `## Architecture review (Fable)`. Plan-only commit.
 - 2026-11-24 01:50 UTC — Astra review stage: `astra-review` returned `APPROVE_WITH_CHANGES` (4 MUST-FIX, 1 SHOULD-CONSIDER; saved at `$STATE/tasks/20261124-014749-astra-architecture.md`), recorded under `## Architecture review (Astra)`. Plan-only commit.
+- 2026-11-24 01:58 UTC — Revision stage: ruled on all 13 items from Fable (8) and Astra (5) under Revision notes (11 accepted, 2 rejected: Astra MF1, Astra SC1); updated Architecture, invariants, tests, Fable gate CSV, and Decision to match. Plan-only commit.
 
 ## Summary
