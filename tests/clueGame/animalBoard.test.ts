@@ -370,9 +370,9 @@ const wired = (): [string, string] => {
   return edge;
 };
 const TABLE: Record<string, SignEntry> = {
-  broad: { category: 'body', meaning: 'Broad.' },
-  mid: { category: 'body', meaning: 'Mid.', implies: ['broad'] },
-  narrow: { category: 'body', meaning: 'Narrow.', implies: ['mid'] },
+  broad: { category: 'body', meaning: 'Broad.', witness: null },
+  mid: { category: 'body', meaning: 'Mid.', witness: null, implies: ['broad'] },
+  narrow: { category: 'body', meaning: 'Narrow.', witness: null, implies: ['mid'] },
 };
 
 test('A7: a narrower sign fits a note of its broader one, never the reverse', () => {
