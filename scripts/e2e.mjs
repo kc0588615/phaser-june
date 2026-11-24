@@ -902,8 +902,12 @@ async function main() {
     };
     for (let n = 1; n <= ROUNDS; n++) {
       const start = await evaluate(() => window.__cc.clue());
-      const pins = await evaluate(() => window.__cc.state().pins);
+      const board = await evaluate(() => { const { pins, grid, movesUsed } = window.__cc.state(); return { pins, grid, movesUsed }; });
+      const { pins } = board;
       const mysteryName = names.get(start.mysteryId);
+      // Plan 055-2: every round starts with a witness gem the player can reach (not under a tile).
+      const freeWitness = board.grid.reduce((sum, column, x) => sum + column.filter((gem, y) => gem === 'purple' && !pins.some(([[px, py]]) => px === x && py === y)).length, 0);
+      check(`round ${n}: starting board has at least one witness gem on an unpinned cell`, board.movesUsed === 0 && start.movesUsed === 0 && freeWitness >= 1, JSON.stringify({ boardMoves: board.movesUsed, clueMoves: start.movesUsed, freeWitness }));
       check(`round ${n}: 5 suspects, the mystery among them, each pinned on the board`, start.suspects.length === 5 && start.suspects.includes(start.mysteryId)
         && start.suspects.every(id => pins.some(([, pin]) => pin === id)), JSON.stringify(pins));
       check(`round ${n}: starts with the rules' moves`, start.movesLeft === start.moves && start.status === 'playing', `${start.movesLeft} of ${start.moves}, ${start.status}`);
@@ -2020,11 +2024,28 @@ async function main() {
             await new Promise(resolve => setTimeout(resolve, 250));
             const text = document.querySelector('[role=dialog]')?.innerText ?? '';
             const marks = [...document.querySelectorAll('[role=dialog] ol > li')].map(li => [...li.querySelectorAll('[data-category-mark]')].map(mark => mark.dataset.categoryMark));
+            const sentences = window.__cc.signWitness();
+            const witness = window.__cc.clue().witness;
+            // Each note: its sign's standard sentence, then [mark] chip (or chip)* in the label row.
+            const items = [...document.querySelectorAll('[role=dialog] ol > li[data-witness-sign]')].map((li, i) => {
+              const sign = li.dataset.witnessSign;
+              const [sentence, label] = li.querySelectorAll(':scope > p');
+              const shown = sentence?.textContent?.trim() ?? '';
+              const also = witness[i]?.also ?? [];
+              const chips = [...(label?.querySelectorAll('[data-sign]') ?? [])].map(chip => chip.dataset.sign);
+              const ors = [...(label?.querySelectorAll(':scope > span') ?? [])].filter(span => span.textContent.trim() === 'or').length;
+              const ok = shown === sentences[sign] && shown === witness[i]?.text && witness[i]?.sign === sign
+                && chips.join() === [sign, ...also].join() && ors === also.length && li.querySelectorAll('[data-category-mark]').length === 1;
+              return { sign, ok, shown, standard: sentences[sign] ?? null, chips, ors, also };
+            });
             [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
-            return { text, marks, ...corner };
+            return { text, marks, items, witnessCount: witness.length, ...corner };
           });
           check(`round ${n}: a witness note says how many of the 5 field guides agree`, /of 5\s+field guides say this too/.test(notes.text), notes.text.slice(0, 120));
-          check(`round ${n}: each witness note carries one mark per category of its signs, none repeated`, notes.marks.length === state.notes && notes.marks.every(cats => cats.length > 0 && new Set(cats).size === cats.length), JSON.stringify(notes.marks));
+          check(`round ${n}: each witness note carries exactly one category mark`, notes.marks.length === state.notes && notes.marks.every(cats => cats.length === 1), JSON.stringify(notes.marks));
+          check(`round ${n}: each witness note shows its sign's standard sentence (signWitness) with its sign chip, an "or" chip per also sign, one category mark, and no ____`,
+            notes.items.length === state.notes && notes.witnessCount === state.notes && notes.items.every(item => item.ok) && !notes.text.includes('____'),
+            JSON.stringify({ notes: state.notes, witness: notes.witnessCount, items: notes.items, blanks: notes.text.includes('____') }));
           check(`round ${n}: the Mystery cell opens the witness notes, counts them and pulses`, notes.inRow && notes.count === String(state.notes) && notes.label.includes(`${state.notes} witness note`) && notes.flash, JSON.stringify({ ...notes, text: undefined, marks: undefined }));
           await screenshot('02c-notes.png');
         }
@@ -2117,6 +2138,19 @@ async function main() {
       await sleep(1500); // the Camera row slides back up and the photo pops in
       await screenshot(`04-round-${n}-end.png`);
       await checkSources(`round ${n}`, CARD);
+      if (state.notes > 0) {
+        const field = await evaluate(() => {
+          const section = document.querySelector('section[aria-labelledby="end-notes"]');
+          return {
+            witness: window.__cc.clue().witness,
+            items: [...(section?.querySelectorAll('[data-sourced-facts] > li') ?? [])].map(li => li.textContent?.trim() ?? ''),
+            sectionText: section?.innerText ?? '',
+          };
+        });
+        check(`round ${n}: reveal Field notes show the hand-written sentence behind each collected witness note, with no blanks`,
+          field.witness.length === state.notes && field.witness.every(entry => entry.behind.length > 0 && field.items.some(text => entry.behind.some(b => text.startsWith(b)))) && !field.sectionText.includes('____'),
+          JSON.stringify(field));
+      }
       const review = await reviewHidesFacts();
       check(`round ${n}: sources: while the card is open the status line shows no "Clue n of m" and there are no side notes`, review.ticker && review.clue === null && !review.sideNotes, JSON.stringify(review));
       if (n === 1) {
@@ -2150,6 +2184,7 @@ async function main() {
     check('a right guess\'s sparkle was checked at least once', sparkleChecked);
     check('the scouting preview was checked at least once', scoutChecked);
     check('the idle hint was checked at least once', hintChecked);
+    check('the run collected and checked a witness note', notesChecked);
     report.sortSaw = sortSaw;
     check('the sort: a run sees a contradiction sink an animal below a higher-numbered one', sortSaw.contradiction, JSON.stringify(sortSaw));
     check('the sort: a run sees more matches lift an animal above a lower-numbered one', sortSaw.matches, JSON.stringify(sortSaw));
