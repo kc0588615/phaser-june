@@ -1,7 +1,8 @@
 // The sign table and its rules (plan 2026-11-23-sign-audit §1.1-1.3, 1.6). Written down first, the ways they could break:
 //  A1 signTableProblems: an empty or whitespace-only meaning passes; a trait target with a prefix typo (`sytem:freshwater`,
 //     `:foo`) passes; an open target missing from the table, or retired, passes; a sign implying or denying itself passes;
-//     a 2- or 3-cycle of open-tag implies passes, or is reported without its path; the real SIGNS isn't clean.
+//     a 2- or 3-cycle of open-tag implies passes, or is reported without its path; the real SIGNS isn't clean, or its
+//     active signs with a null witness aren't exactly floreana_island, pinta_island and prairie_dog_towns.
 //  A2 Types: an active entry without a meaning compiles; a retired entry with implies, denies or a meaning compiles.
 //  A3 buildImplied / heldSigns: a transitive edge isn't closed; a diamond holds duplicates; a retired tag implies
 //     something or isn't held as itself; trait tags leak in; undefined input throws; an unknown tag doesn't throw.
@@ -97,6 +98,10 @@ test('A1: the real SIGNS is clean, and its retired tags are the 15 no note may u
     'no_tadpoles', 'rock_basker', 'rock_climber', 'sand_swimmer', 'seasonal_streams', 'stays_underground', 'tree_dweller', 'yellow_scales',
   ]);
   assert.equal(Object.values(SIGNS).filter(entry => !entry.retired).length, 201);
+  assert.deepEqual(
+    Object.keys(SIGNS).filter(tag => !SIGNS[tag].retired && SIGNS[tag].witness === null).sort(),
+    ['floreana_island', 'pinta_island', 'prairie_dog_towns'],
+  );
 });
 
 // ---- A1-W
