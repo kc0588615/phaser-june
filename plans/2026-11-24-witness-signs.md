@@ -2,7 +2,7 @@
 mission: witness-signs
 project: critter-connect
 branch: agent/witness-signs
-status: active
+status: done
 started: 2026-11-24 00:49 UTC
 ---
 
@@ -1067,6 +1067,24 @@ Command: `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 200 --
   - `starMoves` `[8, 14]` kept: careful 20th-pct moves left shifted `+2` (world `14→16`), `+1` (africa `15→16`), `0` (asia `14→14`) — none exceeds `> 2`.
   - **Decomposition:** Run 1 vs Baseline (per-sign dealer + 10 edges) is nearly flat on world/asia and slightly softer on africa (`careful` ★★★ `−5`, moves `−0.5`, because single-sign notes replace multi-sign notes); Run 2 vs Run 1 (`startWitness: 1`) lifts `careful` moves left `+0.5 to +0.9` (`+0.6` world, `+0.9` africa, `+0.5` asia), `★★★ +0 to +5 pts`, and notes `+0.2 to +0.3`/round.
 
+### Final Verification (2026-11-24 06:24–06:41 UTC)
+
+All checks run sequentially on the final tree (`489bb0fe`, zero changes under `db/`):
+
+1. **Guarded dev content build + `e2e:fresh` (`phaser_june_dev`):**
+   - Command: `( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a; [ "$(psql "$DATABASE_URL" -tAc 'select current_database()')" = phaser_june_dev ] || exit 1; npm run content -- build && CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh )`
+   - Dev content build: `content_sources: 16`, `species: 76`, `species_deduction_clues: 3653`, `species_facts: 491`, `0 citation warnings` (matches Baseline).
+   - E2E result: **1563/1563 checks passed** (seed 7, duration **832 s** / 13m52s, under CI's 15 min limit; Anywhere load median `2242 ms` at 1x, `4539 ms` at 4x; rounds 1–4 collected 3, 0, 5, 9 notes). All new checks passed: starting free witness gem on rounds 1–4, notes-drawer standard sentence (`signWitness`) + `SignChip` + `"or"` `also` chips + single category mark + no `____`, round-end `#end-notes` hand-written `behind` sentences + no `____` on rounds 1/3/4, `the run collected and checked a witness note`, and stale-save / A16 checks.
+   - Artifact: `/srv/critter-ai/agent-state/missions/witness-signs/e2e-final/` (`report.json` + screenshots; `e2e-artifacts/` cleared and `e2e-s*` deleted; `e2e-baseline/` and `e2e-final/` kept).
+2. **Static checks:** `npm run typecheck` pass; `npm run lint` pass (`0` warnings); `npm test` **186/186** pass (6 suites, 21.7 s; up from Baseline's 147); `npm run content -- preview` `0` `PROBLEM` lines.
+3. **Live database (read-only):** `npm run content -- check` against `.env.local` (`phaser_june`) passed: `Pool: 76 playable of 76 species, 3653 clues (3041 deductive), 491 facts. 0 errors, 0 warnings.`
+4. **Production build (run alone):** `npm run build` (`tsc --noEmit && next build`) passed cleanly (16.0 s compile, 10/10 static pages).
+5. **Balance:** S13 paired 200-round runs (`--seed 44 --places world,africa,asia`) remain valid (`src/` edits after S13 touched only `roundStillFits`/`sameNote`, `witnessNameProblems`, and `BoardModel.newBoard`'s post-20-attempt tight-board fallback that never runs on 7×7 boards). 68/69 pre-registered checks pass; 1 exception (`asia` `reader` Found `−2 pts`) accepted under Decisions; `startWitness: 1` hits `100%` starting gems; `starMoves: [8, 14]` kept.
+6. **Goal 4 re-run on final tree:** `witness-metrics.ts` passed `after-head` (6,107/6,107 dealt notes, `0` giveaways, `0` throws, `100.00%` starting gem) and `after-live` (`7bce511a`, 1,355/1,355 dealt notes, `0` non-standard sentences, `0` throws, `16` pre-H22 stale-tag deals resolved in prod by H22); `/tmp/ws-c7b` deleted immediately after.
+7. **Fable gate re-run on final tree:** regenerated `$STATE/witness-sentences.csv` (`201` rows, `142` dealt signs, `label_hit: 0`, `censor_blanks: 0`); all 48 Fable FIX proposals ruled under Decisions (`47` applied, `1` rejected keeping `prairie_dog_towns` `null`; `HELD_BACK = []`).
+8. **Dead code check:** `git grep -n -E "WithBlanks|revealNotes|noteCategories|MAX_BLANKS|\.full\b" src tests scripts` returned empty.
+9. **Owner's content build:** not needed (pure code/docs/tests; `0` files modified under `db/`).
+
 ## Code review (Astra)
 
 Saved reply: `/srv/critter-ai/agent-state/missions/witness-signs/tasks/20261124-053907-astra-code-review.md`
@@ -1206,5 +1224,35 @@ SHOULD-CONSIDER:
 - 2026-11-24 06:09 UTC — Step S16 (Astra MF3): Opus (`$STATE/tasks/20261124-060610-opus-5-5-high.md`) updated R2/R4 failure-mode comments and added red-first tests in `tests/clueGame/animalBoard.test.ts` (`also: ['']` vs `[]`, joined-`|` collision on real `also.length >= 2`, and 7 malformed `round.log` entries: `null`, string, number, array, `{}`, `{ kind: 123 }`), then replaced `join('|')` with element-by-element `also` comparison in `sameNote` and added whole-log plain-object + string-`kind` validation before filtering in `roundStillFits` (`src/clueGame/animalBoard.ts`). Lead reviewed full diff and independently verified CHECKS: `typecheck` pass, `lint` 0 warnings, `npm test` 183/183 pass, `content -- preview` 0 `PROBLEM` lines.
 - 2026-11-24 06:16 UTC — Step S17 (Astra MF4): Opus (`$STATE/tasks/20261124-061239-opus-5-5-high.md`) added G9 failure-mode header and red-first test in `tests/game/boardModel.test.ts` (failed with `RangeError` on 3×3 `atLeast: 6` before `src/` edits: 183 pass / 1 fail; covers 3 colors `chance: 0` incl. Astra MF4 seed `0`, `BOARD_GEMS` `chance: 0` and `0.8` across seeds `0..19` with exact replay, plus impossible 2×2 `atLeast: 1` throwing `RangeError`), then kept `BoardModel.newBoard`'s first 20 random attempts unchanged (preserving byte-identical 7×7 boards/RNG) and added a 20-attempt constructive fallback using private `ensureThreeOfAColor()` (including surplus-rare recovery when `chance > 0` leaves `< 3` free normal gems) followed by `shuffle()` in `src/game/BoardModel.ts`. Lead reviewed full diff and independently verified CHECKS: `typecheck` pass, `lint` 0 warnings, `npm test` 184/184 pass (21.8 s), `content -- preview` 0 `PROBLEM` lines.
 - 2026-11-24 06:22 UTC — Step S18 (Astra MF5 / Fable SC1): Opus (`$STATE/tasks/20261124-061816-opus-5-5-high.md`) added failure mode 5 and two red-first tests in `tests/clueGame/content.test.ts` (failed with `Unknown sign` on `zz_unknown_sign` and `zz_new_sign` before `src/` edits: 184 pass / 2 fail), then filtered unknown open tags (`tag.includes(':') || isKnownSign(tag, table)`) before calling `heldSigns` inside `witnessNameProblems` in `src/clueGame/questionMatchContent.ts` while keeping `animalsFromProfiles`/`signsOf`/`heldSigns` strict so `content -- preview` reports unknown signs via `checkProfile` and completes known-sign and citation checks without aborting. Lead reviewed full diff and independently verified CHECKS: `typecheck` pass, `lint` 0 warnings, `npm test` 186/186 pass (22.0 s), `content -- preview` 0 `PROBLEM` lines.
+- 2026-11-24 06:42 UTC — Full Verification & Summary: verified `typecheck` pass, `lint` 0 warnings, `npm test` 186/186 pass (21.7 s), `content -- preview` 0 `PROBLEM` lines, live `content -- check` (read-only) `76 species / 3653 clues / 491 facts / 0 errors / 0 warnings`, dead-code grep clean, `witness-metrics.ts` (`after-head` 6,107/6,107 & `after-live` 1,355/1,355 pass), regenerated `witness-sentences.csv` (`201` rows, `label_hit: 0`, `censor_blanks: 0`), `npm run build` pass, and guarded `phaser_june_dev` `content -- build && e2e:fresh` **1563/1563** pass in **832 s** (13m52s; artifact `$STATE/e2e-final/`, cleared `e2e-artifacts/` and `e2e-s*`). Wrote Summary and set `status: done`.
 
 ## Summary
+
+### What changed (rules `055-2`)
+- **Standard witness sentences & per-sign dealing (`src/clueGame/signs.ts`, `src/clueGame/animalBoard.ts`):** added `witness: string | null` to `ActiveSignEntry` across all 201 active signs (`198` standard sentences + `3` deliberate `null` non-dealable 1-holder signs: `floreana_island`, `pinta_island`, `prairie_dog_towns`; `HELD_BACK = []`), wired all 10 deferred open-tag `implies` edges from `sign-audit`, added safe `isKnownSign` / `witnessSentence` helpers, and switched `witnessNotes` to per-sign dealing (`{ sign, text, fits, also }`), dropping signs implied by another dealt sign and computing sorted `also` narrower chips for field-guide matching.
+- **Witness UI & reveal card (`src/components/animalBoard/AnimalSheets.tsx`, `AnimalGame.tsx`, `src/clueGame/questionMatch.ts`, `questionMatchContent.ts`, `animalSession.ts`, `src/game/debugBridge.ts`):** shared `SignChip` between field guides and witness notes, rendered witness sentences through `GlossaryText` with `<CategoryMark>` + `<SignChip>` + explicit `"or"` separators for `also` chips (matching plain text in `LogText`), kept the reveal card's Field notes showing the animal's own whole hand-written sentences in profile order, added `animalDebugSummary.witness` (`behind` sentences) and `window.__cc.signWitness()`, and removed dead blanking code (`WithBlanks.tsx`, `noteCategories`, `FieldNote.full`, `Animal.revealNotes`, `MAX_BLANKS`, `BLANK` export). Moved name-giveaway detection off runtime page load into `witnessNameProblems` (`content -- preview` + unit tests, resilient to unknown open tags in `preview`), and filtered unknown open tags at the live `animalsFromPool` door.
+- **Starting witness gem & save guard (`src/game/BoardModel.ts`, `EventBus.ts`, `useAnimalSession.ts`, `animalBoard.ts`, `scripts/balance-044.ts`):** added `ANIMAL_RULES.startWitness = 1` (version `'055-2'`) and `RareGem.atLeast` so every new board starts with at least one free witness gem while keeping boards mystery-independent and preserving byte-identical RNG on the 73.8% of boards that already roll one (with `RangeError` validation and a constructive fallback for tight feasible boards). Hardened `roundStillFits` with element-wise `also` matching and whole-log entry validation.
+- **Tests & docs (`tests/`, `scripts/e2e.mjs`, `docs/CLUE_MATCH.md`, `docs/ANIMAL_BOARD_PAPER.md`, `docs/CONTENT_SOURCES.md`, `CONTEXT.md`):** added failure-mode-first unit tests (147 → 186 passing), E2E checks for starting free witness gems, standard sentences/chips, round-end hand-written `behind` notes, and stale-save handling, and updated docs for `055-2`.
+
+### Goal 4 & balance results
+- **Word giveaways (525 HEAD combos):** `151` displayed giveaways (`119` wording + `32` masked-standard across `133` combos) → **`0`**. Combos with ≥1 note: HEAD `525 → 525` (`100.0%`), historical pre-H22 `7bce511a` `403 → 458` (`76.8% → 87.2%`; its `16` stale-tag deals were already resolved in production by H22).
+- **Starting witness gem:** `73.82%` (mean `1.32`) → **`100.00%`** (mean `1.58`, confirmed empirically in Run 2 across world/africa/asia).
+- **Balance (`balance-044.ts --rounds 200 --seed 44 --places world,africa,asia`):** Run 2 (`055-2`, `--start-witness 1`) vs Baseline (`055-1`) passed `68/69` pre-registered checks; the lone exception (`asia` `reader` Found `98% → 96%`, `−2 pts`, inside `±3%` CI while `★★★ +4`, moves `+0.9`, points `+6.6`) was accepted under Decisions, and `starMoves: [8, 14]` stayed unchanged.
+
+### Reviews & gates
+- **Fable sentence-review gate (`claude-fable-5-2` · high):** all 201 active signs reviewed for HEAD truth, grade 6–12 reading level, no giveaways, and label avoidance (`153 OK`, `48 FIX` → `47` applied, `1` rejected keeping `prairie_dog_towns` `null`, `0` new `null`s, `0` suspect HEAD tags).
+- **Final code reviews:**
+  - **Astra:** `APPROVE_WITH_CHANGES` (6 MUST-FIX, 3 SHOULD-CONSIDER). MF1–MF5 fixed in S15–S18; MF6 (`rodent_hunter` naming generic prey "mice, rats and squirrels") resolved via recorded exception under Decisions.
+  - **Fable:** `APPROVE` (0 MUST-FIX, 5 SHOULD-CONSIDER; SC1 fixed alongside Astra MF5 in S18).
+
+### Verification & artifacts
+- **E2E (final):** guarded `phaser_june_dev` `npm run content -- build && CHROME_PATH=$HOME/.local/bin/chrome-nosandbox npm run e2e:fresh` — **1563/1563 checks passed** in **832 s** (13m52s; Anywhere load median `2242 ms` 1x / `4539 ms` 4x). Artifact: `/srv/critter-ai/agent-state/missions/witness-signs/e2e-final/`.
+- **Other checks:** `npm run typecheck` pass, `npm run lint` pass (0 warnings), `npm test` **186/186** pass, `npm run content -- preview` 0 problems, live `npm run content -- check` (read-only) `76 species, 3653 clues (3041 deductive), 491 facts, 0 errors, 0 warnings`, `npm run build` pass, dead-code grep empty, `witness-metrics.ts` and `witness-list.ts` re-verified on final tree.
+
+### Owner action & follow-ups
+- **Owner's production content build:** **Not needed.** Zero files changed under `db/`, and H22 already loaded `sign-audit`'s `3653` clues into live `phaser_june`. No handoff items waiting on the owner.
+- **Follow-ups / SHOULD-CONSIDER notes for later PRs:**
+  - **Website shot & alt text (Fable SC2):** `src/site/shots.ts:46-48` (`witnessNote`) and `Teachers.tsx:89` quote an old hand-written note with no chip; retake `npm run site:shots` and update alt text in a website PR.
+  - **Untagged profile note `14:2`:** Desert Rain Frog's untagged `"puffs up"` note remains for a future content PR.
+  - **CI advisory `e2e` timing margin (Fable SC3):** final `e2e:fresh` ran in `832 s` (S10: `845 s`) vs CI's `900 s` job timeout; watch for timing flakes.
+  - **Other review notes:** E2E notes-drawer check saw a 0-`also` note (`egg_guarding`), while all 455 `also` notes are verified by unit test `W5` and `e2e.mjs` DOM assertions (Astra SC1); `useAnimalSession.ts:93` keeps a no-op `warn` to avoid per-load noise from 3 extinct species lacking countries (Astra SC2); `mother_carries_young` vs `pouch` and `hooves` vs `hard_toe_tips` (0 dealt combos) read similarly apart from chips (Fable SC4); `docs/CLUE_MATCH.md:88` lists the witness-note fits check under "Every round" while E2E checks the drawer once per run via `notesChecked` (Fable SC5).
