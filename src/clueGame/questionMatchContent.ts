@@ -1,6 +1,6 @@
 // Content -> the Animal records the animal board plays with (questionMatch.ts): the traits
 // questions can ask about, regions and continents, family tree names, field guide lines,
-// signs, and field notes (with blanks where a word would name the animal) with their sources.
+// signs, and field notes with their sources.
 // Two front doors, one builder: animalsFromPool for the game (database rows from
 // GET /api/clue-game/pool; it skips, with a warning, a sign this code doesn't know) and
 // animalsFromProfiles for the balance bot and the unit tests (db/content/animals/*.json; strict).
@@ -20,10 +20,8 @@ const GUIDE_CATEGORY: Record<string, ChargeCategory | 'family'> = {
 
 const title = (value: string) => value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 
-/** The blank a field note shows in place of a word that would name the animal. */
-export const BLANK = '____';
-/** A note with more blanks than this is hard to read, so it waits for the reveal card. */
-const MAX_BLANKS = 2;
+/** What `censor` puts in place of a word that would name the animal. */
+const BLANK = '____';
 /** Name words too generic to give an animal away ("Giant Pangolin" keeps "giant", "Red-eyed Tree Frog" keeps "tree"). */
 const GENERIC = new Set(['giant', 'great', 'greater', 'lesser', 'common', 'northern', 'southern', 'eastern', 'western', 'island', 'tree', 'long', 'the', 'relatives']);
 
@@ -147,23 +145,15 @@ function buildAnimal(input: AnimalInput, warn: (text: string) => void): Animal {
     species: input.scientificName,
   };
 
-  // A round shows a field note with blanks where a word names the animal; the reveal card shows it whole.
-  const giveaways = giveawaysOf(input);
+  // Field notes, whole, in profile order: the hand-written clues, then the facts (the reveal card lists them all).
   const notes: FieldNote[] = [];
-  const revealNotes: FieldNote[] = [];
   const items: Array<{ text: string; source: Source; tags?: readonly string[] }> = [...input.clues.filter(clue => clue.handWritten), ...input.facts];
-  for (const item of items) {
-    const { text, blanks } = censor(item.text, giveaways);
-    const tags = item.tags?.length ? { tags: [...item.tags] } : {};
-    if (blanks === 0) notes.push({ text: item.text, source: item.source, ...tags });
-    else if (blanks <= MAX_BLANKS) notes.push({ text, full: item.text, source: item.source, ...tags });
-    else revealNotes.push({ text: item.text, source: item.source, ...tags });
-  }
+  for (const item of items) notes.push({ text: item.text, source: item.source, ...(item.tags?.length ? { tags: [...item.tags] } : {}) });
 
   const allTags = [...new Set(input.clues.flatMap(clue => clue.tags))];
   return {
     id: input.id, name: input.commonName, scientificName: input.scientificName, photo: input.photo,
-    continents, traits, familyTree, notes, revealNotes, guide,
+    continents, traits, familyTree, notes, guide,
     // An unknown sign throws here, at load (plan 055), never in a render.
     signs: signsOf(allTags), tags: allTags,
   };

@@ -624,7 +624,7 @@ export function RoundEndSheet({ session, animal, species, citations, box, nameOf
   }));
   const called = guesses.filter(Boolean).length;
   const answered = round.orders.some(order => order.answer);
-  const notes = [...animal.notes, ...animal.revealNotes];
+  const notes = animal.notes;
   // A find pops the photo in, then fills the stars one by one (MotionConfig turns this off for reduced motion).
   const pop = (delay: number) => (found ? { initial: { opacity: 0, scale: 0.6 }, animate: { opacity: 1, scale: 1 }, transition: { type: 'spring' as const, stiffness: 420, damping: 18, delay } } : {});
   return (
@@ -725,7 +725,7 @@ export function RoundEndSheet({ session, animal, species, citations, box, nameOf
                 Field notes <span className="rounded-full bg-color-1-transparent px-xs font-data normal-case text-neutral-10">{notes.length}</span>
               </h3>
               <FactsWithSources
-                facts={notes.map((note, index) => ({ key: index, text: note.full ?? note.text, source: note.source }))}
+                facts={notes.map((note, index) => ({ key: index, text: note.text, source: note.source }))}
                 citations={citations}
                 className="flex list-disc flex-col gap-s pl-m text-m text-neutral-8 marker:text-neutral-6"
               />

@@ -20,6 +20,7 @@ import {
 import { clueFace } from '@/clueGame/clueFaces';
 import { PREFIX_CATEGORY, makeBook, poolFor, type Animal, type Book } from '@/clueGame/questionMatch';
 import { animalsFromProfiles } from '@/clueGame/questionMatchContent';
+import { animalDebugSummary, animalSessionReducer } from '@/clueGame/animalSession';
 import { SIGNS, heldSigns, signsOf, witnessSentence, type SignEntry } from '@/clueGame/signs';
 import type { ContinentKey } from '@/clueGame/regions';
 import { hash32, mulberry32 } from '@/lib/seededRng';
@@ -186,7 +187,7 @@ function synth(columns: Record<string, Array<string | string[]>>, continents: Co
     return {
       id: animalId, name: `Synth ${animalId}`, scientificName: `Synthus ${animalId}`, photo: null, continents: [...continents], traits,
       familyTree: { class: rank('C'), order: rank('O'), family: rank('F'), genus: 'G', species: `s${animalId}` },
-      notes: [NOTE], revealNotes: [], guide: { body: [], habits: [], habitat: [], range: [], life: [], family: [] }, signs: [],
+      notes: [NOTE], guide: { body: [], habits: [], habitat: [], range: [], life: [], family: [] }, signs: [],
       tags: Object.values(traits).flat(),
     };
   });
@@ -494,6 +495,9 @@ for (const { place, set, mystery, sign, fits } of PINNED) {
 //     sentence is neither dealt nor implied by a dealt sign (a dealer that deals nothing passes W1-W5).
 //  W7 The dealt notes' signs aren't a subsequence of `[...heldSigns(mystery.tags)]`.
 //  W8 A fixture mystery holding retired `tree_dweller`, shared by 2+ suspects, gets a note for it, or throws.
+//  W9 A dealt sign has no mystery note in `mystery.notes` whose `heldSigns(note.tags)` holds it (so `behind` would be
+//     empty), or a `behind` text contains `____`, or `animalDebugSummary(...).witness` disagrees with `round.notes` /
+//     `mystery.notes` (or `notes` stops being a count).
 //  R1 roundStillFits is true for a saved note that differs only in `sign`.
 //  R2 roundStillFits is true for a saved note that differs only in `also`.
 //  R3 roundStillFits is true, or throws, for a note in `notes` (or `notesLeft`) with `also` missing or not an array.
@@ -640,4 +644,28 @@ test('R4: a note log entry missing, extra, out of order or malformed doesn\'t fi
   }
   // A null entry isn't a note entry: skipped, never thrown on.
   assert.doesNotThrow(() => fitsLoose({ ...round, log: [null, ...round.log] }));
+});
+
+/** The mystery's whole notes holding `sign`: what a witness note stands behind. */
+const behindOf = (mysteryId: number, sign: string) =>
+  book.byId.get(mysteryId)!.notes.filter(entry => heldSigns(entry.tags).has(sign)).map(entry => entry.text);
+
+test('W9: every dealt sign stands behind a whole mystery note, and the debug summary shows it', () => {
+  for (const place of PLACES) for (const set of sets(place)) for (const mysteryId of set) {
+    for (const note of witnessNotes(book, set, mysteryId)) {
+      const behind = behindOf(mysteryId, note.sign);
+      const at = `${place ?? 'world'} ${set} mystery ${mysteryId} ${note.sign}`;
+      assert.ok(behind.length > 0, `W9 ${at}: no mystery note holds it`);
+      for (const text of behind) assert.ok(!text.includes('____'), `W9 ${at}: "${text}"`);
+    }
+  }
+  const round = collectedRound();
+  const session = animalSessionReducer(null, { type: 'load', book, round, boardSeed: 1, trail: newTrail(ANIMAL_RULES) })!;
+  const summary = animalDebugSummary(session, 44);
+  assert.equal(summary.notes, round.notes.length, 'W9 notes is a count');
+  assert.deepEqual(summary.witness, round.notes.map(note => ({ sign: note.sign, text: note.text, also: note.also, behind: behindOf(round.mysteryId, note.sign) })));
+  for (const entry of summary.witness) {
+    assert.ok(entry.behind.length > 0, `W9 summary ${entry.sign}: behind empty`);
+    for (const text of entry.behind) assert.ok(!text.includes('____'), `W9 summary ${entry.sign}: "${text}"`);
+  }
 });

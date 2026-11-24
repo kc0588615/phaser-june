@@ -219,6 +219,32 @@ describe('witnessNameProblems', () => {
   });
 });
 
+// Plan 2026-11-24-witness-signs S8: field notes are whole (no censoring). Written down first, the ways it could break:
+//   1. A profile's `animal.notes` aren't exactly its hand-written clues (`profile.clues`) then its facts
+//      (`profile.facts`), in profile order and whole, through animalsFromProfiles or animalsFromPool.
+//   2. A note in `animal.notes` contains `____`.
+//   3. One of the 16 facts once held for the reveal card (more than 2 blanks under censoring) is missing from
+//      `animal.notes`, or out of profile order (1's exact match covers it).
+describe('Whole field notes', () => {
+  const viaProfiles = animalsFromProfiles(profiles, sources);
+  const viaPool = new Map(animalsFromPool(pool).map(animal => [animal.id, animal]));
+  const expected = (profile: AnimalProfile) => [...profile.clues.map(clue => clue.text), ...profile.facts.map(fact => fact.text)];
+
+  test('notes are the hand-written clues then the facts, whole and in profile order, through both doors', () => {
+    assert.equal(viaProfiles.length, profiles.length);
+    assert.equal(viaPool.size, profiles.length);
+    profiles.forEach((profile, i) => {
+      const fromProfile = viaProfiles[i];
+      const fromPool = viaPool.get(profile.id);
+      assert.ok(fromPool, `${profile.commonName}: in the pool`);
+      assert.deepEqual(fromProfile.notes.map(note => note.text), expected(profile), `1 ${profile.commonName} (profiles)`);
+      assert.deepEqual(fromPool.notes.map(note => note.text), expected(profile), `1 ${profile.commonName} (pool)`);
+      assert.deepEqual(fromPool.notes.map(note => [note.text, note.tags]), fromProfile.notes.map(note => [note.text, note.tags]), `1 ${profile.commonName}: doors agree`);
+      for (const note of [...fromProfile.notes, ...fromPool.notes]) assert.ok(!note.text.includes('____'), `2 ${profile.commonName}: "${note.text}"`);
+    });
+  });
+});
+
 describe('Unknown signs at the doors', () => {
   const blanding = () => structuredClone(profiles.find(profile => profile.commonName === "Blanding's Turtle")!);
   const poolOf = (profile: AnimalProfile) => poolFromRows(contentRowsFromProfiles([profile]), { registry: sources, pages: citedPages });
@@ -242,7 +268,7 @@ describe('Unknown signs at the doors', () => {
     // The generated size clue stays in the guide, not the notes; the tagless hand-written clue stays a note, its tag gone.
     assert.ok(animal.guide.body.some(line => line.text === size.label), 'size clue in the guide');
     assert.ok(!animal.notes.some(note => note.text === size.label), 'size clue not a note');
-    const note = [...animal.notes, ...animal.revealNotes].find(entry => (entry.full ?? entry.text) === scales.label);
+    const note = animal.notes.find(entry => entry.text === scales.label);
     assert.ok(note, 'hand-written clue still a note');
     assert.equal(note.tags, undefined);
   });
