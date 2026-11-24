@@ -2307,7 +2307,7 @@ async function main() {
     // as an old-content save holds) isn't resumed: a fresh round 1 is dealt from the saved seed.
     const staleSeed = await evaluate(() => {
       const saved = JSON.parse(sessionStorage.getItem('cc:explore:game'));
-      saved.session.round.notesLeft.push({ text: 'It sleeps high in the trees.', tags: ['tree_dweller'], fits: 2, source: { name: 'Old content', url: null } });
+      saved.session.round.notesLeft.push({ sign: 'tree_dweller', text: 'It sleeps high in the trees.', fits: 2, also: [] });
       sessionStorage.setItem('cc:explore:game', JSON.stringify(saved));
       return saved.seed;
     });
@@ -2322,7 +2322,7 @@ async function main() {
     const freshSave = await waitFor(seed => {
       const saved = JSON.parse(sessionStorage.getItem('cc:explore:game') ?? 'null');
       return saved?.seed === seed && saved.session.roundNo === 1 && saved.session.end === null && saved.session.round.movesUsed === 0
-        && !saved.session.round.notesLeft.some(note => note.tags.includes('tree_dweller')) && saved;
+        && !saved.session.round.notesLeft.some(note => note.sign === 'tree_dweller') && saved;
     }, 'the fresh round 1 save', 10_000, staleSeed).catch(() => null);
     const brokenSaves = [
       ['trail', 'a save missing session.trail (a field today\'s code writes) is dropped for a fresh round 1'],

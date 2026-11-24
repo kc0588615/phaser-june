@@ -374,7 +374,7 @@ async function main() {
       console.log(`|---|${state.orders.map(() => '---').join('|')}|`);
       state.suspects.forEach((id, i) => console.log(`| ${name(id)} | ${state.orders.map(order => (order.row[i] ? 'yes' : 'no')).join(' | ')} |`));
       console.log(`\nWitness notes (${state.notesLeft.length}):`);
-      for (const note of state.notesLeft) console.log(`- "${note.text}" fits ${note.fits} of ${state.suspects.length}`);
+      for (const note of state.notesLeft) console.log(`- "${note.text}" (${note.sign}) fits ${note.fits} of ${state.suspects.length}`);
       continue;
     }
 

@@ -1,6 +1,6 @@
 // Plan 044 rules: the animal board. Five suspects sit pinned on the board; four clue
 // orders, filled by collecting their gems, answer yes/no questions about the
-// mystery; witness gems show its hand-written clues; the player marks suspects
+// mystery; witness gems show standard sentences for its signs; the player marks suspects
 // "ruled out", and a marked suspect is released when a gem next to it is cleared.
 // Plan 045: the suspects' own answers start hidden; a move's clear of a clue's color
 // next to an unmarked tile shows that animal's answer to it (scouting). Rules 047-1
@@ -19,7 +19,7 @@ import {
 } from '@/clueGame/questionMatch';
 import { clueFace } from '@/clueGame/clueFaces';
 import { neverAsked } from '@/clueGame/traits';
-import { SIGNS, heldSigns, type SignTable } from '@/clueGame/signs';
+import { SIGNS, heldSigns, witnessSentence, type SignTable } from '@/clueGame/signs';
 import { REGIONS, type ContinentKey } from '@/clueGame/regions';
 import { hash32 } from '@/lib/seededRng';
 
@@ -228,28 +228,44 @@ export function animalFitsNote(suspect: Pick<Animal, 'tags'>, note: Pick<FieldNo
   return (note.tags ?? []).every(tag => held.has(tag));
 }
 
-/** A hand-written clue about the mystery, with how many suspects' field guides record the same thing. */
-export interface WitnessNote extends FieldNote { fits: number }
+/** One of the mystery's signs as its standard sentence; `fits`: suspects holding the sign; `also`: narrower signs some suspects' guides show instead of this one (sorted). */
+export interface WitnessNote { sign: string; text: string; fits: number; also: string[] }
 
 /**
- * The mystery's witness notes: its hand-written clues whose tags fit 2 or more suspects but not all of them. A note
- * fitting only the mystery would solve the round; one without tags says nothing a field guide can check. A suspect
- * fits when its field guide records every tag of the note, or a narrower sign that states it (an untagged trait
- * counts as not recorded).
+ * The mystery's witness notes: each sign it holds (own tags in clue order, each followed by what it implies) that has a
+ * standard sentence and fits 2 or more suspects but not all of them, less any such sign another one implies (the
+ * narrower note says it already). A sign fitting only the mystery would solve the round. A suspect fits when it holds
+ * the sign or a narrower one stating it; `also` lists the narrower chips the suspects' guides show for it, so every
+ * fitter shows `sign` or an `also` chip and no non-fitter does.
  */
 export function witnessNotes(book: Book, suspects: readonly number[], mysteryId: number): WitnessNote[] {
-  return animal(book, mysteryId).notes.flatMap(note => {
-    if (!note.tags?.length) return [];
-    const fits = suspects.filter(id => animalFitsNote(animal(book, id), note)).length;
-    return fits >= 2 && fits < suspects.length ? [{ ...note, fits }] : [];
+  const kept = [...heldSigns(animal(book, mysteryId).tags)].flatMap(sign => {
+    const text = witnessSentence(sign);
+    if (text === null) return [];
+    const fits = suspects.filter(id => animalFitsNote(animal(book, id), { tags: [sign] })).length;
+    return fits >= 2 && fits < suspects.length ? [{ sign, text, fits }] : [];
   });
+  const chips = [...new Set(suspects.flatMap(id => animal(book, id).signs.map(chip => chip.tag)))].sort();
+  return kept
+    .filter(({ sign }) => !kept.some(other => other.sign !== sign && heldSigns([other.sign]).has(sign)))
+    .map(note => ({ ...note, also: chips.filter(tag => tag !== note.sign && heldSigns([tag]).has(note.sign)) }));
+}
+
+/** Whether a saved witness note is well formed and reads the same as a fresh one (a corrupt save never throws). */
+function sameNote(saved: unknown, fresh: WitnessNote | undefined): boolean {
+  if (typeof saved !== 'object' || saved === null || fresh === undefined) return false;
+  const { sign, text, fits, also } = saved as Partial<Record<keyof WitnessNote, unknown>>;
+  return typeof sign === 'string' && typeof text === 'string' && typeof fits === 'number'
+    && Array.isArray(also) && also.every(tag => typeof tag === 'string')
+    && sign === fresh.sign && text === fresh.text && fits === fresh.fits && also.join('|') === fresh.also.join('|');
 }
 
 /**
  * Content can change between visits (the owner's content build lands after the deploy): a saved round resumes only if
  * every suspect (and the mystery) is still in the book and, on a continent, still lives there, and the book would deal
  * it the same clue rows and witness notes now. Ids first, so witnessNotes never meets an id the book lacks; notes
- * compare on what the player reads (text, tags, fits), so a citation edit alone keeps the round.
+ * compare on what the player reads (sign, text, fits, also), and the log's note entries must be the collected notes in
+ * order. A malformed saved note or log entry returns false, never throws.
  */
 export function roundStillFits(book: Book, round: AnimalRound): boolean {
   const place = round.place;
@@ -263,9 +279,11 @@ export function roundStillFits(book: Book, round: AnimalRound): boolean {
   if (!rowsFit) return false;
   const saved = [...round.notes, ...round.notesLeft];
   const fresh = witnessNotes(book, round.suspects, round.mysteryId);
-  const same = (a: WitnessNote, b: WitnessNote) =>
-    a.text === b.text && a.fits === b.fits && (a.tags ?? []).join('|') === (b.tags ?? []).join('|');
-  return saved.length === fresh.length && saved.every((note, i) => same(note, fresh[i]));
+  if (saved.length !== fresh.length || !saved.every((note, i) => sameNote(note, fresh[i]))) return false;
+  if (!Array.isArray(round.log)) return false;
+  const logged = (round.log as unknown[]).filter((entry): entry is { kind: 'note'; note?: unknown } =>
+    typeof entry === 'object' && entry !== null && (entry as { kind?: unknown }).kind === 'note');
+  return logged.length === round.notes.length && logged.every((entry, i) => sameNote(entry.note, round.notes[i]));
 }
 
 /**
@@ -582,7 +600,7 @@ function scorePencils(state: AnimalRound, pencil: Pencil): { bonus: number; coun
 export function stillPossible(book: Book, state: AnimalRound, knows: (tag: string) => boolean = () => false): number[] {
   return state.suspects.filter((id, i) => !state.released.includes(id)
     && state.orders.every(order => order.answer === null || !(order.seen[i] || knows(order.tag)) || order.row[i] === (order.answer === 'yes'))
-    && state.notes.every(note => animalFitsNote(animal(book, id), note)));
+    && state.notes.every(note => animalFitsNote(animal(book, id), { tags: [note.sign] })));
 }
 
 /**

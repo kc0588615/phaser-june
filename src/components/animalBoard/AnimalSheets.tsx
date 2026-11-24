@@ -12,7 +12,7 @@ import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace } from '@/clueGame/clueFaces';
 import type { CluePool, PoolSpecies } from '@/clueGame/pool';
 import { CATEGORY_LABELS, CHARGE_CATEGORIES, categoryOf, prefixOf, type Animal, type ChargeCategory, type Sign } from '@/clueGame/questionMatch';
-import { noteCategories } from '@/clueGame/signs';
+import { signCategory } from '@/clueGame/signs';
 import { FactsWithSources } from '@/components/clueGame/FactsWithSources';
 import { GlossaryText } from '@/components/clueGame/GlossaryText';
 import { WithBlanks } from '@/components/clueGame/WithBlanks';
@@ -446,7 +446,7 @@ export function NotesList({ round }: { round: AnimalRound }) {
         <li key={index} className="flex flex-col gap-xs rounded-s bg-notes/15 p-s">
           <p className="m-0 text-m"><WithBlanks text={note.text} /></p>
           <p className={`m-0 flex flex-wrap gap-x-s gap-y-xxs ${MARK_CAPTION}`}>
-            {noteCategories(note.tags).map(category => <CategoryMark key={category} category={category} small />)}
+            <CategoryMark category={signCategory(note.sign)} small />
           </p>
           <p className="m-0 flex items-center gap-xs text-xs text-neutral-7">
             <span className="flex gap-xxs" aria-hidden="true">

@@ -3,7 +3,7 @@
 // (plan 2026-11-23-sign-audit); docs/research/2026-11-07-moves-and-signs/sign-map.csv is the research record it was built
 // from. It keeps every open tag ever shipped, retired ones included, so new code still loads rows an older content build
 // wrote. Pure: queries only.
-import { CHARGE_CATEGORIES, type ChargeCategory, type Sign } from '@/clueGame/questionMatch';
+import { type ChargeCategory, type Sign } from '@/clueGame/questionMatch';
 import { tagOutcome } from '@/clueGame/deduction';
 import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, prefixOf } from '@/clueGame/traits';
 
@@ -49,7 +49,7 @@ export const SIGNS: SignTable = {
   above_tree_line: at('habitat', "Lives at least partly in the open high-mountain zone above the tree line, where it is too high and cold for trees to grow (living only in forest below it doesn't count).", 'It lives at least partly in the open, treeless zone high on mountains, where it is too cold for trees to grow.', { implies: ['high_mountains'] }),
   algae_fur: at('body', "Algae grow in its fur or hair and tint it green (algae on a shell or skin don't count).", 'Its shaggy hair is tinted green by tiny plant-like living things growing in it.', { implies: ['covering:fur'] }),
   ambush_hunter: at('habits', 'Catches prey mainly by hiding or waiting still and striking when prey comes close, rather than chasing it down.', 'It catches prey mainly by lying in wait or hiding, then striking when the prey comes close.', { denies: NOT_ANIMALS }),
-  backward_pouch: at('life', "The female's pouch opens toward her back legs (rear-facing), not toward her head.", 'Its females have a belly pocket that opens toward the back legs, not toward the head.'),
+  backward_pouch: at('life', "The female's pouch opens toward her back legs (rear-facing), not toward her head.", 'Its females have a belly pocket that opens toward the back legs, not toward the head.', { implies: ['pouch'] }),
   bamboo_eater: at('habits', 'Bamboo (leaves, stems or shoots) is its main food.', 'Its main food is bamboo, whether the leaves, stems or shoots.', { denies: NOT_PLANTS }),
   bamboo_forest: at('habitat', "Lives at least partly in forest with a thick undergrowth of bamboo (eating bamboo elsewhere doesn't count).", 'It lives at least partly in woods with a thick undergrowth of bamboo.', { implies: ['habitat:forest'] }),
   basker: at('habits', "Regularly lies in the sun to warm its body, on logs, rocks, banks or at the water's surface.", 'It regularly lies out in the sun to warm its body.', { denies: ['activity:night'] }),
@@ -68,7 +68,7 @@ export const SIGNS: SignTable = {
   buries_itself: at('habits', "Hides or rests buried, covered by sand, mud, soil or fallen leaves, often with only its head out (resting inside a burrow doesn't count).", 'It hides or rests covered by sand, mud, soil or fallen leaves, often with only its head showing.'),
   burrower: at('habits', "Digs into the ground on land: digs burrows, tunnels or dens, or digs its body down into soil or sand (only resting in burrows others dug, or burying itself in leaves or underwater sand/mud, doesn't count).", 'It digs into the ground on land, making holes, tunnels or dens, or digging its body down into soil or sand.'),
   camouflage: at('body', 'Its color or pattern helps it blend in with its surroundings so it is hard to see.', 'Its colors or pattern help it blend into its surroundings, so it is hard to see.'),
-  carries_young_on_back: at('life', "A mother carries her baby riding or clinging on her back (eggs embedded in skin and fathers carrying tadpoles don't count, see mother_carries_young and father_carries_young).", "Its babies ride or cling on their mother's back."),
+  carries_young_on_back: at('life', "A mother carries her baby riding or clinging on her back (eggs embedded in skin and fathers carrying tadpoles don't count, see mother_carries_young and father_carries_young).", "Its babies ride or cling on their mother's back.", { implies: ['mother_carries_young'] }),
   cecropia_leaves: at('habits', 'Leaves of Cecropia trees are a main part of its food.', 'Its main foods include the leaves of cecropia trees.', { implies: ['leaf_eater'], denies: NOT_PLANTS }),
   chirps: at('habits', 'Makes short, high, bird-like chirping calls.', 'It makes short, high-pitched peeping calls.'),
   climber: at('habits', "Climbs well or often, in trees, on rocks or both (only scrambling onto logs or banks doesn't count).", 'It clambers well or often, up branches, rocks or both.'),
@@ -90,12 +90,12 @@ export const SIGNS: SignTable = {
   ever_growing_teeth: at('body', 'Some of its teeth keep growing all its life, worn down by use.', 'Its jaws hold some teeth that never stop growing, worn down by use all its life.'),
   eye_glands: at('body', 'Has large scent glands just below or in front of its eyes.', 'It has large scent pouches on its face, just below or in front of its eyes.'),
   face_markings: at('body', 'Has bold markings of a contrasting color on its face: patches, rings, a mask, crescents or lines.', 'Its head has bold patches, rings, a mask, crescents or lines of a contrasting color on its forehead, cheeks, snout or around its eyes.'),
-  face_mask: at('body', 'A dark band or patch across its eyes looks like a mask.', "It has a dark band or patch across its eyes, like a bandit's disguise."),
+  face_mask: at('body', 'A dark band or patch across its eyes looks like a mask.', "It has a dark band or patch across its eyes, like a bandit's disguise.", { implies: ['face_markings'] }),
   false_thumb: at('body', 'Has a "false thumb": an enlarged wrist bone or extra digit that it uses like a thumb to grip.', 'It grips with help from an enlarged wrist bone or extra digit that works like a sixth finger.'),
   fast_runner: at('habits', 'Runs fast: it can sprint or chase at about 50 km/h or more.', 'It can sprint or chase at about 50 km/h or more.'),
   fast_streams: at('habitat', 'Lives in or by fast-flowing streams or rivers with rushing water.', 'It lives in or beside streams or rivers with rushing water.', { implies: FRESH_WATER }),
   father_carries_young: at('life', 'The father carries the eggs or young (such as tadpoles) on or in his body.', "Its eggs or young are carried on or in the father's body."),
-  feathery_gills: at('body', 'Has feathery gills sticking out from its body (outside gills) as an adult.', 'It keeps frilly, branched breathing tufts sticking out from the sides of its head, even as an adult.', { implies: ['habitat:wetlands'] }),
+  feathery_gills: at('body', 'Has feathery gills sticking out from its body (outside gills) as an adult.', 'It keeps frilly, branched breathing tufts sticking out from the sides of its head, even as an adult.', { implies: ['habitat:wetlands', 'underwater_breathing'] }),
   feeds_on_ground: at('habits', 'Finds most of its food on the ground, even if it can climb.', 'It finds most of its food down on the ground, even if it can climb.'),
   fish_eater: at('habits', 'Fish are a main part of its food.', 'It eats fish as a main part of its food.', { denies: NOT_ANIMALS }),
   five_front_claws: at('body', 'Has five claws on each front foot.', 'It has five nails on each forefoot.'),
@@ -182,7 +182,7 @@ export const SIGNS: SignTable = {
   rolls_into_ball: at('habits', 'Curls up into a tight ball to protect itself.', 'It curls up into a tight ball to protect itself.'),
   roosts_in_trees: at('habits', 'Rests (roosts) hanging or perching in tree branches, often in groups.', 'It rests hanging or perching among branches, often in groups.', { implies: ['trees:yes', 'habitat:forest', 'often_in_trees'] }),
   round_body: at('body', 'Its body is round and puffy.', 'It is plump and puffy, shaped almost like a ball.'),
-  s_shaped_horns: at('body', 'Its horns curve back and then up or forward, making an S shape seen from the side.', 'Its horns curve back and then up or forward, like the letter S seen from the side.'),
+  s_shaped_horns: at('body', 'Its horns curve back and then up or forward, making an S shape seen from the side.', 'Its horns curve back and then up or forward, like the letter S seen from the side.', { implies: ['horns'] }),
   saddleback_shell: at('body', 'Its shell is a "saddleback": raised high at the front, above the neck.', 'Its shell rises high at the front, arching up above its neck.', { implies: ['covering:shell'] }),
   salt_licks: at('habits', 'Seeks out salt licks, or mineral-rich soil, clay or water, to get minerals.', 'It seeks out salty or mineral-rich soil, clay or water to get minerals.'),
   sand_dunes: at('habitat', 'Lives on or in sand dunes, coastal or inland.', 'It lives on or in dunes, the hills of wind-blown sand, near the coast or inland.'),
@@ -198,7 +198,7 @@ export const SIGNS: SignTable = {
   shallow_wetlands: at('habitat', 'Lives in shallow, still water such as marshes, ponds and bogs.', 'It lives in shallow, still water such as marshes, swamps, pools and bogs.', { implies: FRESH_WATER }),
   shares_food: at('habits', "Shares food with, or brings food to, other members of its group beyond its own young (a parent feeding only its own young doesn't count).", 'It splits meals with, or brings meals to, members of its group beyond its own young.', { denies: ['social:alone'] }),
   shell_spines: at('body', 'Has small spines or pointed bumps on its shell, mainly along the front edge.', 'Its shell has small pointed bumps, mainly along the front edge.', { implies: ['covering:shell'] }),
-  shoulder_stripe: at('body', 'A single bold stripe runs across its shoulders.', 'It has a single bold band running across the top of its forelimbs.'),
+  shoulder_stripe: at('body', 'A single bold stripe runs across its shoulders.', 'It has a single bold band running across the top of its forelimbs.', { implies: ['stripes'] }),
   side_frills: at('body', 'Grows thin, hair-like flaps of skin on its sides (and thighs).', 'It grows thin, thread-like flaps of skin along its flanks and thighs, at least in males.'),
   skin_folds: at('body', 'Its skin has deep folds, like plates of armor.', 'Its hide has deep creases, like plates of armor.', { implies: ['covering:skin'] }),
   sleeping_nests: at('habits', 'Builds a nest or bed (of leaves, branches or grass) to sleep or rest in, in a tree or on the ground.', 'It builds a bed of leaves, branches or grass to sleep or rest in.'),
@@ -208,10 +208,10 @@ export const SIGNS: SignTable = {
   snowy_winters: at('habitat', 'Lives where snow covers the ground for weeks or months in winter.', 'It lives where snow covers the ground for weeks or months in winter.'),
   snub_nose: at('body', 'Its nose is short, flat and turned up.', 'Its snout is short, flat and tipped upward.'),
   soars: at('habits', 'Soars: glides on rising warm air without flapping.', 'It rides rising currents of warm air without flapping.'),
-  spectacles: at('body', 'Pale rings or markings around its eyes look like glasses.', 'Its eyes are circled by pale rings or markings that look like a pair of glasses.'),
+  spectacles: at('body', 'Pale rings or markings around its eyes look like glasses.', 'Its eyes are circled by pale rings or markings that look like a pair of glasses.', { implies: ['face_markings'] }),
   spiky_shell: at('body', 'Its shell has spikes or sharp points around its edge.', 'Its shell has sharp points sticking out around its edge.', { implies: ['covering:shell'] }),
   spiny_forest: at('habitat', 'Lives in dry spiny forest: thorny, cactus-like forest and brush.', 'It lives in dry, prickly woodland and brush full of thorny, cactus-like plants.', { implies: ['habitat:forest'] }),
-  spiral_horns: at('body', 'Its horns twist in a spiral, like a corkscrew, along their length.', 'Its horns twist like a corkscrew along their length.'),
+  spiral_horns: at('body', 'Its horns twist in a spiral, like a corkscrew, along their length.', 'Its horns twist like a corkscrew along their length.', { implies: ['horns'] }),
   spots: at('body', 'Its coat or skin is covered with spots or rosettes.', 'Its coat or skin is covered with dots, speckles or rose-shaped rings.'),
   spotted_belly: at('body', 'Its belly is spotted.', 'Its underside is dotted with blotches of another color.'),
   squeaker: at('habits', 'Makes high squeaking calls.', 'It makes small, high-pitched squealing calls.'),
@@ -233,7 +233,7 @@ export const SIGNS: SignTable = {
   swimmer: at('habits', "Swims well or often, by choice, in water (moving through sand or soil doesn't count).", 'It paddles through water well or often, by choice.'),
   tail_organ: at('body', 'Males have a tail-like body part used for mating.', 'Its males have a short, stub-like body part used for mating.'),
   tap_forager: at('habits', 'Taps on wood or bark and listens for hollow spots to find hidden food.', 'It taps on wood or bark and listens for hollow spots to find hidden food.'),
-  tear_lines: at('body', 'Dark lines run from the inner corner of each eye down to its mouth, like tear tracks.', 'Its face has dark streaks running from the inner corner of each eye down to its mouth, as if it had been crying.'),
+  tear_lines: at('body', 'Dark lines run from the inner corner of each eye down to its mouth, like tear tracks.', 'Its face has dark streaks running from the inner corner of each eye down to its mouth, as if it had been crying.', { implies: ['face_markings'] }),
   temperature_sex: at('life', "Whether its eggs hatch male or female depends on the nest's temperature.", 'Its eggs hatch male or female depending on how warm the nest is.'),
   territorial: at('habits', "Defends an area (a territory, home patch or den site) against others of its kind (fights over mates alone don't count).", 'It defends an area, such as a home patch or den site, against others of its kind.'),
   throat_patch: at('body', 'Has a patch or patches of contrasting color on its throat.', 'It has one or more areas of contrasting color under its chin, at the front of its neck.'),
@@ -250,7 +250,7 @@ export const SIGNS: SignTable = {
   vertical_pupils: at('body', 'Its pupils are vertical slits.', 'Its eyes have dark centers shaped like upright slits.'),
   voiceless: at('habits', "Makes no calls: no croaks, songs, squeaks or other voice sounds (a hiss of breath doesn't count as a call).", 'It makes no calls at all: no croaks, songs, squeaks or other vocal sounds.', { denies: ['chirps', 'loud_calls', 'low_rumbles', 'screecher', 'squeaker', 'whistle_calls'] }),
   walks_on_knuckles: at('habits', 'Walks on its knuckles or the sides of its curled front feet, keeping its claws or fingers off the ground.', 'It puts its weight on its knuckles or the sides of its curled front feet when walking, keeping its claws or fingers off the ground.'),
-  walks_upright: at('habits', 'Usually walks on its back legs, using its front legs only now and then.', 'It usually walks on its back legs, using its front legs only now and then.'),
+  walks_upright: at('habits', 'Usually walks on its back legs, using its front legs only now and then.', 'It usually walks on its back legs, using its front legs only now and then.', { implies: ['stands_on_hind_legs'] }),
   warning_colors: at('body', 'Has bright colors that warn predators it is poisonous or bad to eat.', 'Its bright hues tell predators that it is toxic or bad to eat.'),
   webbed_feet: at('body', 'Has webbed feet: skin joins its toes.', 'Its toes are joined by flaps of skin between them.'),
   whistle_calls: at('habits', 'Calls with high whistles.', 'It makes high-pitched whistles.'),
@@ -392,12 +392,6 @@ export function signsOf(tags: readonly string[] | undefined, table: SignTable = 
 /** The question category a sign sits under. Throws on a tag missing from SIGNS. */
 export function signCategory(tag: string): ChargeCategory {
   return entryOf(tag).category;
-}
-
-/** The distinct categories of a note's signs, in CHARGE_CATEGORIES order. */
-export function noteCategories(tags: readonly string[] | undefined): ChargeCategory[] {
-  const found = new Set(openTags(tags).map(signCategory));
-  return CHARGE_CATEGORIES.filter(category => found.has(category));
 }
 
 /** The parts of a sign's rules that its holder's record (traits) or held signs (`closure`) contradict. */

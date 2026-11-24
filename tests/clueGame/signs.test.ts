@@ -7,7 +7,8 @@
 //  A3 buildImplied / heldSigns: a transitive edge isn't closed; a diamond holds duplicates; a retired tag implies
 //     something or isn't held as itself; trait tags leak in; undefined input throws; an unknown tag doesn't throw.
 //  A4 signsOf: a narrower sign and its wired broader one (on different notes) show two badges; a lone broader sign is
-//     dropped; tag order changes; one tag on two notes shows twice; a retired tag is dropped; a deferred pair loses one.
+//     dropped; tag order changes; one tag on two notes shows twice; a retired tag is dropped; one of the 10 former
+//     deferred edges isn't wired, or `badges(['backward_pouch', 'pouch'])` isn't `['backward_pouch']`.
 //  A5 signProblems: an unknown tag doesn't return early; a retired tag passes; a trait implies conflict reached only
 //     through a narrower sign isn't reported, or names the wrong `via`; an implied trait with no record is reported; a
 //     trait denies the record holds passes; an open denies against a sign held directly, or reached through a narrower
@@ -25,7 +26,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  SIGNS, buildImplied, heldSigns, isKnownSign, noteCategories, signCategory, signProblems, signTableProblems, signsOf,
+  SIGNS, buildImplied, heldSigns, isKnownSign, signCategory, signProblems, signTableProblems, signsOf,
   witnessSentence,
   type ActiveSignEntry, type SignEntry,
 } from '@/clueGame/signs';
@@ -233,12 +234,23 @@ test('A4: a narrower sign hides its wired broader one; a lone broader sign shows
 test('A4: badges keep tag order, show each tag once, and keep retired tags as themselves', () => {
   assert.deepEqual(badges(['burrower', 'diet:insects', 'digging_claws', 'burrower']), ['burrower', 'digging_claws']);
   assert.deepEqual(signsOf(['tree_dweller']), [{ tag: 'tree_dweller', text: 'tree dweller', category: 'habits' }]);
-  assert.deepEqual(noteCategories(['tree_dweller', 'big_ears']), ['body', 'habits']);
 });
 
-test('A4: a deferred pair (edge not wired) keeps both badges', () => {
-  assert.ok(!impliesOf('backward_pouch').includes('pouch'));
-  assert.deepEqual(badges(['backward_pouch', 'pouch']), ['backward_pouch', 'pouch']);
+test('A4: the 10 former deferred edges are wired', () => {
+  const edges: Array<[string, string]> = [
+    ['backward_pouch', 'pouch'],
+    ['carries_young_on_back', 'mother_carries_young'],
+    ['face_mask', 'face_markings'],
+    ['feathery_gills', 'underwater_breathing'],
+    ['s_shaped_horns', 'horns'],
+    ['shoulder_stripe', 'stripes'],
+    ['spectacles', 'face_markings'],
+    ['spiral_horns', 'horns'],
+    ['tear_lines', 'face_markings'],
+    ['walks_upright', 'stands_on_hind_legs'],
+  ];
+  for (const [narrower, broader] of edges) assert.ok(impliesOf(narrower).includes(broader), `${narrower} -> ${broader}`);
+  assert.deepEqual(badges(['backward_pouch', 'pouch']), ['backward_pouch']);
 });
 
 // ---- A5
