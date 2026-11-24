@@ -882,6 +882,42 @@ How each step runs (`~/.gemini/mission-lead.md`):
     - CHECKS.
     - `git grep -n -E "WithBlanks|revealNotes|____|blanked" docs CONTEXT.md` shows only history lines.
 
+- [ ] S15. **Reclassify Goal 4 before/after metrics (Astra MF1 + MF2).**
+  - **State files:** `$STATE/scripts/witness-metrics.ts`, `$STATE/before-non-shared.csv`, `$STATE/before-wording.csv`, `$STATE/witness-metrics.md`. No repo code changes (plan `## Results` only).
+  - **Work:**
+    - Update `$STATE/scripts/witness-metrics.ts` so base-tree non-standard detection also catches dealt notes whose displayed text (`note.text`) was masked with `____` even when `full ?? text` matched the sign's shared modal sentence (e.g. `brown_throat` on `#54` Brown-throated Sloth showing `"Its throat is ____."`), and counts the exact `7bce511a` deals affected by the 4 stale pre-H22 tags (`1:yellow_legs`, `9:forest_floor`, `14:puffs_up`, `39:rarely_drinks`).
+    - Re-extract `/tmp/ws-base` (`8d246c70`) and `/tmp/ws-c7b` (`7bce511a`), dump the updated non-standard/masked base-HEAD deals, classify all newly included masked deals in `$STATE/before-wording.csv` by what players actually saw, re-run `witness-metrics.ts --wording-csv` and both after runs, and delete `/tmp/ws-base` and `/tmp/ws-c7b` afterwards.
+  - **Verify:**
+    - `witness-metrics.ts --wording-csv` exits 0 with 0 missing/unused/conflicting rulings; lead audits every newly classified row.
+    - Update `## Results` Goal 4 table with the corrected `Before, HEAD` displayed-text giveaway count (with breakdown) and replace `After, live (7bce511a)`'s misleading `0` with the exact pre-H22 stale-tag figure and H22 resolution note.
+
+- [ ] S16. **Harden `sameNote` and `roundStillFits` log validation (Astra MF3).**
+  - **Files:** `src/clueGame/animalBoard.ts`, `tests/clueGame/animalBoard.test.ts`.
+  - **Failure modes first** (red-first tests in `tests/clueGame/animalBoard.test.ts`):
+    - `sameNote` accepts `also: ['']` against `fresh.also: []` (or delimiter-colliding strings via `join('|')`).
+    - `roundStillFits` returns `true` (instead of `false`) when `round.log` contains `null`, a primitive, or an object missing a string `kind`.
+  - **Then implement:**
+    - In `sameNote`, compare `also` element-by-element (`also.length === fresh.also.length && also.every((tag, i) => tag === fresh.also[i])`).
+    - In `roundStillFits`, reject `round.log` if any entry is not a non-null object with a string `kind`, before filtering `kind === 'note'`.
+  - **Verify:** CHECKS.
+
+- [ ] S17. **Guarantee playable feasible tight boards in `BoardModel.newBoard` (Astra MF4).**
+  - **Files:** `src/game/BoardModel.ts`, `tests/game/boardModel.test.ts`.
+  - **Failure modes first** (red-first tests in `tests/game/boardModel.test.ts`):
+    - G9: feasible tight boards throw `RangeError` because random fills miss 3 gems of one color — reproduce `new BoardModel(3, 3)` with seed `0`, 3 colors, `{ type: 'purple', chance: 0, atLeast: 6 }` (and seeds `0..19` on 3×3 with 3 and 5 colors, `atLeast: 6`), while verifying geometrically impossible boards (e.g. 2×2 with `atLeast: 1`) still throw `RangeError` and normal 7×7 boards remain byte-identical (G1–G8 pass).
+  - **Then implement:**
+    - Keep the 20 random `freshGrid()` → `topUpRare()` → `if (!this.hasAnyValidMove()) this.shuffle()` attempts unchanged so normal 7×7 boards keep byte-identical RNG.
+    - If those 20 attempts do not find a playable board, run a constructive fallback (up to 20 attempts): build `freshGrid()` + `topUpRare()`, ensure at least 3 free non-rare cells share one RNG-chosen normal color when no color has count ≥ 3, then `shuffle()` and return once `findMatches === 0 && hasAnyValidMove()`; throw `RangeError` if geometry still allows no playable board.
+  - **Verify:** CHECKS.
+
+- [ ] S18. **Keep `content -- preview` resilient to unknown signs (Astra MF5 / Fable SC1).**
+  - **Files:** `src/clueGame/questionMatchContent.ts`, `tests/clueGame/content.test.ts`.
+  - **Failure modes first** (red-first test in `tests/clueGame/content.test.ts`):
+    - `witnessNameProblems` throws on a profile carrying an unknown open tag (which aborts `content -- preview` before citations and later profiles), or skips checking the profile's known signs when an unknown tag is present.
+  - **Then implement:**
+    - In `witnessNameProblems`, filter out unknown open tags (`tag => tag.includes(':') || isKnownSign(tag, table)`) before calling `heldSigns(..., table)` so `signProblems`/`checkProfile` reports unknown signs softly while `witnessNameProblems` still checks every known sign on the profile without throwing. Keep `animalsFromProfiles`, `signsOf`, and `heldSigns` strict.
+  - **Verify:** CHECKS, plus verify the `preview` check sequence (`checkProfile` + `witnessNameProblems` + `checkCitations`) completes without throwing on a cloned profile carrying an unknown open tag.
+
 ## Verification
 
 Run these one at a time, after both final code reviews are recorded and their accepted MUST-FIX steps are done. Run them from the worktree root and record each result in **Log** and `## Results`.
@@ -1028,7 +1064,40 @@ Command: `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 200 --
 
 ## Code review (Astra)
 
+Saved reply: `/srv/critter-ai/agent-state/missions/witness-signs/tasks/20261124-053907-astra-code-review.md`
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. `plans/2026-11-24-witness-signs.md:954` — The baseline count of 119 excludes 36 deals whose full sentences matched but whose displayed wording was masked. In world set `[23,30,43,52,54]`, both sloths fit `brown_throat`, but only mystery 54 displays “Its throat is ____.” Reclassify using the text players saw.
+2. `plans/2026-11-24-witness-signs.md:959` — Sentence equality cannot establish the reported zero giveaways on pre-H22 data. In world set `[3,6,9,11,76]`, mystery 76’s only other `forest_floor` fitter was incorrectly tagged animal 9. Correct the historical result. H22 already fixed the live rows.
+3. `src/clueGame/animalBoard.ts:288` — A valid save with `null` prepended to `round.log` passes restore, then crashes when the UI reads `entry.kind`. Reject malformed entries before filtering. The chip comparison (`src/clueGame/animalBoard.ts:264`) also accepts `['']` for `[]`, rendering a dangling “or.” Compare array elements directly.
+4. `src/game/BoardModel.ts:153` — The retry limit rejects feasible boards. Reproduced on a 3×3 board with seed `0`, three normal colors, `chance: 0` and `atLeast: 6`. A legal layout exists, but shuffling cannot create three matching gems when the generated colors differ.
+5. `scripts/content.ts:151` — An unknown sign now aborts `content -- preview`. `checkProfile` reports it, then `witnessNameProblems` throws on the same tag, suppressing citation diagnostics and every later profile’s results.
+6. `src/clueGame/signs.ts:181` — `rodent_hunter` names “mice, rats and squirrels” in 23 deals. Goal 1 explicitly forbids animal names. Reword the sentence or record an approved exception for prey names.
+
+SHOULD-CONSIDER:
+
+- Exercise a note with a nonempty `also` in E2E. The recorded drawer check saw only `egg_guarding` with zero alternatives, so removing every “or” chip would still pass (`scripts/e2e.mjs:2015`).
+- Pass a warning callback on the live pool path. The default silently discards the promised unknown-sign diagnostic (`src/clueGame/questionMatchContent.ts:163`).
+- Confirm base freshness before opening the PR. Reviewed `agent/witness-signs` at `c6f26461` against local `origin/main` at `8d246c70`. The read-only checkout blocked fetch. All 182 unit tests passed in memory.
+
 ## Code review (Fable)
+
+Saved reply: `/srv/critter-ai/agent-state/missions/witness-signs/tasks/20261124-054439-fable-5-2-high.md`
+
+VERDICT: APPROVE — no MUST-FIX. Reviewed `origin/main` (`8d246c70`) `...` HEAD (`c6f26461`) on `agent/witness-signs`.
+
+MUST-FIX: None.
+
+SHOULD-CONSIDER:
+
+1. `scripts/content.ts:151` — `content -- preview` now aborts on an unknown sign. `witnessNameProblems([profile])` calls strict `heldSigns` (`src/clueGame/questionMatchContent.ts:91`), which throws. Confirmed with a cloned profile carrying `zz_new_sign`. Fix: run the name check only when `checkProfile` returned no problems.
+2. `src/site/shots.ts:48` — the website's witness-note shot and alt text are stale (quotes an old hand-written note, no chip). Out of brief scope; put in Summary.
+3. E2E time margin — S10 took 845 s against CI's 900 s job, up from 826–827 s at S8/S9. Advisory `e2e` job may time out; say so in Summary.
+4. Two pairs of sentences read alike in `src/clueGame/signs.ts`; only the chips tell them apart: `mother_carries_young` (line 145) vs `pouch` (line 164), and `hooves` (line 126) vs `hard_toe_tips` (line 122).
+5. `docs/CLUE_MATCH.md` "Once a run" list dropped "a witness note says how many of the 5 field guides agree", while `scripts/e2e.mjs:2044` still checks it.
 
 ## Release
 
@@ -1090,6 +1159,20 @@ Command: `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 200 --
   - `yellow_head`: **Accepted** (`Its head is mostly yellow.`) — drops "bright", stronger than meaning for Radiated Tortoise.
   - `yellow_legs`: **Accepted** (`Its legs have yellow skin or scales.`) — drops "bright" (untrue for African Spurred Tortoise) and replaces "limbs" with "legs".
 - (lead) **S13 balance ruling**: 68 of 69 pre-registered Run 2 vs Baseline checks pass. Accept the single exception — `asia` `reader` Found `98% ±2 → 96% ±3` (`−2 pts` vs `[−1, +2]`) — without rule changes: `reader` moves randomly, the 4-round delta out of 200 is well inside its `±3%` 95% CI, and `asia` `reader`'s overall performance improved (`★★★ 58→62%` `+4 pts`, moves left `14.8→15.7` `+0.9`, points/round `265.6→272.2` `+6.6`). Keep `starMoves: [8, 14]` unchanged (`careful` 20th-pct moves left shifted `+2`/`+1`/`0` across world/africa/asia, none `> 2`).
+- (lead) **Final code review rulings (Astra `APPROVE_WITH_CHANGES` + Fable `APPROVE`)**:
+  - **Astra MF1 (baseline giveaway count excludes 36 masked standard-sentence deals):** **Accepted → Step S15.** `witness-metrics.ts` compared `full ?? text` rather than displayed `note.text`, missing masked giveaways like `#54` Brown-throated Sloth's `"Its throat is ____."`. Reclassify on displayed text and update `## Results`.
+  - **Astra MF2 (`After, live (7bce511a)` table cell claims `0` giveaways despite 4 stale pre-H22 tags):** **Accepted → Step S15.** Replace with the exact pre-H22 stale-tag figure and H22 resolution note beside `0` non-standard sentences (HEAD stays `0`).
+  - **Astra MF3 (`roundStillFits` skips `null`/malformed `round.log` entries and `sameNote` `join('|')` matches `['']` with `[]`):** **Accepted → Step S16.** Direct array comparison in `sameNote` and strict object+string-`kind` check on every `round.log` entry.
+  - **Astra MF4 (`BoardModel.newBoard` 20-attempt limit rejects feasible tight 3×3 `atLeast: 6` board):** **Accepted → Step S17.** Keep the 20 random attempts unchanged (byte-identical 7×7 RNG) and add a constructive 3-of-a-kind fallback before throwing `RangeError`.
+  - **Astra MF5 / Fable SC1 (`content -- preview` aborts on an unknown sign inside `witnessNameProblems`):** **Accepted → Step S18.** Filter unknown open tags inside `witnessNameProblems` so `checkProfile` reports unknown signs softly while `witnessNameProblems` checks all known signs without crashing `preview` (`animalsFromProfiles`/`signsOf`/`heldSigns` remain strict).
+  - **Astra MF6 (`rodent_hunter` names "mice, rats and squirrels"):** **Accepted via recorded exception (no code edit).** Generic non-holder prey/food names (`fish`, `insects`, `ants`/`termites`, and `mice, rats and squirrels` in `rodent_hunter`) are approved: none of `rodent_hunter`'s 4 holders (`Black-footed Ferret`, `Ethiopian Wolf`, `Jaguar`, `Maned Wolf`) is a rodent or matches those names, the examples are worldwide prey needed for grade 6–12 readability, and keeping `signs.ts` untouched keeps all 198 sentences 100% Fable-reviewed.
+  - **Astra SC1 (exercise nonempty `also` in E2E):** **Rejected for this mission (note in Summary).** `e2e:fresh` is already 845 s vs CI's 900 s limit; `also` is exhaustively verified by unit test `W5` over all 525 combos (455 `also` notes) and DOM assertions in `e2e.mjs`.
+  - **Astra SC2 (pass `warn` callback on live pool path `useAnimalSession.ts:93`):** **Rejected (note in Summary).** `buildAnimal` warns on 3 extinct species with no countries on every load; wiring `console.warn` would spam the console on every page load.
+  - **Astra SC3 (confirm base freshness before PR):** **Accepted.** Verified `origin/main` = `8d246c70`; Release unit rebases on fresh `origin/main` before opening PR.
+  - **Fable SC2 (stale website `witnessNote` shot/alt):** **Out of scope — carry to Summary.**
+  - **Fable SC3 (E2E 845 s vs 900 s CI margin):** **Noted — carry to Summary** (advisory job).
+  - **Fable SC4 (`mother_carries_young` vs `pouch`, `hooves` vs `hard_toe_tips` wording similarity):** **Rejected for this mission (carry to Summary).** `hard_toe_tips` has 1 holder and 0 dealt combos; `mother_carries_young` displays its chip and passed Fable S5 review; editing `signs.ts` now would ship unreviewed text.
+  - **Fable SC5 (`docs/CLUE_MATCH.md` "Once a run" wording):** **Noted — carry to Summary.** Line 88 retained "how many of the 5 field guides agree" (moved to the Every round bullet, though the notes-drawer check runs once per run via `notesChecked`).
 
 ## Log
 
@@ -1113,5 +1196,6 @@ Command: `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 200 --
 - 2026-11-24 05:24 UTC — Step S12: Opus (`$STATE/tasks/20261124-051645-opus-5-5-high.md`) classified all 293 rows of `$STATE/before-non-shared.csv` into `$STATE/before-wording.csv` (86 `sign-audit/wording.csv`, 37 mixed/overridden incl. 4 blank/past-tense overrides, 170 newly judged; 56 `yes` / 237 `no` rows; no repo code edits). Lead re-ran `witness-metrics.ts --wording-csv` (exit 0: `119` giveaway dealt notes of 509 non-standard / 5,803 total, `42` distinct pairs/texts across `110/525` combos, 0 missing/unused/conflicting rulings; after = `0`), audited all 56 `yes` rulings and 22+ sampled/borderline `no` rulings against `db/content/animals/*.json`, recorded the before/after row under `## Results`, and deleted `/tmp/ws-base`, `/tmp/ws-c7b`, and `/tmp/s12w`. Plan-only commit.
 - 2026-11-24 05:33 UTC — Step S13: ran paired 200-round balance bot runs (`--seed 44 --places world,africa,asia`) for `--start-witness 0` (`$STATE/balance-run1.txt`; starting witness gem `69%/74%/75%`) and `--start-witness 1` (`$STATE/balance-run2.txt`; starting witness gem `100%` everywhere, mean `1.56/1.68/1.50`). Compared Run 2 vs Baseline: 68/69 pre-registered checks pass; accepted `asia` `reader` Found `98%→96%` (`−2 pts`, within `±3%` CI while `★★★ +4`, moves left `+0.9`, points `+6.6`) under Decisions; kept `starMoves: [8, 14]` (careful 20th pct `16/16/14`, shift `≤ 2`). Opus (`$STATE/tasks/20261124-053041-opus-5-5-high.md`) added the `055-2` tuning comment in `src/clueGame/animalBoard.ts`. Lead verified diff and CHECKS (`typecheck` pass, `lint` 0 warnings, `npm test` 182/182, `content -- preview` 0 `PROBLEM` lines) and recorded both tables and starting-gem rates under `## Results`.
 - 2026-11-24 05:38 UTC — Step S14: Opus (`$STATE/tasks/20261124-053501-opus-5-5-high.md`) updated `docs/CLUE_MATCH.md`, `CONTEXT.md`, `docs/ANIMAL_BOARD_PAPER.md` (line 3 + `Rules 055-2` note with paired bot results, frozen body untouched), and `docs/CONTENT_SOURCES.md` (`witness` field/checks, per-sign fits, 10 wired edges as history, 2–4 suspect sign rule). Lead reviewed full diff and verified: `git grep -E "WithBlanks|revealNotes|____|blanked" docs CONTEXT.md` matches only history lines (`ANIMAL_BOARD_PAPER.md:70`, `2026-11-06-clue-audit.md:66`, PNG), `typecheck` pass, `lint` 0 warnings, `npm test` 182/182, `content -- preview` 0 `PROBLEM` lines.
+- 2026-11-24 05:54 UTC — Final code review: Astra (`$STATE/tasks/20261124-053907-astra-code-review.md`) returned `APPROVE_WITH_CHANGES` (6 MUST-FIX, 3 SHOULD-CONSIDER) and Fable (`$STATE/tasks/20261124-054439-fable-5-2-high.md`) returned `APPROVE` (0 MUST-FIX, 5 SHOULD-CONSIDER). Recorded both reviews and lead rulings under `## Decisions`; added Steps S15 (Astra MF1+MF2 Goal 4 masked-text/pre-H22 metrics), S16 (Astra MF3 `sameNote`/`roundStillFits` log guard), S17 (Astra MF4 tight feasible board fallback), and S18 (Astra MF5 / Fable SC1 `witnessNameProblems` unknown-sign resilience for `content -- preview`); resolved Astra MF6 (`rodent_hunter` prey names) via recorded exception. Plan-only commit.
 
 ## Summary
