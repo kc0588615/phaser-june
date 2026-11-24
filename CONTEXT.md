@@ -56,7 +56,7 @@ A plain grey gem that matches but asks nothing.
 _Avoid_: blocker, filler
 
 **Witness gem**:
-A rare purple gem, collected by a match next to it, that gives a witness note.
+A rare purple gem, collected by a match next to it, that gives a witness note. Every starting board holds at least one, on an unpinned cell.
 _Avoid_: note gem
 
 **Toy**:
@@ -98,7 +98,7 @@ The player's own guess written in a hidden answer (yes or no). Once that answer 
 _Avoid_: note, call
 
 **Witness note**:
-A hand-written, sourced detail about the mystery animal, with words that would name it blanked, plus how many of the suspects' field guides say the same. It fits 2 to 4 suspects, so it narrows but never solves.
+One of the mystery animal's signs in its standard sentence, with its sign chip (and any narrower chips a suspect's guide shows instead, joined by "or") and how many of the suspects' field guides hold it. It fits 2 to 4 suspects, so it narrows but never solves; the mystery's own hand-written notes show in full on the round-end card.
 _Avoid_: field note, clue, fun note, hint
 
 **Rule out**:

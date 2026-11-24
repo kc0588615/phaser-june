@@ -1,6 +1,6 @@
 # The Animal Board: How It Plays, How to Play It Well, and What It Teaches
 
-> **A dated paper, not kept current.** This is the 2026-10-01 paper for rules 044-0, with the notes below for later rules up to 055-1. The current rules are summarised in `docs/CLUE_MATCH.md` (Rules) and `CONTEXT.md`; the numbers are in `ANIMAL_RULES` (`src/clueGame/animalBoard.ts`).
+> **A dated paper, not kept current.** This is the 2026-10-01 paper for rules 044-0, with the notes below for later rules up to 055-2. The current rules are summarised in `docs/CLUE_MATCH.md` (Rules) and `CONTEXT.md`; the numbers are in `ANIMAL_RULES` (`src/clueGame/animalBoard.ts`).
 
 *Critter Connect, rules 044-0 (branch `variant/044-animal-board`, plan `plans/044-animal-board.md`). Written 2026-10-01 from the built rules, the playable graybox at `/explore`, and the balance bot's results. Every success rate in this paper comes from simulated players, not from children; section 6 says what a human study should measure.*
 
@@ -13,6 +13,8 @@
 > **Rules 053-0 (2026-10-31) change §2.6 and §3:** the player may **name the mystery once a round, any time**, out of moves too ("It's this one!" in its field guide, asked twice). A right name is a find worth ★ (50 points plus the streak, nothing for moves left); a wrong one loses the round and a heart. So a blind name wins one time in five, the same floor as marking at random, and the random player now finds about one round in five (by naming at the end). Owner decision; plan `plans/053-name-it.md`.
 
 > **Rules 053-1 (2026-11-01) change §2.3:** a *double*: when the move's own clear has matches of two colors (both swapped gems matched; toys' clears and cascades don't count), each clue order it hit gets 2 extra gems. A pebble half still makes it a double, but only the clue order gains. The board calls out "Double!" and "+2" over each clue color. Bot (300 rounds, Africa/Asia, players aim for doubles): finds unchanged (careful 98/97%, novice 95/94%); careful's moves left at the find 16.2/13.4 -> 16.8/14.2, ★★★ 69/49% -> 73/56%; star lines unchanged. `--double N` in the bot (0 off).
+
+> **Rules 055-2 (2026-11-24) change §2.2 and §2.4:** witness notes are dealt per sign: a note shows the sign's standard `witness` sentence (`SIGNS`, `src/clueGame/signs.ts`) with its sign chip (plus any narrower `also` chips, joined by "or") and its category mark. The mystery's hand-written notes stay whole, in profile order, on the round-end card, with no word hidden. The 10 open-tag `implies` edges the sign audit deferred are wired. Every starting board holds at least one witness gem on an unpinned cell (`startWitness: 1`, whatever the mystery; `witnessChance: 0.03` still rolls): boards starting with one 73.82% -> 100%, mean 1.32 -> 1.58. Bot (paired, 200 rounds a place, seed 44, world/Africa/Asia, 055-2 vs 055-1): careful's moves left at the find +0.4 to +0.9 (+0.5 to +0.9 from `startWitness: 1` alone), ★★★ 82 -> 88% / 87 -> 87% / 81 -> 82% (0 to +6 points), notes a round +0.2 to +0.3; star lines `[8, 14]` kept (careful's 20th-percentile moves left 16/16/14, shift ≤ 2). Details: `plans/2026-11-24-witness-signs.md`.
 
 ## Abstract
 
