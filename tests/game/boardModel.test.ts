@@ -44,6 +44,10 @@
 // G7. A tight but feasible `atLeast` gives a board without that many free rare gems, or with a standing match, or
 //     with no valid move.
 // G8. A rare gem dropped because its type is a normal gem still tops up or throws.
+// G9. A feasible tight board throws `RangeError` because random fills miss 3 gems of one color (or high `chance`
+//     rolls leave fewer than 3 free normal gems when `freeCount - atLeast >= 3`), or a geometrically impossible
+//     board with `freeCount - atLeast >= 3` (such as 2×2 with `atLeast: 1`) fails to throw `RangeError`, or the
+//     fallback breaks determinism or alters normal 7×7 boards (G1-G8).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Grid, type Move, type Special } from '@/game/BoardModel';
@@ -450,7 +454,7 @@ test('pinned tiles never move, double or vanish through play and reshuffles', ()
   }
 });
 
-// ---- Starting witness gem (G1-G8) ----
+// ---- Starting witness gem (G1-G9) ----
 
 const WITNESS = { type: WITNESS_GEM, chance: 0.03 };
 /** The app's pins for a seed: `tileCells` on the 7×7 board with 5 tiles, as useAnimalSession deals them. */
@@ -554,4 +558,29 @@ test('G8: a rare gem dropped for being a normal color neither tops up nor throws
       assert.deepEqual(model.getGrid(), plain.getGrid(), `seed ${seed} atLeast ${atLeast}`);
     }
   }
+});
+
+test('G9: a feasible tight 3×3 board is built (constructive fallback), replays exactly; an impossible one throws', () => {
+  const tight = (seed: number, gems: readonly GemType[], chance = 0): BoardModel => {
+    const model = new BoardModel(3, 3);
+    model.newBoard(seed, gems, { type: WITNESS_GEM, chance, atLeast: 6 });
+    return model;
+  };
+  const three: GemType[] = ['orange', 'yellow', 'green'];
+  const cases: Array<{ gems: readonly GemType[]; chance: number }> = [
+    { gems: three, chance: 0 },
+    { gems: BOARD_GEMS, chance: 0 },
+    { gems: BOARD_GEMS, chance: 0.8 },
+  ];
+  for (const { gems, chance } of cases) {
+    for (let seed = 0; seed < 20; seed++) {
+      const label = `${gems.length} colors chance ${chance} seed ${seed}`;
+      const model = tight(seed, gems, chance);
+      assert.ok(rareCounts(model).free >= 6, `${label}: too few witness gems`);
+      assert.deepEqual(tight(seed, gems, chance).getGrid(), model.getGrid(), `${label}: no exact replay`);
+      assert.ok(playable(model), `${label}: not playable`);
+    }
+  }
+  // No line of 3 fits a 2×2 board, so no move can ever exist.
+  assert.throws(() => new BoardModel(2, 2).newBoard(0, BOARD_GEMS, { type: WITNESS_GEM, chance: 0, atLeast: 1 }), RangeError);
 });

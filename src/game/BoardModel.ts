@@ -156,7 +156,45 @@ export class BoardModel {
       if (!this.hasAnyValidMove()) this.shuffle();
       if (this.findMatches(this.grid, this.toys).length === 0 && this.hasAnyValidMove()) return;
     }
+    // Tight boards (many rare gems on few cells): random fills may hold no three of a color, so no move can exist.
+    // Seed three of one color, then shuffle. Runs only after the loop above fails, so normal boards are unchanged.
+    for (let attempt = 0; attempt < 20; attempt++) {
+      this.grid = this.freshGrid();
+      this.topUpRare();
+      this.ensureThreeOfAColor();
+      if (this.findMatches(this.grid, this.toys).length > 0 || !this.hasAnyValidMove()) this.shuffle();
+      if (this.findMatches(this.grid, this.toys).length === 0 && this.hasAnyValidMove()) return;
+    }
     throw new RangeError('Could not build a playable board with the requested rare gems.');
+  }
+
+  /**
+   * Make the free cells hold three gems of one normal color (a move needs three), keeping `rare.atLeast` rare gems:
+   * newBoard checked `freeCount - atLeast >= 3`, so surplus rolled rare gems cover any shortfall of normal ones.
+   */
+  private ensureThreeOfAColor(): void {
+    const freeNormal: Cell[] = [];
+    const freeRare: Cell[] = [];
+    this.grid.forEach((column, x) => column.forEach((gem, y) => {
+      if (!this.isPinned([x, y])) (gem === this.rare?.type ? freeRare : freeNormal).push([x, y]);
+    }));
+    if (freeNormal.length + freeRare.length < 3) return;
+    const counts = new Map<GemType, number>();
+    for (const [x, y] of freeNormal) counts.set(this.grid[x][y], (counts.get(this.grid[x][y]) ?? 0) + 1);
+    if (this.gemTypes.some(type => (counts.get(type) ?? 0) >= 3)) return;
+    const color = this.gemTypes[Math.floor(this.rng() * this.gemTypes.length)];
+    while (freeNormal.length < 3) {
+      const [x, y] = freeRare.splice(Math.floor(this.rng() * freeRare.length), 1)[0];
+      this.grid[x][y] = color;
+      freeNormal.push([x, y]);
+    }
+    let have = freeNormal.filter(([x, y]) => this.grid[x][y] === color).length;
+    while (have < 3) {
+      const others = freeNormal.filter(([x, y]) => this.grid[x][y] !== color);
+      const [x, y] = others[Math.floor(this.rng() * others.length)];
+      this.grid[x][y] = color;
+      have++;
+    }
   }
 
   /**
