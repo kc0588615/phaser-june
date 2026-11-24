@@ -1124,6 +1124,22 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- **PR:** https://github.com/kc0588615/phaser-june/pull/87 (`agent/witness-signs` `95bb1fbd` → `main`, already cleanly ahead of `origin/main` `8d246c70`, rebase no-op).
+- **CI:** both jobs passed on first run — `CI/check` (3m14s) and `CI/e2e` (12m2s).
+- **Merge commit:** `798a734d02761e0d8b79ab7605eedc9dde3314e3` (`Merge pull request #87 from kc0588615/agent/witness-signs`).
+- **Deploy output last line:** `deploy critter-connect: live at https://critterconnect.org`
+- **Deploy log:** `/srv/critter-ai/agent-state/missions/witness-signs/release-deploy.log`
+- **Live smoke results (`2026-11-24 07:00 UTC`):**
+  - `https://play.critterconnect.org/version.txt`: HTTP 200, `798a734d02761e0d8b79ab7605eedc9dde3314e3`.
+  - `https://play.critterconnect.org/`: HTTP 200 (`4,460` B, `__NEXT_DATA__`).
+  - `https://play.critterconnect.org/explore/`: HTTP 200 (`2,524` B, `__NEXT_DATA__`; `deploy/check.sh` also confirmed `https://play.critterconnect.org/explore/?seed=1 board drawn (390x390 canvas, 5 animals, attempt 1, 6.0 s)`).
+  - `https://play.critterconnect.org/api/places/`: HTTP 200 JSON — `5` places, `76` animals.
+  - `https://play.critterconnect.org/api/clue-game/pool/`: HTTP 200 JSON — `76` species, `3,653` clues, `491` facts, `459` citations.
+  - `https://critterconnect.org/` (+ `/teachers/`, `/privacy/`, `/terms/`, `/robots.txt`, `/sitemap.xml`, `/nope/` 404, redirects): all OK per `deploy/check.sh`.
+- **Owner handoff:** none needed (zero files changed under `db/`, and H22 already loaded `sign-audit`'s `3,653` clues into live `phaser_june`).
+
+Result: done
+
 ## Decisions
 
 - (lead) Architecture **A1(a) + U1 + B3 + C1**: store `witness: string | null` directly on `ActiveSignEntry` in `src/clueGame/signs.ts` and deal witness notes per sign (`{ sign, text, fits, also }`), wiring all 10 deferred open-tag `implies` edges from `sign-audit`. Eliminates duplicate-sign notes, multi-sign coupling, and `revealNotes` coupling; fixes every giveaway on live `7bce511a` rows immediately on deploy (`403 → 458/525` live combos) with zero content build needed.
@@ -1225,6 +1241,7 @@ SHOULD-CONSIDER:
 - 2026-11-24 06:16 UTC — Step S17 (Astra MF4): Opus (`$STATE/tasks/20261124-061239-opus-5-5-high.md`) added G9 failure-mode header and red-first test in `tests/game/boardModel.test.ts` (failed with `RangeError` on 3×3 `atLeast: 6` before `src/` edits: 183 pass / 1 fail; covers 3 colors `chance: 0` incl. Astra MF4 seed `0`, `BOARD_GEMS` `chance: 0` and `0.8` across seeds `0..19` with exact replay, plus impossible 2×2 `atLeast: 1` throwing `RangeError`), then kept `BoardModel.newBoard`'s first 20 random attempts unchanged (preserving byte-identical 7×7 boards/RNG) and added a 20-attempt constructive fallback using private `ensureThreeOfAColor()` (including surplus-rare recovery when `chance > 0` leaves `< 3` free normal gems) followed by `shuffle()` in `src/game/BoardModel.ts`. Lead reviewed full diff and independently verified CHECKS: `typecheck` pass, `lint` 0 warnings, `npm test` 184/184 pass (21.8 s), `content -- preview` 0 `PROBLEM` lines.
 - 2026-11-24 06:22 UTC — Step S18 (Astra MF5 / Fable SC1): Opus (`$STATE/tasks/20261124-061816-opus-5-5-high.md`) added failure mode 5 and two red-first tests in `tests/clueGame/content.test.ts` (failed with `Unknown sign` on `zz_unknown_sign` and `zz_new_sign` before `src/` edits: 184 pass / 2 fail), then filtered unknown open tags (`tag.includes(':') || isKnownSign(tag, table)`) before calling `heldSigns` inside `witnessNameProblems` in `src/clueGame/questionMatchContent.ts` while keeping `animalsFromProfiles`/`signsOf`/`heldSigns` strict so `content -- preview` reports unknown signs via `checkProfile` and completes known-sign and citation checks without aborting. Lead reviewed full diff and independently verified CHECKS: `typecheck` pass, `lint` 0 warnings, `npm test` 186/186 pass (22.0 s), `content -- preview` 0 `PROBLEM` lines.
 - 2026-11-24 06:42 UTC — Full Verification & Summary: verified `typecheck` pass, `lint` 0 warnings, `npm test` 186/186 pass (21.7 s), `content -- preview` 0 `PROBLEM` lines, live `content -- check` (read-only) `76 species / 3653 clues / 491 facts / 0 errors / 0 warnings`, dead-code grep clean, `witness-metrics.ts` (`after-head` 6,107/6,107 & `after-live` 1,355/1,355 pass), regenerated `witness-sentences.csv` (`201` rows, `label_hit: 0`, `censor_blanks: 0`), `npm run build` pass, and guarded `phaser_june_dev` `content -- build && e2e:fresh` **1563/1563** pass in **832 s** (13m52s; artifact `$STATE/e2e-final/`, cleared `e2e-artifacts/` and `e2e-s*`). Wrote Summary and set `status: done`.
+- 2026-11-24 07:01 UTC — Release: `git rebase origin/main` no-op (`8d246c70`); opened PR #87; CI green on first run (`CI/check` 3m14s, `CI/e2e` 12m2s); merged PR #87 as `798a734d02761e0d8b79ab7605eedc9dde3314e3`; ran `deploy critter-connect` (`deploy critter-connect: live at https://critterconnect.org`, log `$STATE/release-deploy.log`); live smoke passed (`version.txt` `798a734d`, `/`, `/explore/` board drawn 390x390 / 5 animals / 6.0 s, `/api/places/` 5 places / 76 animals, `/api/clue-game/pool/` 76 species / 3653 clues / 491 facts / 459 citations, apex site + redirects OK). Recorded `Result: done`.
 
 ## Summary
 
@@ -1250,6 +1267,7 @@ SHOULD-CONSIDER:
 - **Other checks:** `npm run typecheck` pass, `npm run lint` pass (0 warnings), `npm test` **186/186** pass, `npm run content -- preview` 0 problems, live `npm run content -- check` (read-only) `76 species, 3653 clues (3041 deductive), 491 facts, 0 errors, 0 warnings`, `npm run build` pass, dead-code grep empty, `witness-metrics.ts` and `witness-list.ts` re-verified on final tree.
 
 ### Owner action & follow-ups
+- **Release:** merged PR #87 (`798a734d02761e0d8b79ab7605eedc9dde3314e3`, CI `check` 3m14s + `e2e` 12m2s green), deployed via `deploy critter-connect` (`live at https://critterconnect.org`), and smoke-tested live (`version.txt` matches, live board drawn in 6.0 s, pool 76 species / 3,653 clues / 491 facts).
 - **Owner's production content build:** **Not needed.** Zero files changed under `db/`, and H22 already loaded `sign-audit`'s `3653` clues into live `phaser_june`. No handoff items waiting on the owner.
 - **Follow-ups / SHOULD-CONSIDER notes for later PRs:**
   - **Website shot & alt text (Fable SC2):** `src/site/shots.ts:46-48` (`witnessNote`) and `Teachers.tsx:89` quote an old hand-written note with no chip; retake `npm run site:shots` and update alt text in a website PR.
