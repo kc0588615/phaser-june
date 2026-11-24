@@ -83,7 +83,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -568,6 +568,21 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+Saved reply: `/srv/critter-ai/agent-state/missions/witness-signs/tasks/20261124-014749-astra-architecture.md`
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. Enforce sentence truth on both supported content snapshots. On `7bce511a`, the proposed dealer gives Dyeing Poison Dart Frog `forest_floor` in two sets and Grévy’s Zebra `rarely_drinks` in five. The sign audit removed both assignments. Withhold a sign whenever an incorrect holder would be counted among its fits, including when that holder is a decoy. [Sentence-review gate](/srv/critter-ai/worktrees/witness-signs/plans/2026-11-24-witness-signs.md:424)
+2. Guarantee a playable board after witness placement. `shuffle()` silently returns its last arrangement after 50 failed attempts. An oversized `atLeast` can also turn every free cell into a witness gem, making a match impossible. Reject infeasible minima and verify a legal move before returning the board. [BoardModel.ts](/srv/critter-ai/worktrees/witness-signs/src/game/BoardModel.ts:363)
+3. Handle unknown signs at pool ingestion. `signsOf` and `heldSigns` throw before `witnessSentence` can skip an unknown tag, so one unsupported tag prevents the entire game from loading. Filter unknown signs on the live read path and keep authoring validation strict. [Content ingestion](/srv/critter-ai/worktrees/witness-signs/src/clueGame/questionMatchContent.ts:136)
+4. Cover persisted log entries in the save guard. `roundStillFits` checks `notes` and `notesLeft`, but the status line also reads a separately serialized note from `round.log`. A log entry missing `also` passes restore and throws during rendering. Validate logged notes or resolve them from the validated collected notes. [Save guard](/srv/critter-ai/worktrees/witness-signs/src/clueGame/animalBoard.ts:264)
+
+SHOULD-CONSIDER:
+
+1. Count how many suspects can actually *receive* each sign. In six proposed HEAD deals, only one can. For example, `climber` fits three suspects, but only Giant Panda can receive it because the other two receive `climbs_boulders`. A player who knows the dealing rule can identify the mystery from that clue alone. [Dealer rule](/srv/critter-ai/worktrees/witness-signs/plans/2026-11-24-witness-signs.md:282)
+
 ## Revision notes
 
 ## Steps
@@ -592,5 +607,6 @@ SHOULD-CONSIDER:
 - 2026-11-24 01:08 UTC — Baseline stage: verified typecheck, lint (0 warnings), unit tests (147/147), `content -- preview` (0 problems), live `content -- check` (2475 clues, 0 errors/warnings), guarded `phaser_june_dev` `content -- build && check` (3653 clues, 0 errors/warnings) + `e2e:fresh` (1554/1554 pass; saved at `$STATE/e2e-baseline/`), and baseline `balance-044.ts` (`--rounds 200 --seed 44 --places world,africa,asia`).
 - 2026-11-24 01:40 UTC — Architecture stage: `architect` Pass 1 findings/options (`$STATE/tasks/20261124-011126-architect.md`), lead Decision (`A1(a) + U1 + B3 + C1`, 10 deferred edges wired, version `'055-2'`, pure code), and `architect` Pass 2 single-design rewrite (`$STATE/tasks/20261124-012648-architect.md`) recorded in plan. No code changes; plan-only commit.
 - 2026-11-24 01:46 UTC — Fable review stage: `architecture-reviewer` returned `APPROVE_WITH_CHANGES` (1 MUST-FIX, 3 MISSED, 4 SHOULD-CONSIDER; saved at `$STATE/tasks/20261124-014241-architecture-reviewer.md`), recorded under `## Architecture review (Fable)`. Plan-only commit.
+- 2026-11-24 01:50 UTC — Astra review stage: `astra-review` returned `APPROVE_WITH_CHANGES` (4 MUST-FIX, 1 SHOULD-CONSIDER; saved at `$STATE/tasks/20261124-014749-astra-architecture.md`), recorded under `## Architecture review (Astra)`. Plan-only commit.
 
 ## Summary
