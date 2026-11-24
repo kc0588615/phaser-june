@@ -84,17 +84,11 @@
     {
       "category": "behavior",
       "text": "It digs deep burrows, up to 15 m long, to escape the heat.",
-      "tags": [
-        "burrower"
-      ],
       "source": "tftsg"
     },
     {
       "category": "behavior",
       "text": "Males fight by ramming each other, and the bigger male usually wins.",
-      "tags": [
-        "territorial"
-      ],
       "source": "tftsg"
     },
     {
@@ -106,6 +100,153 @@
       "category": "conservation",
       "text": "Main threats: farms and cattle taking over its land, and people collecting it for food and the pet trade.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/crm.5.110.sulcata.v1.2020.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are yellow.",
+      "tags": [
+        "yellow_legs"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Geochelone_sulcata/"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rests in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Geochelone_sulcata/"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/crm.5.110.sulcata.v1.2020.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It mostly eats grass or other low plants that it crops from the ground.",
+      "tags": [
+        "grazer"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/crm.5.110.sulcata.v1.2020.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It wallows in mud, or coats itself with mud, to cool off or protect its skin.",
+      "tags": [
+        "mud_bather"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Geochelone_sulcata/"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "It can go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Geochelone_sulcata/"
+    },
+    {
+      "category": "diet",
+      "text": "It spreads plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "tftsg"
+    },
+    {
+      "category": "habitat",
+      "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/crm.5.110.sulcata.v1.2020.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
+      "tags": [
+        "sand_dunes"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Geochelone_sulcata/"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatch as males or females depends on how warm the nest is.",
+      "tags": [
+        "temperature_sex"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/crm.5.110.sulcata.v1.2020.pdf"
     }
   ],
   "facts": [

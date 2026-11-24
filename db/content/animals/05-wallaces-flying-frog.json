@@ -58,9 +58,6 @@
     {
       "category": "morphology",
       "text": "Its huge hands and feet are webbed right to the fingertips.",
-      "tags": [
-        "webbed_feet"
-      ],
       "source": "amphibiaweb"
     },
     {
@@ -87,9 +84,6 @@
     {
       "category": "behavior",
       "text": "It lives high in the trees and only climbs down to breed.",
-      "tags": [
-        "climber"
-      ],
       "source": "iucn"
     },
     {
@@ -109,6 +103,96 @@
       "category": "conservation",
       "text": "Main threat: lowland rainforest cut down for timber and oil palm plantations.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by hanging or perching in tree branches.",
+      "tags": [
+        "roosts_in_trees"
+      ],
+      "source": "literature",
+      "url": "https://www.threatenedtaxa.org/JoTT/article/download/7072/7965?inline=1"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives in trees and seldom comes down to the ground.",
+      "tags": [
+        "seldom_on_ground"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps or rests high up in trees.",
+      "tags": [
+        "sleeps_high_in_trees"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs on leaves or branches hanging over water, so the tadpoles drop in when they hatch.",
+      "tags": [
+        "eggs_over_water"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "reproduction",
+      "text": "It breeds when heavy rains come, often in pools, puddles or streams that the rain fills.",
+      "tags": [
+        "rain_breeder"
+      ],
+      "source": "ngo",
+      "url": "https://www.hutan.org.my/wp-content/uploads/2022/05/Guide-to-frogs-of-the-Lower-Kinabatangan-2021-FINAL-copy.pdf"
     }
   ],
   "facts": [

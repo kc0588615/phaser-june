@@ -125,9 +125,6 @@
     {
       "category": "reproduction",
       "text": "It lays its eggs on a leaf over water, so the tadpoles drop into the pond when they hatch.",
-      "tags": [
-        "eggs_over_water"
-      ],
       "source": "amphibiaweb"
     },
     {
@@ -138,6 +135,114 @@
     {
       "category": "conservation",
       "text": "Its international trade has been controlled since 2010 (CITES Appendix II).",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "ngo",
+      "url": "https://www.rainforest-alliance.org/species/red-eyed-tree-frog/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/news/new-zoo-red-eyed-tree-frogs"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is plain white.",
+      "tags": [
+        "white_belly"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by hanging or perching in tree branches.",
+      "tags": [
+        "roosts_in_trees"
+      ],
+      "source": "ngo",
+      "url": "https://www.rainforest-alliance.org/species/red-eyed-tree-frog/"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives in trees and seldom comes down to the ground.",
+      "tags": [
+        "seldom_on_ground"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps or rests high up in trees.",
+      "tags": [
+        "sleeps_high_in_trees"
+      ],
+      "source": "ngo",
+      "url": "https://www.rainforest-alliance.org/species/red-eyed-tree-frog/"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs on leaves or branches hanging over water, so the tadpoles drop in when they hatch.",
+      "tags": [
+        "eggs_over_water"
+      ],
       "source": "amphibiaweb"
     }
   ],

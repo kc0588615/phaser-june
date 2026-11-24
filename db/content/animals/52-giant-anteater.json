@@ -104,9 +104,6 @@
     {
       "category": "morphology",
       "text": "Its sticky tongue is about 60 cm long and flicks in and out up to 150 times a minute.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "smithsonian"
     },
     {
@@ -120,9 +117,6 @@
     {
       "category": "morphology",
       "text": "Its big, bushy tail is almost as long as its body.",
-      "tags": [
-        "long_tail"
-      ],
       "source": "adw"
     },
     {
@@ -137,17 +131,11 @@
     {
       "category": "behavior",
       "text": "It sees poorly, but its sense of smell is about 40 times better than ours.",
-      "tags": [
-        "poor_eyesight"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "If it can't get away, it rears up on its back legs, leaning on its tail, and swipes with its claws.",
-      "tags": [
-        "stands_on_hind_legs"
-      ],
       "source": "smithsonian"
     },
     {
@@ -161,14 +149,117 @@
     {
       "category": "reproduction",
       "text": "A baby rides on its mother's back for about six months.",
-      "tags": [
-        "carries_young_on_back"
-      ],
       "source": "iucn"
     },
     {
       "category": "conservation",
       "text": "Wildfires, road crashes and farms replacing its grasslands and forests all threaten it.",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Adults have a mane: a crest or ruff of longer hair on the neck or back.",
+      "tags": [
+        "mane"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "government",
+      "url": "https://www.biodiversidad.gob.mx/media/1/planeta/cites/files/CITES_mamiferos_12.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "sdzwa"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "At least sometimes, it stands, rears up, hops or runs on its back legs alone.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "habitat",
+      "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in dry, thorny forest or brush.",
+      "tags": [
+        "spiny_forest"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/50/956/1/4968042"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her young riding or clinging on her back.",
+      "tags": [
+        "carries_young_on_back"
+      ],
       "source": "iucn"
     }
   ],

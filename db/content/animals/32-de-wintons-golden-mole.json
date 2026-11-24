@@ -50,26 +50,16 @@
     {
       "category": "morphology",
       "text": "It is blind, and relies on super-sharp hearing.",
-      "tags": [
-        "poor_eyesight",
-        "super_hearing"
-      ],
       "source": "ngo"
     },
     {
       "category": "behavior",
       "text": "It 'swims' through loose sand instead of digging lasting tunnels.",
-      "tags": [
-        "burrower"
-      ],
       "source": "ngo"
     },
     {
       "category": "behavior",
       "text": "It feels the vibrations of footsteps above it and slips away.",
-      "tags": [
-        "senses_vibrations"
-      ],
       "source": "ngo"
     },
     {
@@ -85,6 +75,72 @@
     {
       "category": "conservation",
       "text": "Digging up beach sand to mine diamonds may destroy its home.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "morphology",
+      "text": "It has strong, long claws that it digs with.",
+      "tags": [
+        "digging_claws"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden_mole"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden_mole"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "behavior",
+      "text": "It can feel vibrations or ripples through the ground or water, to sense prey, danger or others.",
+      "tags": [
+        "senses_vibrations"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
+      "tags": [
+        "sand_dunes"
+      ],
       "source": "iucn"
     }
   ],

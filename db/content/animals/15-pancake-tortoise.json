@@ -75,9 +75,6 @@
     {
       "category": "morphology",
       "text": "Its shell is so flat it looks like a pancake.",
-      "tags": [
-        "flat_shell"
-      ],
       "source": "iucn"
     },
     {
@@ -91,17 +88,11 @@
     {
       "category": "behavior",
       "text": "It hides in narrow cracks between and under slabs of rock.",
-      "tags": [
-        "crevice_hider"
-      ],
       "source": "iucn"
     },
     {
       "category": "behavior",
       "text": "It is a good climber: some have been found in cracks high up on tall boulders.",
-      "tags": [
-        "climbs_boulders"
-      ],
       "source": "iucn"
     },
     {
@@ -112,6 +103,119 @@
     {
       "category": "conservation",
       "text": "International trade in it has been controlled since 1975 (CITES Appendix II).",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Accounts/crm_5_107_tornieri_v1_2018.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its body is very flat, much wider than it is tall.",
+      "tags": [
+        "flat_body"
+      ],
+      "source": "tftsg"
+    },
+    {
+      "category": "morphology",
+      "text": "Its shell or skin has lines that spread out like stars.",
+      "tags": [
+        "star_pattern"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Accounts/crm_5_107_tornieri_v1_2018.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "morphology",
+      "text": "Its shell is very flat and low, not domed.",
+      "tags": [
+        "flat_shell"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rests in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%202%20No%201%20%281996%29/Moll_and_Klemens_1996.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%202%20No%201%20%281996%29/Moll_and_Klemens_1996.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It mostly eats grass or other low plants that it crops from the ground.",
+      "tags": [
+        "grazer"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%202%20No%201%20%281996%29/Moll_and_Klemens_1996.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It can go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/african-pancake-tortoise"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs up big rocks, boulders or cliffs.",
+      "tags": [
+        "climbs_boulders"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/african-pancake-tortoise"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatch as males or females depends on how warm the nest is.",
+      "tags": [
+        "temperature_sex"
+      ],
+      "source": "tftsg",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Accounts/crm_5_107_tornieri_v1_2018.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides in narrow cracks and gaps between or under rocks.",
+      "tags": [
+        "crevice_hider"
+      ],
       "source": "iucn"
     }
   ],

@@ -70,9 +70,6 @@
     {
       "category": "morphology",
       "text": "Its dark shell is covered in yellow lines that spread out like stars.",
-      "tags": [
-        "star_pattern"
-      ],
       "source": "adw"
     },
     {
@@ -86,9 +83,6 @@
     {
       "category": "behavior",
       "text": "It grazes the same patches again and again, keeping the plants trimmed short like a lawn mower.",
-      "tags": [
-        "grazer"
-      ],
       "source": "adw"
     },
     {
@@ -103,6 +97,123 @@
       "category": "conservation",
       "text": "Main threats: collecting for food and the pet trade, and loss of its forest.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are yellow.",
+      "tags": [
+        "yellow_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its shell or skin has lines that spread out like stars.",
+      "tags": [
+        "star_pattern"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "literature",
+      "url": "https://ccb.kglmeridian.com/view/journals/ccab/12/1/article-p56.xml"
+    },
+    {
+      "category": "diet",
+      "text": "It mostly eats grass or other low plants that it crops from the ground.",
+      "tags": [
+        "grazer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly among the fallen leaves (leaf litter) on a forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "tftsg",
+      "url": "https://chelonian.org/wp-content/uploads/file/CRM%206/CRM_6_Castellano_etal_2013.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "literature",
+      "url": "https://www.herpconbio.org/Volume_17/Issue_2/Nambinina_etal_2022.pdf"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatch as males or females depends on how warm the nest is.",
+      "tags": [
+        "temperature_sex"
+      ],
+      "source": "tftsg",
+      "url": "https://chelonian.org/wp-content/uploads/file/CRM%206/CRM_6_Castellano_etal_2013.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

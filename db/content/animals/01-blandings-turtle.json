@@ -63,9 +63,6 @@
     {
       "category": "morphology",
       "text": "It has yellow scales on its legs and tail.",
-      "tags": [
-        "yellow_legs"
-      ],
       "source": "adw"
     },
     {
@@ -79,17 +76,11 @@
     {
       "category": "habitat",
       "text": "It lives in shallow marshes, ponds and bogs full of water plants.",
-      "tags": [
-        "shallow_wetlands"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "It often climbs out of the water to bask on logs.",
-      "tags": [
-        "basker"
-      ],
       "source": "adw"
     },
     {
@@ -103,6 +94,165 @@
     {
       "category": "conservation",
       "text": "Main threats: wetlands lost to farms and houses, and many turtles die crossing roads.",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is spotted.",
+      "tags": [
+        "spotted_belly"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "britannica",
+      "url": "https://www.britannica.com/animal/turtle-reptile"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, making burrows, tunnels or dens, or (at least when young) digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%201%20No%203%20%281995%29/Butler_and_Graham_1995.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "government",
+      "url": "https://semspub.epa.gov/work/03/130484.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "government",
+      "url": "https://files.dnr.state.mn.us/eco/nongame/projects/consgrant_reports/1998/1998_sajwaj_etal.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It often eats animals that are already dead.",
+      "tags": [
+        "scavenger"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests or sleeps through the winter, inactive for weeks or months.",
+      "tags": [
+        "winter_rest"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rests in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "literature",
+      "url": "https://chelonian.org/wp-content/uploads/file/CCB%20Vol%201%20No%203%20%281995%29/Butler_and_Graham_1995.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
+      ],
+      "source": "government",
+      "url": "https://semspub.epa.gov/work/03/130484.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "government",
+      "url": "https://pubs.usgs.gov/of/2021/1104/d/ofr20211104d.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
       "source": "iucn"
     }
   ],

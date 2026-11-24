@@ -71,17 +71,11 @@
     {
       "category": "morphology",
       "text": "Its teeth keep growing all its life, worn down by tough grass.",
-      "tags": [
-        "ever_growing_teeth"
-      ],
       "source": "ngo"
     },
     {
       "category": "morphology",
       "text": "It has strong front legs and long claws for digging.",
-      "tags": [
-        "digging_claws"
-      ],
       "source": "ngo"
     },
     {
@@ -101,17 +95,11 @@
     {
       "category": "behavior",
       "text": "It digs huge burrows: the biggest one mapped had more than 90 m of tunnels and six entrances.",
-      "tags": [
-        "burrower"
-      ],
       "source": "ngo"
     },
     {
       "category": "behavior",
       "text": "It sees poorly and finds its way by smell and hearing.",
-      "tags": [
-        "poor_eyesight"
-      ],
       "source": "ngo"
     },
     {
@@ -125,10 +113,7 @@
     {
       "category": "habitat",
       "text": "It lives in open eucalyptus woodland with deep, sandy soil for digging.",
-      "source": "iucn",
-      "tags": [
-        "burrower"
-      ]
+      "source": "iucn"
     },
     {
       "category": "geography",
@@ -140,6 +125,90 @@
       "text": "In the 1980s only about 35 were left.",
       "source": "government",
       "url": "https://www.stateoftheenvironment.detsi.qld.gov.au/biodiversity/case-studies/northern-hairy-nosed-wombat"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "ngo",
+      "url": "https://www.australianwildlife.org/media/12382/download"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves its dung in piles that it comes back to, as messages to others of its kind.",
+      "tags": [
+        "dung_piles"
+      ],
+      "source": "government",
+      "url": "https://www.agriculture.gov.au/sites/default/files/documents/survey-guidelines-mammals.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "government",
+      "url": "https://www.qld.gov.au/environment/plants-animals/conservation/threatened-species/featured-projects/northern-hairy-nosed-wombat2/northern-hairy-nosed-wombat/about-northern-hairy-nosed-wombats"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It builds a nest or bed of leaves, branches or grass to sleep or rest in.",
+      "tags": [
+        "sleeping_nests"
+      ],
+      "source": "ngo",
+      "url": "https://www.australianwildlife.org/media/12382/download"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "morphology",
+      "text": "It has strong, long claws that it digs with.",
+      "tags": [
+        "digging_claws"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "ngo"
     }
   ],
   "facts": [

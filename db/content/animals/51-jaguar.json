@@ -111,17 +111,11 @@
     {
       "category": "morphology",
       "text": "Some jaguars are all black, but up close you can still see their spots.",
-      "tags": [
-        "black_coat"
-      ],
       "source": "adw"
     },
     {
       "category": "diet",
       "text": "Its bite is strong enough to crack turtle shells and caiman skin.",
-      "tags": [
-        "strong_bite"
-      ],
       "source": "adw"
     },
     {
@@ -140,10 +134,6 @@
     {
       "category": "behavior",
       "text": "Each one marks its home area with scent, scratches on trees and calls.",
-      "tags": [
-        "territorial",
-        "scent_marks"
-      ],
       "source": "adw"
     },
     {
@@ -159,6 +149,166 @@
     {
       "category": "conservation",
       "text": "Forests cleared and broken up for farms and ranches are its main threat.",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/jaguar"
+    },
+    {
+      "category": "morphology",
+      "text": "The back of each ear has a bold spot of a contrasting color.",
+      "tags": [
+        "ear_spots"
+      ],
+      "source": "ngo",
+      "url": "https://www.catsg.org/_files/ugd/7a07e2_0f1124fffbd54d6082ffd53e8d1fd2b3.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its head is very large for its body.",
+      "tags": [
+        "huge_head"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail has rings of alternating colors.",
+      "tags": [
+        "ringed_tail"
+      ],
+      "source": "ngo",
+      "url": "https://www.catsg.org/living-species-jaguar"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is spotted.",
+      "tags": [
+        "spotted_belly"
+      ],
+      "source": "ngo",
+      "url": "https://www.catsg.org/living-species-jaguar"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "ngo",
+      "url": "https://www.catsg.org/_files/ugd/7a07e2_0f1124fffbd54d6082ffd53e8d1fd2b3.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "ngo",
+      "url": "https://www.panthera.org/blog-post/which-wild-cats-hiss"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud calls that carry far, such as songs, hoots, barks, roars or wails.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Jaguar"
+    },
+    {
+      "category": "diet",
+      "text": "Rodents are a main part of its prey.",
+      "tags": [
+        "rodent_hunter"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Jaguar"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in brackish water, part salty and part fresh, as in estuaries, coastal lagoons or mangroves.",
+      "tags": [
+        "brackish_water"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in dry, thorny forest or brush.",
+      "tags": [
+        "spiny_forest"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
       "source": "iucn"
     }
   ],

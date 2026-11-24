@@ -6,6 +6,7 @@
 import { EventBus, type EventPayloads } from './EventBus';
 import type { GemType } from './constants';
 import { neighborSwaps, type BoardModel, type Cell, type Grid, type Move, type Toys } from './BoardModel';
+import { SIGNS } from '@/clueGame/signs';
 
 export interface DebugBoardSnapshot {
   ready: boolean;
@@ -188,6 +189,12 @@ async function tap([x, y]: Cell, { timeoutMs = 15000, input = 'mouse', holdMs = 
   return { blocked: null, timedOut: after.timedOut, after };
 }
 
+/** Each active sign -> the open signs its `implies` names directly (table data only; e2e derives the closure itself). */
+function signImplies(): Record<string, string[]> {
+  return Object.fromEntries(Object.entries(SIGNS).flatMap(([tag, entry]) =>
+    entry.retired ? [] : [[tag, (entry.implies ?? []).filter(target => !target.includes(':'))]]));
+}
+
 /** Scale animation speed (1 = normal). The game clock stays real: it times input (long press, idle hint), so a test sees a player's timing. */
 function speed(scale: number): number {
   requireScene().tweens.timeScale = scale;
@@ -222,6 +229,8 @@ function install(): void {
     speed,
     /** Plan 046: play the board's effect for a Yes to this question (e.g. 'diet:insects'), as if it just landed. */
     answer: (tag: string) => EventBus.emit('clue-board-answer', { tag, yes: true }),
+    /** Sign audit: the direct open-tag `implies` edges, so e2e can check the field guide drops implied broader signs. */
+    signImplies,
   };
 }
 

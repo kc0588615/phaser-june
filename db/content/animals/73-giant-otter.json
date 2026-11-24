@@ -94,9 +94,6 @@
     {
       "category": "morphology",
       "text": "Each otter has its own pattern of cream patches on its throat.",
-      "tags": [
-        "throat_patch"
-      ],
       "source": "wikipedia"
     },
     {
@@ -111,26 +108,16 @@
     {
       "category": "behavior",
       "text": "It is the noisiest otter, with many different calls for alarm and for keeping in touch.",
-      "tags": [
-        "loud_calls"
-      ],
       "source": "wikipedia"
     },
     {
       "category": "behavior",
       "text": "Families clear campsites on riverbanks and mark their territory with scent and shared toilet spots.",
-      "tags": [
-        "territorial",
-        "scent_marks"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "It digs big dens under fallen logs near the water.",
-      "tags": [
-        "burrower"
-      ],
       "source": "adw"
     },
     {
@@ -141,6 +128,156 @@
     {
       "category": "conservation",
       "text": "Gold mining poisons its rivers with mercury, and new dams change the rivers it needs.",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "ngo",
+      "url": "https://wwflac.awsassets.panda.org/downloads/wildlife_guidelines_2023.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rests in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "ngo",
+      "url": "https://peru.fzs.org/wp-content/uploads/2023/05/manu-book-dv-ingles-baja-completo_fnl_compressed_compressed.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "literature",
+      "url": "https://journals.plos.org/plosone/article/file?id=10.1371%2Fjournal.pone.0251974&type=printable"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves its dung in piles that it comes back to, as messages to others of its kind.",
+      "tags": [
+        "dung_piles"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud, harsh screeches.",
+      "tags": [
+        "screecher"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4229255/"
+    },
+    {
+      "category": "behavior",
+      "text": "It can feel vibrations or ripples through the ground or water, to sense prey, danger or others.",
+      "tags": [
+        "senses_vibrations"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "diet",
+      "text": "It shares food with, or brings food to, members of its group other than its own young.",
+      "tags": [
+        "shares_food"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4229255/"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud calls that carry far, such as songs, hoots, barks, roars or wails.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4229255/"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in large rivers, not only in small streams or ponds.",
+      "tags": [
+        "big_rivers"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
       "source": "iucn"
     }
   ],

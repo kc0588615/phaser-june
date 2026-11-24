@@ -19,6 +19,7 @@ import {
 } from '@/clueGame/questionMatch';
 import { clueFace } from '@/clueGame/clueFaces';
 import { neverAsked } from '@/clueGame/traits';
+import { SIGNS, heldSigns, type SignTable } from '@/clueGame/signs';
 import { REGIONS, type ContinentKey } from '@/clueGame/regions';
 import { hash32 } from '@/lib/seededRng';
 
@@ -220,18 +221,26 @@ export function pickSuspectSet(book: Book, pool: readonly number[], seedId: numb
   return set.sort((a, b) => a - b);
 }
 
+/** Whether a suspect's field guide records every tag of the note, or a narrower sign that states it. */
+export function animalFitsNote(suspect: Pick<Animal, 'tags'>, note: Pick<FieldNote, 'tags'>, table: SignTable = SIGNS): boolean {
+  const tags = suspect.tags ?? [];
+  const held = new Set([...tags, ...heldSigns(tags, table)]);
+  return (note.tags ?? []).every(tag => held.has(tag));
+}
+
 /** A hand-written clue about the mystery, with how many suspects' field guides record the same thing. */
 export interface WitnessNote extends FieldNote { fits: number }
 
 /**
  * The mystery's witness notes: its hand-written clues whose tags fit 2 or more suspects but not all of them. A note
  * fitting only the mystery would solve the round; one without tags says nothing a field guide can check. A suspect
- * fits when its field guide records every tag of the note (an untagged trait counts as not recorded).
+ * fits when its field guide records every tag of the note, or a narrower sign that states it (an untagged trait
+ * counts as not recorded).
  */
 export function witnessNotes(book: Book, suspects: readonly number[], mysteryId: number): WitnessNote[] {
   return animal(book, mysteryId).notes.flatMap(note => {
     if (!note.tags?.length) return [];
-    const fits = suspects.filter(id => note.tags!.every(tag => animal(book, id).tags?.includes(tag))).length;
+    const fits = suspects.filter(id => animalFitsNote(animal(book, id), note)).length;
     return fits >= 2 && fits < suspects.length ? [{ ...note, fits }] : [];
   });
 }
@@ -278,7 +287,7 @@ export function tileCells(width: number, height: number, count: number, rng: () 
 
 // ---- Wandering (plan 047) ----
 
-/** How an animal moves (plan 046 exits, plan 047 steps): from its clue tags; bats fly. */
+/** How an animal moves (plan 046 exits, plan 047 steps): from its raw clue tags, never implied signs; bats fly, and a swimmer swims only from water. */
 export type Travel = 'fly' | 'swim' | 'dig' | 'walk';
 export type Heading = 'up' | 'down' | 'left' | 'right';
 export const HEADING_STEP: Record<Heading, readonly [dx: number, dy: number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
@@ -286,7 +295,8 @@ export const HEADING_STEP: Record<Heading, readonly [dx: number, dy: number]> = 
 export function travelOf(animal: Pick<Animal, 'tags' | 'familyTree'>): Travel {
   const tags = animal.tags ?? [];
   if (animal.familyTree.order.latin === 'Chiroptera' || tags.includes('glider')) return 'fly';
-  if (tags.includes('fully_aquatic') || tags.includes('swimmer')) return 'swim';
+  const inWater = tags.includes('system:freshwater') || tags.includes('system:marine');
+  if (tags.includes('fully_aquatic') || (tags.includes('swimmer') && inWater)) return 'swim';
   if (tags.includes('burrower')) return 'dig';
   return 'walk';
 }
@@ -572,7 +582,7 @@ function scorePencils(state: AnimalRound, pencil: Pencil): { bonus: number; coun
 export function stillPossible(book: Book, state: AnimalRound, knows: (tag: string) => boolean = () => false): number[] {
   return state.suspects.filter((id, i) => !state.released.includes(id)
     && state.orders.every(order => order.answer === null || !(order.seen[i] || knows(order.tag)) || order.row[i] === (order.answer === 'yes'))
-    && state.notes.every(note => note.tags!.every(tag => animal(book, id).tags?.includes(tag))));
+    && state.notes.every(note => animalFitsNote(animal(book, id), note)));
 }
 
 /**

@@ -90,9 +90,6 @@
     {
       "category": "habitat",
       "text": "It lives by fast-flowing rivers in the rainforest; its tadpoles live in rushing water at the foot of waterfalls.",
-      "tags": [
-        "fast_streams"
-      ],
       "source": "iucn"
     },
     {
@@ -106,6 +103,70 @@
     {
       "category": "conservation",
       "text": "Main threats: people hunt it for food, and forests are cleared for farms.",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is plain white.",
+      "tags": [
+        "white_belly"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly among the fallen leaves (leaf litter) on a forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by fast-flowing streams or rivers with rushing water.",
+      "tags": [
+        "fast_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
       "source": "iucn"
     }
   ],

@@ -86,9 +86,6 @@
     {
       "category": "morphology",
       "text": "It can be brown or bright green, matching the ground where it sits.",
-      "tags": [
-        "camouflage"
-      ],
       "source": "adw"
     },
     {
@@ -102,9 +99,6 @@
     {
       "category": "habitat",
       "text": "It lives in the fallen leaves of southern beech forests.",
-      "tags": [
-        "leaf_litter"
-      ],
       "source": "iucn"
     },
     {
@@ -134,6 +128,115 @@
       "category": "diet",
       "text": "It sits still and waits for insects to come close.",
       "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8169120/"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "literature",
+      "url": "https://biozoojournals.ro/nwjz/content/v14n2/nwjz_e171508_Bourke.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "ngo",
+      "url": "https://www.ranitadedarwin.org/_files/ugd/9a1a89_eaefebf8e2de46e388e3daa5dfc7c8bc.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests or sleeps through the winter, inactive for weeks or months.",
+      "tags": [
+        "winter_rest"
+      ],
+      "source": "literature",
+      "url": "https://doi.org/10.1186/s12983-015-0132-y"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly among the fallen leaves (leaf litter) on a forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "ngo",
+      "url": "https://www.ranitadedarwin.org/_files/ugd/9a1a89_eaefebf8e2de46e388e3daa5dfc7c8bc.pdf"
     }
   ],
   "facts": [

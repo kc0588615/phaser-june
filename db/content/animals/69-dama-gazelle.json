@@ -88,9 +88,6 @@
     {
       "category": "morphology",
       "text": "It has a long, thin neck and very long legs that help it lose heat.",
-      "tags": [
-        "long_legs"
-      ],
       "source": "wikipedia"
     },
     {
@@ -101,25 +98,16 @@
     {
       "category": "diet",
       "text": "It stands up on its back legs to reach high acacia leaves.",
-      "tags": [
-        "stands_on_hind_legs"
-      ],
       "source": "adw"
     },
     {
       "category": "diet",
       "text": "It gets most of the water it needs from the plants it eats.",
-      "tags": [
-        "rarely_drinks"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "It moves into the Sahara in the rainy season and back to bushland in the dry season.",
-      "tags": [
-        "nomadic"
-      ],
       "source": "adw"
     },
     {
@@ -131,6 +119,111 @@
       "category": "conservation",
       "text": "Poaching, and livestock eating its food, are its main threats.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toes end in hard hooves that it walks on.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/dama-gazelle"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is plain white.",
+      "tags": [
+        "white_belly"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves its dung in piles that it comes back to, as messages to others of its kind.",
+      "tags": [
+        "dung_piles"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It has no fixed home area: it wanders or travels long distances, following food, water or rain.",
+      "tags": [
+        "nomadic"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It can go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "At least sometimes, it stands, rears up, hops or runs on its back legs alone.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

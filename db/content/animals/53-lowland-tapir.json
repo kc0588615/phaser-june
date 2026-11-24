@@ -98,9 +98,6 @@
     {
       "category": "morphology",
       "text": "It has four hoofed toes on each front foot and three on each back foot.",
-      "tags": [
-        "hooves"
-      ],
       "source": "sdzwa"
     },
     {
@@ -114,9 +111,6 @@
     {
       "category": "behavior",
       "text": "It is a good swimmer and runs into the water to escape danger.",
-      "tags": [
-        "swimmer"
-      ],
       "source": "adw"
     },
     {
@@ -138,10 +132,6 @@
     {
       "category": "diet",
       "text": "It feasts on palm fruit and is the main spreader of the moriche palm's seeds.",
-      "tags": [
-        "fruit_eater",
-        "seed_spreader"
-      ],
       "source": "iucn"
     },
     {
@@ -155,6 +145,182 @@
     {
       "category": "conservation",
       "text": "Hunting, forest loss and road accidents are its main threats.",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "sdzwa"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "ngo",
+      "url": "https://tapirs.org/wp-content/uploads/2018/06/TAPIR-TRACKS-A-Curriculum-Guide-for-Educators.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears have white edges.",
+      "tags": [
+        "white_ear_rims"
+      ],
+      "source": "ngo",
+      "url": "https://tapirs.org/wp-content/uploads/2018/06/TAPIR-TRACKS-A-Curriculum-Guide-for-Educators.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toes end in hard hooves that it walks on.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "sdzwa"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/tapirs/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It wallows in mud, or coats itself with mud, to cool off or protect its skin.",
+      "tags": [
+        "mud_bather"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/tapirs/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud, harsh screeches.",
+      "tags": [
+        "screecher"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It can breathe through the tip of its raised nose, snout or trunk while the rest of its body stays under water.",
+      "tags": [
+        "snorkel_nose"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/tapir"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "ngo",
+      "url": "https://tapirs.org/wp-content/uploads/2018/06/TAPIR-TRACKS-A-Curriculum-Guide-for-Educators.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/tapir"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is a main or favorite part of its food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "It spreads plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in forest with a thick undergrowth of bamboo.",
+      "tags": [
+        "bamboo_forest"
+      ],
+      "source": "literature",
+      "url": "https://www.vigilife.org/wp-content/uploads/mena-et-al-2021-ecolappl.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
       "source": "iucn"
     }
   ],

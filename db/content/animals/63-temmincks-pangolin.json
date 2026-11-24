@@ -80,17 +80,11 @@
     {
       "category": "morphology",
       "text": "It has no teeth. It swallows small stones that help grind up food in its stomach.",
-      "tags": [
-        "toothless"
-      ],
       "source": "adw"
     },
     {
       "category": "morphology",
       "text": "Its sticky tongue can be up to 25 cm long.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
@@ -121,32 +115,162 @@
     {
       "category": "habitat",
       "text": "It can dig its own burrow, but it prefers old ones left by warthogs or aardvarks.",
-      "tags": [
-        "burrower",
-        "borrowed_burrows"
-      ],
       "source": "wikipedia"
     },
     {
       "category": "behavior",
       "text": "It marks trees with urine and scent to leave messages for other pangolins.",
-      "tags": [
-        "scent_marks"
-      ],
       "source": "adw"
     },
     {
       "category": "reproduction",
       "text": "Babies ride on their mother's back or tail until they weigh about 3 kg.",
-      "tags": [
-        "carries_young_on_back"
-      ],
       "source": "adw"
     },
     {
       "category": "conservation",
       "text": "Trade in pangolins, and farms taking over its land, are its main threats.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs up big rocks, boulders or cliffs.",
+      "tags": [
+        "climbs_boulders"
+      ],
+      "source": "ngo",
+      "url": "https://ewt.org/wp-content/uploads/2022/11/Temmincks-Ground-Pangolin-Smutsia-temminckii_VU.pdf"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "ngo",
+      "url": "https://savepangolins.org/what-is-a-pangolin/"
+    },
+    {
+      "category": "diet",
+      "text": "It can go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes no calls: no croaks, songs, squeaks or other voice sounds.",
+      "tags": [
+        "voiceless"
+      ],
+      "source": "ngo",
+      "url": "https://www.pangolinsg.org/wp-content/uploads/sites/4/2020/05/Guidance-on-the-ecological-monitoring-of-pangolin_EN.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
+      "tags": [
+        "sand_dunes"
+      ],
+      "source": "literature",
+      "url": "https://wiredspace.wits.ac.za/bitstreams/03c99524-dfd0-4d39-ba5f-618ecfd118d1/download"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "habitat",
+      "text": "It sleeps, hides or raises its young in burrows or dens that other animals dug.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her young riding or clinging on her back.",
+      "tags": [
+        "carries_young_on_back"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

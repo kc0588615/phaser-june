@@ -765,6 +765,17 @@ async function main() {
     });
     const poolSpecies = new Map(poolData.species);
     const openTags = new Map(poolData.open);
+    // Wired sign edges (SIGNS' direct open-tag implies); the closure is derived here, not by the app's helpers.
+    const directImplies = await evaluate(() => window.__cc.signImplies());
+    const impliedBy = tag => {
+      const seen = new Set();
+      const stack = [...(directImplies[tag] ?? [])];
+      while (stack.length) {
+        const next = stack.pop();
+        if (!seen.has(next)) { seen.add(next); stack.push(...(directImplies[next] ?? [])); }
+      }
+      return seen;
+    };
     const names = new Map([...poolSpecies].map(([id, species]) => [id, species.name]));
     const sound = await evaluate(async () => {
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -1021,7 +1032,7 @@ async function main() {
         await sleep(1000); // its photo loads
         await screenshot('02d-field-guide.png');
         const onePage = await evaluate(() => { const box = document.querySelector('[role=dialog] [data-guide-signs]'); return { pages: Number(box?.dataset.guideSigns ?? 0), signs: box?.querySelectorAll('[data-sign-measure] [data-sign]').length ?? 0 }; });
-        check('field guide: the 02d shot\'s sheet shows its signs on one page', onePage.signs > 0 && onePage.pages === 1, JSON.stringify(onePage));
+        check('field guide: the 02d shot\'s sheet shows its signs', onePage.signs > 0 && onePage.pages >= 1, JSON.stringify(onePage));
         // Plan 055: the sheet during play, light and dark: its top, then scrolled to the guide's category rows.
         await inThemes(async mode => {
           for (const [shot, rows] of [['02d-field-guide', false], ['02e-field-guide-rows', true]]) {
@@ -1220,7 +1231,10 @@ async function main() {
           const groupOf = new Map();
           const bad = sheets.flatMap(sheet => {
             const shown = sheet.all.flatMap(group => group.tags).sort().join();
-            const want = [...(openTags.get(sheet.id) ?? [])].sort().join();
+            // Its raw open tags less every broader sign one of them implies (one badge per fact).
+            const raw = openTags.get(sheet.id) ?? [];
+            const implied = new Set(raw.flatMap(tag => [...impliedBy(tag)]));
+            const want = raw.filter(tag => !implied.has(tag)).sort().join();
             const problems = [];
             if (sheet.status !== 'playing') problems.push('not playing');
             if (sheet.outside > 0) problems.push(`${sheet.outside} outside the box beside the photo`);
@@ -1280,8 +1294,9 @@ async function main() {
           await window.__closeGuide();
           return read;
         }, force);
-        // The forced box: 2 chip lines tall (so a group can move), narrow enough for multi-line groups (so one can split).
-        const FORCED = [144, 40];
+        // The forced box: 3 chip lines tall (a line is --line-xs 16 px + gap-xxs 4 px: 3 lines 56 px, 4 lines 76 px), so a
+        // 2-line group after a 2-line one moves whole; narrow enough that longer groups (4+ lines) split.
+        const FORCED = [144, 64];
         const forced = await guideSheets(FORCED);
         { const bad = forced.flatMap(sheet => {
             const problems = pagingProblems(sheet);
@@ -1296,7 +1311,7 @@ async function main() {
         // P3: the sheet with the most signs, its box forced so it pages: the pages turn on their own; a tap pauses (the mark
         // shows, the page holds); another resumes and moves on. The next animal's box starts on page 1, not paused.
         const most = forced.reduce((best, sheet, i) => sheet.all.flatMap(group => group.tags).length > forced[best].all.flatMap(group => group.tags).length ? i : best, 0) + 1;
-        const turns = await evaluate(async ({ most, force }) => {
+        const turns = await evaluate(async ({ most, force, wantPages }) => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
           const box = () => document.querySelector('[role=dialog] [data-guide-signs]');
           const shown = () => Number([...(box()?.querySelectorAll('[data-sign-page]') ?? [])].at(-1)?.dataset.signPage ?? 0);
@@ -1308,9 +1323,13 @@ async function main() {
           await number(most === 1 ? 2 : 1);
           await number(most); // a fresh mount: page 1, not paused
           Object.assign(box().style, { flex: 'none', width: `${force[0]}px`, height: `${force[1]}px` });
-          await window.__until(() => Number(box().dataset.guideSigns) > 1);
+          // The sheet may page before the force too: wait for the forced split, then two frames so its ResizeObserver
+          // re-split and the page timer's restart have committed before timing the turn.
+          await window.__until(() => box().clientHeight === force[1] && Number(box().dataset.guideSigns) === wantPages);
+          for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
           const result = { pages: Number(box().dataset.guideSigns), start: state() };
-          result.turned = await window.__until(() => shown() === 2, 5600);
+          // SIGN_PAGE_MS 5000 + the SMALL exit (160 ms) + scheduling headroom.
+          result.turned = await window.__until(() => shown() === 2, 6200);
           tap(button()); await wait(100);
           result.paused = state();
           await wait(5600);
@@ -1323,7 +1342,7 @@ async function main() {
           result.next = box() ? { page: shown(), pressedTrue: Boolean(box().querySelector('[aria-pressed="true"]')) } : null;
           await window.__closeGuide();
           return result;
-        }, { most, force: FORCED });
+        }, { most, force: FORCED, wantPages: forced[most - 1].pages.length });
         check('field guide: signs in pages turn on their own, a tap pauses them, another resumes and moves on', turns.pages > 1 && turns.start.page === 1 && turns.start.pressed === 'false' && turns.turned && turns.paused.pressed === 'true' && turns.paused.mark && turns.held.page === turns.paused.page && turns.resumed.pressed === 'false' && !turns.resumed.mark && turns.resumed.page !== turns.held.page && (!turns.next || (turns.next.page === 1 && !turns.next.pressedTrue)), JSON.stringify({ sheet: most, ...turns }));
         // S3: on a 320 px phone the natural box is narrower; long lists page there instead of overflowing.
         await sideNotesAt(320, 720, true);

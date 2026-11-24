@@ -69,14 +69,38 @@ Trait values (templates in `profiles.ts`):
 
 ### Signs
 
-A clue's open tags are its **signs**: each shows as a phrase (`digging_claws` → "digging claws") beside the field guide's photo, in its question category's group, and is never hidden during play. `SIGNS` in `src/clueGame/signs.ts` is the vocabulary and is authoritative: it gives each tag its category and what its plain reading says about the traits. A new tag needs its entry there; `checkProfile` (so `content -- preview` and `build`) flags an open tag missing from it, a sign that contradicts its holder's traits, and one that restates an asked answer. `docs/research/2026-11-07-moves-and-signs/sign-map.csv` is the research record it came from. Retired tags stay in `SIGNS` so new code still loads rows an older content build wrote.
+A clue's open tags are its **signs**: each shows as a phrase (`digging_claws` → "digging claws") beside the field guide's photo, in its question category's group, and is never hidden during play. `SIGNS` in `src/clueGame/signs.ts` is the vocabulary and is authoritative: each active entry gives its category, its `meaning` (the one-line definition: what counts and what doesn't) and its rules, `implies` and `denies`. Tag a note only with signs whose `meaning` its words state. A new tag needs its entry there; `checkProfile` (so `content -- preview` and `build`) runs `signProblems`, which flags an open tag missing from `SIGNS`, a retired tag, a sign whose rules (or those of a broader sign it implies) contradict its holder's traits or other signs, and a narrower and broader sign on the same note. `docs/research/2026-11-07-moves-and-signs/sign-map.csv` is the research record it came from; the definitions' sign-off is plan `plans/2026-11-23-sign-audit.md`.
+
+Rules, from `SIGNS`:
+- Trait `implies`: the holder's record must not rule it out (`algae_fur` implies `covering:fur`; `never_climbs` implies `trees:no`). Trait `denies`: the holder must not hold it (`leaf_eater` denies `diet:meat` and `diet:insects`).
+- Open `denies`: the holder must not hold that sign or one implying it (`forest_floor` denies `often_in_trees`).
+- `climber` and `swimmer` carry no trait `implies`: climbing rocks isn't living in trees, and swimming isn't fresh water.
+
+Narrower and broader signs (Goal 2 of the sign audit):
+- A narrower sign lists its strictly broader sign in `implies` (`climbs_boulders` → `climber`, `dung_piles` → `scent_marks`) once the edge passes both gates: entailment under the approved `meaning`s, and the wording gate (zero false fits on every live and audited note tagged with the broader sign).
+- `animalFitsNote` closes over wired `implies` edges, so a holder of the narrower sign fits a note tagged with the broader one, for witness fits and deduction (`witnessNotes`, `stillPossible`).
+- One sign per fact **per note**: never tag one note with a narrower sign and a broader sign it implies (`signProblems` flags it); keep the narrower one its words state. A broad tag on a **different** note stays, so that note can still be dealt. `signsOf` drops implied broader signs, so the field guide shows one badge per fact.
+
+Ten edges are entailed but deferred to mission witness-signs: live notes tagged with the broader sign use narrower wording that the narrower sign's holders don't match. They are not in `implies`, but the one-sign-per-fact tagging rule already applies to them. Blocking notes (`speciesId:clue`, from the audit's `definitions.csv`):
+
+| Edge | Blocking notes |
+|---|---|
+| `backward_pouch` → `pouch` | 43:4 "Its pouch opens forward, like other kangaroos'." |
+| `carries_young_on_back` → `mother_carries_young` | 10:7 "Its eggs sink into pockets in the mother's back and hatch there as tiny toads, with no tadpole stage."; 54:6 "A mother carries her baby clinging to her belly." |
+| `face_mask` → `face_markings` | 42:0 "It has white patches on its nose, chin, forehead and chest." |
+| `feathery_gills` → `underwater_breathing` | 2:3 "It can take in oxygen underwater through its skin and throat."; 62:2 "Folds of skin along its sides help it take in oxygen from the water through its skin."; 75:1 "Loose, wrinkly folds of skin along its sides help it breathe through its skin." |
+| `s_shaped_horns` → `horns` | 29:3 "Males have two short horns covered in skin."; 38:0 "Both males and females have long, straight, nearly parallel horns."; 68:0 "Both males and females have sharp, ringed horns that curve up like a lyre." |
+| `shoulder_stripe` → `stripes` | 29:1 "Its legs have white and brown stripes, like a zebra's."; 43:1 "It has two golden stripes down its back." |
+| `spectacles` → `face_markings` | 38:2 "It has white patches on its face, hiding what may be the biggest face scent glands of any mammal."; 50:2 "It has a dark tuft of hair on its forehead and white markings on its face." |
+| `spiral_horns` → `horns` | 29:3, 38:0, 68:0 (above); 66:0 "It has two horns, one behind the other; the front one can be more than a metre long." |
+| `tear_lines` → `face_markings` | 50:2 (above) |
+| `walks_upright` → `stands_on_hind_legs` | 36:2 "It can stand up on its back legs and tail to reach into termite mounds."; 57:7 "If it can't dig away from danger, it stands up on its back legs and tail and defends itself with its claws."; 61:3 "On the ground it hops upright on its back legs, holding its arms above its head." |
 
 The sign rule:
 - A sign names evidence from its own note, in the note's own words ("sleeps high in trees", "seldom on ground"), never a question's answer (`tree_dweller` is "Lives in trees: yes" and is retired).
-- One sign per fact: never tag a note with a tag and its narrower case (`carries_young_on_back` and `mother_carries_young`); keep the narrower one its words state. A witness note fits every animal holding all its tags, so the broader tag alone would make it fit animals its words aren't true of.
-- It never contradicts its holder's traits on a plain reading: `swimmer` on a land-only animal reads as fresh water, `builds_nests` on a live-born mammal reads as eggs, `climber` on a `trees: no` animal reads as trees yes.
-- If no evidence word in the note fits, drop the tag (the note stays untagged); never invent one.
+- If no active sign's `meaning` fits the note's evidence, leave the note untagged; never invent one.
 - Reuse a shared tag where notes say the same thing: a witness note shows only when two suspects share its tag (plan 044).
+- Retired tags (`retired: true`, no rules and no `meaning`) stay in `SIGNS` only so new code still loads rows an older content build wrote; `signProblems` rejects one on any profile.
 
 Look-alike suspects come from `pickSuspectSet` in `src/clueGame/animalBoard.ts`: relatives first (the most shared family-tree ranks), then `likeness` in `src/clueGame/questionMatch.ts` (+1 for each trait category two animals share, -1 for each they differ on; no weight for rare traits).
 

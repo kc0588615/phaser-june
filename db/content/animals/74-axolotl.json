@@ -108,9 +108,6 @@
     {
       "category": "behavior",
       "text": "It can regrow lost legs, gills, and even parts of its eyes and brain.",
-      "tags": [
-        "regrows_body_parts"
-      ],
       "source": "wikipedia"
     },
     {
@@ -124,9 +121,6 @@
     {
       "category": "diet",
       "text": "It waits for prey to come close instead of chasing it, and its tiny teeth can grip food but not chew it.",
-      "tags": [
-        "ambush_hunter"
-      ],
       "source": "amphibiaweb"
     },
     {
@@ -138,6 +132,142 @@
       "category": "conservation",
       "text": "Tilapia, fish that people put in its lakes, hunt it and compete for its food.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/axolotl"
+    },
+    {
+      "category": "morphology",
+      "text": "Its head is very large for its body.",
+      "tags": [
+        "huge_head"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/axolotl"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes have no eyelids.",
+      "tags": [
+        "lidless_eyes"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "literature",
+      "url": "https://www.annzool.net/PDF/anz47-free/anz47-223.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is flattened like a paddle, for swimming.",
+      "tags": [
+        "paddle_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/axolotl"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/axolotl/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It can feel vibrations or ripples through the ground or water, to sense prey, danger or others.",
+      "tags": [
+        "senses_vibrations"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/axolotl/characteristics"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It can regrow lost body parts, such as legs, a tail or gills.",
+      "tags": [
+        "regrows_body_parts"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/axolotl"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/axolotl"
     }
   ],
   "facts": [

@@ -114,6 +114,78 @@
       "category": "conservation",
       "text": "Main threats: granite quarries, new roads, landslides, and farms clearing its forest.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by fast-flowing streams or rivers with rushing water.",
+      "tags": [
+        "fast_streams"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It breeds when heavy rains come, often in pools, puddles or streams that the rain fills.",
+      "tags": [
+        "rain_breeder"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [

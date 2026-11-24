@@ -84,17 +84,11 @@
     {
       "category": "morphology",
       "text": "Its legs have white and brown stripes, like a zebra's.",
-      "tags": [
-        "stripes"
-      ],
       "source": "adw"
     },
     {
       "category": "morphology",
       "text": "Its long, dark tongue can reach more than 30 cm.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
@@ -116,17 +110,11 @@
     {
       "category": "diet",
       "text": "It licks clay, charcoal and even bat droppings to get extra minerals.",
-      "tags": [
-        "salt_licks"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "It marks its home area with urine and by rubbing its neck to leave its scent.",
-      "tags": [
-        "scent_marks"
-      ],
       "source": "adw"
     },
     {
@@ -138,6 +126,159 @@
       "category": "conservation",
       "text": "Logging and people settling in its forests, even in protected areas, are its main threats.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/okapi"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/okapi"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/okapi/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/okapi/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves its dung in piles that it comes back to, as messages to others of its kind.",
+      "tags": [
+        "dung_piles"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It can run fast, at about 50 km/h or more.",
+      "tags": [
+        "fast_runner"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/okapi/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with deep, low rumbles, some too low for people to hear.",
+      "tags": [
+        "low_rumbles"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/okapi"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/okapi/characteristics"
+    },
+    {
+      "category": "diet",
+      "text": "It spreads plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "ngo",
+      "url": "https://virunga.org/wildlife/mammals/okapi/"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/okapi"
+    },
+    {
+      "category": "diet",
+      "text": "It visits salt licks, or eats mineral-rich soil, clay or water, to get minerals.",
+      "tags": [
+        "salt_licks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

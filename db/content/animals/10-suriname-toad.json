@@ -81,9 +81,6 @@
     {
       "category": "morphology",
       "text": "Its tiny black eyes have no eyelids.",
-      "tags": [
-        "lidless_eyes"
-      ],
       "source": "adw"
     },
     {
@@ -94,17 +91,11 @@
     {
       "category": "morphology",
       "text": "Its front legs are short and weak, with long thin fingers. Its back legs are long and strong, with webbed feet.",
-      "tags": [
-        "webbed_feet"
-      ],
       "source": "amphibiaweb"
     },
     {
       "category": "behavior",
       "text": "It almost never leaves the water, resting on the bottom of murky ponds.",
-      "tags": [
-        "rests_on_bottom"
-      ],
       "source": "adw"
     },
     {
@@ -132,6 +123,129 @@
       "category": "habitat",
       "text": "It lives in slow rivers and canals with muddy bottoms.",
       "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/surinam-toad"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8169120/"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes have no eyelids.",
+      "tags": [
+        "lidless_eyes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/surinam-toad"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It spends its whole life in water and rarely or never comes out onto land.",
+      "tags": [
+        "fully_aquatic"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

@@ -135,6 +135,71 @@
       "category": "conservation",
       "text": "Illegal crops, logging, mining and pollution are destroying its small forest.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its head is mostly yellow.",
+      "tags": [
+        "yellow_head"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are yellow.",
+      "tags": [
+        "yellow_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "A parent stays with its eggs or nest and guards them until they hatch.",
+      "tags": [
+        "egg_guarding"
+      ],
+      "source": "ngo",
+      "url": "https://citizen-conservation.org/wp-content/uploads/2024/10/CC-Breeding-Guidelines_Phyllobates-terribilis_07-2024.pdf"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [

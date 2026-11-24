@@ -99,17 +99,11 @@
     {
       "category": "habitat",
       "text": "It lives near the coast, even in drainage ditches and gardens in town.",
-      "tags": [
-        "town_dweller"
-      ],
       "source": "iucn"
     },
     {
       "category": "reproduction",
       "text": "It breeds after heavy rain, in ditches, swamps and still pools.",
-      "tags": [
-        "rain_breeder"
-      ],
       "source": "adw"
     },
     {
@@ -121,6 +115,63 @@
       "category": "conservation",
       "text": "Collecting wild frogs for pets has stopped; pet tomato frogs are now bred in captivity.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its bright colors warn predators that it is poisonous or bad to eat.",
+      "tags": [
+        "warning_colors"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It puffs its body up with air when threatened.",
+      "tags": [
+        "puffs_up"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tomato_frog"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "It breeds when heavy rains come, often in pools, puddles or streams that the rain fills.",
+      "tags": [
+        "rain_breeder"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

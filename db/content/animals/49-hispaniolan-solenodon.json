@@ -85,25 +85,16 @@
     {
       "category": "morphology",
       "text": "Its long, bendy snout is held up by a special bone of its own.",
-      "tags": [
-        "pointed_snout"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "It roots in the soil with its snout and rips open rotten logs with its claws.",
-      "tags": [
-        "digging_claws"
-      ],
       "source": "iucn"
     },
     {
       "category": "behavior",
       "text": "By day it rests in rock cracks, hollow trees or tunnels it digs.",
-      "tags": [
-        "burrower"
-      ],
       "source": "adw"
     },
     {
@@ -115,15 +106,132 @@
     {
       "category": "geography",
       "text": "It lives only on the island of Hispaniola, shared by Haiti and the Dominican Republic.",
-      "tags": [
-        "one_island"
-      ],
       "source": "iucn"
     },
     {
       "category": "conservation",
       "text": "Dogs, cats and mongooses brought to the island hunt it.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/47/927/100/2609399"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/47/927/100/2609399"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "government",
+      "url": "https://pdf.usaid.gov/pdf_docs/Pnadr534.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/e7b5fe60-8503-4134-a7e8-6e9fb2f735a6/content"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/47/927/100/2609399"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "literature",
+      "url": "https://academic.oup.com/mspecies/article/47/927/100/2609399"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has strong, long claws that it digs with.",
+      "tags": [
+        "digging_claws"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Hispaniolan_solenodon"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly among the fallen leaves (leaf litter) on a forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "government",
+      "url": "https://pdf.usaid.gov/pdf_docs/Pnadr534.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides in narrow cracks and gaps between or under rocks.",
+      "tags": [
+        "crevice_hider"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

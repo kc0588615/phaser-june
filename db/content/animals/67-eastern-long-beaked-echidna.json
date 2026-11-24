@@ -79,9 +79,6 @@
     {
       "category": "morphology",
       "text": "Its snout is a long tube, about 12 cm long.",
-      "tags": [
-        "pointed_snout"
-      ],
       "source": "adw"
     },
     {
@@ -95,18 +92,11 @@
     {
       "category": "morphology",
       "text": "Its tongue has rows of tiny spines for gripping earthworms.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
       "category": "morphology",
       "text": "It has five claws on each front foot. Its western cousin usually has only three.",
-      "tags": [
-        "five_front_claws",
-        "digging_claws"
-      ],
       "source": "adw"
     },
     {
@@ -144,8 +134,128 @@
     {
       "category": "habitat",
       "text": "It lives in New Guinea's mountains, and is still common above 3,000 m, far from villages.",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/echidna"
+    },
+    {
+      "category": "morphology",
+      "text": "It has pointed spurs, or big spur-like scales, on its legs.",
+      "tags": [
+        "leg_spurs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/echidna"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It moves very slowly, even when disturbed.",
+      "tags": [
+        "slow_mover"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has strong, long claws that it digs with.",
+      "tags": [
+        "digging_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in the open zone high on mountains above the tree line, where it is too cold for trees to grow.",
+      "tags": [
+        "above_tree_line"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly among the fallen leaves (leaf litter) on a forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "literature",
+      "url": "https://png-data.sprep.org/system/files/Opiang_2009_homerange_movement_denuse_long-beaked_echindna_PNG.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in grassy meadows high on mountainsides.",
+      "tags": [
+        "mountain_meadows"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
       "tags": [
         "high_mountains"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
       ],
       "source": "iucn"
     }

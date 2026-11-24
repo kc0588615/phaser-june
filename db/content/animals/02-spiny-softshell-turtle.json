@@ -85,14 +85,105 @@
     {
       "category": "behavior",
       "text": "When disturbed, it dives and buries itself in sand with only its head showing.",
-      "tags": [
-        "buries_itself"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "It can take in oxygen underwater through its skin and throat.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "From October to April it rests buried on the bottom of rivers and lakes.",
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It likes open rivers and lakes with sandy or muddy bottoms.",
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: dams, boats, roads and people catching it.",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Spiny_softshell_turtle"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its body is very flat, much wider than it is tall.",
+      "tags": [
+        "flat_body"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its shell is very flat and low, not domed.",
+      "tags": [
+        "flat_shell"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has one or more stripes: long bands of a contrasting color on its body or legs.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "britannica",
+      "url": "https://www.britannica.com/animal/turtle-reptile"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It can take in oxygen from the water while it stays underwater.",
       "tags": [
         "underwater_breathing"
       ],
@@ -100,26 +191,110 @@
     },
     {
       "category": "behavior",
-      "text": "From October to April it rests buried on the bottom of rivers and lakes.",
+      "text": "It often rests in the sun to warm its body.",
       "tags": [
-        "winter_rest",
-        "buries_itself",
+        "basker"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "It often eats animals that are already dead.",
+      "tags": [
+        "scavenger"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "government",
+      "url": "https://publications.gc.ca/collections/collection_2017/eccc/CW69-14-257-2016-eng.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
         "rests_on_bottom"
       ],
       "source": "adw"
     },
     {
+      "category": "behavior",
+      "text": "It rests or sleeps through the winter, inactive for weeks or months.",
+      "tags": [
+        "winter_rest"
+      ],
+      "source": "adw"
+    },
+    {
       "category": "habitat",
-      "text": "It likes open rivers and lakes with sandy or muddy bottoms.",
+      "text": "It lives in large rivers, not only in small streams or ponds.",
+      "tags": [
+        "big_rivers"
+      ],
+      "source": "government",
+      "url": "https://mdc.mo.gov/discover-nature/field-guide/northern-spiny-softshell"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in brackish water, part salty and part fresh, as in estuaries, coastal lagoons or mangroves.",
+      "tags": [
+        "brackish_water"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "government",
+      "url": "https://www.lccmr.mn.gov/projects/2015/finals/2015_03m.pdf"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
       "tags": [
         "sandy_bottoms"
       ],
       "source": "adw"
     },
     {
-      "category": "conservation",
-      "text": "Main threats: dams, boats, roads and people catching it.",
-      "source": "iucn"
+      "category": "reproduction",
+      "text": "It lays its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

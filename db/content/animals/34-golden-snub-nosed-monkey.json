@@ -78,9 +78,6 @@
     {
       "category": "habitat",
       "text": "It lives in mountain forests where snow can cover the ground for up to six months.",
-      "tags": [
-        "snowy_winters"
-      ],
       "source": "iucn"
     },
     {
@@ -94,9 +91,6 @@
     {
       "category": "behavior",
       "text": "It climbs in the trees but also spends time on the ground.",
-      "tags": [
-        "climber"
-      ],
       "source": "iucn"
     },
     {
@@ -113,6 +107,152 @@
       "category": "conservation",
       "text": "Forest cleared for farming is its biggest threat.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "literature",
+      "url": "https://treatment.plazi.org/GgServer/xhtml/CE199B17FFA5FFA1FAFF62BFF64BFCE0"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Adults have a mane: a crest or ruff of longer hair on the neck or back.",
+      "tags": [
+        "mane"
+      ],
+      "source": "literature",
+      "url": "https://treatment.plazi.org/GgServer/xhtml/CE199B17FFA5FFA1FAFF62BFF64BFCE0"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is mostly red, reddish brown or golden red.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "literature",
+      "url": "https://treatment.plazi.org/GgServer/xhtml/CE199B17FFA5FFA1FAFF62BFF64BFCE0"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is a main or favorite part of its food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden_snub-nosed_monkey"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud calls that carry far, such as songs, hoots, barks, roars or wails.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6032912/"
+    },
+    {
+      "category": "diet",
+      "text": "It drinks nectar from flowers.",
+      "tags": [
+        "nectar_drinker"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Rhinopithecus/"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by hanging or perching in tree branches.",
+      "tags": [
+        "roosts_in_trees"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden_snub-nosed_monkey"
+    },
+    {
+      "category": "diet",
+      "text": "It spreads plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "literature",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/32929865/"
+    },
+    {
+      "category": "diet",
+      "text": "It shares food with, or brings food to, members of its group other than its own young.",
+      "tags": [
+        "shares_food"
+      ],
+      "source": "literature",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/17694533/"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in forest with a thick undergrowth of bamboo.",
+      "tags": [
+        "bamboo_forest"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her eggs or young on her body as she moves about.",
+      "tags": [
+        "mother_carries_young"
+      ],
+      "source": "adw",
+      "url": "https://animaldiversity.org/accounts/Rhinopithecus/"
     }
   ],
   "facts": [

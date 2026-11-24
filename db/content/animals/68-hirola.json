@@ -92,9 +92,6 @@
     {
       "category": "morphology",
       "text": "Big dark scent glands below its eyes earned it the name \"four-eyed antelope\".",
-      "tags": [
-        "eye_glands"
-      ],
       "source": "wikipedia"
     },
     {
@@ -113,19 +110,11 @@
     {
       "category": "diet",
       "text": "It can go a long time without drinking by resting and storing fat.",
-      "tags": [
-        "rarely_drinks"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "Males guard a territory, marking grass stems with scent and scraping the ground with their hooves.",
-      "tags": [
-        "territorial",
-        "scent_marks",
-        "hooves"
-      ],
       "source": "adw"
     },
     {
@@ -137,6 +126,78 @@
       "category": "conservation",
       "text": "Poaching, drought, disease and too many cattle all threaten it.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has large scent glands just below or in front of its eyes.",
+      "tags": [
+        "eye_glands"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves its dung in piles that it comes back to, as messages to others of its kind.",
+      "tags": [
+        "dung_piles"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toes end in hard hooves that it walks on.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It can go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

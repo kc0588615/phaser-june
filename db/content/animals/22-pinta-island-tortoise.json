@@ -77,6 +77,122 @@
       "category": "conservation",
       "text": "The last one, Lonesome George, died on 24 June 2012 after 40 years in captivity.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It had five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Gal%C3%A1pagos_tortoise"
+    },
+    {
+      "category": "morphology",
+      "text": "Its shell was a 'saddleback': raised high at the front, above the neck.",
+      "tags": [
+        "saddleback_shell"
+      ],
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_abingdonii.html"
+    },
+    {
+      "category": "morphology",
+      "text": "It had a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "literature",
+      "url": "https://iucn-tftsg.org/wp-content/uploads/file/Articles/Van_Denburgh_1914.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "As an adult, it had no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "behavior",
+      "text": "It often rested in the sun to warm its body.",
+      "tags": [
+        "basker"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "diet",
+      "text": "It found most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_abingdonii.html"
+    },
+    {
+      "category": "behavior",
+      "text": "It made a loud hissing sound.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/galapagostortoises/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It made loud calls that carried far, such as roars or bellows.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "literature",
+      "url": "https://www.reptilesofecuador.com/chelonoidis_abingdonii.html"
+    },
+    {
+      "category": "diet",
+      "text": "It could go days or longer without drinking, getting most of its water from its food.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Gal%C3%A1pagos_tortoise"
+    },
+    {
+      "category": "diet",
+      "text": "It spread plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "behavior",
+      "text": "It moved very slowly, even when disturbed.",
+      "tags": [
+        "slow_mover"
+      ],
+      "source": "literature",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/15802673/"
+    },
+    {
+      "category": "reproduction",
+      "text": "It laid its eggs out of the water, on land or underground.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatched as males or females depended on how warm the nest was.",
+      "tags": [
+        "temperature_sex"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/galapagos-giant-tortoise"
     }
   ],
   "facts": [

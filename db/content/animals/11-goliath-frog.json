@@ -68,9 +68,6 @@
     {
       "category": "morphology",
       "text": "Its eyes can be almost 2.5 cm across.",
-      "tags": [
-        "large_eyes"
-      ],
       "source": "adw"
     },
     {
@@ -81,17 +78,11 @@
     {
       "category": "habitat",
       "text": "It needs big, clean, fast-flowing rivers deep in the rainforest.",
-      "tags": [
-        "fast_streams"
-      ],
       "source": "iucn"
     },
     {
       "category": "behavior",
       "text": "It rests on wet, mossy rocks by rivers and waterfalls.",
-      "tags": [
-        "rests_by_waterfalls"
-      ],
       "source": "adw"
     },
     {
@@ -117,6 +108,182 @@
     {
       "category": "reproduction",
       "text": "Adults clear out pools by the river, or dig hollows in the gravel bank, to lay their eggs in, and guard the nests at night.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "government",
+      "url": "https://cites.org/sites/default/files/eng/cop/08/prop/E08-Prop-56_Conraua.PDF"
+    },
+    {
+      "category": "behavior",
+      "text": "It can leap several times its own body length in one jump.",
+      "tags": [
+        "big_leaper"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/goliath-frog"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides or rests buried under sand, mud, gravel, soil or fallen leaves.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on wet rocks by waterfalls or rapids.",
+      "tags": [
+        "rests_by_waterfalls"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in large rivers, not only in small streams or ponds.",
+      "tags": [
+        "big_rivers"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by cool or cold, clear streams.",
+      "tags": [
+        "cold_streams"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers or lakes with soft, sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by fast-flowing streams or rivers with rushing water.",
+      "tags": [
+        "fast_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its tadpoles cling to rocks in fast water with a sucker-like mouth.",
+      "tags": [
+        "sucker_mouth_tadpoles"
+      ],
+      "source": "literature",
+      "url": "https://media.rufford.org/media/project_reports/Journal%20of%20natural%20History%202019%2C%20Vol.%2053%2C%20No.%2021-22%2C%201263-1276.pdf"
+    },
+    {
+      "category": "reproduction",
+      "text": "A parent stays with its eggs or nest and guards them until they hatch.",
       "tags": [
         "egg_guarding"
       ],

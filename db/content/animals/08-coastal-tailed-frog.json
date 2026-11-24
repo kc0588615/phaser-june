@@ -97,9 +97,6 @@
     {
       "category": "habitat",
       "text": "It lives in clear, cold mountain streams beside old forests.",
-      "tags": [
-        "cold_streams"
-      ],
       "source": "adw"
     },
     {
@@ -126,6 +123,112 @@
     {
       "category": "conservation",
       "text": "In Canada it is listed as a species of Special Concern.",
+      "source": "government"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "government",
+      "url": "https://www.env.gov.bc.ca/fia/documents/fieldguide_speciesatrisk_coast.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on wet rocks by waterfalls or rapids.",
+      "tags": [
+        "rests_by_waterfalls"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tailed_frog"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by fast-flowing streams or rivers with rushing water.",
+      "tags": [
+        "fast_streams"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "government"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly high up in mountains: on upper slopes, high plateaus or alpine zones, not just foothills.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "government"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly where snow covers the ground for weeks or months in winter.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "government"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by cool or cold, clear streams.",
+      "tags": [
+        "cold_streams"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides in narrow cracks and gaps between or under rocks.",
+      "tags": [
+        "crevice_hider"
+      ],
       "source": "government"
     }
   ],

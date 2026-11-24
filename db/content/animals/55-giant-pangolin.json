@@ -84,9 +84,6 @@
     {
       "category": "morphology",
       "text": "Its sticky tongue is up to 70 cm long.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
@@ -127,23 +124,91 @@
     {
       "category": "behavior",
       "text": "Males and females mark their home areas with scent.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "Even though it lives in forests, it never climbs trees.",
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "It is hunted and sold for its scales and meat.",
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "literature",
+      "url": "https://zenodo.org/records/5720446"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "literature",
+      "url": "https://zenodo.org/records/5720446"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
       "tags": [
         "scent_marks"
       ],
       "source": "iucn"
     },
     {
-      "category": "behavior",
-      "text": "Even though it lives in forests, it never climbs trees.",
-      "source": "adw",
+      "category": "reproduction",
+      "text": "A mother carries her young riding or clinging on her back.",
       "tags": [
-        "never_climbs"
-      ]
-    },
-    {
-      "category": "conservation",
-      "text": "It is hunted and sold for its scales and meat.",
-      "source": "iucn"
+        "carries_young_on_back"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

@@ -109,9 +109,6 @@
     {
       "category": "behavior",
       "text": "By day it hides under a big flat rock on the stream bed, and it defends that rock from other hellbenders.",
-      "tags": [
-        "territorial"
-      ],
       "source": "adw"
     },
     {
@@ -138,15 +135,101 @@
     {
       "category": "habitat",
       "text": "It needs clear, cool, fast-flowing streams, and avoids water warmer than 20 °C.",
-      "tags": [
-        "cold_streams"
-      ],
       "source": "iucn"
     },
     {
       "category": "conservation",
       "text": "Mud washing in from logging, mining and roads buries the rocks it needs for shelter and nests.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its coat or skin is covered with spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It has webbed feet: skin joins its toes.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It catches prey mainly by hiding or waiting still, then striking when the prey comes close.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/hellbender"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on the bottom of a river, lake or pond, under water.",
+      "tags": [
+        "rests_on_bottom"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in large rivers, not only in small streams or ponds.",
+      "tags": [
+        "big_rivers"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by fast-flowing streams or rivers with rushing water.",
+      "tags": [
+        "fast_streams"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by cool or cold, clear streams.",
+      "tags": [
+        "cold_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides in narrow cracks and gaps between or under rocks.",
+      "tags": [
+        "crevice_hider"
+      ],
+      "source": "amphibiaweb"
     }
   ],
   "facts": [

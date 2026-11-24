@@ -81,26 +81,16 @@
     {
       "category": "morphology",
       "text": "Its front teeth never stop growing, like a rodent's.",
-      "tags": [
-        "ever_growing_teeth"
-      ],
       "source": "adw"
     },
     {
       "category": "morphology",
       "text": "It has big eyes and large, bat-like ears.",
-      "tags": [
-        "large_eyes",
-        "big_ears"
-      ],
       "source": "adw"
     },
     {
       "category": "morphology",
       "text": "Its bushy tail is longer than its body.",
-      "tags": [
-        "long_tail"
-      ],
       "source": "ngo",
       "url": "https://www.worldwildlife.org/news/magazine/spring-2021/meet-the-aye-aye-the-worlds-weirdest-primate"
     },
@@ -124,10 +114,6 @@
     {
       "category": "behavior",
       "text": "It sleeps all day in a ball-shaped nest of leaves high in the trees.",
-      "tags": [
-        "sleeping_nests",
-        "sleeps_high_in_trees"
-      ],
       "source": "adw"
     },
     {
@@ -149,9 +135,6 @@
     {
       "category": "diet",
       "text": "It also drinks nectar from the flowers of the traveler's tree.",
-      "tags": [
-        "nectar_drinker"
-      ],
       "source": "adw"
     },
     {
@@ -168,6 +151,186 @@
       "category": "conservation",
       "text": "Trees it feeds from are cut down to build boats and houses.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is black or nearly black all over, at least in some individuals.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot.",
+      "tags": [
+        "five_front_claws"
+      ],
+      "source": "literature",
+      "url": "https://www.science.smith.edu/departments/Biology/VHAYSSEN/msi/pdf/740_Daubentonia_madagascariensis.pdf"
+    },
+    {
+      "category": "morphology",
+      "text": "It bites or chews with unusual force for its size.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "literature",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/24339191/"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Some of its teeth keep growing all its life.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "ngo",
+      "url": "https://www.worldwildlife.org/news/magazine/spring-2021/meet-the-aye-aye-the-worlds-weirdest-primate"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs well or often, in trees, on rocks or both.",
+      "tags": [
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is a main or favorite part of its food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by hanging or perching in tree branches.",
+      "tags": [
+        "roosts_in_trees"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes loud, harsh screeches.",
+      "tags": [
+        "screecher"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "At least sometimes, it stands, rears up, hops or runs on its back legs alone.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/ayeaye/behavior"
+    },
+    {
+      "category": "diet",
+      "text": "It drinks nectar from flowers.",
+      "tags": [
+        "nectar_drinker"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It builds a nest or bed of leaves, branches or grass to sleep or rest in.",
+      "tags": [
+        "sleeping_nests"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps or rests high up in trees.",
+      "tags": [
+        "sleeps_high_in_trees"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "In some places it lives in or near human settlements, such as towns, villages, gardens, parks or plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "Its entire natural wild range is, or was, on a single island.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "adw"
     }
   ],
   "facts": [

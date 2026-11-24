@@ -69,9 +69,6 @@
     {
       "category": "morphology",
       "text": "It has a long, bendy snout, which is why sengis are also called elephant shrews.",
-      "tags": [
-        "pointed_snout"
-      ],
       "source": "adw"
     },
     {
@@ -106,10 +103,6 @@
     {
       "category": "diet",
       "text": "It hunts through thick fallen leaves on the forest floor.",
-      "tags": [
-        "leaf_litter",
-        "forest_floor"
-      ],
       "source": "iucn"
     },
     {
@@ -121,6 +114,128 @@
       "category": "conservation",
       "text": "Tree cutting and clearing for farms are shrinking its small forests.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes are large for its head.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs are very long for its body.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is long: at least two-thirds as long as its head and body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "morphology",
+      "text": "Its fur is mostly red, reddish brown or golden red.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden-rumped_sengi"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly among the fallen leaves (leaf litter) on a forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "smithsonian",
+      "url": "https://repository.si.edu/server/api/core/bitstreams/108a8019-3239-44f3-ba37-53be3a4d5291/content"
     }
   ],
   "facts": [

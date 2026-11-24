@@ -103,36 +103,22 @@
     {
       "category": "morphology",
       "text": "Its long snout looks like a stretched-out pig's snout.",
-      "tags": [
-        "pointed_snout"
-      ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Aardvark"
     },
     {
       "category": "morphology",
       "text": "It sees poorly, but its long ears hear very well.",
-      "tags": [
-        "poor_eyesight",
-        "big_ears"
-      ],
       "source": "adw"
     },
     {
       "category": "diet",
       "text": "It licks up ants and termites with its long, sticky tongue and swallows them without chewing.",
-      "tags": [
-        "long_tongue"
-      ],
       "source": "adw"
     },
     {
       "category": "diet",
       "text": "It digs into ant nests and termite mounds with its strong, spade-like claws.",
-      "tags": [
-        "raids_termite_mounds",
-        "digging_claws"
-      ],
       "source": "adw"
     },
     {
@@ -154,16 +140,137 @@
     {
       "category": "behavior",
       "text": "If it can't dig away from danger, it stands up on its back legs and tail and defends itself with its claws.",
-      "tags": [
-        "stands_on_hind_legs",
-        "burrower"
-      ],
       "source": "adw"
     },
     {
       "category": "conservation",
       "text": "Hunting for bushmeat may be a real threat to it in some countries, like Zambia and Mozambique.",
       "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has very sharp hearing and relies on it.",
+      "tags": [
+        "super_hearing"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its snout is long, or narrows to a pointed tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Aardvark"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue is very long and can reach far out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It finds most of its food on the ground.",
+      "tags": [
+        "feeds_on_ground"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area, paths or objects with scent, such as urine, dung or scent rubbed on from its glands.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "ngo",
+      "url": "https://www.afrotheria.net/PDFs/Afrotherian-Conservation-Number-16-September-2020.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Aardvark"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Aardvark"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs into the ground on land, for example making burrows, tunnels or dens, or digging itself down into soil or sand.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has strong, long claws that it digs with.",
+      "tags": [
+        "digging_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It breaks open ant or termite nests with its claws or snout to eat the insects inside.",
+      "tags": [
+        "raids_termite_mounds"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "At least sometimes, it stands, rears up, hops or runs on its back legs alone.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly on or in sand dunes, by the coast or inland.",
+      "tags": [
+        "sand_dunes"
+      ],
+      "source": "literature",
+      "url": "https://doi.org/10.3389/fphys.2020.00637"
     }
   ],
   "facts": [

@@ -99,49 +99,31 @@
     {
       "category": "morphology",
       "text": "Its large, oval ears have white edges, and its lips are white.",
-      "tags": [
-        "white_ear_rims"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "It swims, wades and dives very well.",
-      "tags": [
-        "swimmer"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "In the dry season it sleeps in muddy pools of water.",
-      "tags": [
-        "mud_bather"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "Its eyes are small and it sees poorly; it relies on smell and hearing.",
-      "tags": [
-        "poor_eyesight"
-      ],
       "source": "adw"
     },
     {
       "category": "behavior",
       "text": "Tapirs call to each other with long, high whistles.",
-      "tags": [
-        "whistle_calls"
-      ],
       "source": "adw"
     },
     {
       "category": "diet",
       "text": "It eats fruit whenever it is in season.",
-      "tags": [
-        "fruit_eater"
-      ],
       "source": "adw"
     },
     {
@@ -156,6 +138,227 @@
       "category": "conservation",
       "text": "People hunting it are its biggest danger.",
       "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears are large for its head.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its colors or pattern help it blend in with its surroundings, so it is hard to see.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face has bold markings in a contrasting color, such as patches, rings or lines.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toes end in hard hooves that it walks on.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/tapirs/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is very short, just a stub.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a patch of contrasting color on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its ears have white edges.",
+      "tags": [
+        "white_ear_rims"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes short, high, bird-like chirping calls.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/tapirs/behavior"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves its dung in piles that it comes back to, as messages to others of its kind.",
+      "tags": [
+        "dung_piles"
+      ],
+      "source": "literature",
+      "url": "https://tropicalconservationscience.mongabay.com/content/v2/09-05-25_140-158_naranjo.pdf"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives and feeds on the forest floor, and rarely if ever climbs up into the trees.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Leaves are a main part of its food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It never climbs trees: it stays on or under the ground, or in water.",
+      "tags": [
+        "never_climbs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It visits salt licks, or eats mineral-rich soil, clay or water, to get minerals.",
+      "tags": [
+        "salt_licks"
+      ],
+      "source": "literature",
+      "url": "https://www.revmexmastozoologia.unam.mx/ojs/index.php/rmm/article/download/300/302"
+    },
+    {
+      "category": "diet",
+      "text": "It spreads plant seeds to new places by eating them, often in fruit, and passing them in its droppings.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It can breathe through the tip of its raised nose, snout or trunk while the rest of its body stays under water.",
+      "tags": [
+        "snorkel_nose"
+      ],
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/tapir"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes high squeaking calls.",
+      "tags": [
+        "squeaker"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends an area, such as a territory, home patch or den site, against others of its kind.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is a main or favorite part of its food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It wallows in mud, or coats itself with mud, to cool off or protect its skin.",
+      "tags": [
+        "mud_bather"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly or not at all, and relies mainly on smell, hearing or touch.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims well or often.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It calls with high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in the open zone high on mountains above the tree line, where it is too cold for trees to grow.",
+      "tags": [
+        "above_tree_line"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in brackish water, part salty and part fresh, as in estuaries, coastal lagoons or mangroves.",
+      "tags": [
+        "brackish_water"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in or by streams that run through forest.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives at least partly in grassy meadows high on mountainsides.",
+      "tags": [
+        "mountain_meadows"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives or breeds in shallow, still water, such as marshes, ponds, pools or bogs.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "iucn"
     }
   ],
   "facts": [
