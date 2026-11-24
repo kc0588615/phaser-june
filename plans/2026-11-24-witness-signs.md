@@ -725,7 +725,7 @@ How each step runs (`~/.gemini/mission-lead.md`):
     - `node scripts/run-typescript.mjs scripts/balance-044.ts --places world --explain 0` prints sentence + sign lines.
     - E2E-DEV passes every check: the existing notes checks still hold, with one mark per note. Artifact: `$STATE/e2e-s4/`.
 
-- [ ] S5. **Fable sentence-review gate, part 1: list, review, rulings (blocking; no code).**
+- [x] S5. **Fable sentence-review gate, part 1: list, review, rulings (blocking; no code).**
   - **Who:** Opus writes `$STATE/scripts/witness-list.ts`, extending S1's helper, and runs it on the worktree to write `$STATE/witness-sentences.csv`.
     - Columns: `sign, category, meaning, witness, HEAD holders (id name), live-only holders, dealt in N HEAD combos, label hit, label_word_hits, censor blanks per holder`.
     - HEAD holders come from the real wired `heldSigns`.
@@ -949,6 +949,55 @@ Run these one at a time, after both final code reviews are recorded and their ac
 - (lead) **Scope, reveal card, `14:2`, version & balance limits**: write sentences for all 201 active signs (`null` only for `floreana_island`, `pinta_island`, `prairie_dog_towns`, plus any sign Fable's truth review flags); keep reveal-card markup unchanged and defer untagged `14:2` to Summary so the mission stays pure code; bump `ANIMAL_RULES.version` to `'055-2'` and pre-register Run 2 vs Baseline balance limits (`--rounds 200 --seed 44 --places world,africa,asia`).
 - (lead) **Revision rulings (Fable + Astra)**: Fable truth gate targets HEAD holders only (4 stale pre-H22 live pairs accepted until H22 runs; Astra MF1 rejected); keep sign labels as-is and keep `witnessNameProblems` strict (no label-word exemption) off the runtime path (`content -- preview` + tests); reject infeasible `RareGem.atLeast` and guarantee a playable board after `topUpRare` in `BoardModel.newBoard`; filter unknown open tags on the live `animalsFromPool` door only (authoring stays strict); validate `{ kind: 'note' }` entries in `round.log` inside `roundStillFits`; reject counterfactual multi-mystery filtering (Astra SC1, KISS).
 - (lead) **S1 sentence-wording rule**: single-word signs forbid their label word and inflections; multi-word signs forbid the whole label phrase (`signTableProblems`) and all holder name/group/place words, but keep plain anatomical/color nouns (`tail`, `eyes`, `ears`, `teeth`, `shell`, `horns`, `tongue`, `white`, `yellow`, `orange`) rather than unnatural slang/riddles (`peepers`, `chewing pegs`, `hearing flaps`, `hindmost part`, `quartet`) so grades 6–12 solo readers understand every clue immediately.
+- (lead) **S5 Fable sentence-review gate** (`$STATE/tasks/20261124-030923-fable-5-2-high.md`): 153 rows accepted as OK (including `floreana_island` and `pinta_island` as `null`); 48 FIX proposals ruled below (47 accepted, 1 rejected); 0 new NULLs; 0 suspect HEAD tags (mission stays pure code; no content build needed):
+  - `black_and_white`: **Accepted** (`Its coat or skin is mostly large, bold patches of black beside patches of white, not stripes.`) — drops overstated "jet-black"/"crisp white" and awkward "pairs … with".
+  - `black_coat`: **Accepted** (`Its fur is black or nearly black all over, at least in some individuals.`) — replaces unnatural "inky dark" riddle with plain color word.
+  - `bright_green`: **Accepted** (`Its body is mostly a vivid green, like a fresh leaf.`) — replaces color riddle with plain "green".
+  - `cecropia_leaves`: **Accepted** (`Its main foods include the leaves of Cecropia trees.`) — capitalizes genus name `Cecropia`.
+  - `eats_lichen`: **Accepted** (`Its diet regularly includes lichens, the plant-like growths that cling to bark and rocks.`) — fixes biological error ("crusty" excludes hanging/bushy lichens eaten by Golden Snub-nosed Monkey).
+  - `egg_guarding`: **Accepted** (`Its eggs or nest are protected by a parent that stays with them until they hatch.`) — removes inflected label word "guarded".
+  - `electric_sense`: **Accepted** (`It can detect the faint electricity given off by other animals' bodies, to find prey.`) — removes repeated label word "sense".
+  - `ever_growing_teeth`: **Accepted** (`It has some teeth that never stop growing and are worn down by use.`) — fixes "Its jaws hold" inaccuracy for elephant tusks outside the mouth.
+  - `eye_glands`: **Accepted** (`It has large scent glands on its face, just below or in front of its eyes.`) — "glands" is biologically accurate and avoids colliding with `pouch` signs.
+  - `face_markings`: **Accepted** (`Its face has bold patches, rings, a mask, crescents or lines of a contrasting color.`) — removes over-specific location list untrue of turtle/otter/tortoise holders.
+  - `father_carries_young`: **Accepted** (`Its eggs or babies ride on or inside the father's body.`) — drops repeated label words "young" and "carried".
+  - `feathery_gills`: **Accepted** (`It keeps frilly, branched gills sticking out from the sides of its head, even as an adult.`) — replaces "breathing tufts" riddle with plain "gills".
+  - `fish_eater`: **Accepted** (`Its main foods include fish.`) — removes reversed label "eats fish".
+  - `five_front_claws`: **Accepted** (`It has five claws on each forefoot.`) — fixes biological error ("nails" is wrong for clawed carnivores/pangolins/bears).
+  - `fruit_eater`: **Accepted** (`Its main or favorite foods include fruit.`) — removes reversed label "eats fruit".
+  - `grasping_lip`: **Accepted** (`Its pointed upper lip grabs leaves and twigs like a finger.`) — replaces "pointed top edge" riddle with plain "upper lip".
+  - `hinged_shell`: **Accepted** (`Its shell has a movable joint across the underside, so it can close up.`) — biologically accurate for a hinged plastron (shells don't "bend").
+  - `huge_head`: **Accepted** (`Its head is very large for its body.`) — drops "oversized for the size of" redundancy without using "big".
+  - `large_eyes`: **Accepted** (`Its eyes are very big for its head.`) — drops "oversized for the size of" redundancy.
+  - `leaf_eater`: **Accepted** (`Its main foods include leaves.`) — removes reversed label "eats leaves".
+  - `leg_spurs`: **Accepted** (`It has big, pointed scales or spikes on its legs.`) — replaces unnatural "prongs"/"limbs" with natural words.
+  - `long_finger`: **Accepted** (`Its hands each have one twig-like finger, far thinner and longer than the rest.`) — untangles awkward phrasing.
+  - `long_tongue`: **Accepted** (`Its tongue reaches far out of its mouth and is often sticky, for catching insects or grabbing leaves.`) — removes "stretchy", untrue for Okapi and Saola.
+  - `low_rumbles`: **Accepted** (`It gives deep, rumbling calls, some pitched below what people can hear.`) — drops repeated label word "low".
+  - `neck_hump`: **Accepted** (`It has a raised ridge or crest along the back of its head and neck.`) — replaces "nape" (above grade 6) with "neck".
+  - `nectar_drinker`: **Accepted** (`It feeds on nectar, the sweet liquid inside flowers.`) — removes reversed label "drinks … nectar".
+  - `prairie_dog_towns`: **Rejected** — keep `null`; prairie dogs are the sign's specific content (a generic "colonies dug by another kind of burrowing animal" blurs into `borrowed_burrows`), and the sign has 1 holder and 0 dealt combos.
+  - `purple_gray`: **Accepted** (`Its skin is a dark, grayish violet.`) — drops "mixed with charcoal", which can be read literally.
+  - `rain_breeder`: **Accepted** (`It mates and lays its eggs when heavy downpours come, often in the pools or puddles they fill.`) — drops both label words "breeds" and "rain".
+  - `red_orange`: **Accepted** (`Its body is a bright, fiery color, halfway between red and orange.`) — replaces "scarlet and tangerine" color riddle with plain grade-6 color words.
+  - `roosts_in_trees`: **Accepted** (`It rests hanging or perching among branches.`) — drops "often in groups", untrue for solitary holders (sloths, orangutan, aye-aye, pangolin, red panda, tree-kangaroo).
+  - `shoulder_stripe`: **Accepted** (`It has a single bold band of contrasting color running across its shoulders.`) — replaces "top of its forelimbs" riddle with "shoulders".
+  - `side_frills`: **Accepted** (`It grows thin, thread-like flaps of skin along its sides and thighs, at least in males.`) — replaces "flanks" (above grade 6) with "sides".
+  - `slow_mover`: **Accepted** (`It creeps along at a crawl, even when disturbed.`) — drops both inflected label words "moves" and "slowly".
+  - `snowy_winters`: **Accepted** (`It lives where snow covers the ground for weeks or months each year.`) — drops repeated label word "winter".
+  - `squeaker`: **Accepted** (`It makes thin, high-pitched calls, like a squeezed rubber toy.`) — fixes "squealing" (different sound from squeaking) and odd "small calls".
+  - `star_fingers`: **Accepted** (`Its fingertips each end in a tiny burst of points, like a little star.`) — replaces "front digits"/"asterisk" riddle with clear grade-6 words.
+  - `stays_larval`: **Accepted** (`It grows up and breeds while keeping the gills and water-living body it had when young, never changing into a land-living adult.`) — fixes ambiguous "keeping its young" phrasing.
+  - `stores_food`: **Accepted** (`It hides or piles up food and comes back to eat it later.`) — drops haypile example untrue for prey-caching holders (Tiger, Ethiopian Wolf, Maned Wolf).
+  - `striped_young`: **Accepted** (`Its babies have lines of contrasting color along their bodies, and sometimes spots, that fade as they grow up.`) — drops reversed label "young have stripes".
+  - `stubby_tail`: **Accepted** (`Its tail is very short, hardly more than a nub.`) — drops "tiny", stronger than meaning for Giant Panda (10–15 cm tail).
+  - `super_hearing`: **Accepted** (`It relies on its ability to pick up very faint sounds.`) — replaces unnatural "sense of sound".
+  - `surfaces_to_breed`: **Accepted** (`It lives underground and comes up above ground only briefly, to mate and lay eggs.`) — drops both label words "surface" and "breed".
+  - `warning_colors`: **Accepted** (`Its bright colors tell predators that it is toxic or bad to eat.`) — replaces "hues" (above grade 6) with "colors".
+  - `white_tail_tip`: **Accepted** (`Its tail ends in white, or has a white band near its end.`) — drops repeated label word "tip".
+  - `winter_rest`: **Accepted** (`It sleeps or lies still through the coldest part of the year, staying inactive for weeks or months.`) — drops reversed label words "rests" and "winter".
+  - `yellow_head`: **Accepted** (`Its head is mostly yellow.`) — drops "bright", stronger than meaning for Radiated Tortoise.
+  - `yellow_legs`: **Accepted** (`Its legs have yellow skin or scales.`) — drops "bright" (untrue for African Spurred Tortoise) and replaces "limbs" with "legs".
 
 ## Log
 
@@ -962,5 +1011,6 @@ Run these one at a time, after both final code reviews are recorded and their ac
 - 2026-11-24 02:37 UTC — Step S2: Opus (`$STATE/tasks/20261124-022841-opus-5-5-high.md`) added the A1 exact-`null` failure mode and test red-first, replaced all 113 `// S2` entries in `src/clueGame/signs.ts` (110 `habits`/`habitat`/`life` sentences including place-free `kopjes`, plus 3 commented `null`s: `floreana_island`, `pinta_island`, `prairie_dog_towns`), and extended `$STATE/scripts/witness-check.ts --signs` to all 201 active signs. Lead audited all 113 rows against `$STATE/sign-holders.csv` and accepted them (leaving minor polish like `climber`/"clambers" and `cecropia` capitalization for the S5–S6 Fable gate). Verified: `git grep "// S2" src/clueGame/signs.ts` empty, `witness-check.ts --signs` 0 problems (132 multi-word info notes), `typecheck` pass, `lint` 0 warnings, `npm test` 153/153, `content -- preview` 0 problems.
 - 2026-11-24 02:43 UTC — Step S3: Opus (`$STATE/tasks/20261124-023840-opus-5-5-high.md`) wrote failure-mode header + red-first tests in `tests/clueGame/content.test.ts` (all 9 modes), extracted shared `giveawaysOf`/`regionsOf`/`familyPlainOf` and exported strict `witnessNameProblems` in `src/clueGame/questionMatchContent.ts`, added the live `animalsFromPool` unknown-open-tag filter with `warn` (preserving raw `compareTags` for `isHandWrittenClue` and strict `animalsFromProfiles`), and wired `witnessNameProblems` into `scripts/content.ts` `preview`. 0 HEAD witness sentences flagged (`src/clueGame/signs.ts` untouched). Lead reviewed full diff and verified: `typecheck` pass, `lint` 0 warnings, `npm test` 166/166, `content -- preview` 0 `PROBLEM` lines.
 - 2026-11-24 03:05 UTC — Step S4: Opus (`$STATE/tasks/20261124-024509-opus-5-5-high.md`) wrote failure-mode headers and red-first tests (`tests 172, pass 159, fail 13`) in `tests/clueGame/signs.test.ts` (10 former deferred edges) and `tests/clueGame/animalBoard.test.ts` (W1–W8, R1–R5, `HELD_BACK = []`, updated A8/S25b/Aardvark), then wired the 10 deferred open-tag `implies` edges and dropped `noteCategories` in `src/clueGame/signs.ts` (0 witness sentences triggered `witnessNameProblems`), implemented per-sign `WitnessNote` / `witnessNotes`, `sameNote` + `round.log` validation in `roundStillFits`, and `stillPossible` in `src/clueGame/animalBoard.ts`, updated `AnimalSheets.tsx` (`signCategory`), `scripts/balance-044.ts` (`--explain`), and `scripts/e2e.mjs` (stale-save fixture/predicate). Lead reviewed full diff and verified: `typecheck` pass, `lint` 0 warnings, `npm test` 172/172, `content -- preview` 0 `PROBLEM` lines, `balance-044.ts --places world --explain 0` (22 standard-sentence notes with sign tags), and guarded `phaser_june_dev` `e2e:fresh` 1554/1554 pass (artifact `$STATE/e2e-s4/`).
+- 2026-11-24 03:26 UTC — Step S5: Opus (`$STATE/tasks/20261124-030716-opus-5-5-high.md`) wrote `$STATE/scripts/witness-list.ts` and generated `$STATE/witness-sentences.csv` (201 active signs, 105 sets / 525 combos, 142 dealt signs, `label_hit` 0, `censor_blanks` 0, 4 expected `live_only_holders` rows from `/tmp/ws-c7b`). Fable (`$STATE/tasks/20261124-030923-fable-5-2-high.md`) reviewed all 201 rows for HEAD biological truth, grade 6–12 readability, no giveaway names/groups/places, and label repetition: 153 OK, 48 FIX, 0 NULL, 0 suspect HEAD tags. Lead ruled on all 48 FIX items under Decisions (47 accepted, 1 rejected: `prairie_dog_towns` kept `null`). Plan-only commit.
 
 ## Summary
