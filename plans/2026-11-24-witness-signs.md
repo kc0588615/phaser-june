@@ -81,7 +81,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -128,6 +128,410 @@ Careful moves left at find (20th/40th/60th pct): world `14/19/22`, africa `15/19
 
 ## Architecture
 
+Pass 2: one design. Code at `7f1f5dd2` (HEAD = `origin/main` `8d246c70` plus the plan). "Live" means HEAD code run on the `7bce511a` content, which the live `phaser_june` rows hold until H22 runs. Figures were recomputed offline. The "after" figures model this design: per-sign dealing, the 10 edges wired, implied signs dropped, and `null` for `floreana_island`, `pinta_island` and `prairie_dog_towns`. Dealable sets are enumerated as `balance-044.ts reportDeals` does: 105 sets and 525 combos on both content versions. Pass 1's working is in `$STATE/tasks/20261124-011126-architect.md`.
+
+### Pre-change facts
+
+| Measure | HEAD profiles | Live `7bce511a` rows |
+|---|---:|---:|
+| Combos with ≥1 note: today, dealt per note (`animalBoard.ts:240-246`) | 525/525 | 403/525 |
+| Combos with ≥1 note: this design, per sign | 525/525 (min 3 a combo) | 458/525 |
+| Notes dealt: today / this design | 5,803 / 6,107 | 943 / 1,355 |
+| Notes in this design that need `also` chips | 455 (7.5%) | 169 |
+| Signs dealt at least once (this design) | 142 | 82 (all within HEAD's) |
+| Dealt notes with several signs; repeating a sign already dealt in the combo (today) | 65; 40 | 107; 20 |
+| Dealt notes shown with blanks (today) | 60 | 69 |
+| Dealt notes whose text isn't the sign's shared standard sentence (today) | 509 (157 distinct) | 921 (257 distinct) |
+| Items censored into `revealNotes` (>2 blanks) | 16 untagged facts on 13 animals, 0 tagged | 16, 0 tagged |
+| Notes shown with blanks (`full` set) | 294 | 286 |
+| Retired tags held; unknown tags | 0; 0 | 0; 0 |
+| `signProblems` with the 10 edges wired | 0 | 2, both already there (33 `above_tree_line`+`high_mountains`, 66 `dung_piles`+`scent_marks`; preview-only, not in `validatePool`) |
+| Field guides that lose a badge when the 10 edges are wired | 2 | 0 |
+| Held signs summed over the 76 animals (`heldSigns`) | 1,458 (max 33 for one animal) | 506 |
+| `animalsFromProfiles` warnings | 3 ("no countries" for 3 profiles, from the scratch read) | 3 |
+
+- **Starting board.** `freshGrid` rolls `witnessChance` 0.03 on all 49 cells, and `setPins` makes 5 of them ignored. P(no gem on the 44 free cells) = 0.97^44 = 26.18%, so P(≥1) = 73.82%, with a mean of 1.32. Pinned cells keep a grid value, possibly purple (`BoardModel.ts:6-7`), so every count must skip pins. Placing a gem on the boards that had none removed the last valid move once in 5,267 boards, and `shuffle()` fixed it.
+- **The 10 deferred edges** (sign-audit Summary): `backward_pouch→pouch`, `carries_young_on_back→mother_carries_young`, `face_mask→face_markings`, `feathery_gills→underwater_breathing`, `s_shaped_horns→horns`, `shoulder_stripe→stripes`, `spectacles→face_markings`, `spiral_horns→horns`, `tear_lines→face_markings`, `walks_upright→stands_on_hind_legs`. Each passed entailment and was blocked only by the wording of old notes, which per-sign dealing no longer shows.
+- **Callers.**
+  - `WithBlanks`: `AnimalGame.tsx:20,55` and `AnimalSheets.tsx:18,447`, both witness notes.
+  - `noteCategories`: `AnimalSheets.tsx:15,449` and `signs.test.ts:19,160`.
+  - `BLANK`: `WithBlanks.tsx:2` and `censor`.
+  - `revealNotes` / `full`: `questionMatchContent.ts:121-134`, `questionMatch.ts:30-31,47-48`, `AnimalSheets.tsx:616,717`, and the fixture at `animalBoard.test.ts:188`.
+  - `RareGem`: `BoardModel.ts:26,119,132`. `EventBus.ts:55` repeats its shape inline.
+  - `newBoard` with a rare gem: `ClueBoardScene.ts:150`, `balance-044.ts:385,387`, `boardModel.test.ts:45,62,417`.
+  - `animalDebugSummary`: `useAnimalSession.ts:253`. Its `notes` count is read by `e2e.mjs` and `scripts/shots/take.mjs:167-191`.
+  - `ANIMAL_RULES`: `useAnimalSession.ts`, `balance-044.ts:323-333`, `savedGame.test.ts`, `animalBoard.test.ts`.
+  - Sign-table literals: the `sign()` helper and `T` in `signs.test.ts:24-45`, `TABLE` in `animalBoard.test.ts:372-376`.
+
+### Findings
+
+1. **A witness note is the mystery's own sentence, so its words give the animal away.**
+   - Where: `animalBoard.ts:231-246` (`WitnessNote extends FieldNote`, dealt per note); shown at `AnimalSheets.tsx:447` and `AnimalGame.tsx:55`.
+   - On HEAD, 509 of 5,803 dealt notes aren't the sign's shared sentence. On live it's 921 of 943, including sign-audit's listed giveaways. 76 signs have 2 or more different texts across holders.
+   - Breaks: Goal 4 (correctness) and DRY (one fact written once per holder).
+   - Fix: deal per sign; the text is `SIGNS[sign].witness`.
+2. **Censoring notes becomes dead code once the round stops showing them.**
+   - Where: `questionMatchContent.ts:22-25,51-59,111-129` (censor, `BLANK`, `MAX_BLANKS`, the `notes`/`full`/`revealNotes` split), `questionMatch.ts:30-31,45-48`, `WithBlanks.tsx`.
+   - Today the blanks also mangle sign-audit's standard sentences, for example "It was a giant ____."
+   - After the fix, the only reader is the reveal card (`AnimalSheets.tsx:616,717`), which always shows `full ?? text`, the whole note.
+   - Breaks: KISS (data nobody reads, docs saying notes are blanked).
+   - Fix: notes keep their whole text in profile order; `full`, `revealNotes`, `MAX_BLANKS`, the `BLANK` export and `WithBlanks.tsx` go. The censor and the name-word list (`giveaways`) stay, used for one new job: warning when a witness sentence names an animal that holds its sign (finding 9).
+3. **Dealing per note repeats signs, ties several signs together, and skips signs held only by implication.**
+   - Where: `animalBoard.ts:225-229,240-246`.
+   - 40 HEAD notes repeat a sign already dealt in the same round. 65 notes have several signs and fit only suspects holding all of them. `high_mountains` held through `above_tree_line` is never dealt.
+   - Breaks: KISS (the unit dealt is a sentence, not a fact).
+   - Fix: per-sign dealing over `heldSigns`, dropping signs implied by another eligible one.
+4. **A witness note shows no sign label, and the field guide's one-badge-per-fact rule hides the broader chip.**
+   - `NotesList` shows only `CategoryMark`s (`AnimalSheets.tsx:445-451`).
+   - `signsOf` (`signs.ts:358-367`) hides a broader chip behind a narrower one. So a "climber" note fits a guide that shows only "climbs boulders": 455 of 6,107 notes on HEAD.
+   - Fix: the shared `SignChip`, plus `also` chips joined by "or".
+5. **Starting witness gems are left to chance.**
+   - Where: `BoardModel.ts:132-144,476-489`.
+   - 26.2% of boards start with none.
+   - `EventBus.ts:55` repeats `RareGem`'s shape inline (DRY).
+   - Fix: B3 top-up; the event payload reuses `RareGem`.
+6. **The 10 deferred edges.**
+   - Where: `signs.ts:46,65,87,92,179,195,205,208,230,247`. They are documented as deferred at `CONTENT_SOURCES.md:84-98`, and pinned as unwired at `signs.test.ts:163-166`.
+   - With per-sign sentences every fit they add is true by definition.
+   - Fix: wire all 10. That test must be replaced, or `npm test` fails.
+7. **The save guard compares the old note shape.**
+   - `roundStillFits` (`animalBoard.ts:254-269`) compares `text`/`tags`/`fits`.
+   - `stillPossible` (`:582-586`) passes the note itself as a `FieldNote`.
+   - Fix: compare `sign`/`text`/`fits`/`also`; fit on `{ tags: [note.sign] }`. Old saves are already dropped by the version check, which runs first (`useAnimalSession.ts:119`).
+8. **E2E gaps and one bug the new shape would cause.**
+   - Notes are checked once, only in the first round that collects one (`e2e.mjs:2011-2029`).
+   - Starting gems and the reveal card's Field notes are never checked.
+   - The stale-save fixture pushes the old shape (`:2309`), and the predicate `note.tags.includes(...)` (`:2325`) would throw on the new shape. Inside `waitFor(...).catch(() => null)` that error is hidden, and the later A16 checks fail with a confusing message.
+9. **No guard keeps a sentence from naming a holder.**
+   - The only per-animal name-word list is built inside `buildAnimal` (`questionMatchContent.ts:111-119`, which needs countries; `Animal` doesn't keep them).
+   - Fix: check there, report through the existing `warn` channel, and assert no such warning in a unit test. That fails loud in CI and never throws for players.
+10. **Stale docs and comments.**
+    - `CLUE_MATCH.md:20,22,51,53,61,90`; `CONTEXT.md:58-59,100-101`; `ANIMAL_BOARD_PAPER.md:3` (plus a new later-rules note); `CONTENT_SOURCES.md:81,84-98,102`.
+    - The comment at `AnimalGame.tsx:499` says the side notes are "only blanked copies".
+
+**Areas that are fine:**
+- `animalFitsNote` (one fit check; it stays the only one).
+- The `heldSigns` closure: retired tags are held as themselves, and unknown tags throw, but already at load in `signsOf` (`questionMatchContent.ts:135-136`), so dealing never meets one.
+- Seeded `newBoard`; `shuffle()` keeps the gems it has; `loadBoard` on resume.
+- `fitsShape` doesn't look inside arrays, so the note shape doesn't affect it. It does catch the new `rules.startWitness` key.
+- The reveal card's markup; `GlossaryText`; `glossary.ts` (no change).
+
+### Target design
+
+**Answers to the brief's questions:**
+- Sentences live in code, one per sign, on its `SIGNS` entry.
+- Notes are dealt per sign, so there are no notes with several signs.
+- The starting board has at least one witness gem, always, whatever the mystery.
+- If a round has no note, its gems give none, as today (0/525 on HEAD; 67/525 live until H22).
+- The board doesn't depend on the mystery.
+- Rules version `'055-2'`.
+
+#### Code changes, file by file
+
+**`src/clueGame/signs.ts`**
+
+New field and helper:
+```ts
+export interface ActiveSignEntry { category; meaning; /** The standard witness sentence: true of every holder, names no animal, group or place, doesn't repeat the label; null = never dealt (comment why). */ witness: string | null; implies?; denies?; retired?: never }
+const at = (category: ChargeCategory, meaning: string, witness: string | null, rules: Pick<ActiveSignEntry, 'implies' | 'denies'> = {}): ActiveSignEntry => ({ category, meaning, witness, ...rules });
+/** A sign's standard sentence; null for a retired, unknown or deliberately unwritten sign (never throws: old live rows load). */
+export function witnessSentence(tag: string, table: SignTable = SIGNS): string | null
+```
+- `RetiredSignEntry` doesn't change. The union's excess-property check (keyed on `retired`) already rejects `witness` on a retired entry, the same way it rejects `meaning` today.
+- All 201 `at(...)` calls get the sentence as the third argument.
+- `null` only on `floreana_island`, `pinta_island` and `prairie_dog_towns` (one holder each; they can't be said without a place or animal). Each gets a one-line comment.
+
+`signTableProblems` additions, for each active entry with `witness !== null`:
+- empty, or `witness !== witness.trim()`;
+- contains `_` (a blank);
+- repeats its label. The label pattern is `new RegExp(\`\\\\b\${tag.split('_').map(escapeRegExp).join('[\\\\s-]+')}\\\\b\`, 'i')`: whole phrase, case-insensitive, with space or hyphen between words. So `s_shaped_horns` matches "S-shaped horns" and "s shaped horns", and `mane` doesn't match "remains". Inflections ("horn" for `horns`) are left to the Fable review.
+- The existing load-time throw (`signs.ts:261-262`) covers it.
+
+The 10 edges are wired: the broader sign is appended to each narrower one's `implies`.
+
+Removed: `noteCategories` (dead).
+
+**`src/clueGame/questionMatch.ts`**
+- `FieldNote = { text: string; source: Source; tags?: readonly string[] }`; `full` goes.
+- `Animal.revealNotes` goes.
+- `Animal.notes`' doc becomes "hand-written clues then facts, in profile order, whole: the reveal card's Field notes".
+
+**`src/clueGame/questionMatchContent.ts`**
+- `buildAnimal` pushes every item into `notes` whole.
+- `MAX_BLANKS` and the `BLANK` export go. `BLANK` stays as a module-local constant inside `censor`, which stays private.
+- After `const signs = signsOf(allTags)`, so unknown tags still throw first, with today's message:
+  ```ts
+  for (const sign of heldSigns(allTags)) {
+    const sentence = witnessSentence(sign);
+    const named = sentence === null ? null : censor(sentence, giveaways);
+    if (named?.blanks) warn(`${input.commonName}: the witness sentence of "${sign}" names it ("${named.text}"): reword it in SIGNS (src/clueGame/signs.ts)`);
+  }
+  ```
+- Cost: about 1,458 sentence checks on HEAD (506 live), against about 2,300 note checks today, so loading gets cheaper.
+- Header comments at `:1-6` and `:109-110` are updated.
+
+**`src/clueGame/animalBoard.ts`**
+```ts
+/** One of the mystery's signs as its standard sentence; `fits`: suspects holding the sign; `also`: narrower signs some suspects' guides show instead of this one (sorted). */
+export interface WitnessNote { sign: string; text: string; fits: number; also: string[] }
+export function witnessNotes(book: Book, suspects: readonly number[], mysteryId: number): WitnessNote[]
+```
+How `witnessNotes` deals:
+1. Go through `[...heldSigns(mystery.tags)]` in its fixed order: own tags in clue order, each followed by what it implies.
+2. Keep a sign when `witnessSentence(sign) !== null` and `fits = suspects.filter(id => animalFitsNote(animal(book, id), { tags: [sign] })).length` is between 2 and `suspects.length - 1`.
+3. Drop a kept sign that another kept sign implies (`other !== sign && heldSigns([other]).has(sign)`). The narrower one says it already.
+4. Set `also = chips.filter(tag => tag !== sign && heldSigns([tag]).has(sign))`, where `chips` is the sorted, distinct `signs[].tag` across all suspects.
+
+What this guarantees:
+- Every fitting suspect shows `sign` or one `also` chip, and no non-fitter shows either.
+- `also` depends only on the sign and the set, so it tells the player nothing beyond `fits`.
+- Order is the profile's, deterministic, and there are no repeats.
+- No new export: `heldSigns` covers both "implies" tests. `narrowerSigns` isn't needed.
+
+Other changes in the file:
+- `roundStillFits`: `same = a.sign === b.sign && a.text === b.text && a.fits === b.fits && a.also.join('|') === b.also.join('|')`; doc updated.
+- `stillPossible`: `animalFitsNote(animal(book, id), { tags: [note.sign] })`.
+- `animalFitsNote` stays.
+- `AnimalRules.startWitness: number` ("witness gems a new board's free cells hold at least").
+- `ANIMAL_RULES`: `version: '055-2'`, `startWitness: 1`; the tuning comment gets one line on the 055-2 bot result.
+- `applyPhase` doesn't change.
+
+**`src/game/BoardModel.ts`**
+- `RareGem { type; chance; /** a new board's free cells hold at least this many */ atLeast?: number }`.
+- `newBoard`: `freshGrid()` → `noToys()` → `setPins(pins)` → `this.topUpRare()` → `if (!this.hasAnyValidMove()) this.shuffle()`.
+- Private command `topUpRare()`:
+  - count rare gems on unpinned cells;
+  - while the count is under `rare.atLeast ?? 0` and unpinned non-rare cells remain, turn `free.splice(Math.floor(this.rng() * free.length), 1)[0]` into the rare gem.
+- It uses the rng only when it places a gem, so the 73.8% of boards that already roll a gem come out byte-identical, which keeps the bot comparison paired. It stops when the free cells run out (no endless loop).
+- A rare gem never matches, so placing one can't create a standing match.
+- `loadBoard` and refills don't change; `pickGem` keeps `chance`.
+
+**`src/game/EventBus.ts:55`**
+- `rare?: RareGem` (type import from `./BoardModel`, which it already imports from).
+
+**`src/components/animalBoard/useAnimalSession.ts:205`**
+- `rare: { type: WITNESS_GEM, chance: round.rules.witnessChance, atLeast: round.rules.startWitness }`.
+- `boardSeed` still comes from the set alone (`:72,82` unchanged).
+
+**`src/components/animalBoard/AnimalSheets.tsx`**
+- Module-local `function SignChip({ tag, as: Tag = 'li' }: { tag: string; as?: 'li' | 'span' })` renders `<Tag data-sign={tag} className={CHIP}>{signPhrase(tag)}</Tag>`. `SignGroups` (`:332`) uses it, unchanged in the DOM (`sign.text === signPhrase(sign.tag)` by `signsOf`).
+- `NotesList` item:
+  - `<li data-witness-sign={note.sign}>`
+  - `<p><GlossaryText text={note.text} /></p>`
+  - label row `<p className="m-0 flex flex-wrap items-center gap-xxs">`:
+    - `<span className={MARK_CAPTION}><CategoryMark category={signCategory(note.sign)} small /></span>`
+    - `<SignChip tag={note.sign} as="span" />`
+    - then for each `also`: `<span className="text-xxs text-neutral-7">or</span><SignChip as="span" />`
+    - The chips sit outside `MARK_CAPTION`, whose `uppercase` would otherwise make them differ from the guide's chips.
+  - the fits row, unchanged.
+- Reveal card: `const notes = animal.notes;` and `text: note.text`. Its markup doesn't change.
+- Imports: `noteCategories` and `WithBlanks` go; `signCategory` and `signPhrase` come in.
+
+**`src/components/animalBoard/AnimalGame.tsx`**
+- `LogText` note: `{note.text} <span className="text-neutral-7">({[note.sign, ...note.also].map(signPhrase).join(' or ')}) Fits {fits} of {count}.</span>`. It stays plain text in the live region, without `GlossaryText`.
+- The `WithBlanks` import goes; the comment at `:499` is fixed.
+
+**Deleted: `src/components/clueGame/WithBlanks.tsx`.**
+
+**`src/clueGame/animalSession.ts` `animalDebugSummary`**
+- Keeps `notes` as a count (e2e and `shots/take.mjs` read it).
+- Adds `witness: round.notes.map(n => ({ sign: n.sign, text: n.text, also: n.also, behind: mystery.notes.filter(f => heldSigns(f.tags).has(n.sign)).map(f => f.text) }))`.
+- `behind` is never empty: every held sign comes from an open tag on a hand-written note, and every hand-written clue is now in `notes`.
+
+**`src/game/debugBridge.ts`**
+- Adds `signWitness(): Record<string, string>` (active signs with a sentence, through `witnessSentence`), beside `signImplies`.
+
+**`scripts/balance-044.ts`**
+- `rules.startWitness = Number(arg('start-witness', String(ANIMAL_RULES.startWitness)))`.
+- `:387` passes `atLeast: rules.startWitness`. The scratch board at `:385` stays at 0, since it is only reloaded.
+- The header prints the start count. One line per place: "starting boards with a witness gem: X% (mean Y)", counted on unpinned cells after `newBoard`.
+- `--explain` prints `"${note.text}" (${note.sign}) fits …`.
+
+#### Invariants and failure modes
+
+| # | Invariant | Held by |
+|---|---|---|
+| I1 | Every dealt note's text is `SIGNS[sign].witness`, true of every HEAD holder, names none, and isn't blanked | dealer, `signTableProblems`, buildAnimal guard + test, Fable gate |
+| I2 | No two notes in a round share a sign, and none is implied by another | dealer step 3, unit test |
+| I3 | `fits` = suspects holding the sign by `heldSigns`, between 2 and n−1, mystery included; the bot and `stillPossible` use the same predicate | `animalFitsNote`, unit test |
+| I4 | Every fitter shows `sign` or an `also` chip; no non-fitter does | dealer step 4, unit test |
+| I5 | Retired, unknown or `null`-sentence signs are skipped and never throw; live rows load | `witnessSentence`, unit test |
+| I6 | A new board has ≥ `startWitness` witness gems on unpinned cells, no standing match and a valid move; same seed gives the same board; boards that rolled one are unchanged | `topUpRare`, board tests |
+| I7 | The board doesn't depend on the mystery | `atLeast` comes from rules |
+| I8 | 055-1 saves are dropped; a malformed 055-2 note throws inside the guarded restore and is dropped | `useAnimalSession.ts:117-133` |
+
+#### Tests (failure modes written first, in each block's header comment)
+
+**`tests/clueGame/signs.test.ts`**
+- Fixtures: `sign(meaning, rules, witness = null)` and `T` include `witness`.
+- A1:
+  - an empty, whitespace or untrimmed sentence is a problem;
+  - `_` is a problem;
+  - the label is a problem, single-word, multi-word, hyphen form and any case;
+  - a label inside another word passes;
+  - `null` passes; retired entries are skipped.
+- A1 on the real table:
+  - `signTableProblems(SIGNS)` is empty;
+  - the `null` signs are exactly `['floreana_island', 'pinta_island', 'prairie_dog_towns']`.
+- A2 (`@ts-expect-error`): an active entry without `witness`; a retired entry with `witness`.
+- `witnessSentence`: retired → null; unknown → null, with no throw; null entry → null; active → its text.
+- A4: the deferred-pair test (`:163-166`) is replaced by "the 10 former deferred edges are wired": each in `implies`, and `badges(['backward_pouch', 'pouch'])` → `['backward_pouch']`.
+- The `noteCategories` assertion (`:160`) goes.
+
+**`tests/clueGame/animalBoard.test.ts`**
+- `TABLE` gets `witness: null`; the synth fixture loses `revealNotes`.
+- `:82-91` keys on `note.sign`.
+- A8: the fixture note becomes `{ sign: broader, text, fits: 3, also: [] }`; `witnessNotes(...).filter(w => w.sign === broader)`. Its `also` contains `narrower` when suspect 2 shows it.
+- A8 on real content and S25b: they use `{ tags: [note.sign] }` and `witness.sign === sign`. All 5 pinned cases still hold under this design (recomputed).
+- New W-block, on real content over `PLACES × sets(place) × mystery`:
+  - W1: no repeated sign;
+  - W2: `text === witnessSentence(sign)`, never null;
+  - W3: `fits` is right and between 2 and n−1;
+  - W4: no implied sign among the notes;
+  - W5: `also` is sorted and I4 holds;
+  - W6: every held sign that fits 2 to n−1 has a non-null sentence, against an explicit `HELD_BACK` list that starts empty (an entry needs a recorded Decision);
+  - W7: the order is a subsequence of `heldSigns(mystery.tags)`;
+  - W8: a fixture mystery holding retired `tree_dweller`, shared by 2 or more suspects, gets no note for it and nothing throws.
+- `roundStillFits`: a saved note that differs only in `sign`, or only in `also`, doesn't fit.
+
+**`tests/clueGame/content.test.ts`**
+- `animalsFromProfiles(profiles, sources, w => warnings.push(w))` gives no warning matching `/witness sentence/`.
+- Negative case: clone a profile and rename it with a 4-letter-or-longer word taken from one of its held signs' sentences. That warns and names the sign.
+
+**`tests/game/boardModel.test.ts`**
+- For seeds 0–1,999 with `tileCells` pins and `atLeast: 1`: ≥1 rare gem on unpinned cells, no standing match, a valid move.
+- A seed whose `atLeast: 0` board already has one gives the identical grid.
+- A seed whose only rolled gem lands on a pinned cell gets one more on a free cell.
+- Same seed twice gives the same grid.
+- `loadBoard` never tops up.
+- `atLeast` larger than the free cells stops without looping.
+
+**`tests/animalBoard/savedGame.test.ts`**: no change (it builds from `ANIMAL_RULES`).
+
+#### E2E (`scripts/e2e.mjs`, no new rounds; DOM reads only, a few seconds)
+
+1. **Every round start** (`:904-910`): `__cc.state().movesUsed === 0` and `clue().movesUsed === 0`, and ≥1 `grid[x][y] === 'purple'` on a cell not in `pins`.
+2. **The existing notes check** (`:2011-2029`): for every `li[data-witness-sign]`:
+   - the first `<p>`'s `textContent.trim()` equals `__cc.signWitness()[sign]`, and equals `clue().witness[i].text`;
+   - the li holds `[data-sign="${sign}"]`, plus `[data-sign="${alt}"]` and an "or" for each `also`;
+   - exactly one `[data-category-mark]`;
+   - the count equals `state.notes`;
+   - the dialog text has no `____`.
+3. **Every round end with `state.notes > 0`**, next to `checkSources`: for each `clue().witness` entry, some `section[aria-labelledby="end-notes"] [data-sourced-facts] > li` starts with one of its `behind` texts, and the section has no `____`.
+4. **The run as a whole**: `check('the run collected and checked a witness note', notesChecked)`. The baseline run collected notes in 3 of its 4 rounds.
+5. **The stale save**: push `{ sign: 'tree_dweller', text: 'It sleeps high in the trees.', fits: 2, also: [] }`; the predicate at `:2325` becomes `note.sign === 'tree_dweller'`.
+
+#### Fable sentence-review gate (blocks shipping)
+
+1. A read-only `$STATE/scripts/witness-list.ts` (esbuild with the `@/` paths, like Pass 1's runner) writes `$STATE/witness-sentences.csv` with these columns: `sign, category, meaning, witness, HEAD holders (id name), live-only holders, dealt in N HEAD combos, label hit, censor blanks per holder`.
+2. Fable (`claude-task --model claude-fable-5-2 --effort high`) reviews:
+   - truth for every HEAD holder (live-only holders are tags sign-audit already ruled wrong; listed for information only);
+   - reading level for grades 6–12, read solo;
+   - no animal, group or place named;
+   - other words than the label.
+3. The lead rules on every item in **Decisions**.
+   - A sign with no sentence true of all holders gets `null`, a `HELD_BACK` entry, and a line in the Summary.
+   - A proven wrong tag is fixed and recorded, which makes a content build needed.
+4. If Fable is out of usage: wait, or use `astra-review --task`. Never ship unreviewed.
+
+#### Before/after metrics (Goal 4)
+
+`$STATE/scripts/witness-metrics.ts` runs on HEAD and on the `7bce511a` copy, on the 105 sets × 5 mysteries:
+- **Combos with ≥1 note.** HEAD 525 → 525; live 403 → 458.
+- **Dealt notes that fit only the mystery by their words.**
+  - Before: Opus classifies HEAD's 157 distinct non-shared dealt texts against their fitting suspects, reusing sign-audit's `wording.csv` rulings where a pair is already ruled. Saved as `$STATE/before-wording.csv`; the count is reported over 525 combos.
+  - After: 0. The script asserts every dealt text equals `witnessSentence(sign)` across all combos; Fable's truth review covers the rest.
+- **Rounds starting with a witness gem.** 73.82% → 100% exactly. The bot's line gives the empirical figure on the 200 × 3 seeded deals.
+
+#### Balance (pre-registered, from the Decision)
+
+- Command: `node scripts/run-typescript.mjs scripts/balance-044.ts --rounds 200 --seed 44 --places world,africa,asia`.
+- Runs:
+  - Run 1 with `--start-witness 0`: the new dealer plus the edges, on boards identical to Baseline;
+  - Run 2 with `--start-witness 1`: the full change.
+- Limits, Run 2 against Baseline:
+  - careful, novice, expert, reader: Found −1 to +2 pts; ★★★ −2 to +8 pts; moves left at find −0.5 to +2.0; notes a round 0 to +0.8;
+  - guesser, random: Found ±4 pts, ★★★ ±4 pts;
+  - oracle: Found 100%, ★★★ 100%, moves left ±0.3.
+- `starMoves` stays `[8, 14]` unless careful's 20th-percentile moves left shifts by more than 2.
+- Any result outside these limits is explained in **Decisions**, or the rules are adjusted.
+- The bot judges notes by sign, so Run 1 against Baseline measures the dealer and the edges, and Run 2 against Run 1 the starting gem.
+
+#### Docs
+
+- `docs/CLUE_MATCH.md`:
+  - `:20` drop `WithBlanks`;
+  - `:22` "field notes (whole)";
+  - `:51` "notes up to 055-2";
+  - `:53` witness gems show the sign's standard sentence and chip, and every board starts with at least one;
+  - `:61` profiles' notes show whole on the reveal card, and witness sentences live in `SIGNS`;
+  - `:90` the new E2E checks.
+- `CONTEXT.md`:
+  - `:58-59` witness gem: at least one on every starting board;
+  - `:100-101` witness note: "one of the mystery's signs in its standard sentence, with its sign and how many field guides hold it; fits 2 to 4".
+- `docs/ANIMAL_BOARD_PAPER.md`:
+  - `:3` "up to 055-2";
+  - add `> **Rules 055-2 (2026-11-24) change §2.2 and §2.4:** …` covering per-sign standard sentences with chips, ≥1 starting witness gem, the 10 edges wired, and the bot result.
+- `docs/CONTENT_SOURCES.md`:
+  - `:81` fits counted per sign;
+  - `:84-98` the edges are wired in 055-2, and the table becomes history;
+  - document the `witness` field and its checks;
+  - `:102` "a witness note shows when 2 to 4 suspects hold its sign".
+
+### Rejected alternatives
+
+- **A2, per-note dealing with standard sentences swapped in:** more rules (several signs on one note, repeats, `null`) for less coverage (403 vs 458 live), and it keeps the note coupling.
+- **A3, sentences in profile JSON:** one fact repeated per holder, already drifting (76 signs with different texts), and it needs the owner's content build before live players see it.
+- **A1(b), a separate `witnessSentences.ts` table:** two tables to keep in sync, and the sentence moves away from the `meaning` it must agree with.
+- **U2, sign labels as glossary terms:** duplicates `meaning` 142–201 times and mixes signs into the science-word glossary.
+- **U3, an inline "Sign: …" caption:** no visual link to the guide's chips.
+- **B1, at least one only when the mystery has a note:** makes the board depend on the mystery (`useAnimalSession.ts:72,82`, `balance-044.ts:363-364`) and is identical to B3 on HEAD.
+- **B2, exactly one:** changes every board's rng from the first cell, so bot runs aren't paired, and it cuts gems on the 39% of boards that roll 2 or more.
+- **C2, sentences only for the 142–143 dealable signs:** a new holder would make a sign dealable with no sentence. W6 would catch it, but only after the fact.
+- **Reveal-card edits** (marking the notes behind collected signs, hiding sign-audit's duplicate sentences): Goal 2 is met as it is, and they are out of the brief.
+- **Editing note 14:2 ("puffs up") in the profile:** a content change that would need a build; it goes in the Summary for a content PR.
+- **Keeping `WithBlanks` on witness notes:** code sentences carry no blanks by construction (checked), so it would only hide a bug.
+- **Keeping the notes' censor split:** blanked text nobody reads (finding 2).
+- **`rare: null` for rounds with no note:** changes the refill rng, adds mystery dependence, and never happens on HEAD.
+- **Deferring the 10 edges again:** nothing blocks them under per-sign dealing, and waiting keeps true fits out of play.
+- **The name check as a throw at load:** would break the game on live rows; `warn` plus a CI test fails loud where authors are.
+- **The name check inside `signTableProblems`:** the table can't see holders' names or countries.
+- **A `narrowerSigns` export:** `heldSigns([tag]).has(sign)` already answers "implies".
+- **Sorting notes by fits:** changes balance for no stated gain; profile order is today's rule.
+
+### Decision (lead)
+
+Choosing **A1(a) + U1 + B3 + C1**, wiring all 10 deferred open-tag `implies` edges, bumping `ANIMAL_RULES.version` to `'055-2'`, and keeping this mission pure code (no profile edits, no new content build unless Fable's truth review proves an existing tag wrong):
+
+1. **Dealing & storage — A1(a) (per sign, `witness: string | null` on `ActiveSignEntry` in `src/clueGame/signs.ts`):**
+   - Dealing per sign eliminates duplicate-sign notes (40 HEAD / 20 live), multi-sign coupling (65 HEAD / 107 live), and `revealNotes` coupling, and immediately lifts live `7bce511a` coverage from `403/525` to `458/525` (with the 10 deferred edges wired) while fixing every live giveaway on deploy before H22 runs.
+   - Keeping `witness: string | null` directly on `ActiveSignEntry` (`RetiredSignEntry` forbids `witness?: never`) puts each sentence beside its authoritative `meaning` for local review, prevents two-table drift, and needs no content build.
+   - `signTableProblems` validates every non-null `witness`: non-empty trimmed text, no `_` blank tokens, and **no case-insensitive whole-phrase word-boundary match** (`\b...\b`, `i`) of `signPhrase(tag)` (word-boundary avoids false hits like `mane` in `remains`).
+   - `witnessSentence(tag, table = SIGNS): string | null` returns `null` safely (never throws) for retired, `null`, or unknown tags (satisfying Decision Rule 3 for older live DB rows).
+   - **Implied-sign deduplication & `also` chips:** Drop any eligible sign implied by another eligible sign (same one-fact rule as `signsOf`; DAG guarantees ≥1 maximal sign whenever any sign is eligible). Compute `also` as the sorted distinct chips in `suspect.signs` across all suspects in the round that transitively imply `note.sign` (`c.tag !== note.sign && implied.get(c.tag)?.has(note.sign)`). Because any suspect holding a narrower sign necessarily fits `note.sign`, `also` depends only on `(note.sign, suspects)` and leaks zero information about the mystery.
+   - `WitnessNote` is `{ sign: string; text: string; fits: number; also: string[] }`. `stillPossible` checks `heldSigns` on `note.sign`; `roundStillFits` compares `sign`, `text`, `fits`, and `also`.
+2. **Label UI — U1 (`SignChip` shared with `GuideSigns`) + `GlossaryText` + explicit `"or"` separators:**
+   - Extract `SignChip` from `SignGroups` (`AnimalSheets.tsx`) so witness notes and field-guide signs share one component and chip shape (`data-sign`).
+   - Render each note's sentence with `<GlossaryText text={note.text} />` (never `WithBlanks`). Render the label row as `<CategoryMark>` + `<SignChip tag={note.sign} />`, followed by `<span className="text-xxs text-neutral-7">or</span> <SignChip tag={alt} />` for each entry in `note.also` so players never misread alternative narrower chips as AND.
+   - Status line (`AnimalGame.tsx` `LogText`): show the plain standard sentence plus `(${[note.sign, ...note.also].map(signPhrase).join(' or ')})` (accepting architect's Pass 2 consistency refinement so the status line matches `NotesList`'s "or" chips).
+   - Remove dead `WithBlanks.tsx`, `noteCategories`, `FieldNote.full`, `Animal.revealNotes`, `MAX_BLANKS`, and the `BLANK` export (confirmed dead once witness notes stop showing blanked profile text; keep `censor` private in `questionMatchContent.ts` for the `buildAnimal` witness-sentence giveaway warning).
+3. **Starting witness gem — B3 ("at least one", always, mystery-independent):**
+   - Add `startWitness: number` (`1`) to `AnimalRules` and optional `atLeast?: number` to `RareGem` (`BoardModel.ts`, reused by `EventPayloads['clue-board-setup'].rare`).
+   - In `BoardModel.newBoard`: `freshGrid()` → `noToys()` → `setPins(pins)` → top-up unpinned non-rare cells using the board's seeded `rng` until `rareCount >= atLeast` (clamped to free cells) → `if (!this.hasAnyValidMove()) this.shuffle()`. Random `witnessChance` rolls stay as today (only the 26.2% of boards rolling 0 witness gems gain 1; mean rises 1.32 → 1.58; the other 73.8% replay identically for clean paired bot comparisons). `shuffle()` preserves placed gems; resumed boards load saved grids without re-placing.
+   - **Mystery independence preserved:** On HEAD profiles, `525/525` combos have ≥1 eligible note (min 3), so B3 and B1 are 100% identical on HEAD. Keeping the board independent of the mystery preserves the invariant at `useAnimalSession.ts:72,82` and `balance-044.ts:363-364`. On the temporary 67/525 pre-H22 live combos with 0 eligible notes, witness gems still appear as they already do on 74% of boards today and yield no note when collected.
+4. **Scope, edge cases & review gate — C1 (all 201 active signs):**
+   - Write standard sentences for all 201 active signs except deliberate `null` entries where no place-/animal-free sentence exists: `floreana_island`, `pinta_island`, and `prairie_dog_towns` (all 1-holder, non-dealable signs). `kopjes` and `one_island` get place-free sentences.
+   - Unit test on real profiles enforces: (a) every dealable sign across the 105 sets has a non-null `witness` sentence (explicit empty allowlist unless a Fable truth failure forces a recorded `null`), and (b) `buildAnimal` emits zero witness-sentence giveaway warnings via the private `censor` check across all 76 animals.
+   - Every sentence is reviewed by Fable (`claude-task --model claude-fable-5-2 --effort high`) for biological truth across every HEAD and live holder and grade 6–12 reading level (with the lead ruling on every item; never shipped unreviewed, falling back to waiting or `astra-review --task` if Fable hits usage limit).
+5. **10 deferred open-tag `implies` edges:** Wire all 10 in `src/clueGame/signs.ts` with A1 (zero profile churn, 0 `signProblems` on HEAD, safe on live `7bce511a` rows).
+6. **Reveal card & `14:2`:** Keep `RoundEndSheet` rendering unchanged (Goal 2 is met cleanly; E2E verifies `#end-notes` contains the full text of an underlying note for each collected sign). Do not edit `14:2` in profiles (out of scope, already untagged, avoids triggering a new content build); note it in Summary for a future content PR.
+7. **Before/after metrics (Goal 4):** Run a reproducible script + Opus classification of HEAD's 157 distinct non-shared dealt texts against their fitting suspects (reusing `sign-audit`'s `wording.csv` where already ruled), saved to `$STATE/before-wording.csv`, to report exact before vs after (0) counts on the 525 combos.
+8. **Version & pre-registered balance limits:** Bump `ANIMAL_RULES.version` to `'055-2'`. Run `scripts/balance-044.ts --rounds 200 --seed 44 --places world,africa,asia` (matching Baseline's 200 paired rounds) for Run (1) (`--start-witness 0`, isolating A1 + 10 edges) and Run (2) (`--start-witness 1`, full change). Acceptable deltas (Run 2 vs Baseline Run 0):
+   - `careful`, `novice`, `expert`, `reader`: Found `−1 to +2 pts`, ★★★ `−2 to +8 pts`, Moves left at find `−0.5 to +2.0`, Notes/round `0 to +0.8`.
+   - `guesser`, `random`: Found `±4 pts`, ★★★ `±4 pts`.
+   - `oracle`: Found `100%` (unchanged), ★★★ `100%` (unchanged), Moves left `±0.3`.
+   - `starMoves` stays `[8, 14]` unless careful's 20th-percentile moves left shifts by more than 2. Any move outside these limits must be explained in **Decisions** or adjusted.
+
 ## Architecture review (Fable)
 
 ## Architecture review (Astra)
@@ -146,8 +550,14 @@ Careful moves left at find (20th/40th/60th pct): world `14/19/22`, africa `15/19
 
 ## Decisions
 
+- (lead) Architecture **A1(a) + U1 + B3 + C1**: store `witness: string | null` directly on `ActiveSignEntry` in `src/clueGame/signs.ts` and deal witness notes per sign (`{ sign, text, fits, also }`), wiring all 10 deferred open-tag `implies` edges from `sign-audit`. Eliminates duplicate-sign notes, multi-sign coupling, and `revealNotes` coupling; fixes every giveaway on live `7bce511a` rows immediately on deploy (`403 → 458/525` live combos) with zero content build needed.
+- (lead) **Label UI & dead-code cleanup**: share `SignChip` between `GuideSigns` and `NotesList`, render sentences with `GlossaryText`, join `also` chips with explicit `"or"` (in both `NotesList` and `LogText`) so players never read narrower alternatives as AND, and remove dead `WithBlanks.tsx`, `noteCategories`, `FieldNote.full`, `Animal.revealNotes`, `MAX_BLANKS`, and the `BLANK` export while repurposing private `censor` inside `buildAnimal` to warn on witness-sentence giveaways.
+- (lead) **Starting witness gem (B3)**: guarantee `>= 1` witness gem on unpinned starting cells on every board (`ANIMAL_RULES.startWitness = 1`, `RareGem.atLeast`), keeping random `witnessChance` rolls and strict board independence from the mystery (identical to conditional B1 on HEAD's `525/525` combos; preserves paired-round bot comparisons on the 73.8% of boards that already roll a witness gem).
+- (lead) **Scope, reveal card, `14:2`, version & balance limits**: write sentences for all 201 active signs (`null` only for `floreana_island`, `pinta_island`, `prairie_dog_towns`, plus any sign Fable's truth review flags); keep reveal-card markup unchanged and defer untagged `14:2` to Summary so the mission stays pure code; bump `ANIMAL_RULES.version` to `'055-2'` and pre-register Run 2 vs Baseline balance limits (`--rounds 200 --seed 44 --places world,africa,asia`).
+
 ## Log
 
 - 2026-11-24 01:08 UTC — Baseline stage: verified typecheck, lint (0 warnings), unit tests (147/147), `content -- preview` (0 problems), live `content -- check` (2475 clues, 0 errors/warnings), guarded `phaser_june_dev` `content -- build && check` (3653 clues, 0 errors/warnings) + `e2e:fresh` (1554/1554 pass; saved at `$STATE/e2e-baseline/`), and baseline `balance-044.ts` (`--rounds 200 --seed 44 --places world,africa,asia`).
+- 2026-11-24 01:40 UTC — Architecture stage: `architect` Pass 1 findings/options (`$STATE/tasks/20261124-011126-architect.md`), lead Decision (`A1(a) + U1 + B3 + C1`, 10 deferred edges wired, version `'055-2'`, pure code), and `architect` Pass 2 single-design rewrite (`$STATE/tasks/20261124-012648-architect.md`) recorded in plan. No code changes; plan-only commit.
 
 ## Summary
