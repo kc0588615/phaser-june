@@ -261,7 +261,8 @@ function sameNote(saved: unknown, fresh: WitnessNote | undefined): boolean {
   const { sign, text, fits, also } = saved as Partial<Record<keyof WitnessNote, unknown>>;
   return typeof sign === 'string' && typeof text === 'string' && typeof fits === 'number'
     && Array.isArray(also) && also.every(tag => typeof tag === 'string')
-    && sign === fresh.sign && text === fresh.text && fits === fresh.fits && also.join('|') === fresh.also.join('|');
+    && sign === fresh.sign && text === fresh.text && fits === fresh.fits
+    && also.length === fresh.also.length && also.every((tag, i) => tag === fresh.also[i]);
 }
 
 /**
@@ -285,8 +286,11 @@ export function roundStillFits(book: Book, round: AnimalRound): boolean {
   const fresh = witnessNotes(book, round.suspects, round.mysteryId);
   if (saved.length !== fresh.length || !saved.every((note, i) => sameNote(note, fresh[i]))) return false;
   if (!Array.isArray(round.log)) return false;
-  const logged = (round.log as unknown[]).filter((entry): entry is { kind: 'note'; note?: unknown } =>
-    typeof entry === 'object' && entry !== null && (entry as { kind?: unknown }).kind === 'note');
+  const entries: unknown[] = round.log;
+  if (!entries.every(entry => typeof entry === 'object' && entry !== null && !Array.isArray(entry)
+    && typeof (entry as { kind?: unknown }).kind === 'string')) return false;
+  const logged = (entries as Array<{ kind: string; note?: unknown }>)
+    .filter((entry): entry is { kind: 'note'; note?: unknown } => entry.kind === 'note');
   return logged.length === round.notes.length && logged.every((entry, i) => sameNote(entry.note, round.notes[i]));
 }
 

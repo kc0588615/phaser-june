@@ -499,10 +499,12 @@ for (const { place, set, mystery, sign, fits } of PINNED) {
 //     empty), or a `behind` text contains `____`, or `animalDebugSummary(...).witness` disagrees with `round.notes` /
 //     `mystery.notes` (or `notes` stops being a count).
 //  R1 roundStillFits is true for a saved note that differs only in `sign`.
-//  R2 roundStillFits is true for a saved note that differs only in `also`.
+//  R2 roundStillFits is true for a saved note that differs only in `also`: incl. `also: ['']` against a fresh `[]`, or
+//     one delimiter-colliding string (`[`${a}|${b}`]` against `[a, b]`), which a `join('|')` compare lets through.
 //  R3 roundStillFits is true, or throws, for a note in `notes` (or `notesLeft`) with `also` missing or not an array.
 //  R4 roundStillFits is true, or throws, for a `{ kind: 'note' }` entry in `round.log` that is missing, extra, out of
-//     order or malformed (no `note`, or a note without `also`).
+//     order or malformed (no `note`, or a note without `also`); or is true, or throws, for any `round.log` entry that
+//     isn't a plain object with a string `kind` (`null`, `'note'`, `42`, `[]`, `{}`, `{ kind: 123 }`).
 //  R5 A valid round stops fitting (the 055-1 cases above, and a round with collected notes and their log entries).
 
 /** Held signs that fit 2 to n - 1 suspects yet are never dealt (each needs a recorded Decision in the plan). */
@@ -603,6 +605,30 @@ test('R1-R2: a saved note that differs only in sign, or only in also, doesn\'t f
   assert.equal(fitsLoose(withNote(round, 0, { ...first, also: [...first.also, 'zz_extra'] })), false, 'R2 notes');
   assert.equal(fitsLoose({ ...round, notesLeft: [{ ...round.notesLeft[0], also: ['zz_extra'] }, ...round.notesLeft.slice(1)] }), false, 'R2 notesLeft');
   if (first.also.length) assert.equal(fitsLoose(withNote(round, 0, { ...first, also: [] })), false, 'R2 notes, also dropped');
+  const bare = round.notes.findIndex(note => note.also.length === 0);
+  const bareLeft = round.notesLeft.findIndex(note => note.also.length === 0);
+  assert.ok(bare >= 0 && bareLeft >= 0, 'a collected note and a note left with no also');
+  assert.equal(fitsLoose(withNote(round, bare, { ...round.notes[bare], also: [''] })), false, "R2 notes, also ['']");
+  const notesLeft = round.notesLeft.map((note, i) => (i === bareLeft ? { ...note, also: [''] } : note));
+  assert.equal(fitsLoose({ ...round, notesLeft }), false, "R2 notesLeft, also ['']");
+});
+
+test('R2: a saved also joined into one string doesn\'t fit a fresh also of 2 or more chips', () => {
+  for (const place of PLACES) for (const set of sets(place)) for (const mysteryId of set) {
+    const notes = witnessNotes(book, set, mysteryId);
+    const i = notes.findIndex(note => note.also.length >= 2);
+    if (i < 0) continue;
+    const fresh = newAnimalRound(book, ANIMAL_RULES, { suspects: set, mysteryId, place });
+    const collected = applyPhase(book, fresh, { collected: {}, witness: notes.length, touched: [] }, false);
+    assert.equal(collected.notes.length, notes.length);
+    assert.equal(roundStillFits(book, collected), true);
+    const joined = { ...notes[i], also: [notes[i].also.join('|')] };
+    assert.equal(fitsLoose(withNote(collected, i, joined)), false, 'R2 notes, also joined');
+    const notesLeft = fresh.notesLeft.map((note, j) => (j === i ? joined : note));
+    assert.equal(fitsLoose({ ...fresh, notesLeft }), false, 'R2 notesLeft, also joined');
+    return;
+  }
+  throw new Error('no real witness note has 2 or more also chips');
 });
 
 test('R3: a saved note with also missing or not an array doesn\'t fit, and doesn\'t throw', () => {
@@ -642,8 +668,19 @@ test('R4: a note log entry missing, extra, out of order or malformed doesn\'t fi
     assert.doesNotThrow(() => fitsLoose(loose), label);
     assert.equal(fitsLoose(loose), false, label);
   }
-  // A null entry isn't a note entry: skipped, never thrown on.
-  assert.doesNotThrow(() => fitsLoose({ ...round, log: [null, ...round.log] }));
+  const junk: Array<[string, unknown[]]> = [
+    ['null first', [null, ...round.log]],
+    ['null last', [...round.log, null]],
+    ['a string', ['note', ...round.log]],
+    ['a number', [42, ...round.log]],
+    ['an array', [[], ...round.log]],
+    ['no kind', [{}, ...round.log]],
+    ['kind not a string', [{ kind: 123 }, ...round.log]],
+  ];
+  for (const [label, log] of junk) {
+    assert.doesNotThrow(() => fitsLoose({ ...round, log }), label);
+    assert.equal(fitsLoose({ ...round, log }), false, label);
+  }
 });
 
 /** The mystery's whole notes holding `sign`: what a witness note stands behind. */
