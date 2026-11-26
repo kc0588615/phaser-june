@@ -61,6 +61,8 @@ SELECT current_database() AS connected_to, :'target' AS target;
 SELECT 1 / (current_database() = :'target' AND :'target' = 'phaser_june')::int AS guard_target;
 SELECT 1 / (count(*) = 1)::int AS dev_copy_exists FROM pg_database WHERE datname = 'phaser_june_dev';
 SELECT 1 / (count(*) = 0)::int AS role_absent FROM pg_roles WHERE rolname = 'critter_reader';
+-- The copy's PUBLIC CONNECT before the REVOKE below. Keep this output: the rollback restores it only if it was t.
+SELECT has_database_privilege('public', 'phaser_june_dev', 'CONNECT') AS dev_public_connect_before;
 
 CREATE ROLE critter_reader NOLOGIN;
 GRANT CONNECT ON DATABASE phaser_june TO critter_reader;
@@ -109,10 +111,18 @@ SELECT 1 / has_database_privilege('critter_reader', 'phaser_june', 'CONNECT')::i
 
 COMMIT;
 
--- Rollback (as postgres, on phaser_june, any time; nothing depends on the role). DROP OWNED BY revokes the role's
--- grants in this database and on the databases; the GRANT gives the copy back its earlier PUBLIC CONNECT:
+-- Rollback (as postgres, any time; nothing depends on the role). Two databases, so two transactions, copy first.
+-- DROP OWNED BY revokes the role's grants in the database it runs in and on the databases themselves. The copy needs
+-- its own: a refresh (pg_dump of live, docs/DATABASE_ACCESS.md#runbook) copies the reader's table grants into it, and
+-- DROP ROLE fails while any remain. On a copy not refreshed since this draft, it drops nothing.
+--   \set ON_ERROR_STOP on
+--   \connect phaser_june_dev
+--   BEGIN; DROP OWNED BY critter_reader; COMMIT;
+--   \connect phaser_june
 --   BEGIN;
---   GRANT CONNECT ON DATABASE phaser_june_dev TO PUBLIC;
+--   GRANT CONNECT ON DATABASE phaser_june_dev TO PUBLIC;  -- only if the run's dev_public_connect_before was t
 --   DROP OWNED BY critter_reader;
 --   DROP ROLE critter_reader;
 --   COMMIT;
+-- Refresh, while this role exists: dropdb/createdb starts the copy from the default ACL, PUBLIC CONNECT included, so
+-- rerun REVOKE CONNECT ON DATABASE phaser_june_dev FROM PUBLIC; after it, until deploy/db/dev-role.sql does it (above).
