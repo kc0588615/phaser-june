@@ -9,9 +9,10 @@ SET LOCAL statement_timeout = '30s';
 -- Covers the schemas public, oneearth and natural_earth. Extension members (PostGIS's spatial_ref_sys and views, any
 -- schema) aren't listed: the grant section sums their privileges per extension as "<k> of <n>" members. Grants read
 -- a NULL ACL as its default (PUBLIC keeps CONNECT, TEMPORARY on a database and EXECUTE on a function), mark a privilege
--- held WITH GRANT OPTION "*" (as aclitem does), and include role memberships and column grants. Columns are numbered
--- by position (not attnum, which a dump and restore renumbers). Each line is "<section> <object> <detail>"; sections
--- run database, extension, schema, relation, column, constraint, index, sequence, view, function, trigger, grant, role.
+-- held WITH GRANT OPTION "*" (as aclitem does; one entry per privilege, whatever the grantors), and include role
+-- memberships and column grants. Columns are numbered by position (not attnum, which a dump and restore renumbers).
+-- Each line is "<section> <object> <detail>"; sections run database, extension, schema, relation, column, constraint,
+-- index, sequence, view, function, trigger, grant, role.
 WITH rel AS (
   SELECT c.oid, c.relname, c.relkind, c.relowner, c.relacl, n.nspname,
          CASE WHEN n.nspname = 'public' THEN '' ELSE n.nspname || '.' END || c.relname AS name
@@ -31,39 +32,49 @@ WITH rel AS (
   JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname IN ('public', 'oneearth', 'natural_earth')
     AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.classid = 'pg_proc'::regclass AND d.objid = p.oid AND d.deptype = 'e')
-), grants AS (
-  SELECT r.name AS object, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END AS grantee,
-         string_agg(a.privilege_type || CASE WHEN a.is_grantable THEN '*' ELSE '' END, ',' ORDER BY a.privilege_type) AS privileges
-  FROM rel r CROSS JOIN LATERAL aclexplode(r.relacl) a
-  WHERE a.grantee <> r.relowner
-  GROUP BY 1, 2
-  UNION ALL
-  SELECT 'schema ' || n.nspname, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END,
-         string_agg(a.privilege_type || CASE WHEN a.is_grantable THEN '*' ELSE '' END, ',' ORDER BY a.privilege_type)
-  FROM pg_namespace n CROSS JOIN LATERAL aclexplode(n.nspacl) a
-  WHERE n.nspname IN ('public', 'oneearth', 'natural_earth') AND a.grantee <> n.nspowner
-  GROUP BY 1, 2
-  UNION ALL
-  SELECT 'database', CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END,
-         string_agg(a.privilege_type || CASE WHEN a.is_grantable THEN '*' ELSE '' END, ',' ORDER BY a.privilege_type)
-  FROM pg_database d CROSS JOIN LATERAL aclexplode(coalesce(d.datacl, acldefault('d', d.datdba))) a
-  WHERE d.datname = current_database() AND a.grantee <> d.datdba
-  GROUP BY 1, 2
-  UNION ALL
-  SELECT 'function ' || f.name, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END,
-         string_agg(a.privilege_type || CASE WHEN a.is_grantable THEN '*' ELSE '' END, ',' ORDER BY a.privilege_type)
-  FROM fn f CROSS JOIN LATERAL aclexplode(coalesce(f.proacl, acldefault('f', f.proowner))) a
-  WHERE a.grantee <> f.proowner
-  GROUP BY 1, 2
-  UNION ALL
-  -- Column grants; a NULL attacl means none.
-  SELECT r.name || '.' || a.attname, CASE WHEN g.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(g.grantee) END,
-         string_agg(g.privilege_type || CASE WHEN g.is_grantable THEN '*' ELSE '' END, ',' ORDER BY g.privilege_type)
+), acl AS (
+  -- Every ACL in scope, one row per object: the direct ones (ext NULL; a NULL relation, schema or column ACL means no
+  -- grants) and extension members (ext names the sum they count in).
+  SELECT r.name AS object, r.relacl AS acl, r.relowner AS owner, NULL::text AS ext
   FROM rel r
-  JOIN pg_attribute a ON a.attrelid = r.oid AND a.attnum > 0 AND NOT a.attisdropped
-  CROSS JOIN LATERAL aclexplode(a.attacl) g
-  WHERE g.grantee <> r.relowner
-  GROUP BY 1, 2
+  UNION ALL
+  SELECT 'schema ' || n.nspname, n.nspacl, n.nspowner, NULL
+  FROM pg_namespace n WHERE n.nspname IN ('public', 'oneearth', 'natural_earth')
+  UNION ALL
+  SELECT 'database', coalesce(d.datacl, acldefault('d', d.datdba)), d.datdba, NULL
+  FROM pg_database d WHERE d.datname = current_database()
+  UNION ALL
+  SELECT 'function ' || f.name, coalesce(f.proacl, acldefault('f', f.proowner)), f.proowner, NULL
+  FROM fn f
+  UNION ALL
+  SELECT r.name || '.' || a.attname, a.attacl, r.relowner, NULL
+  FROM rel r JOIN pg_attribute a ON a.attrelid = r.oid AND a.attnum > 0 AND NOT a.attisdropped
+  UNION ALL
+  SELECT k.kind || ' ' || k.objid, k.acl, k.owner, 'extension ' || e.extname || ' ' || k.kind
+  FROM pg_extension e
+  JOIN pg_depend d ON d.refclassid = 'pg_extension'::regclass AND d.refobjid = e.oid AND d.deptype = 'e'
+  CROSS JOIN LATERAL (
+    SELECT 'functions' AS kind, coalesce(p.proacl, acldefault('f', p.proowner)) AS acl, p.proowner AS owner, p.oid AS objid
+    FROM pg_proc p WHERE d.classid = 'pg_proc'::regclass AND p.oid = d.objid
+    UNION ALL
+    SELECT 'relations', c.relacl, c.relowner, c.oid
+    FROM pg_class c WHERE d.classid = 'pg_class'::regclass AND c.oid = d.objid AND c.relkind IN ('r', 'p', 'v', 'm', 'f', 'S')
+  ) k
+), held AS (
+  -- One line per object and grantee. aclexplode gives a row per grantor, so each privilege is folded to one first,
+  -- marked '*' if any grantor gave it with grant option.
+  SELECT p.object, p.ext, p.grantee,
+         string_agg(p.privilege_type || CASE WHEN p.grantable THEN '*' ELSE '' END, ',' ORDER BY p.privilege_type) AS privileges
+  FROM (
+    SELECT c.object, c.ext, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END AS grantee,
+           a.privilege_type, bool_or(a.is_grantable) AS grantable
+    FROM acl c CROSS JOIN LATERAL aclexplode(c.acl) a
+    WHERE a.grantee <> c.owner
+    GROUP BY c.object, c.ext, a.grantee, a.privilege_type
+  ) p
+  GROUP BY p.object, p.ext, p.grantee
+), grants AS (
+  SELECT object, grantee, privileges FROM held WHERE ext IS NULL
   UNION ALL
   -- Role memberships, without built-in pg_* members (a pg_* role granted to one of ours still prints).
   SELECT DISTINCT 'role ' || pg_get_userbyid(m.roleid), pg_get_userbyid(m.member),
@@ -73,27 +84,10 @@ WITH rel AS (
   WHERE pg_get_userbyid(m.member) NOT LIKE 'pg\_%'
   UNION ALL
   -- Extension members, summed: k members of that kind give the grantee these privileges, of n in all.
-  SELECT 'extension ' || x.extname || ' ' || x.kind, x.grantee, x.privileges || ' ' || count(*) || ' of ' || max(x.n)
-  FROM (
-    SELECT m.extname, m.kind, m.n, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END AS grantee,
-           string_agg(a.privilege_type || CASE WHEN a.is_grantable THEN '*' ELSE '' END, ',' ORDER BY a.privilege_type) AS privileges
-    FROM (
-      SELECT e.extname, k.kind, k.acl, k.owner, k.objid, count(*) OVER (PARTITION BY e.oid, k.kind) AS n
-      FROM pg_extension e
-      JOIN pg_depend d ON d.refclassid = 'pg_extension'::regclass AND d.refobjid = e.oid AND d.deptype = 'e'
-      CROSS JOIN LATERAL (
-        SELECT 'functions' AS kind, coalesce(p.proacl, acldefault('f', p.proowner)) AS acl, p.proowner AS owner, p.oid AS objid
-        FROM pg_proc p WHERE d.classid = 'pg_proc'::regclass AND p.oid = d.objid
-        UNION ALL
-        SELECT 'relations', c.relacl, c.relowner, c.oid
-        FROM pg_class c WHERE d.classid = 'pg_class'::regclass AND c.oid = d.objid
-      ) k
-    ) m
-    CROSS JOIN LATERAL aclexplode(m.acl) a
-    WHERE a.grantee <> m.owner
-    GROUP BY m.extname, m.kind, m.n, m.objid, a.grantee
-  ) x
-  GROUP BY x.extname, x.kind, x.grantee, x.privileges
+  SELECT h.ext, h.grantee, h.privileges || ' ' || count(*) || ' of ' || max(x.n)
+  FROM held h
+  JOIN (SELECT ext, count(*) AS n FROM acl WHERE ext IS NOT NULL GROUP BY ext) x USING (ext)
+  GROUP BY h.ext, h.grantee, h.privileges
 ), lines AS (
   SELECT 1 AS section, '' AS object, 0 AS pos,
          'database ' || current_database() || ' server ' || current_setting('server_version_num') AS line
@@ -151,7 +145,7 @@ WITH rel AS (
   FROM pg_roles ro WHERE ro.rolname IN (SELECT grantee FROM grants)
   UNION ALL
   SELECT 12, 'default acl', 0, 'grant default for ' || pg_get_userbyid(da.defaclrole)
-         || coalesce(' in schema ' || da.defaclnamespace::regnamespace::text, '') || ' on ' || da.defaclobjtype::text || ' ' || da.defaclacl::text
+         || coalesce(' in schema ' || nullif(da.defaclnamespace, 0::oid)::regnamespace::text, '') || ' on ' || da.defaclobjtype::text || ' ' || da.defaclacl::text
   FROM pg_default_acl da
 )
 SELECT line FROM lines ORDER BY section, object, pos, line;
