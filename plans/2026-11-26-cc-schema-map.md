@@ -803,7 +803,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 11:23 UTC · S11: map states `critter_app`'s effective privileges exactly per [07] (SELECT on 11 of 16 relations, no writes, catalogs via PUBLIC). Typecheck, lint pass.
 - 2026-11-26 11:26 UTC · S12: rerun block diffs only after each output's line 1 names its expected database; ran as written ([35]/[36] pass, = [32]/[33]) and with dev on live ([37], stops). Plan copy -> pointer. Typecheck, lint pass.
 - 2026-11-26 11:34 UTC · Gemini code review: APPROVE_WITH_CHANGES, 2 MUST-FIX (rerun guard exits 0 when stopped; multi-grantor ACL rows duplicate privileges) -> S13-S14, SC1-2 folded into S14, SC3 to owner. Plan-only change; typecheck, lint pass.
-- 2026-11-26 11:40 UTC · S13: rerun guard's stop branch exits 2 (diff's trouble code); on logged copies pass case exits 1 (diff = 32/33), dev-on-live [37] exits 2. Typecheck, lint pass.
+- 2026-11-26 11:36 UTC · S13: rerun guard's stop branch exits 2 (diff's trouble code); on logged copies pass case exits 1 (diff = 32/33), dev-on-live [37] exits 2. Typecheck, lint pass.
 
 ## Schema check result
 
