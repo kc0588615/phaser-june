@@ -781,7 +781,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 11:19 UTC · S9: schema-check.sql marks grant-option privileges `*` in all 6 aclexplode branches; [32]/[33] reruns identical to [25]/[29]/[26] (nothing grantable today), [34] literal-ACL check shows `INSERT*`. V4 scan clean, typecheck, lint pass.
 - 2026-11-26 11:22 UTC · S10: map's "Same content" says which columns [09]/[19] hash and what that proves; view diff counts 10 species (7 SVG, 9 GeoJSON), 4/5 outlines, recomputed; sequences line split (build resets 4, iucn via default). V7 pass, typecheck, lint pass.
 - 2026-11-26 11:23 UTC · S11: map states `critter_app`'s effective privileges exactly per [07] (SELECT on 11 of 16 relations, no writes, catalogs via PUBLIC). Typecheck, lint pass.
-- 2026-11-26 11:40 UTC · S12: rerun block diffs only after each output's line 1 names its expected database; ran as written ([35]/[36] pass, = [32]/[33]) and with dev on live ([37], stops). Plan copy -> pointer. Typecheck, lint pass.
+- 2026-11-26 11:26 UTC · S12: rerun block diffs only after each output's line 1 names its expected database; ran as written ([35]/[36] pass, = [32]/[33]) and with dev on live ([37], stops). Plan copy -> pointer. Typecheck, lint pass.
 
 ## Schema check result
 
