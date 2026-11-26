@@ -146,7 +146,7 @@ Out:
   - [x] Architecture A: `db-designer` maps the live and dev databases (query log), writes `docs/DATABASE_SCHEMA.md` (inventory), `db/analysis/schema-check.sql`, the plan's Data model section (summary, schema.sql drift, ranked findings) and `db/proposals/`
   - [x] Architecture B: `db-designer` makes the diagram-design profile and marker, the Mermaid ERDs in `docs/schema/` and their light/dark HTML+SVG renders, and embeds them in `docs/DATABASE_SCHEMA.md`
   - [x] Architecture C: `architect` writes the Architecture section for the repo edits (`db/schema.sql`, the docs, the check query)
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -378,6 +378,25 @@ From `db-designer`, 2026-11-26.
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. `docs/schema/phaser-june.mmd` doesn't parse: line 5 is a bare `%%`. Mermaid strips comments with `/^\s*%%(?!{)[^\n]+\n?/gm`, which needs a character after `%%`, so that line survives ahead of `erDiagram`: `Parse error on line 1 ... Expecting 'ER_DIAGRAM', got '%'` (Mermaid 12.2.0, `mermaid.parse()` from Node). With line 5 deleted it parses: 11 entities, 118 columns, 8 links, keys as the map has them. Delete the line, and make the Verification parse the `.mmd` with a real Mermaid (Architecture B checked it "against the documented grammar only"): a read-only import of `/srv/apps/critwire/node_modules/.pnpm/mermaid@12.2.0/node_modules/mermaid/dist/mermaid.core.mjs` works, or GitHub's view of the pushed file.
+2. Target design step 2, `species_deduction_clues`: moving only `species_id` to follow `created_at` gives `..., is_filtering, source_key, source_url, created_at, species_id`. Live is `..., is_filtering, created_at, species_id, source_key, source_url` ([20]:127-136). It takes two moves: `created_at` to follow `is_filtering`, then `species_id` after it (4 lines reordered in the file, not 3). As written the object still "differs" and "all 12 now matches" fails. `species` is right as written.
+3. Two logical links contradict the map's own rule, "cardinality is what the schema allows" (`docs/DATABASE_SCHEMA.md:266`): `iucn.id_no` and `oneearth_bioregion.eco_sym` are nullable with no foreign key ([20]:53, :109), so their parent side is zero or one, as `source_key`'s is drawn. Today's data has no NULLs [08], which belongs in the Notes column. Fix `.mmd:196` and `:199` (`||..o{` to `|o..o{`), the rows at `DATABASE_SCHEMA.md:274` and `:277` ("many to one, optional"), and the `1` label on those two edges in all four renders.
+
+MISSED:
+- `docs/DATABASE_SCHEMA.md:309` says there are no function grants. That is A1's misreading again: [07] explodes `proacl`, and NULL means the default, so PUBLIC holds EXECUTE on every function (`:286` and F5 say so for the 46). Reword: no explicit function grants; PUBLIC keeps the default EXECUTE.
+- `AGENTS.md:55` repeats the change rule A6 edits in `db/schema.sql:5-7` ("change the DB, then update the file"). After A6 the two copies disagree. Edit both in the same step.
+- The plan's "Statistics: every table has planner statistics [08]" is wrong for `clue_match_places` (0 of 12 columns, [08]). Harmless at 5 rows; don't carry the sentence into the Summary.
+
+SHOULD-CONSIDER:
+1. Cite `db/schema.sql` by object, not line, in the 8 map refs and 2 proposal refs (A2). P02 and P03 shift the lines again when applied, and the map's line 6 says its `file:line` refs are at `62c63c32`, which the renumbered ones won't be. Code refs keep `file:line`.
+2. Record A6 under Decisions: the Docs Map and Related pointers go past the brief's "change those facts only".
+3. P01's header: load the read-only settings file with A5's fail-fast pattern. `scripts/db` falls back to `.env.local` (`postgres`) when the file doesn't load, so the role protects nothing if the loader fails silently.
+4. P04 runs as `postgres` on the dev copy, and no settings file here gives that login: say in its header how the later mission connects.
+5. Nothing else to cut: findings F1-F6 and A1-A6 are real and fairly ranked, every cited `file:line` checks out, the query log is read-only throughout, and no draft breaks the game or CI (`load()` lists its columns, `scripts/content.ts:28-37`; no code names a dropped object).
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -399,5 +418,6 @@ From `db-designer`, 2026-11-26.
 - 2026-11-26 09:50 UTC · Architecture A: split stage into A/B/C; db-designer mapped live+dev (24 read-only query files in `queries/`), wrote `docs/DATABASE_SCHEMA.md`, `db/analysis/schema-check.sql`, Data model (12 schema.sql objects: 7 match, 5 file-behind; F1 medium + F2–F6 low), `db/proposals/01`–`05`. Query files checked (wrapper, no writes); typecheck, lint, 186/186 unit pass.
 - 2026-11-26 09:55 UTC · Architecture B: db-designer added the profile `~/.diagram-design/profiles/critter-connect.md`, the `.diagram-design` marker, `docs/schema/phaser-june.mmd` (11 entities, 118 cols, 8 links) and light/dark HTML+SVG renders, embedded in `DATABASE_SCHEMA.md` (fixed iucn numeric(65,30) and ranges cardinality). SVGs parse, light render checked by eye in headless Chrome; typecheck, lint pass.
 - 2026-11-26 10:10 UTC · Architecture C: architect wrote Architecture (A1–A2 medium: check query misses default ACLs; stale schema.sql line refs; A3–A6 low), docs DB facts all verified correct (pointers only), target design: 6 ordered edits. Plan-only change; no DB access.
+- 2026-11-26 10:25 UTC · Fable review: APPROVE WITH CHANGES, 3 MUST-FIX (.mmd bare `%%` breaks Mermaid parse; species_deduction_clues column order needs two moves; iucn/oneearth logical links should be zero-or-one). Plan-only change.
 
 ## Summary
