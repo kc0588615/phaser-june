@@ -141,7 +141,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -149,6 +149,13 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+From `0c0f064e` (branch `agent/cc-schema-map`, cut from `origin/main` `62c63c32`), 2026-11-26 ~09:00 UTC.
+
+- Install: `node_modules` present, `npm ls --depth=0` clean; no reinstall needed. Migrate: n/a (no migration history; `db/schema.sql` is a hand-kept baseline and is never run).
+- `npm run typecheck`: pass. `npm run lint`: pass (exit 0). `npm test`: 186/186 pass.
+- `CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:fresh`: 1563/1563 checks pass, seed 7. Artifact: `/srv/critter-ai/agent-state/missions/cc-schema-map/e2e-s0-baseline/` (`report.json`, screenshots, `run.log`).
+- DB target: the worktree's `.env.local` `DATABASE_URL` is live `phaser_june` as `postgres` (its comment line still says "dev DB copy"; stale). The dev copy is reached only via `/srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy` (`critter_dev` / `phaser_june_dev`). The baseline e2e read live; the game writes nothing.
 
 ## Architecture
 
@@ -170,5 +177,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-26 09:05 UTC · Baseline: typecheck, lint, 186/186 unit, e2e:fresh 1563/1563 pass; artifact `e2e-s0-baseline/`.
 
 ## Summary
