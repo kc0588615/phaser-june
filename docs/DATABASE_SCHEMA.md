@@ -346,7 +346,7 @@ CI's e2e job reads the dev copy, so it must keep up with live. The same queries 
 - sequences and their owning columns;
 - views (`md5` and `pg_get_viewdef`);
 - functions and triggers;
-- grants (relations, schemas, the database, default ACLs), role memberships, column grants, and extension members' grants (summed per extension as `k of n`);
+- grants (relations, schemas, the database, default ACLs), role memberships, column grants, and extension members' grants (summed per extension as `k of n`); a privilege held with grant option is marked `*`, as in an ACL (none today [32]);
 - the settings of roles that hold a grant.
 
 It runs read-only:

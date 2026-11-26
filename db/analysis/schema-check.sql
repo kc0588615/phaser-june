@@ -8,10 +8,10 @@ SET LOCAL statement_timeout = '30s';
 --
 -- Covers the schemas public, oneearth and natural_earth. Extension members (PostGIS's spatial_ref_sys and views, any
 -- schema) aren't listed: the grant section sums their privileges per extension as "<k> of <n>" members. Grants read
--- a NULL ACL as its default (PUBLIC keeps CONNECT, TEMPORARY on a database and EXECUTE on a function), and include
--- role memberships and column grants. Columns are numbered by position (not attnum, which a dump and restore
--- renumbers). Each line is "<section> <object> <detail>"; sections run database, extension, schema, relation, column,
--- constraint, index, sequence, view, function, trigger, grant, role.
+-- a NULL ACL as its default (PUBLIC keeps CONNECT, TEMPORARY on a database and EXECUTE on a function), mark a privilege
+-- held WITH GRANT OPTION "*" (as aclitem does), and include role memberships and column grants. Columns are numbered
+-- by position (not attnum, which a dump and restore renumbers). Each line is "<section> <object> <detail>"; sections
+-- run database, extension, schema, relation, column, constraint, index, sequence, view, function, trigger, grant, role.
 WITH rel AS (
   SELECT c.oid, c.relname, c.relkind, c.relowner, c.relacl, n.nspname,
          CASE WHEN n.nspname = 'public' THEN '' ELSE n.nspname || '.' END || c.relname AS name
@@ -33,32 +33,32 @@ WITH rel AS (
     AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.classid = 'pg_proc'::regclass AND d.objid = p.oid AND d.deptype = 'e')
 ), grants AS (
   SELECT r.name AS object, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END AS grantee,
-         string_agg(a.privilege_type, ',' ORDER BY a.privilege_type) AS privileges
+         string_agg(a.privilege_type || CASE WHEN a.is_grantable THEN '*' ELSE '' END, ',' ORDER BY a.privilege_type) AS privileges
   FROM rel r CROSS JOIN LATERAL aclexplode(r.relacl) a
   WHERE a.grantee <> r.relowner
   GROUP BY 1, 2
   UNION ALL
   SELECT 'schema ' || n.nspname, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END,
-         string_agg(a.privilege_type, ',' ORDER BY a.privilege_type)
+         string_agg(a.privilege_type || CASE WHEN a.is_grantable THEN '*' ELSE '' END, ',' ORDER BY a.privilege_type)
   FROM pg_namespace n CROSS JOIN LATERAL aclexplode(n.nspacl) a
   WHERE n.nspname IN ('public', 'oneearth', 'natural_earth') AND a.grantee <> n.nspowner
   GROUP BY 1, 2
   UNION ALL
   SELECT 'database', CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END,
-         string_agg(a.privilege_type, ',' ORDER BY a.privilege_type)
+         string_agg(a.privilege_type || CASE WHEN a.is_grantable THEN '*' ELSE '' END, ',' ORDER BY a.privilege_type)
   FROM pg_database d CROSS JOIN LATERAL aclexplode(coalesce(d.datacl, acldefault('d', d.datdba))) a
   WHERE d.datname = current_database() AND a.grantee <> d.datdba
   GROUP BY 1, 2
   UNION ALL
   SELECT 'function ' || f.name, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END,
-         string_agg(a.privilege_type, ',' ORDER BY a.privilege_type)
+         string_agg(a.privilege_type || CASE WHEN a.is_grantable THEN '*' ELSE '' END, ',' ORDER BY a.privilege_type)
   FROM fn f CROSS JOIN LATERAL aclexplode(coalesce(f.proacl, acldefault('f', f.proowner))) a
   WHERE a.grantee <> f.proowner
   GROUP BY 1, 2
   UNION ALL
   -- Column grants; a NULL attacl means none.
   SELECT r.name || '.' || a.attname, CASE WHEN g.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(g.grantee) END,
-         string_agg(g.privilege_type, ',' ORDER BY g.privilege_type)
+         string_agg(g.privilege_type || CASE WHEN g.is_grantable THEN '*' ELSE '' END, ',' ORDER BY g.privilege_type)
   FROM rel r
   JOIN pg_attribute a ON a.attrelid = r.oid AND a.attnum > 0 AND NOT a.attisdropped
   CROSS JOIN LATERAL aclexplode(a.attacl) g
@@ -76,7 +76,7 @@ WITH rel AS (
   SELECT 'extension ' || x.extname || ' ' || x.kind, x.grantee, x.privileges || ' ' || count(*) || ' of ' || max(x.n)
   FROM (
     SELECT m.extname, m.kind, m.n, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END AS grantee,
-           string_agg(a.privilege_type, ',' ORDER BY a.privilege_type) AS privileges
+           string_agg(a.privilege_type || CASE WHEN a.is_grantable THEN '*' ELSE '' END, ',' ORDER BY a.privilege_type) AS privileges
     FROM (
       SELECT e.extname, k.kind, k.acl, k.owner, k.objid, count(*) OVER (PARTITION BY e.oid, k.kind) AS n
       FROM pg_extension e
