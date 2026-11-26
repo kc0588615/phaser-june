@@ -142,10 +142,10 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design (split into the three items below)
+- [x] Architecture: `architect` writes findings and the target design (split into the three items below)
   - [x] Architecture A: `db-designer` maps the live and dev databases (query log), writes `docs/DATABASE_SCHEMA.md` (inventory), `db/analysis/schema-check.sql`, the plan's Data model section (summary, schema.sql drift, ranked findings) and `db/proposals/`
   - [x] Architecture B: `db-designer` makes the diagram-design profile and marker, the Mermaid ERDs in `docs/schema/` and their light/dark HTML+SVG renders, and embeds them in `docs/DATABASE_SCHEMA.md`
-  - [ ] Architecture C: `architect` writes the Architecture section for the repo edits (`db/schema.sql`, the docs, the check query)
+  - [x] Architecture C: `architect` writes the Architecture section for the repo edits (`db/schema.sql`, the docs, the check query)
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -161,6 +161,76 @@ From `0c0f064e` (branch `agent/cc-schema-map`, cut from `origin/main` `62c63c32`
 - DB target: the worktree's `.env.local` `DATABASE_URL` is live `phaser_june` as `postgres` (its comment line still says "dev DB copy"; stale). The dev copy is reached only via `/srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy` (`critter_dev` / `phaser_june_dev`). The baseline e2e read live; the game writes nothing.
 
 ## Architecture
+
+From `architect`, Architecture C, 2026-11-26. Repo edits only: `db/schema.sql`, the docs, the check query. DB facts come from the Data model below and the query log [NN]; no database was touched.
+
+### Findings, ranked
+
+| # | Rank | Where | Problem | Rule / bug | Fix |
+|---|---|---|---|---|---|
+| A1 | medium | `db/analysis/schema-check.sql:45-55` | `aclexplode(d.datacl)` and `aclexplode(f.proacl)` read a NULL ACL as "no grants". NULL means the default, which gives PUBLIC `CONNECT, TEMPORARY` on a database (`EXECUTE` on a function). The dev copy's `datacl` is NULL [01], so its check prints no database grant, and the [20]/[21] diff shows live with 2 extra grant lines when the copy in fact grants more | fail loud: a real privilege passes unseen; the drift evidence misleads | `aclexplode(coalesce(d.datacl, acldefault('d', d.datdba)))` and `aclexplode(coalesce(f.proacl, acldefault('f', f.proowner)))`. Relations and schemas default to owner-only, which `grantee <> owner` drops anyway: leave them |
+| A2 | medium | `docs/DATABASE_SCHEMA.md:64, 97, 150, 155, 233, 304`; `db/proposals/02-drop-redundant-indexes.sql:51`; `db/proposals/04-drop-unused-extensions.sql:5` | cite `db/schema.sql` by line; the header edit below shifts every line after 13. Three sentences describe the file as behind and turn false once it's fixed: `DATABASE_SCHEMA.md:84` ("lists `species_id` second"), `:150` ("has neither the key nor the NOT NULLs"), `:262` ("header doesn't mention it") | stale refs: wrong docs | in the same step as the schema.sql edit: renumber every live `schema\.sql:` ref (older `plans/` are history: untouched); rewrite the 3 sentences to the new state |
+| A3 | low | `db/schema.sql:82-83`, copied at `docs/DATABASE_SCHEMA.md:143` | `habitat_colormap` is "the habitat raster behind the globe's habitat pictures". No code draws habitat pictures (`git grep -i 'colormap\|habitat raster' -- src scripts`: nothing), nothing reads the table [22]; the owner keeps it for map legends (Q18, `plans/2026-11-15-db-retire.md:203`) | wrong fact | "Legend of the habitat raster: pixel value -> IUCN habitat class and kind (e.g. 106 = ...). Nothing reads it; the owner keeps it for map legends (audit Q18)." Same fact in both files |
+| A4 | low | `db/analysis/schema-check.sql:6-7` vs `docs/DATABASE_SCHEMA.md:348` | the query says only owners differ by design; the doc says owners and database grants. After A1 the dev diff shows the database grants too | DRY: two copies of the expected diff, already disagreeing | the query's header names "owners and the database's grants" and points at `docs/DATABASE_SCHEMA.md#dev-copy-phaser_june_dev` for the rest |
+| A5 | low | `docs/DATABASE_SCHEMA.md:345` | the dev-copy subshell's `. <file>` doesn't stop if the file fails to load. `scripts/db` then falls back to `.env.local` (live), so the "dev" output is live's: harmless (read-only), but the diff lies | fail fast | `. <file> \|\| exit 1; set +a; : "${DATABASE_URL:?dev-copy settings not loaded}"`, as `docs/DATABASE_ACCESS.md:255-256` does |
+| A6 | low | `AGENTS.md:59-65` (Docs Map), `docs/DATABASE_ACCESS.md:312-320` (Related), `db/schema.sql:5-7` (change rule) | nothing points at the new map or the check, and the change rule ("apply, then edit this file") leaves `docs/DATABASE_SCHEMA.md` out. The next schema change drifts the map silently, the problem this mission clears | discoverability; drift | one Docs Map line, one Related line; the schema.sql change rule names the map and the check (every schema change already edits that file, so it's the one place) |
+
+**Checked and fine:**
+- `schema-check.sql` otherwise meets the Definition of done: `BEGIN TRANSACTION READ ONLY`, `SET LOCAL statement_timeout`, `ROLLBACK`; one sorted line per item (`ORDER BY section, object, pos, line`); columns by position with type, NOT NULL, default; `pg_get_constraintdef`, `pg_get_indexdef`, `pg_get_viewdef` (views and matviews); `aclexplode` grants incl. matviews and sequences; stateless, so rerunnable. `-qAt` hides the command tags ([20] starts at `database ...`).
+- Nothing reads `db/schema.sql` but `tests/clueGame/content.test.ts:27-52`, which pins view-SQL literals only (IDP, Lydekker, `NOT IN ('RUS', 'IDN')`, `presence IN (1, 2)` counts). `scripts/content.ts:45` only mentions it. No `SELECT *` or column-less `INSERT` on the content tables (`git grep`), so column order is cosmetic.
+- CI's legacy-ORM grep (`.github/workflows/ci.yml:24`) covers `db/`: the new text must not trip it.
+
+### Docs facts (question 2)
+
+No database fact in the three docs is wrong; the only edits are A6's pointers. Each was checked:
+
+| Doc:line | Fact | Evidence |
+|---|---|---|
+| `AGENTS.md:9`, `:18` | PostGIS on Hetzner via TLS PgBouncer; the app as `critter_app` straight to the container | [01] 17.5 / PostGIS 3.5.2; roles table [07] |
+| `AGENTS.md:38` | VPS DB is live `phaser_june` | [01] `current_database`, `current_user = postgres` |
+| `AGENTS.md:51`, `:55` | `clue_match_places` view; one client, raw SQL; baseline, no history; scripts via `connect.ts` except `scripts/db` and `import-natural-earth.mjs` | [02]; `content.ts`, `iucn.ts`, `clue-world-map.ts` import `connect` (grep) |
+| `docs/CLUE_MATCH.md:67-69` | 4 content tables + 2 matviews, presence 1-2, Russia/IDN/France splits, basemaps from `natural_earth.countries` | [05]; `db/schema.sql`. It skips `habitat_colormap`, but says "the schema the app uses", which is true |
+| `docs/DATABASE_ACCESS.md:4`, `:99` | server 17.5 | [01] |
+| `docs/DATABASE_ACCESS.md:64`, `:184-192` | `DATABASE_URL` is `postgres`, a superuser; CI reads the copy as `critter_dev` | [07]; `ci.yml:74` |
+| `docs/DATABASE_ACCESS.md:227-229` | `dev-role.sql` closes prod to PUBLIC | [01] live `datacl` has no PUBLIC `c` (its `T` is F6) |
+| `docs/DATABASE_ACCESS.md:290-293` | player tables dropped, live and copy | [02][12] |
+
+The stale "dev DB copy" comment is only in the uncommitted `.env.local` (committed: `.env.example`, `.env.vps.example`, `deploy/app.env.example`; none says it): not a repo edit.
+
+### Data model check (question 4)
+
+- `docs/DATABASE_SCHEMA.md` repeats the columns, keys and indexes `db/schema.sql` holds (and the `.mmd` and 4 renders again). Acceptable: the brief requires the map, it is dated ("as it was on 2026-11-26") and query-cited, and A6's change rule plus the rerunnable check are the drift guard. Not acceptable: line refs and "file is behind" sentences this mission itself makes false (A2).
+- "Extensions: list them, or what stays after P04": list live today. The proposals aren't applied.
+- The rest holds for the repo edits: [20] lines 50-51 and 147 (`habitat_colormap`), 111-126 (`species`), 127-136 (clues), [01] (extensions).
+
+### Target design (questions 1, 3, 5)
+
+Edits in order; each step's check beside it. View SQL is never touched; no `pg_get_viewdef` text goes in any file.
+
+1. **`db/analysis/schema-check.sql`**: A1 (two `coalesce(..., acldefault(...))`) and A4 (header). Check: rerun it, the committed file plus a `current_database()` guard, as `queries/25-live-schema-check.sql` and `26-dev-schema-check.sql` (read-only, as 20/21). Expect 25 = [20] byte for byte; 26 = [21] plus `grant database to PUBLIC CONNECT,TEMPORARY`.
+2. **`db/schema.sql`**, every "file behind" item fixed by hand, in the file's style:
+   - Header: keep lines 1-3 (hand-kept baseline, not a migration history). Change rule: "...then edit this file and the map docs/DATABASE_SCHEMA.md to match; db/analysis/schema-check.sql prints the live definitions to compare." After the "Also needed" list: "Kept though nothing reads it (owner, audit Q18), like habitat_colormap below: oneearth.eco_sym_colors, the bioregions' legend colors." Extensions line becomes: "Extensions, as live has them (2026-11-26): postgis; pg_stat_statements (monitoring); pgcrypto and uuid-ossp, which no SQL in the repo calls; init/01-extensions.sql installs all four. plpgsql is built in."
+   - `species`: move `created_at`, `updated_at` to follow `conservation_code` (live order [20]:111-126).
+   - `species_deduction_clues`: move `species_id` (with its inline FK) to follow `created_at` (live order [20]:127-136). Constraint names don't depend on position.
+   - `habitat_colormap`: `value integer PRIMARY KEY, label text NOT NULL` (live `habitat_colormap_pkey`, the default name [20]:147); its comment per A3.
+   - Check: `npm test` (content.test.ts); `git diff db/schema.sql` has no hunk from `-- Range maps` down; CI's legacy-ORM grep (`ci.yml:24`) empty; read each object against [25]: all 12 now "matches".
+3. **`docs/DATABASE_SCHEMA.md`**: A2 (renumber refs, rewrite `:84`, `:150`, `:262`), A3 (`:143`), A5 (`:345`), and cite [25]/[26] where it cites [20]/[21] (`:313`). Check: every `schema\.sql:N` ref read against the edited file.
+4. **`db/proposals/02-drop-redundant-indexes.sql:51`, `04-drop-unused-extensions.sql:5`**: A2 refs (04: "db/schema.sql's header says so"). Comments only. Check: read.
+5. **`AGENTS.md`** Docs Map: "`docs/DATABASE_SCHEMA.md`: the live database's objects, readers, roles, grants and dev-copy drift; ERD `docs/schema/`; check `db/analysis/schema-check.sql`." **`docs/DATABASE_ACCESS.md`** Related: the same pointer, one line. Check: read.
+6. **Final:** `npm run typecheck`, `npm run lint`, `npm test`, then `CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:fresh` once.
+
+No change to `src/`, `scripts/`, `db/content/`, `init/` or `deploy/`.
+
+### Rejected alternatives
+
+- Header note on column order instead of reordering: leaves 2 permanent "differs" for every later check to explain. The reorder moves 3 lines, and nothing depends on order.
+- Header lists the extensions left after P04: P04 isn't applied, and the file describes live.
+- `CREATE TABLE oneearth.eco_sym_colors` in the file: it's imported with `oneearth`, like `oneearth_bioregion`. The brief asks only to name it as kept.
+- Object-name refs instead of renumbering `db/schema.sql:N`: the map uses `file:line` throughout. Renumber once.
+- `COLLATE "C"` in the check's `ORDER BY`: both databases share one server and `en_US.utf8` [01], and the two outputs are compared in the same run.
+- `acldefault` for relations and schemas too: their default is owner-only, which the owner filter drops. No output change.
+- A pointer in `docs/CLUE_MATCH.md`: it has no wrong DB fact, and AGENTS.md's Docs Map is the index.
+- Updating line refs in older `plans/`: they're history.
 
 ## Data model
 
@@ -328,5 +398,6 @@ From `db-designer`, 2026-11-26.
 - 2026-11-26 09:05 UTC · Baseline: typecheck, lint, 186/186 unit, e2e:fresh 1563/1563 pass; artifact `e2e-s0-baseline/`.
 - 2026-11-26 09:50 UTC · Architecture A: split stage into A/B/C; db-designer mapped live+dev (24 read-only query files in `queries/`), wrote `docs/DATABASE_SCHEMA.md`, `db/analysis/schema-check.sql`, Data model (12 schema.sql objects: 7 match, 5 file-behind; F1 medium + F2–F6 low), `db/proposals/01`–`05`. Query files checked (wrapper, no writes); typecheck, lint, 186/186 unit pass.
 - 2026-11-26 09:55 UTC · Architecture B: db-designer added the profile `~/.diagram-design/profiles/critter-connect.md`, the `.diagram-design` marker, `docs/schema/phaser-june.mmd` (11 entities, 118 cols, 8 links) and light/dark HTML+SVG renders, embedded in `DATABASE_SCHEMA.md` (fixed iucn numeric(65,30) and ranges cardinality). SVGs parse, light render checked by eye in headless Chrome; typecheck, lint pass.
+- 2026-11-26 10:10 UTC · Architecture C: architect wrote Architecture (A1–A2 medium: check query misses default ACLs; stale schema.sql line refs; A3–A6 low), docs DB facts all verified correct (pointers only), target design: 6 ordered edits. Plan-only change; no DB access.
 
 ## Summary
