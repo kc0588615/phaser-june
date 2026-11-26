@@ -767,6 +767,16 @@ SHOULD-CONSIDER:
 
 ## Release
 
+2026-11-26, deploy. Branch already on `origin/main` `62c63c32` (no rebase needed). Full Verification rerun on `e06bcefe`: V1 e2e:fresh 1563/1563 (`e2e-final/` replaced), V2 typecheck/lint/186 unit/CI guards, V3 scope, V4 scan-done (01-42), V5 [42] = [25] (no live drift), same-order x5, V6-V10 pass.
+- PR: https://github.com/kc0588615/phaser-june/pull/90. CI `check` first failed in "Website browser test" (`Chrome did not start in 20 s`, runner flake; no site file changed; local `e2e:site` 444/444); `gh run rerun --failed` once: `check` pass, `e2e` pass (run 45817755605).
+- Merge commit: `84b3ba569e4b19cf56440e99fca800b8eb4615ff`.
+- Deploy last line: `deploy critter-connect: live at https://critterconnect.org` (39 OK checks, 0 FAIL).
+- Smoke: `version.txt` = `84b3ba56...`; play `/`, `/explore/`, `/api/places/`, `/api/clue-game/pool/` and critterconnect.org `/` all 200 with expected content. Mission changes no served page (docs/db files only).
+- Log: `/srv/critter-ai/agent-state/missions/cc-schema-map/release-deploy.log`.
+- No production content build needed.
+
+Result: done
+
 ## Decisions
 
 - 2026-11-26 · Scope: A6 adds one Docs Map line (AGENTS.md), one Related line (docs/DATABASE_ACCESS.md) and the map + check to the change rule (AGENTS.md:55, db/schema.sql header), past the brief's "change those facts only": the brief creates the map and check, and with nothing pointing at them and a change rule that skips them, the next schema change drifts them unseen. No database fact changes (Fable SC2).
@@ -807,6 +817,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 11:36 UTC · S13: rerun guard's stop branch exits 2 (diff's trouble code); on logged copies pass case exits 1 (diff = 32/33), dev-on-live [37] exits 2. Typecheck, lint pass.
 - 2026-11-26 11:39 UTC · S14: schema-check.sql grants fold per privilege whatever the grantor (one `acl` CTE, one fold/aggregate), global default ACL prints no `in schema -`, extension relation members filtered by relkind. [38]/[39] = [32]/[33]; [40] literal two-grantor ACL prints `SELECT*` once. V4 clean, typecheck, lint pass.
 - 2026-11-26 11:57 UTC · Final Verification on `951b705c`: V1 e2e:fresh 1563/1563 (`e2e-final/`), V2 typecheck/lint/186 unit/CI guards, V3-V10 pass; [41] live check = [25]. Summary written, status done.
+- 2026-11-26 12:31 UTC · Release: Verification rerun pass (e2e 1563/1563, [42] = [25]); PR #90, CI check flaked once (Chrome start), rerun pass; merged `84b3ba56`, deployed, version.txt + smoke pass.
 
 ## Schema check result
 
@@ -881,3 +892,5 @@ Final Verification 2026-11-26 on `951b705c` (base `origin/main` `62c63c32`, unch
 - `db-designer` + diagram-design did the job: a full map, a faithful 11-entity ERD that renders clean in both modes, a rerunnable check and 5 guarded drafts, in two units. The reviews still found real gaps in its first cut (Mermaid parse, cardinality, target guards; then grant options, large objects, overstated content-hash and privilege claims), so its output needs the review rounds.
 - Gemini added 2 real MUST-FIX that Astra missed (the rerun guard exited 0 when it stopped; multi-grantor ACLs duplicated a privilege) and 4 useful small items; narrower than Astra's 6, but not redundant.
 - Cost (`mission usage`): 24 Claude sessions, 137 minutes; list-price weight Opus $39.62 + Fable $4.19 (Astra and Gemini not counted). Worth repeating for schema work, with both code reviews; the read-only query-file rule made every live query auditable at no extra cost.
+
+**Release:** PR #90 merged (`84b3ba56`) and deployed 2026-11-26; live `version.txt` matches, smoke passes. No production content build needed. Owner: pick proposals in handoff H23.
