@@ -3,13 +3,15 @@ SET LOCAL statement_timeout = '30s';
 -- Schema check: the live definitions of the database's own objects, one line each in a fixed sorted order, to
 -- compare with db/schema.sql by reading both (docs/DATABASE_SCHEMA.md#schema-check). Read only: it changes nothing.
 --   ./scripts/db -qAt -f db/analysis/schema-check.sql > schema-check.out
--- Run it on the live database and on the dev copy (docs/DATABASE_ACCESS.md) and diff the two outputs: owners differ
--- by design (critter_dev owns the copy's objects); anything else that differs is drift.
+-- Run it on the live database and on the dev copy (docs/DATABASE_ACCESS.md) and diff the two outputs: owners and the
+-- database's grants differ by design (docs/DATABASE_SCHEMA.md#dev-copy-phaser_june_dev); anything else is drift.
 --
--- Covers the schemas public, oneearth and natural_earth, without extension members (PostGIS's spatial_ref_sys and
--- views). Columns are numbered by position (not attnum, which a dump and restore renumbers). Each line is
--- "<section> <object> <detail>"; sections run database, extension, schema, relation, column, constraint, index,
--- sequence, view, function, trigger, grant, role.
+-- Covers the schemas public, oneearth and natural_earth. Extension members (PostGIS's spatial_ref_sys and views, any
+-- schema) aren't listed: the grant section sums their privileges per extension as "<k> of <n>" members. Grants read
+-- a NULL ACL as its default (PUBLIC keeps CONNECT, TEMPORARY on a database and EXECUTE on a function), and include
+-- role memberships and column grants. Columns are numbered by position (not attnum, which a dump and restore
+-- renumbers). Each line is "<section> <object> <detail>"; sections run database, extension, schema, relation, column,
+-- constraint, index, sequence, view, function, trigger, grant, role.
 WITH rel AS (
   SELECT c.oid, c.relname, c.relkind, c.relowner, c.relacl, n.nspname,
          CASE WHEN n.nspname = 'public' THEN '' ELSE n.nspname || '.' END || c.relname AS name
@@ -44,15 +46,54 @@ WITH rel AS (
   UNION ALL
   SELECT 'database', CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END,
          string_agg(a.privilege_type, ',' ORDER BY a.privilege_type)
-  FROM pg_database d CROSS JOIN LATERAL aclexplode(d.datacl) a
+  FROM pg_database d CROSS JOIN LATERAL aclexplode(coalesce(d.datacl, acldefault('d', d.datdba))) a
   WHERE d.datname = current_database() AND a.grantee <> d.datdba
   GROUP BY 1, 2
   UNION ALL
   SELECT 'function ' || f.name, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END,
          string_agg(a.privilege_type, ',' ORDER BY a.privilege_type)
-  FROM fn f CROSS JOIN LATERAL aclexplode(f.proacl) a
+  FROM fn f CROSS JOIN LATERAL aclexplode(coalesce(f.proacl, acldefault('f', f.proowner))) a
   WHERE a.grantee <> f.proowner
   GROUP BY 1, 2
+  UNION ALL
+  -- Column grants; a NULL attacl means none.
+  SELECT r.name || '.' || a.attname, CASE WHEN g.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(g.grantee) END,
+         string_agg(g.privilege_type, ',' ORDER BY g.privilege_type)
+  FROM rel r
+  JOIN pg_attribute a ON a.attrelid = r.oid AND a.attnum > 0 AND NOT a.attisdropped
+  CROSS JOIN LATERAL aclexplode(a.attacl) g
+  WHERE g.grantee <> r.relowner
+  GROUP BY 1, 2
+  UNION ALL
+  -- Role memberships, without built-in pg_* members (a pg_* role granted to one of ours still prints).
+  SELECT DISTINCT 'role ' || pg_get_userbyid(m.roleid), pg_get_userbyid(m.member),
+         coalesce(nullif(concat_ws(',', CASE WHEN m.admin_option THEN 'ADMIN' END, CASE WHEN m.inherit_option THEN 'INHERIT' END,
+                                   CASE WHEN m.set_option THEN 'SET' END), ''), 'MEMBER')
+  FROM pg_auth_members m
+  WHERE pg_get_userbyid(m.member) NOT LIKE 'pg\_%'
+  UNION ALL
+  -- Extension members, summed: k members of that kind give the grantee these privileges, of n in all.
+  SELECT 'extension ' || x.extname || ' ' || x.kind, x.grantee, x.privileges || ' ' || count(*) || ' of ' || max(x.n)
+  FROM (
+    SELECT m.extname, m.kind, m.n, CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END AS grantee,
+           string_agg(a.privilege_type, ',' ORDER BY a.privilege_type) AS privileges
+    FROM (
+      SELECT e.extname, k.kind, k.acl, k.owner, k.objid, count(*) OVER (PARTITION BY e.oid, k.kind) AS n
+      FROM pg_extension e
+      JOIN pg_depend d ON d.refclassid = 'pg_extension'::regclass AND d.refobjid = e.oid AND d.deptype = 'e'
+      CROSS JOIN LATERAL (
+        SELECT 'functions' AS kind, coalesce(p.proacl, acldefault('f', p.proowner)) AS acl, p.proowner AS owner, p.oid AS objid
+        FROM pg_proc p WHERE d.classid = 'pg_proc'::regclass AND p.oid = d.objid
+        UNION ALL
+        SELECT 'relations', c.relacl, c.relowner, c.oid
+        FROM pg_class c WHERE d.classid = 'pg_class'::regclass AND c.oid = d.objid
+      ) k
+    ) m
+    CROSS JOIN LATERAL aclexplode(m.acl) a
+    WHERE a.grantee <> m.owner
+    GROUP BY m.extname, m.kind, m.n, m.objid, a.grantee
+  ) x
+  GROUP BY x.extname, x.kind, x.grantee, x.privileges
 ), lines AS (
   SELECT 1 AS section, '' AS object, 0 AS pos,
          'database ' || current_database() || ' server ' || current_setting('server_version_num') AS line

@@ -493,7 +493,7 @@ From `planner`, 2026-11-26, based on the final architecture: the Architecture ta
 
 Rules for every step: no database writes. Each query is a new file in `/srv/critter-ai/agent-state/missions/cc-schema-map/queries/` (the Decision rules' wrapper), scanned with V4 before it runs and run with `./scripts/db -f`, with its `.out` saved beside it. Numbers 25-26 are S1's; take the next free number from 29 (27-28 are used). `Q=/srv/critter-ai/agent-state/missions/cc-schema-map/queries` below. Commit code and plan together and push after each step.
 
-- [ ] S1. **Schema check: the privileges it misses** (A1, A4; target design step 1). Riskiest and enabling: it is the only new SQL run against live, and S2-S4 check against its output [25].
+- [x] S1. **Schema check: the privileges it misses** (A1, A4; target design step 1). Riskiest and enabling: it is the only new SQL run against live, and S2-S4 check against its output [25].
   - Files: `db/analysis/schema-check.sql`. Query log (outside git): `$Q/25-live-schema-check.{sql,out}`, `$Q/26-dev-schema-check.{sql,out}`.
   - Do: target design step 1 (a)-(d) plus its header lines, all inside the `grants` CTE. Handle every item in **Failure modes** FM1-FM12. Then build 25 and 26 the way 20 and 21 were built: the committed file, with a line-3 comment and the `SELECT 1 / (current_database() = '<db>')::int AS guard_<x> \gset` guard inserted after its two wrapper lines. Scan both with V4, then run them:
     ```bash
@@ -520,6 +520,11 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
     - No `grant role` lines and no column-grant lines ([07]/[17]: none).
     - `npm run typecheck`, `npm run lint`.
   - Record: a `Result:` sub-bullet under this step with the real extension lines and the three diff results. S4 copies them into the map.
+  - Result (2026-11-26, [25] live, [26] dev; both exit 0, empty stderr, line 1 names its database; V4 scan clean on both):
+    - `diff 20 25`: adds exactly the 7 expected lines, nothing else. Real lines (sorted as printed): `grant extension pg_stat_statements functions to PUBLIC EXECUTE 2 of 3`, `... pg_stat_statements relations to PUBLIC SELECT 2 of 2`, `... pgcrypto functions to PUBLIC EXECUTE 36 of 36`, `... plpgsql functions to PUBLIC EXECUTE 3 of 3`, `... postgis functions to PUBLIC EXECUTE 776 of 776`, `... postgis relations to PUBLIC SELECT 3 of 3`, `... uuid-ossp functions to PUBLIC EXECUTE 10 of 10`. All counts as predicted.
+    - `diff 21 26`: the same 7 lines plus `grant database to PUBLIC CONNECT,TEMPORARY` (FM1: the copy's NULL `datacl` now reads as its default).
+    - `diff 25 26`: line 1, schema/relation owners (`postgres` vs `critter_dev`), and the database grants (live `PUBLIC TEMPORARY` + `critter_app CONNECT`; copy `PUBLIC CONNECT,TEMPORARY`) only. Extension lines identical in both (FM12).
+    - No `grant role` and no column-grant lines in either (FM6-FM8). Typecheck, lint pass.
 - [ ] S2. **`db/schema.sql` to live, plus the change rule's other copies** (target design steps 2 and 5, A3, A6). Fable MISSED 2 asks for both copies of the change rule to be edited in the same step.
   - Files: `db/schema.sql`, `AGENTS.md`, `docs/CLUE_MATCH.md`, `docs/DATABASE_ACCESS.md`.
   - Do:
@@ -717,5 +722,6 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 - 2026-11-26 10:12 UTC · Astra review: APPROVE_WITH_CHANGES, 5 MUST-FIX (proposals must assert target DB before DDL; P01 grants too broad, scope off pg_read_all_data; check query misses memberships/column/function grants; Mermaid parse + cardinality; deduction-clues column order), 2 SHOULD-CONSIDER. Plan-only change.
 - 2026-11-26 10:26 UTC · Revision: db-designer fixed .mmd parse (real Mermaid 12.2.0 parse: 11/118/8), iucn/eco_sym cardinality in .mmd+renders+map, target-DB guards on P01–P05 (proven read-only [28]), P01 scoped off pg_read_all_data (+ dev-copy PUBLIC CONNECT revoke); architect revised target design (clue order 2 moves, check-query memberships/column/extension grants, AGENTS.md change rule, cite schema.sql by object). Lint, typecheck pass.
 - 2026-11-26 10:37 UTC · Steps: planner wrote S1–S6 (check-query privileges, schema.sql edits + change rule copies, object-by-object check record, cite by object, handoff H23, full Verification), Verification V1–V10, Failure modes. Plan-only change.
+- 2026-11-26 10:55 UTC · S1: schema-check.sql reads NULL database/function ACLs as defaults, adds role memberships, column grants and per-extension grant sums (`k of n`); header names the expected dev diff. Ran [25] live / [26] dev read-only: diffs exactly as predicted (7 extension lines; dev +PUBLIC CONNECT,TEMPORARY; 25 vs 26 owners + db grants only). Typecheck, lint pass.
 
 ## Summary
