@@ -149,7 +149,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -489,7 +489,213 @@ Decision line for **Decisions**:
 
 ## Steps
 
+From `planner`, 2026-11-26, based on the final architecture: the Architecture target design (steps 1-5), the Data model, both reviews and the Revision notes. **Already done on the branch:** the map, the ERD (`.mmd` parses with Mermaid 12.2.0, cardinalities fixed, 4 renders rebuilt), the profile and marker, proposals 01-05 with target guards, the map's function-grant wording. **Left:** the architect's repo edits, the comparison record and the handoff item. **No ERD step:** the `.mmd` already has `habitat_colormap`'s PK and live's clue column order, and S6 rechecks the renders.
+
+Rules for every step: no database writes. Each query is a new file in `/srv/critter-ai/agent-state/missions/cc-schema-map/queries/` (the Decision rules' wrapper), scanned with V4 before it runs and run with `./scripts/db -f`, with its `.out` saved beside it. Numbers 25-26 are S1's; take the next free number from 29 (27-28 are used). `Q=/srv/critter-ai/agent-state/missions/cc-schema-map/queries` below. Commit code and plan together and push after each step.
+
+- [ ] S1. **Schema check: the privileges it misses** (A1, A4; target design step 1). Riskiest and enabling: it is the only new SQL run against live, and S2-S4 check against its output [25].
+  - Files: `db/analysis/schema-check.sql`. Query log (outside git): `$Q/25-live-schema-check.{sql,out}`, `$Q/26-dev-schema-check.{sql,out}`.
+  - Do: target design step 1 (a)-(d) plus its header lines, all inside the `grants` CTE. Handle every item in **Failure modes** FM1-FM12. Then build 25 and 26 the way 20 and 21 were built: the committed file, with a line-3 comment and the `SELECT 1 / (current_database() = '<db>')::int AS guard_<x> \gset` guard inserted after its two wrapper lines. Scan both with V4, then run them:
+    ```bash
+    ./scripts/db -qAt -f $Q/25-live-schema-check.sql > $Q/25-live-schema-check.out
+    ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy || exit 1; set +a
+      : "${DATABASE_URL:?dev-copy settings not loaded}"
+      ./scripts/db -qAt -f $Q/26-dev-schema-check.sql > $Q/26-dev-schema-check.out )
+    ```
+  - Check:
+    - Both runs exit 0 with empty stderr. Line 1 of each output names its database.
+    - `diff $Q/20-live-schema-check.out $Q/25-live-schema-check.out` adds exactly these 7 lines and nothing else:
+      ```
+      grant extension pg_stat_statements functions to PUBLIC EXECUTE 2 of 3
+      grant extension pg_stat_statements relations to PUBLIC SELECT 2 of 2
+      grant extension pgcrypto functions to PUBLIC EXECUTE 36 of 36
+      grant extension plpgsql functions to PUBLIC EXECUTE 3 of 3
+      grant extension postgis functions to PUBLIC EXECUTE 776 of 776
+      grant extension postgis relations to PUBLIC SELECT 3 of 3
+      grant extension uuid-ossp functions to PUBLIC EXECUTE 10 of 10
+      ```
+      The counts come from [24] and [27]. A count that differs is a fact to record, never a reason to bend the query.
+    - `diff 21 26` gives the same 7 lines plus `grant database to PUBLIC CONNECT,TEMPORARY`.
+    - `diff 25 26` shows line 1, owners and the database grants only.
+    - No `grant role` lines and no column-grant lines ([07]/[17]: none).
+    - `npm run typecheck`, `npm run lint`.
+  - Record: a `Result:` sub-bullet under this step with the real extension lines and the three diff results. S4 copies them into the map.
+- [ ] S2. **`db/schema.sql` to live, plus the change rule's other copies** (target design steps 2 and 5, A3, A6). Fable MISSED 2 asks for both copies of the change rule to be edited in the same step.
+  - Files: `db/schema.sql`, `AGENTS.md`, `docs/CLUE_MATCH.md`, `docs/DATABASE_ACCESS.md`.
+  - Do:
+    - **`db/schema.sql`**, exactly as target design step 2 says:
+      - the header's change rule, the `eco_sym_colors` "kept" line and the Extensions line (keep lines 1-3 and the "fails at the first CREATE" sentence);
+      - `species`: `created_at` and `updated_at` follow `conservation_code`;
+      - clues: two moves, to `..., is_filtering, created_at, species_id, source_key, source_url`, then fix the commas;
+      - `habitat_colormap`: `value integer PRIMARY KEY, label text NOT NULL`, with A3's comment. Hand-written; no view SQL touched.
+    - **The same change rule** (names the map and the check) in:
+      - `AGENTS.md:55`'s Data line;
+      - the last sentence of `docs/CLUE_MATCH.md`'s Database section ("Change the database with SQL, then update the file to match."). That is a third copy the architecture missed. Leaving it would make the copies disagree, which is what Fable MISSED 2 warns about.
+    - **Pointers:** `AGENTS.md`'s Docs Map line and `docs/DATABASE_ACCESS.md`'s Related line (target design step 5).
+    - **Decisions:** add one line. The `CLUE_MATCH.md` copy follows the A6 decision. `docs/DRIZZLE_ORM_GUIDE.md:39` ("Edit `db/schema.sql` to match, then update the query and its `Row` type") stays: it isn't in the brief's list of docs, and it is a step for query changes that doesn't contradict the rule.
+  - Check:
+    - `npm test` (186/186; `tests/clueGame/content.test.ts` pins the view literals), `npm run typecheck`, `npm run lint`.
+    - `git diff origin/main -- db/schema.sql` has no hunk at or below `-- Range maps`.
+    - V5's column-order loop against `$Q/25-live-schema-check.out` prints `same-order` 5 times.
+    - V2's CI greps come back empty.
+    - Read the three change rules side by side (`git grep -n 'schema-check.sql' -- AGENTS.md docs/CLUE_MATCH.md db/schema.sql`): one rule.
+- [ ] S3. **Record the schema check, object by object** (Definition of done, "The schema check").
+  - Files: the plan only, a new `## Schema check result` section above `## Summary`.
+  - Do: read `$Q/25-live-schema-check.out` against the edited `db/schema.sql`, object by object, with no parser:
+    - the 12 objects of the Data model's table;
+    - the grants in `deploy/db/app-role.sql`;
+    - one row for what the file leaves out by design (`iucn`, `oneearth.*`, `natural_earth.countries`, extension members), which the map covers.
+    - Views: the hand-written SQL is read against [25]'s `pg_get_viewdef`, and `diff 20 25` has no `view` line change, so live hasn't moved since [05].
+
+    Each row: matches or differs, how, and what was done (S2's edit, or "file ahead: finding + handoff line"). Add the dev copy's result (`diff 25 26`) and the rerun command.
+  - If an object still differs:
+    - file behind: add a fix step before S4;
+    - file ahead: add a finding row, and a line for S5's handoff item.
+
+    Never fix the database.
+  - Check: 12 of 12 match (the Architecture expects this after S2), plus the `app-role.sql` row. `npm run typecheck`, `npm run lint`.
+- [ ] S4. **The map and proposals cite the edited file by object** (A2, A3, A5; target design steps 3-4).
+  - Files: `docs/DATABASE_SCHEMA.md`, `db/proposals/02-drop-redundant-indexes.sql`, `db/proposals/04-drop-unused-extensions.sql`.
+  - Do:
+    - **Refs by object, not line:** every `db/schema.sql:N` ref becomes a reference to the object or step. In the map:
+      - `#species`: both views' `ranges` step;
+      - `#species_deduction_clues`: the `playable` step;
+      - `#habitat_colormap`: its keys line;
+      - the views' intro: "match `db/schema.sql`'s two `CREATE MATERIALIZED VIEW`";
+      - `#natural_earthcountries`: `clue_match_places`' `country_parts` step;
+      - `#roles-and-grants`: `db/schema.sql`'s closing grant `DO` block.
+    - **Sentences that call the file behind:** rewrite them for the new state. That is `#species_deduction_clues` ("lists `species_id` second"), `#habitat_colormap`'s keys, `#oneeartheco_sym_colors` ("header doesn't mention it"), and `#species`' column-order line, which now matches the file.
+    - **A3:** `#habitat_colormap`'s first line, in the same words as the `db/schema.sql` comment.
+    - **A5:** in `#schema-check`:
+      - the dev subshell gets `|| exit 1` and `${DATABASE_URL:?}`;
+      - its expect comment becomes "owners and the database's grants only";
+      - the covers list adds memberships, column grants and extension members (summed);
+      - its pointer goes to the plan's "Schema check result".
+    - `#dev-copy-phaser_june_dev`: [20] vs [21] becomes [25] vs [26].
+    - `#roles-and-grants`: add S1's real `grant extension` lines, and "memberships and column grants: none [25]".
+    - Proposals, comments only:
+      - 02's rollback ref becomes "the four CREATE INDEX lines in db/schema.sql";
+      - 04's header ref becomes "db/schema.sql's header says so".
+  - Check:
+    - `git grep -nE 'schema\.sql:[0-9]' -- . ':!plans'` prints nothing. It needs the `[0-9]`: the Architecture's bare `schema\.sql:` also matches the prose at `scripts/content.ts:45`, which is out of scope.
+    - Every remaining `db/schema.sql` mention in the map and the proposals names a step or block that is in the file. `grep -nE '^(WITH )?[a-z_]+ AS \(|^\), [a-z_]+ AS \(|^DO ' db/schema.sql` lists them.
+    - `git diff db/proposals/` changes `--` lines only, and V8 prints `ok` 5 times.
+    - `npm run typecheck`, `npm run lint`.
+- [ ] S5. **Handoff item for Danby** (Definition of done 5).
+  - Files: `/srv/critter-ai/handoff/critter-connect.md` (outside git), and the plan (Log; a Decisions line with the item's number).
+  - Do: take the next unused number (`grep -n '^### H' /srv/critter-ai/handoff/critter-connect.md`; the highest today is H22, so H23). Add the item under `## Open`, in `~/AGENTS.md`'s exact format:
+    - Title with no values, e.g. `### H23 · Database proposals from cc-schema-map: pick which to apply`.
+    - `Status: waiting on you`; `From: cc-schema-map · <date>`; `Blocks: nothing`.
+    - **Why:** the map exists, and nothing was applied.
+    - **Steps:** read `docs/DATABASE_SCHEMA.md` and each proposal (`https://github.com/kc0588615/phaser-june/tree/agent/cc-schema-map/db/proposals`; on `main` after the release). Then one line each, from the Data model's "Handoff lines": P01-P05 with risk and recommendation, F2 (a code change, no proposal), and any "file ahead" line from S3.
+    - **Your reply:**
+      - `P01 =` … `P05 =` (apply / skip / later);
+      - `P04: does any tool of yours outside the repo call pgcrypto or uuid-ossp functions? =`;
+      - `F2: queue a code mission to widen the clue-id rule? =`.
+  - Check:
+    - Every format field is present.
+    - The title and body hold no secret, IP address or connection string.
+    - `npm run typecheck`, `npm run lint`.
+- [ ] S6. **Full Verification:** V1-V10 below. Run V2-V9 first (seconds each) and V1, the E2E, last.
+  - Fix any failure before checking this off. A fix bigger than a few lines becomes a new step before S6.
+  - Log each V's result in one line, with the E2E artifact's path.
+
 ## Verification
+
+Run from the worktree root, one heavy job at a time, on the step's final commit. `Q=/srv/critter-ai/agent-state/missions/cc-schema-map/queries`; `S=/srv/critter-ai/agent-state/missions/cc-schema-map`. The Summary unit and the release (after its rebase) rerun all of it.
+
+- **V1. E2E** (the owner's primary test). No new scenario: nothing a player sees changes, and no code under `src/` or `scripts/` changes. The existing `e2e:fresh` scenario reads every database path the game has: `/api/places` and its outline (globe), `/api/clue-game/pool`, range and ranges. It plays globe → continent → 4 rounds at `/explore` (seed 7), with resume, two tabs, Anywhere load and the IDN split, checking invariants on every move.
+  ```bash
+  CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:fresh 2>&1 | tee /tmp/cc-schema-map-e2e-final.log
+  run=$(grep -oE 'Artifact: e2e-artifacts/[^ ]+/' /tmp/cc-schema-map-e2e-final.log | tail -1 | cut -d' ' -f2)
+  rm -rf $S/e2e-final && mkdir -p $S/e2e-final && cp -r "$run". $S/e2e-final/ && cp /tmp/cc-schema-map-e2e-final.log $S/e2e-final/run.log
+  ```
+  - Must show: the last line reads `N/N checks passed. Artifact: ...`, with 0 failed. Baseline: 1563/1563. N changes only if a rebase brought e2e changes.
+  - Artifact: `$S/e2e-final/` (`report.json`, screenshots, `run.log`). Reproduce with the same command; seed 7 is the default.
+  - Disk: keep only `e2e-s0-baseline/` and `e2e-final/`.
+- **V2. Static and CI.** `npm run typecheck` and `npm run lint` exit 0. `npm test` passes 186/186 (the mission adds no tests; `content.test.ts` pins `db/schema.sql`). CI's `! git ...` guard lines (the legacy-ORM greps and the legal-links grep), run verbatim from the workflow, print nothing:
+  ```bash
+  for n in $(grep -n '^ *! git ' .github/workflows/ci.yml | cut -d: -f1); do bash -c "$(sed -n ${n}p .github/workflows/ci.yml)" || echo "CI guard ci.yml:$n FAILED"; done
+  ```
+- **V3. Scope.** These print nothing:
+  - `git diff --name-only origin/main...HEAD | grep -E '^(src|scripts|db/content|init|deploy)/'`;
+  - `git diff --name-only origin/main...HEAD | grep -E '(^|/)\.env'`.
+
+  `git diff origin/main...HEAD -- db/schema.sql` touches only the header and the Content section.
+- **V4. Query log is read-only** (Definition of done, "Query log"). The command prints only `scan-done`. Every file has the wrapper, no forbidden token outside strings and comments, and an `.out` beside it:
+  ```bash
+  cd $Q && for f in *.sql; do
+    [ "$(sed -n 1p "$f")" = 'BEGIN TRANSACTION READ ONLY;' ] && [ "$(sed -n 2p "$f")" = "SET LOCAL statement_timeout = '30s';" ] \
+      && [ "$(grep -v '^[[:space:]]*$' "$f" | tail -1)" = 'ROLLBACK;' ] || echo "WRAPPER $f"
+    sed -E "s/'[^']*'//g; s/--.*$//" "$f" | grep -niE '\b(INSERT|UPDATE|DELETE|MERGE|DROP|ALTER|CREATE|GRANT|REVOKE|TRUNCATE|VACUUM|ANALYZE|REFRESH|LOCK|COPY|CLUSTER|REINDEX|COMMIT|SAVEPOINT|PREPARE|DO|CALL|LISTEN|NOTIFY)\b|^[[:space:]]*END[[:space:]]*;|SET[[:space:]]+(SESSION[[:space:]]+)?TRANSACTION|\\!|\\(c|connect|gexec|copy|o|setenv)\b|pg_stat_reset|pg_terminate_backend|pg_cancel_backend|pg_reload_conf|set_config|nextval|setval|pg_authid|pg_shadow|pg_user_mapping|pg_subscription|pg_hba_file_rules|pg_stat_activity|pg_stat_ssl|pg_stat_replication|pg_stat_statements' | sed "s|^|$f:|"
+    ls "${f%.sql}"*.out >/dev/null 2>&1 || echo "NO OUTPUT $f"
+  done; echo scan-done; cd - >/dev/null
+  ```
+  It passes on files 01-28 today. `ANALYZE` covers `EXPLAIN ANALYZE`.
+- **V5. Schema check reruns and matches** (Definition of done, "The schema check"; "a later mission can rerun").
+  - Write `$Q/<next free>-live-schema-check-final.sql` (29 at first), built as 25 was. Scan it with V4, run it as in S1, then `diff $Q/25-live-schema-check.out <it>.out`. Expect empty: the query is stateless, and live hasn't changed since S1.
+  - A non-empty diff is live drift. Record it in the Summary and the handoff item; the database is never fixed.
+  - Then the column order, against the final output. It prints `same-order` 5 times:
+  ```bash
+  for t in content_sources species species_deduction_clues species_facts habitat_colormap; do
+    diff <(grep "^column $t " <final>.out | awk '{print $4}') \
+         <(sed -n "/^CREATE TABLE $t (/,/^);/p" db/schema.sql | sed '1d;$d' | grep -v '^ *UNIQUE (' | awk '{print $1}') && echo "$t same-order"; done
+  ```
+  - `## Schema check result` (S3) still reads 12 of 12 match.
+- **V6. ERD** (Definition of done, "ERD"). Every line passes:
+  ```bash
+  node $S/erd-build/parse-mmd.mjs docs/schema/phaser-june.mmd 11,118,8          # exit 0, "counts match the map: 11,118,8"
+  P=$(ls -d ~/.claude/plugins/cache/diagram-design/diagram-design/*/ | tail -1)
+  for h in docs/schema/phaser-june.html docs/schema/phaser-june-dark.html; do
+    python3 ${P}skills/diagram-design/scripts/self_check.py $h; python3 ${P}scripts/verify-geometry.py $h; done   # OK, 0 findings each
+  for s in docs/schema/phaser-june.svg docs/schema/phaser-june-dark.svg; do python3 -c 'import sys,xml.etree.ElementTree as E; E.parse(sys.argv[1])' $s; done
+  # tables and FKs = the live check's (prints entities-match, fks-match)
+  diff <(grep -E '^relation ' <final>.out | grep -v ' sequence ' | awk '{print $2}' | sed 's/.*\.//' | sort) \
+       <(grep -E '^[a-z_]+ \{$' docs/schema/phaser-june.mmd | awk '{print $1}' | sort) && echo entities-match
+  diff <(grep 'FOREIGN KEY' <final>.out | sed -E 's/^constraint ([a-z_.]+) [a-z_]+ FOREIGN KEY \(([a-z_]+)\) REFERENCES ([a-z_.]+)\(.*/\3 \1 \2/' | sort) \
+       <(grep -E '^[a-z_]+ [|}][|o]--[o|][|{}] ' docs/schema/phaser-june.mmd | sed -E 's/^([a-z_]+) [^ ]+ ([a-z_]+) : "FK ([a-z_]+).*/\1 \2 \3/' | sort) && echo fks-match
+  ```
+  - Each of the 4 renders names all 11 entities.
+  - The map links the `.mmd` and the 4 renders, and embeds `schema/phaser-june.svg`.
+  - `~/.diagram-design/profiles/critter-connect.md` exists, and `.diagram-design` reads `profile: critter-connect`.
+- **V7. Map coverage** (Definition of done 1). Every non-sequence relation in `<final>.out` has a `` ### `<name>` `` heading in `docs/DATABASE_SCHEMA.md`. The map has its extensions/functions/triggers, roles and grants, dev copy, schema check and diagrams sections. `git grep -nE 'schema\.sql:[0-9]' -- . ':!plans'` prints nothing.
+- **V8. Proposals** (Definition of done 4). Prints `ok` 5 times. Nothing in `queries/` runs a proposal's DDL (V4).
+  ```bash
+  for f in db/proposals/*.sql; do head -1 "$f" | grep -q '^-- DRAFT: not applied' && grep -q '^BEGIN;' "$f" && grep -q '^COMMIT;' "$f" \
+    && grep -q '^-- Before' "$f" && grep -q '^-- After' "$f" && grep -q '^-- Rollback' "$f" && grep -q '^-- Risk' "$f" \
+    && grep -q 'guard_target' "$f" && grep -q '^\\set ON_ERROR_STOP on' "$f" && echo "ok $f" || echo "INCOMPLETE $f"; done
+  ```
+- **V9. No secrets or player data** in committed files. This prints nothing (the brackets keep the pattern from matching itself in this plan):
+  ```bash
+  git diff --name-only --diff-filter=d origin/main...HEAD | xargs grep -nE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b|postgres(ql)?://|PGPASS[W]ORD|password *=|SCRAM-SH[A]|md5[0-9a-f]{32}|PRIVATE[ ]KEY'
+  ```
+  No sampled rows outside the content tables (species, clues, facts, sources).
+- **V10. Handoff.** `grep -n '^### H23 · ' /srv/critter-ai/handoff/critter-connect.md` (or S5's number) finds one item under `## Open`, with `Status: waiting on you`, `Blocks: nothing`, the P01-P05 lines and a **Your reply** block.
+
+## Failure modes
+
+Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on their own, by running them read-only, not by unit tests. These are written before the code. S1's run must show each one handled.
+
+- **FM1. NULL ACL read as "no grants":** a database or function on the default ACL (the copy's `datacl`; most functions) prints nothing. Fix: `coalesce(..., acldefault('d'|'f', owner))`. Seen in: [26] prints `grant database to PUBLIC CONNECT,TEMPORARY`; [25] keeps [20]'s `PUBLIC TEMPORARY` and `critter_app CONNECT`.
+- **FM2. Extension members outside the 3 schemas missed:** plpgsql's handlers live in `pg_catalog`. Fix: the sums select members through `pg_depend` `deptype = 'e'`, in any schema. Seen in: the `plpgsql functions ... 3 of 3` line.
+- **FM3. One line per member:** about 830 lines. Fix: group by extension, kind, grantee and privileges. Seen in: exactly 7 `grant extension` lines.
+- **FM4. Wrong `k of n`:** `n` must count every member of that kind, with or without a grant, or a revoke hides. Seen in: `pg_stat_statements functions ... 2 of 3` (its reset function is owner-only [27]).
+- **FM5. NULL relation ACL taken as PUBLIC:** a relation's default is owner-only. Fix: no `acldefault` for relations; `aclexplode(NULL)` gives no rows. Seen in: relation counts 3 and 2, as [07].
+- **FM6. Built-in role nesting floods the memberships:** Fix: drop members named `pg_*`; a `pg_*` role granted to one of ours still prints. Seen in: no `grant role` line ([07]/[17]: 0).
+- **FM7. Duplicate membership lines,** one pair with several grantors. Fix: `DISTINCT`.
+- **FM8. Column ACLs:** a NULL `attacl` must mean none, not an error. Seen in: no column line [07].
+- **FM9. Unstable order:** new lines sort under section 12 like the rest (`section, object, pos, line`). Seen in: V5's rerun diff is empty.
+- **FM10. A secret or a forbidden catalog:** only `pg_auth_members` (oids and options), `pg_roles`, `pg_proc`, `pg_class`, `pg_attribute`, `pg_depend`, `pg_extension`; no `pg_authid`. Seen in: V4 passes on 25 and 26; the output has role and privilege names only.
+- **FM11. The dev run reads live:** the settings file fails to load and `scripts/db` falls back to `.env.local`. Fix: `|| exit 1`, `${DATABASE_URL:?}`, and the `guard_dev` `\gset`. Seen in: line 1 of [26] is `database phaser_june_dev`.
+- **FM12. Server version:** `inherit_option` and `set_option` need PG 16+; both servers are 17.5 [01]. On an older server the query errors loudly, which is fail fast, and acceptable. The extension owner may differ in the copy: if any `grant extension` line differs between 25 and 26, record it as a fact.
+
+## Risks / open questions
+
+- **Live can change mid-mission** (Danby's WSL content build, another mission). V5's rerun diff shows it. Record it as drift; never fix the database.
+- **Release rebase:** `origin/main` may have touched `db/schema.sql`, `AGENTS.md` or the docs. Resolve keeping both, then rerun Verification. The map pins code `file:line` refs to `62c63c32`. If `git diff --stat 62c63c32 origin/main -- src scripts deploy init` shows cited files changed, say so in the Summary rather than chase refs.
+- **The E2E reads live** through `.env.local`; the game writes nothing. If a timing check fails while every invariant passes, rerun once and record both runs.
+- **P04's dev route** (`-d phaser_june_dev` as `postgres`) is untried, and its header says so. It is for a later mission; not tested here, because that would be a write.
+- **Out of the brief's doc list:** the `DRIZZLE_ORM_GUIDE.md:39` copy of the change rule stays (S2's Decision line). The Summary names it for the owner.
 
 ## Code review (Astra)
 
@@ -510,5 +716,6 @@ Decision line for **Decisions**:
 - 2026-11-26 10:25 UTC · Fable review: APPROVE WITH CHANGES, 3 MUST-FIX (.mmd bare `%%` breaks Mermaid parse; species_deduction_clues column order needs two moves; iucn/oneearth logical links should be zero-or-one). Plan-only change.
 - 2026-11-26 10:12 UTC · Astra review: APPROVE_WITH_CHANGES, 5 MUST-FIX (proposals must assert target DB before DDL; P01 grants too broad, scope off pg_read_all_data; check query misses memberships/column/function grants; Mermaid parse + cardinality; deduction-clues column order), 2 SHOULD-CONSIDER. Plan-only change.
 - 2026-11-26 10:26 UTC · Revision: db-designer fixed .mmd parse (real Mermaid 12.2.0 parse: 11/118/8), iucn/eco_sym cardinality in .mmd+renders+map, target-DB guards on P01–P05 (proven read-only [28]), P01 scoped off pg_read_all_data (+ dev-copy PUBLIC CONNECT revoke); architect revised target design (clue order 2 moves, check-query memberships/column/extension grants, AGENTS.md change rule, cite schema.sql by object). Lint, typecheck pass.
+- 2026-11-26 10:37 UTC · Steps: planner wrote S1–S6 (check-query privileges, schema.sql edits + change rule copies, object-by-object check record, cite by object, handoff H23, full Verification), Verification V1–V10, Failure modes. Plan-only change.
 
 ## Summary
