@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 928" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="phaser-june-title phaser-june-desc" id="phaser-june-root">
+        <title id="phaser-june-title">phaser_june · entity-relationship diagram</title>
+        <desc id="phaser-june-desc">Critter Connect's live database: eleven tables and materialized views in four schema zones, with species at the centre, joined by four foreign keys and four logical links that have no key.</desc>
+  <defs>
+      <style>#phaser-june-root { --color-paper:   #f5f4f1;
+      --color-ink:     #383329;
+      --color-muted:   #595449;
+      --color-accent:  #00785a;
+      --font-sans:     'GT Maru', 'Nunito', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Noto Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace; }
+      #phaser-june-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #phaser-june-root .diagram-container { width: 100%; overflow-x: auto; }
+      #phaser-june-root .note { font-family: var(--font-mono);
+      font-size: 0.7rem;
+      line-height: 1.6;
+      color: var(--color-muted);
+      margin-top: 1rem;
+      max-width: 960px; }
+      @media print {
+#phaser-june-root .diagram-container { overflow-x: visible; }
+}</style>
+  </defs>
+        <rect width="100%" height="100%" fill="#f5f4f1"/>
+        <!-- Zones -->
+        <rect x="40" y="40" width="536" height="552" rx="8" fill="#e9e5df" stroke="#383329" stroke-width="1" stroke-opacity="0.12"/>
+        <text x="56" y="58" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.18em">PUBLIC · CONTENT</text>
+        <rect x="644" y="40" width="276" height="480" rx="8" fill="#e9e5df" stroke="#383329" stroke-width="1" stroke-opacity="0.12"/>
+        <text x="660" y="58" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.18em">PUBLIC · RANGES AND PLACES</text>
+        <rect x="644" y="560" width="276" height="160" rx="8" fill="#e9e5df" stroke="#383329" stroke-width="1" stroke-opacity="0.12"/>
+        <text x="660" y="578" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.18em">NATURAL_EARTH</text>
+        <rect x="40" y="632" width="536" height="192" rx="8" fill="#e9e5df" stroke="#383329" stroke-width="1" stroke-opacity="0.12"/>
+        <text x="56" y="650" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.18em">ONEEARTH</text>
+        <!-- Relationships (drawn before boxes) -->
+        <!-- FK species_deduction_clues.species_id -&gt; species.id, ON DELETE CASCADE -->
+        <path d="M 404,176 L 404,200 Q 404,208 396,208 L 184,208 Q 176,208 176,216 L 176,240" fill="none" stroke="#595449" stroke-width="1"/>
+        <!-- FK species_facts.species_id -&gt; species.id, ON DELETE CASCADE -->
+        <line x1="476" y1="176" x2="476" y2="240" stroke="#595449" stroke-width="1"/>
+        <!-- FK species_deduction_clues.source_key -&gt; content_sources.key -->
+        <line x1="240" y1="448" x2="240" y2="392" stroke="#595449" stroke-width="1"/>
+        <!-- FK species_facts.source_key -&gt; content_sources.key -->
+        <line x1="376" y1="448" x2="376" y2="376" stroke="#595449" stroke-width="1"/>
+        <!-- logical iucn.id_no = species.iucn_id -->
+        <line x1="552" y1="98" x2="672" y2="98" stroke="#595449" stroke-width="1" stroke-dasharray="5,4"/>
+        <!-- logical clue_match_ranges.species_id = species.id (view) -->
+        <path d="M 552,124 L 612,124 Q 620,124 620,132 L 620,268 Q 620,276 628,276 L 672,276" fill="none" stroke="#595449" stroke-width="1" stroke-dasharray="5,4"/>
+        <!-- logical clue_match_places.species_ids[] contains species.id (view) -->
+        <path d="M 552,150 L 588,150 Q 596,150 596,158 L 596,420 Q 596,428 604,428 L 672,428" fill="none" stroke="#595449" stroke-width="1" stroke-dasharray="5,4"/>
+        <!-- logical oneearth_bioregion.eco_sym = eco_sym_colors.eco_sym -->
+        <line x1="288" y1="708" x2="328" y2="708" stroke="#595449" stroke-width="1" stroke-dasharray="5,4"/>
+        <!-- Cardinality and action labels (masks sit inside zones) -->
+        <rect x="556" y="80" width="20" height="12" rx="2" fill="#e9e5df"/>
+        <text x="566" y="89" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">0..1</text>
+        <rect x="656" y="80" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="662" y="89" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">N</text>
+        <rect x="556" y="106" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="562" y="115" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">1</text>
+        <rect x="648" y="258" width="20" height="12" rx="2" fill="#e9e5df"/>
+        <text x="658" y="267" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">0..1</text>
+        <rect x="556" y="132" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="562" y="141" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">M</text>
+        <rect x="656" y="410" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="662" y="419" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">N</text>
+        <rect x="410" y="180" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="416" y="189" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">1</text>
+        <rect x="182" y="222" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="188" y="231" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">N</text>
+        <rect x="266" y="190" width="48" height="12" rx="2" fill="#e9e5df"/>
+        <text x="290" y="199" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">CASCADE</text>
+        <rect x="482" y="180" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="488" y="189" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">1</text>
+        <rect x="482" y="222" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="488" y="231" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">N</text>
+        <rect x="422" y="202" width="48" height="12" rx="2" fill="#e9e5df"/>
+        <text x="446" y="211" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">CASCADE</text>
+        <rect x="246" y="398" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="252" y="407" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">N</text>
+        <rect x="246" y="430" width="20" height="12" rx="2" fill="#e9e5df"/>
+        <text x="256" y="439" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">0..1</text>
+        <rect x="358" y="382" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="364" y="391" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">N</text>
+        <rect x="350" y="430" width="20" height="12" rx="2" fill="#e9e5df"/>
+        <text x="360" y="439" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">0..1</text>
+        <rect x="292" y="690" width="12" height="12" rx="2" fill="#e9e5df"/>
+        <text x="298" y="699" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">N</text>
+        <rect x="308" y="690" width="20" height="12" rx="2" fill="#e9e5df"/>
+        <text x="318" y="699" fill="#595449" font-size="8" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">0..1</text>
+        <!-- Entities -->
+        <!-- habitat_colormap -->
+        <rect x="64" y="72" width="224" height="88" rx="8" fill="#ffffff"/>
+        <rect x="64" y="72" width="224" height="40" rx="8" fill="#383329" fill-opacity="0.04"/>
+        <rect x="64" y="104" width="224" height="8" fill="#383329" fill-opacity="0.04"/>
+        <line x1="64" y1="112" x2="288" y2="112" stroke="#383329" stroke-width="1" stroke-opacity="0.22"/>
+        <rect x="64" y="72" width="224" height="88" rx="8" fill="none" stroke="#383329" stroke-width="1"/>
+        <text x="80" y="88" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">TABLE · KEPT, UNREAD</text>
+        <text x="80" y="104" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">habitat_colormap</text>
+        <text x="80" y="132" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace"># value</text>
+        <text x="272" y="132" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="80" y="148" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">label</text>
+        <text x="272" y="148" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">text</text>
+        <!-- species -->
+        <rect x="328" y="72" width="224" height="104" rx="8" fill="#ffffff"/>
+        <rect x="328" y="72" width="224" height="40" rx="8" fill="#00785a" fill-opacity="0.08"/>
+        <rect x="328" y="104" width="224" height="8" fill="#00785a" fill-opacity="0.08"/>
+        <line x1="328" y1="112" x2="552" y2="112" stroke="#00785a" stroke-width="1" stroke-opacity="0.4"/>
+        <rect x="328" y="72" width="224" height="104" rx="8" fill="none" stroke="#00785a" stroke-width="1"/>
+        <text x="344" y="88" fill="#00785a" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">TABLE · CENTRAL</text>
+        <text x="344" y="104" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">species</text>
+        <text x="344" y="132" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace"># id</text>
+        <text x="536" y="132" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="344" y="148" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">~ iucn_id</text>
+        <text x="536" y="148" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">bigint · UQ</text>
+        <text x="344" y="164" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">+ 14 more columns</text>
+        <!-- species_deduction_clues -->
+        <rect x="64" y="240" width="224" height="152" rx="8" fill="#ffffff"/>
+        <rect x="64" y="240" width="224" height="40" rx="8" fill="#383329" fill-opacity="0.04"/>
+        <rect x="64" y="272" width="224" height="8" fill="#383329" fill-opacity="0.04"/>
+        <line x1="64" y1="280" x2="288" y2="280" stroke="#383329" stroke-width="1" stroke-opacity="0.22"/>
+        <rect x="64" y="240" width="224" height="152" rx="8" fill="none" stroke="#383329" stroke-width="1"/>
+        <text x="80" y="256" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">TABLE</text>
+        <text x="80" y="272" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">species_deduction_clues</text>
+        <text x="80" y="300" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace"># id</text>
+        <text x="272" y="300" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="80" y="316" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">→ species_id</text>
+        <text x="272" y="316" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="80" y="332" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">→ source_key</text>
+        <text x="272" y="332" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">text</text>
+        <text x="80" y="348" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">category</text>
+        <text x="272" y="348" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">text · CHECK</text>
+        <text x="80" y="364" fill="#595449" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">UQ species_id, category, reveal_order</text>
+        <text x="80" y="380" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">+ 6 more columns</text>
+        <!-- species_facts -->
+        <rect x="328" y="240" width="224" height="136" rx="8" fill="#ffffff"/>
+        <rect x="328" y="240" width="224" height="40" rx="8" fill="#383329" fill-opacity="0.04"/>
+        <rect x="328" y="272" width="224" height="8" fill="#383329" fill-opacity="0.04"/>
+        <line x1="328" y1="280" x2="552" y2="280" stroke="#383329" stroke-width="1" stroke-opacity="0.22"/>
+        <rect x="328" y="240" width="224" height="136" rx="8" fill="none" stroke="#383329" stroke-width="1"/>
+        <text x="344" y="256" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">TABLE</text>
+        <text x="344" y="272" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">species_facts</text>
+        <text x="344" y="300" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace"># id</text>
+        <text x="536" y="300" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="344" y="316" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">→ species_id</text>
+        <text x="536" y="316" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="344" y="332" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">→ source_key</text>
+        <text x="536" y="332" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">text</text>
+        <text x="344" y="348" fill="#595449" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">UQ species_id, category, sort_order</text>
+        <text x="344" y="364" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">+ 4 more columns</text>
+        <!-- content_sources -->
+        <rect x="196" y="448" width="224" height="120" rx="8" fill="#ffffff"/>
+        <rect x="196" y="448" width="224" height="40" rx="8" fill="#383329" fill-opacity="0.04"/>
+        <rect x="196" y="480" width="224" height="8" fill="#383329" fill-opacity="0.04"/>
+        <line x1="196" y1="488" x2="420" y2="488" stroke="#383329" stroke-width="1" stroke-opacity="0.22"/>
+        <rect x="196" y="448" width="224" height="120" rx="8" fill="none" stroke="#383329" stroke-width="1"/>
+        <text x="212" y="464" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">TABLE</text>
+        <text x="212" y="480" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">content_sources</text>
+        <text x="212" y="508" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace"># id</text>
+        <text x="404" y="508" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="212" y="524" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">key</text>
+        <text x="404" y="524" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">text · UQ</text>
+        <text x="212" y="540" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">tier</text>
+        <text x="404" y="540" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">smallint · CHECK 1–4</text>
+        <text x="212" y="556" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">+ 3 more columns</text>
+        <!-- iucn -->
+        <rect x="672" y="72" width="224" height="120" rx="8" fill="#ffffff"/>
+        <rect x="672" y="72" width="224" height="40" rx="8" fill="#383329" fill-opacity="0.04"/>
+        <rect x="672" y="104" width="224" height="8" fill="#383329" fill-opacity="0.04"/>
+        <line x1="672" y1="112" x2="896" y2="112" stroke="#383329" stroke-width="1" stroke-opacity="0.22"/>
+        <rect x="672" y="72" width="224" height="120" rx="8" fill="none" stroke="#383329" stroke-width="1"/>
+        <text x="688" y="88" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">TABLE · IMPORTED</text>
+        <text x="688" y="104" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">iucn</text>
+        <text x="688" y="132" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace"># ogc_fid</text>
+        <text x="880" y="132" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="688" y="148" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">~ id_no</text>
+        <text x="880" y="148" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">numeric(65,30)</text>
+        <text x="688" y="164" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">wkb_geometry</text>
+        <text x="880" y="164" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">geometry 4326 · GiST</text>
+        <text x="688" y="180" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">+ 27 more columns</text>
+        <!-- clue_match_ranges -->
+        <rect x="672" y="224" width="224" height="104" rx="8" fill="#ffffff"/>
+        <rect x="672" y="224" width="224" height="40" rx="8" fill="#383329" fill-opacity="0.04"/>
+        <rect x="672" y="256" width="224" height="8" fill="#383329" fill-opacity="0.04"/>
+        <line x1="672" y1="264" x2="896" y2="264" stroke="#383329" stroke-width="1" stroke-opacity="0.22"/>
+        <rect x="672" y="224" width="224" height="104" rx="8" fill="none" stroke="#595449" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="688" y="240" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">MATERIALIZED VIEW</text>
+        <text x="688" y="256" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">clue_match_ranges</text>
+        <text x="688" y="284" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">~ species_id</text>
+        <text x="880" y="284" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer · UQ</text>
+        <text x="688" y="300" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">+ 5 more columns</text>
+        <text x="688" y="316" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">reads species, clues, iucn</text>
+        <!-- clue_match_places -->
+        <rect x="672" y="360" width="224" height="136" rx="8" fill="#ffffff"/>
+        <rect x="672" y="360" width="224" height="40" rx="8" fill="#383329" fill-opacity="0.04"/>
+        <rect x="672" y="392" width="224" height="8" fill="#383329" fill-opacity="0.04"/>
+        <line x1="672" y1="400" x2="896" y2="400" stroke="#383329" stroke-width="1" stroke-opacity="0.22"/>
+        <rect x="672" y="360" width="224" height="136" rx="8" fill="none" stroke="#595449" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="688" y="376" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">MATERIALIZED VIEW</text>
+        <text x="688" y="392" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">clue_match_places</text>
+        <text x="688" y="420" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">key</text>
+        <text x="880" y="420" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">text · UQ</text>
+        <text x="688" y="436" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">~ species_ids</text>
+        <text x="880" y="436" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer[]</text>
+        <text x="688" y="452" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">outline</text>
+        <text x="880" y="452" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">geometry · SRID 0</text>
+        <text x="688" y="468" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">+ 9 more columns</text>
+        <text x="688" y="484" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">reads species, clues, iucn, countries</text>
+        <!-- countries -->
+        <rect x="672" y="592" width="224" height="104" rx="8" fill="#ffffff"/>
+        <rect x="672" y="592" width="224" height="40" rx="8" fill="#383329" fill-opacity="0.04"/>
+        <rect x="672" y="624" width="224" height="8" fill="#383329" fill-opacity="0.04"/>
+        <line x1="672" y1="632" x2="896" y2="632" stroke="#383329" stroke-width="1" stroke-opacity="0.22"/>
+        <rect x="672" y="592" width="224" height="104" rx="8" fill="none" stroke="#383329" stroke-width="1"/>
+        <text x="688" y="608" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">TABLE · IMPORTED</text>
+        <text x="688" y="624" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">countries</text>
+        <text x="688" y="652" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace"># gid</text>
+        <text x="880" y="652" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="688" y="668" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">geom</text>
+        <text x="880" y="668" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">geometry 4326 · GiST</text>
+        <text x="688" y="684" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">+ 10 more columns</text>
+        <!-- oneearth_bioregion -->
+        <rect x="64" y="664" width="224" height="136" rx="8" fill="#ffffff"/>
+        <rect x="64" y="664" width="224" height="40" rx="8" fill="#383329" fill-opacity="0.04"/>
+        <rect x="64" y="696" width="224" height="8" fill="#383329" fill-opacity="0.04"/>
+        <line x1="64" y1="704" x2="288" y2="704" stroke="#383329" stroke-width="1" stroke-opacity="0.22"/>
+        <rect x="64" y="664" width="224" height="136" rx="8" fill="none" stroke="#383329" stroke-width="1"/>
+        <text x="80" y="680" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">TABLE · IMPORTED</text>
+        <text x="80" y="696" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">oneearth_bioregion</text>
+        <text x="80" y="724" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace"># ogc_fid</text>
+        <text x="272" y="724" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="80" y="740" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">bioregion</text>
+        <text x="272" y="740" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">varchar · UQ</text>
+        <text x="80" y="756" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">~ eco_sym</text>
+        <text x="272" y="756" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="80" y="772" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">wkb_geometry</text>
+        <text x="272" y="772" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">geometry 4326 · GiST</text>
+        <text x="80" y="788" fill="#6b665b" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">+ 11 more columns</text>
+        <!-- eco_sym_colors -->
+        <rect x="328" y="664" width="224" height="88" rx="8" fill="#ffffff"/>
+        <rect x="328" y="664" width="224" height="40" rx="8" fill="#383329" fill-opacity="0.04"/>
+        <rect x="328" y="696" width="224" height="8" fill="#383329" fill-opacity="0.04"/>
+        <line x1="328" y1="704" x2="552" y2="704" stroke="#383329" stroke-width="1" stroke-opacity="0.22"/>
+        <rect x="328" y="664" width="224" height="88" rx="8" fill="none" stroke="#383329" stroke-width="1"/>
+        <text x="344" y="680" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">TABLE · KEPT, UNREAD</text>
+        <text x="344" y="696" fill="#383329" font-size="12" font-weight="700" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">eco_sym_colors</text>
+        <text x="344" y="724" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace"># eco_sym</text>
+        <text x="536" y="724" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">integer</text>
+        <text x="344" y="740" fill="#383329" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">hex_color</text>
+        <text x="536" y="740" fill="#595449" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">varchar(7) · CHECK</text>
+        <!-- Legend -->
+        <line x1="40" y1="856" x2="920" y2="856" stroke="#383329" stroke-width="0.8" stroke-opacity="0.1"/>
+        <text x="40" y="872" fill="#595449" font-size="8" font-weight="500" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.18em">LEGEND</text>
+        <rect x="40" y="883" width="14" height="10" rx="2" fill="#ffffff" stroke="#00785a" stroke-width="1"/>
+        <rect x="40.5" y="883.5" width="13" height="4" fill="#00785a" fill-opacity="0.16"/>
+        <text x="60" y="892" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">Central entity</text>
+        <rect x="160" y="883" width="14" height="10" rx="2" fill="#ffffff" stroke="#383329" stroke-width="1"/>
+        <text x="180" y="892" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">Table</text>
+        <rect x="240" y="883" width="14" height="10" rx="2" fill="#ffffff" stroke="#595449" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="260" y="892" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">Materialized view</text>
+        <rect x="380" y="883" width="14" height="10" rx="2" fill="#e9e5df" stroke="#383329" stroke-width="1" stroke-opacity="0.12"/>
+        <text x="400" y="892" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">Schema zone</text>
+        <line x1="492" y1="888" x2="516" y2="888" stroke="#595449" stroke-width="1"/>
+        <text x="524" y="892" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">Foreign key</text>
+        <line x1="612" y1="888" x2="636" y2="888" stroke="#595449" stroke-width="1" stroke-dasharray="5,4"/>
+        <text x="644" y="892" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">Logical join, no foreign key</text>
+        <text x="40" y="910" fill="#383329" font-size="9" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace">#</text>
+        <text x="52" y="910" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">Primary key</text>
+        <text x="132" y="910" fill="#383329" font-size="9" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace">→</text>
+        <text x="146" y="910" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">FK column</text>
+        <text x="220" y="910" fill="#383329" font-size="9" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace">~</text>
+        <text x="232" y="910" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">Joined, no FK</text>
+        <text x="316" y="910" fill="#383329" font-size="9" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace">UQ</text>
+        <text x="334" y="910" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">Unique</text>
+        <text x="388" y="910" fill="#383329" font-size="9" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace">1 N 0..1 M</text>
+        <text x="452" y="910" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">One, many, optional, many (array)</text>
+        <text x="640" y="910" fill="#383329" font-size="9" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace">+ N</text>
+        <text x="664" y="910" fill="#595449" font-size="9" font-family="'GT Maru', 'Nunito', system-ui, sans-serif">Other columns: phaser-june.mmd</text>
+      </svg>

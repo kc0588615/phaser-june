@@ -1,0 +1,204 @@
+%% Critter Connect database (live phaser_june): entity-relationship diagram.
+%% Source of truth for the ERD. Renders: phaser-june.html / -dark.html, phaser-june.svg / -dark.svg
+%% (diagram-design, profile critter-connect). The map it follows: docs/DATABASE_SCHEMA.md.
+%% Mapped read-only on 2026-11-26 (cc-schema-map, query log [03] columns, [04] keys and indexes, [05] views).
+%% Conventions:
+%% - Every table and materialized view, every column in physical order, with its SQL type.
+%%   Mermaid types can't hold a comma or a space, so: numeric(65,30) and geometry(...) are spelled out in the
+%%   comment, float8 = double precision, timestamptz = timestamp with time zone, varchar = character varying.
+%% - PK primary key, FK foreign key, UK unique (constraint or unique index). A UK on several columns of one table
+%%   is one composite unique key, named in the comments.
+%% - Solid line (--) = a foreign key. Dotted line (..) = a logical join the code makes, with no foreign key;
+%%   its integrity was checked by query [08] instead.
+%% - Cardinality is what the schema allows, not what the data holds today: a nullable join column with no FK
+%%   (iucn.id_no, oneearth_bioregion.eco_sym) leaves the parent side zero or one (|o).
+%% - Check: a real Mermaid must parse this file (Mermaid drops only %% lines with text after them, so no bare %%).
+%% - Schemas: Mermaid has no namespaces, so entity names are the bare table names (all unique across the three
+%%   schemas). The schema of each zone is in the comment above it.
+
+erDiagram
+
+%% ── Zone 1 · schema public · content (written by npm run content -- build) ──
+
+species {
+    integer id PK "serial"
+    bigint iucn_id UK "joins iucn.id_no, no FK"
+    text scientific_name
+    text common_name
+    text class
+    text taxon_order
+    text family
+    text genus
+    text conservation_code
+    timestamptz created_at "not null, default now()"
+    timestamptz updated_at "not null, default now()"
+    text redlist_url
+    text photo_url
+    text photo_credit
+    text photo_license
+    text photo_page
+}
+
+species_deduction_clues {
+    integer id PK "serial; species id x 100 + position"
+    text category UK "CHECK: one of 9 categories; composite UK species_id, category, reveal_order (unique index uq_deduction_clues_species_cat_order)"
+    text label
+    text[] compare_tags "GIN index ix_deduction_clues_compare"
+    smallint reveal_order UK "default 1; composite UK"
+    boolean is_filtering "default true"
+    timestamptz created_at "not null, default now()"
+    integer species_id FK, UK "to species.id ON DELETE CASCADE; composite UK"
+    text source_key FK "to content_sources.key, nullable"
+    text source_url
+}
+
+species_facts {
+    integer id PK "serial; species id x 100 + position"
+    integer species_id FK, UK "to species.id ON DELETE CASCADE; composite UK species_id, category, sort_order (species_facts_species_id_category_sort_order_key)"
+    text category UK "composite UK"
+    text fact_text
+    smallint sort_order UK "default 1; composite UK"
+    text source_key FK "to content_sources.key, nullable"
+    text source_url
+}
+
+content_sources {
+    integer id PK "serial"
+    text key UK "referenced by the clue and fact FKs"
+    smallint tier "CHECK tier between 1 and 4"
+    text name
+    text url
+    text notes "default empty string"
+}
+
+%% Kept by the owner (habitat raster legend); nothing in the repo reads it.
+habitat_colormap {
+    integer value PK
+    text label
+}
+
+%% ── Zone 2 · schema public · ranges and places ──
+
+%% IUCN range polygons (npm run iucn -- import; ogr2ogr shapefile types).
+iucn {
+    integer ogc_fid PK "serial"
+    numeric id_no "numeric(65,30); joins species.iucn_id, no FK"
+    text sci_name
+    text tax_comm
+    text kingdom
+    text phylum
+    text class
+    text order_
+    text family
+    text genus
+    text category
+    boolean marine
+    boolean terrestria
+    boolean freshwater
+    text island
+    numeric origin "numeric(65,30)"
+    numeric presence "numeric(65,30); the views keep 1-2"
+    numeric seasonal "numeric(65,30)"
+    text compiler
+    numeric yrcompiled "numeric(65,30)"
+    text citation
+    text source
+    text subspecies
+    text subpop
+    text legend
+    numeric generalisd "numeric(65,30)"
+    numeric shape_leng "numeric(65,30)"
+    numeric shape_area "numeric(65,30)"
+    geometry wkb_geometry "geometry(Geometry,4326); GiST ix_iucn_wkb_geometry"
+    text dist_comm
+}
+
+%% Materialized view: one row per playable species. Unique index clue_match_ranges_species_id.
+%% Reads species, species_deduction_clues, iucn.
+clue_match_ranges {
+    integer species_id UK "species.id, no FK (view)"
+    text svg_path
+    text geojson
+    float8 lon
+    float8 lat
+    bigint area_km2
+}
+
+%% Materialized view: one row per continent with 2+ playable animals. Unique index clue_match_places_key.
+%% Reads species, species_deduction_clues, iucn, natural_earth.countries.
+clue_match_places {
+    text kind
+    text key UK
+    text name
+    text grp
+    integer[] species_ids "species.id values, no FK (view)"
+    float8 west
+    float8 south
+    float8 east
+    float8 north
+    float8 lon
+    float8 lat
+    geometry outline "untyped geometry: geometry_columns says SRID 0; values are 4326"
+}
+
+%% ── Zone 3 · schema natural_earth ──
+
+%% Natural Earth countries (scripts/import-natural-earth.mjs).
+countries {
+    integer gid PK
+    text name
+    text name_long
+    text admin
+    varchar(3) adm0_a3
+    varchar(2) iso_a2
+    varchar(3) iso_a3
+    text continent
+    text region_un
+    text subregion
+    float8 pop_est
+    geometry geom "geometry(MultiPolygon,4326), not null; GiST natural_earth_countries_geom_idx"
+}
+
+%% ── Zone 4 · schema oneearth ──
+
+%% One Earth bioregions (imported outside the repo).
+oneearth_bioregion {
+    integer ogc_fid PK
+    numeric objectid_1
+    numeric objectid_2
+    varchar bioregions
+    varchar bioregion UK "uq_oneearth_bioregion_bioregion"
+    varchar realm
+    varchar sub_realm
+    varchar biome
+    float8 shape_length
+    numeric shape_length_alt
+    float8 shape_area
+    geometry wkb_geometry "geometry(MultiPolygon,4326); GiST ix_oneearth_bioregion_wkb_geometry"
+    integer eco_id
+    integer eco_sym "joins eco_sym_colors.eco_sym, no FK; btree index"
+    text eco_code
+}
+
+%% Kept by the owner (bioregion map legend); nothing in the repo reads it.
+eco_sym_colors {
+    integer eco_sym PK
+    varchar(7) hex_color "CHECK hex_color is #RRGGBB"
+}
+
+%% ── Relationships: 4 foreign keys (solid) ──
+
+species ||--o{ species_deduction_clues : "FK species_id, ON DELETE CASCADE"
+species ||--o{ species_facts : "FK species_id, ON DELETE CASCADE"
+content_sources |o--o{ species_deduction_clues : "FK source_key to key"
+content_sources |o--o{ species_facts : "FK source_key to key"
+
+%% ── Relationships: 4 logical joins, no foreign key (dotted) ──
+
+species |o..o{ iucn : "iucn_id = id_no"
+species ||..o| clue_match_ranges : "view, species_id"
+species }o..o{ clue_match_places : "view, species_ids array"
+eco_sym_colors |o..o{ oneearth_bioregion : "eco_sym"
+
+%% Not drawn as relationships (no key): the spatial joins. content -- ranges intersects iucn with
+%% oneearth_bioregion and countries; clue_match_places intersects iucn with countries.

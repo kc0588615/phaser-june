@@ -3,14 +3,20 @@
 -- were squashed into it (git log --all -- src/db/migrations).
 --
 -- To change the schema, apply the change (./scripts/db -1 -f change.sql), then
--- edit this file to match. On an existing database this file fails at the first
--- CREATE, inside its transaction, so running it by mistake changes nothing.
+-- edit this file and the map docs/DATABASE_SCHEMA.md to match;
+-- db/analysis/schema-check.sql prints the live definitions to compare. On an
+-- existing database this file fails at the first CREATE, inside its transaction,
+-- so running it by mistake changes nothing.
 --
 -- Also needed, imported from their sources and not defined here:
 --   iucn                         IUCN range polygons (docs/SHAPEFILE_BEST_PRACTICES.md)
 --   oneearth.oneearth_bioregion  OneEarth bioregions: realm, wkb_geometry
 --   natural_earth.countries      Natural Earth countries (scripts/import-natural-earth.mjs)
--- Extensions: postgis. init/01-extensions.sql also installs pgcrypto, which no SQL in the repo calls.
+-- Kept though nothing reads it (owner, audit Q18), like habitat_colormap below:
+-- oneearth.eco_sym_colors, the bioregions' legend colors.
+-- Extensions, as live has them (2026-11-26): postgis; pg_stat_statements
+-- (monitoring); pgcrypto and uuid-ossp, which no SQL in the repo calls;
+-- init/01-extensions.sql installs all four. plpgsql is built in.
 BEGIN;
 SET LOCAL search_path = public;
 
@@ -37,28 +43,28 @@ CREATE TABLE species (
   family             text,
   genus              text,
   conservation_code  text,                    -- IUCN Red List category, e.g. 'EN'
+  created_at         timestamptz NOT NULL DEFAULT now(),
+  updated_at         timestamptz NOT NULL DEFAULT now(),
   redlist_url        text,                    -- the species' Red List assessment
   photo_url          text,                    -- Wikimedia Commons, reusable with credit
   photo_credit       text,
   photo_license      text,
-  photo_page         text,
-  created_at         timestamptz NOT NULL DEFAULT now(),
-  updated_at         timestamptz NOT NULL DEFAULT now()
+  photo_page         text
 );
 
 -- One row per clue. The gem colors map to these categories in
 -- src/clueGame/categories.ts. Tagged clues (is_filtering) compare candidates.
 CREATE TABLE species_deduction_clues (
   id            serial PRIMARY KEY,
-  species_id    integer NOT NULL REFERENCES species(id) ON DELETE CASCADE,
   category      text NOT NULL CHECK (category IN ('habitat', 'morphology', 'diet', 'behavior', 'reproduction', 'taxonomy', 'key_fact', 'geography', 'conservation')),
   label         text NOT NULL,
   compare_tags  text[],
   reveal_order  smallint NOT NULL DEFAULT 1,
   is_filtering  boolean NOT NULL DEFAULT true,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  species_id    integer NOT NULL REFERENCES species(id) ON DELETE CASCADE,
   source_key    text REFERENCES content_sources(key),
-  source_url    text,
-  created_at    timestamptz NOT NULL DEFAULT now()
+  source_url    text
 );
 CREATE UNIQUE INDEX uq_deduction_clues_species_cat_order ON species_deduction_clues (species_id, category, reveal_order);
 CREATE INDEX ix_deduction_clues_species ON species_deduction_clues (species_id);
@@ -79,11 +85,12 @@ CREATE TABLE species_facts (
 CREATE INDEX ix_species_facts_species ON species_facts (species_id);
 CREATE INDEX ix_species_facts_category ON species_facts (species_id, category);
 
--- Legend of the habitat raster behind the globe's habitat pictures: pixel value
--- -> IUCN habitat class and kind (e.g. 106 = Forest - Subtropical-tropical moist lowland).
+-- Legend of the habitat raster: pixel value -> IUCN habitat class and kind
+-- (e.g. 106 = Forest - Subtropical-tropical moist lowland). Nothing reads it; the
+-- owner keeps it for map legends (audit Q18).
 CREATE TABLE habitat_colormap (
-  value  integer,
-  label  text
+  value  integer PRIMARY KEY,
+  label  text NOT NULL
 );
 
 -- Range maps ------------------------------------------------------------------
