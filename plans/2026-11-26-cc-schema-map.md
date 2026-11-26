@@ -607,6 +607,19 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
   - Fix any failure before checking this off. A fix bigger than a few lines becomes a new step before S6.
   - Log each V's result in one line, with the E2E artifact's path.
 
+- [ ] S7. **P01: narrow the read-only claim to what the role enforces** (Astra code MUST-FIX 1). `default_transaction_read_only` is only a default, and PUBLIC keeps EXECUTE on `lo_create`/`lo_from_bytea`, so the reader can still create large objects (and temp tables, P05). Say so in the header and beside `writes_none`; no new grant or revoke.
+  - Check: V8 (target guard) unchanged; `git diff` on the proposal is comment-only; typecheck, lint.
+- [ ] S8. **P01: rollback keeps the earlier state, and covers both databases** (MUST-FIX 2). Rollback grants PUBLIC CONNECT on the copy only if the pre-checks showed `public_connect` true; runs `DROP OWNED BY critter_reader` in `phaser_june_dev` too (a refresh from live copies the reader's grants there) before `DROP ROLE`. Note that a refresh (`dropdb`/`createdb`, `docs/DATABASE_ACCESS.md` refresh steps) reopens the copy's PUBLIC CONNECT, so the REVOKE is rerun after it.
+  - Check: comment-only diff; V8; typecheck, lint.
+- [ ] S9. **Schema check shows grant options** (MUST-FIX 3). `db/analysis/schema-check.sql` marks a grantable privilege `*` (aclitem style) in every grant branch that uses `aclexplode`.
+  - Check: rerun live and dev read-only as new query files from 30 (guard, wrapper, V4 scan); `diff` against [25]/[26] is empty (nothing is grantable today); typecheck, lint.
+- [ ] S10. **Map: what the content hashes prove** (MUST-FIX 4, plus SHOULD-CONSIDER 2). `docs/DATABASE_SCHEMA.md` "Same content" says which columns [09]/[19] hash (not every column: e.g. `natural_earth.countries` 5 of its columns; `iucn` geometry hashed apart from row ids) and so what it shows; "View output" gives the saved counts (`clue_match_ranges`: 7 SVG paths, 9 GeoJSON values, 10 species; 4 of 5 outlines). Sequences line: the content build resets four; `iucn_ogc_fid_seq` advances through its column default.
+  - Check: the counts recomputed from `diff $Q/09-*.out $Q/19-*.out`; V7; typecheck, lint.
+- [ ] S11. **Map: `critter_app`'s effective privileges stated exactly** (MUST-FIX 5). Replace "SELECT and nothing else on every relation" with: SELECT on its 6 relations and PUBLIC's catalog/extension relations, no write privilege on any relation [07].
+  - Check: the sentence matches [07]; typecheck, lint.
+- [ ] S12. **Schema check rerun asserts each database** (MUST-FIX 6). The rerun block in `docs/DATABASE_SCHEMA.md` and the plan's "Schema check result" stops unless line 1 is `database phaser_june ...` / `database phaser_june_dev ...` (e.g. `head -1 ... | grep -q '^database phaser_june_dev '  || exit 1`), before the diff.
+  - Check: run the block as written (read-only) and see it pass; point the dev part at live once (load `.env.local`) and see it stop; typecheck, lint.
+
 ## Verification
 
 Run from the worktree root, one heavy job at a time, on the step's final commit. `Q=/srv/critter-ai/agent-state/missions/cc-schema-map/queries`; `S=/srv/critter-ai/agent-state/missions/cc-schema-map`. The Summary unit and the release (after its rebase) rerun all of it.
@@ -706,6 +719,25 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 
 ## Code review (Astra)
 
+`astra-review --code origin/main` on `675e8197` (base `62c63c32`), 2026-11-26, exit 0. Six MUST-FIX items, all real: S7-S12 fix them. Fetch from this session worked: `origin/main` is still `62c63c32`, the merge base (its SHOULD-CONSIDER 3).
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. [db/proposals/01-read-only-agent-role.sql:82](/srv/critter-ai/worktrees/cc-schema-map/db/proposals/01-read-only-agent-role.sql:82) — `writes_none` can pass while the reader can still create persistent large objects through PostgreSQL’s default function privileges. P05 only removes temporary-table access. Verify that boundary or narrow the read-only guarantee. [PostgreSQL large-object functions](https://www.postgresql.org/docs/17/lo-funcs.html)
+2. [db/proposals/01-read-only-agent-role.sql:107](/srv/critter-ai/worktrees/cc-schema-map/db/proposals/01-read-only-agent-role.sql:107) — The rollback grants PUBLIC `CONNECT` even if dev was already closed before P01. After a normal dev refresh, copied reader grants also survive `DROP OWNED` on live and make `DROP ROLE` fail. Preserve the prior access state and account for grants in both databases. [Refresh procedure](/srv/critter-ai/worktrees/cc-schema-map/docs/DATABASE_ACCESS.md:224) · [PostgreSQL `DROP OWNED`](https://www.postgresql.org/docs/17/sql-drop-owned.html)
+3. [db/analysis/schema-check.sql:36](/srv/critter-ai/worktrees/cc-schema-map/db/analysis/schema-check.sql:36) — The grant output discards `is_grantable`. Giving `critter_app` grant option on its existing `species` SELECT produces an identical report despite allowing it to grant access to others.
+4. [docs/DATABASE_SCHEMA.md:331](/srv/critter-ai/worktrees/cc-schema-map/docs/DATABASE_SCHEMA.md:331) — Queries 09/19 omit fields such as `countries.iso_a2` and hash IUCN geometries independently of row IDs. They cannot establish identical content. The saved outputs also show **7 SVG paths and 9 GeoJSON values** differ, affecting **10 distinct species**.
+5. [docs/DATABASE_SCHEMA.md:305](/srv/critter-ai/worktrees/cc-schema-map/docs/DATABASE_SCHEMA.md:305) — The map says `critter_app` can SELECT every relation. Query 07 shows it lacks SELECT on `iucn`, `habitat_colormap` and all three imported-schema tables.
+6. [docs/DATABASE_SCHEMA.md:358](/srv/critter-ai/worktrees/cc-schema-map/docs/DATABASE_SCHEMA.md:358) — A dev settings file pointing at live passes the nonempty-variable check, compares live against itself and returns a clean diff. Assert the expected database before collecting each snapshot.
+
+SHOULD-CONSIDER:
+
+- [db/proposals/02-drop-redundant-indexes.sql:49](/srv/critter-ai/worktrees/cc-schema-map/db/proposals/02-drop-redundant-indexes.sql:49) — Verify the covering indexes’ leading columns and predicates. A same-name replacement passes the current guard.
+- [docs/DATABASE_SCHEMA.md:30](/srv/critter-ai/worktrees/cc-schema-map/docs/DATABASE_SCHEMA.md:30) — The content build resets four sequences. The IUCN importer advances the fifth through its column default.
+- Recheck remote freshness before the PR. This review covered `agent/cc-schema-map` at `675e8197` against local `origin/main` at `62c63c32`. Fetch was blocked and the remote lookup failed.
+
 ## Code review (Gemini)
 
 ## Release
@@ -717,6 +749,7 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 - 2026-11-26 · S2: the change rule's third copy, `docs/CLUE_MATCH.md`'s Database section, follows the A6 decision (same words as AGENTS.md). `docs/DRIZZLE_ORM_GUIDE.md:39` stays: not in the brief's doc list, and its query-change step doesn't contradict the rule.
 - 2026-11-26 · S5: handoff item is **H23** (`Blocks: nothing`): P01-P05 one line each with risk + recommendation, F2 as code-only, no file-ahead line (S3).
 - 2026-11-26 · S6: V7 read as passing: the 3 import tables' headings are schema-qualified (`` `natural_earth.countries` ``, `` `oneearth.oneearth_bioregion` ``, `` `oneearth.eco_sym_colors` ``), so the literal unqualified grep misses them. V9 read on the branch's added lines (none match): its whole-file grep hits only lines already on `origin/main` (localhost tunnel ports, the Docker-internal db address, a `<password>` placeholder).
+- 2026-11-26 · Astra code review: all 6 MUST-FIX adopted as S7-S12. SHOULD-CONSIDER 2 (sequence reset wording) folded into S10, being one line of the same doc. SHOULD-CONSIDER 1 (P02's guard should check the covering indexes' columns, not just their names) left for the owner: P02 is a draft he may never pick; in the Summary.
 
 ## Log
 
@@ -734,6 +767,7 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 - 2026-11-26 10:47 UTC · S4: map + proposals 02/04 cite `db/schema.sql` by object, not line; file-behind sentences rewritten for the S2 state; A3/A5 applied; grants section gets S1's extension sums. `schema\.sql:[0-9]` grep empty, proposals comment-only diff, V8 ok x5, typecheck, lint pass.
 - 2026-11-26 10:49 UTC · S5: added H23 to `/srv/critter-ai/handoff/critter-connect.md` (format fields all present; no secret, IP or connection string). Typecheck, lint pass.
 - 2026-11-26 11:05 UTC · S6: full Verification on `c5e1c485`. V1 e2e:fresh 1563/1563, artifact `/srv/critter-ai/agent-state/missions/cc-schema-map/e2e-final/`. V2 typecheck, lint, 186/186 unit, CI guards empty. V3 scope empty, schema.sql hunks header + Content only. V4 scan-done (01-29). V5 [29] rerun = [25] (diff empty), same-order x5, 12/12 still. V6 parse 11,118,8, self_check + geometry 0 findings x2, SVGs parse, entities-match, fks-match, 11/11 in 4 renders, links + embed, profile + marker. V7 every relation headed (3 schema-qualified), all sections, no `schema.sql:N`. V8 ok x5. V9 no added line matches. V10 H23 open, waiting, Blocks nothing, P01-P05 + reply.
+- 2026-11-26 11:30 UTC · Astra code review: APPROVE_WITH_CHANGES, 6 MUST-FIX (P01 large objects + rollback, grant options, content-hash claim, critter_app wording, rerun database assert) -> S7-S12; 3 SHOULD-CONSIDER. Plan-only change.
 
 ## Schema check result
 
