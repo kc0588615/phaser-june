@@ -2,8 +2,13 @@
 --
 -- A read-only login role, critter_reader, for agents' and scripts' read-only work on the live phaser_june. Today every
 -- agent session connects as postgres, a superuser (rolsuper and rolbypassrls), so a read-only task stays read-only only
--- because its query file opens with BEGIN TRANSACTION READ ONLY. With this role, the role enforces it. Writes (content
--- builds, view refreshes, range imports, schema changes) keep using postgres, as the owner decided on 2026-11-01.
+-- because its query file opens with BEGIN TRANSACTION READ ONLY. With this role, no table, view or sequence can be
+-- written, whatever the session does: the role holds no write privilege on any relation. It is not fully read-only:
+-- default_transaction_read_only is only a default, which a session can turn off, and then PUBLIC's grants still let it
+-- create temporary tables (TEMPORARY on phaser_june; proposal 05 removes it) and large objects (EXECUTE on
+-- lo_create, lo_from_bytea, lo_put, lowrite; query log 30). This draft adds no grant or revoke for those. Writes
+-- (content builds, view refreshes, range imports, schema changes) keep using postgres, as the owner decided on
+-- 2026-11-01.
 --
 -- Scope: live only, and only the mapped objects (revised after the Astra review; query log 27):
 --   - CONNECT on phaser_june; USAGE on public, oneearth and natural_earth; SELECT on the map's 11 tables and
@@ -16,7 +21,7 @@
 --     copy's owner (CI's e2e, docs/DATABASE_ACCESS.md), and postgres, a superuser. Nothing else uses the copy (git grep).
 --   - No default privileges. A table added later stays closed to this role until someone grants it
 --     (GRANT SELECT ON <schema.table> TO critter_reader;), so a future table about people is never readable by accident.
---   - default_transaction_read_only and a 30 s statement_timeout.
+--   - default_transaction_read_only (a default, not a limit: see above) and a 30 s statement_timeout.
 --   - What's left, catalogs only: PUBLIC's CONNECT on the maintenance database postgres and on template1 [27].
 --     PgBouncer routes neither (docker-compose.yml, pgbouncer DATABASE_URLS), and neither holds app data.
 --
@@ -39,8 +44,9 @@
 --   - Locks and data: catalog writes only, no rewrite, no data change. lock_timeout caps any wait at 5 s.
 --   - Players: nothing. The live app connects only to phaser_june, as critter_app.
 --   - The dev copy: from then on only critter_dev and postgres can connect. Sessions already open keep running.
---   - A session can turn off default_transaction_read_only, but the role holds no write privilege anywhere. The one
---     exception is PUBLIC's TEMPORARY on phaser_june, which proposal 05 removes.
+--   - A session can turn off default_transaction_read_only. It still can't write any relation, but through PUBLIC it
+--     can create temporary tables (until proposal 05) and large objects, which outlive the session and which it owns
+--     (lo_compat_privileges is off; phaser_june holds 0 large objects today [30]).
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL lock_timeout = '5s';
@@ -76,7 +82,9 @@ FROM pg_roles WHERE rolname = 'critter_reader';
 SELECT 1 / (count(*) = 0)::int AS member_of_nothing
 FROM pg_auth_members WHERE member = 'critter_reader'::regrole;
 -- Every relation and sequence in the three schemas readable (a table created since this draft fails here: decide
--- whether to grant it); none writable.
+-- whether to grant it); none writable. writes_none covers relations only: PUBLIC's TEMPORARY (proposal 05) and its
+-- EXECUTE on the large-object functions (lo_create, lo_from_bytea) still let the role create objects once a session
+-- turns off default_transaction_read_only.
 SELECT 1 / bool_and(CASE WHEN c.relkind = 'S' THEN has_sequence_privilege('critter_reader', c.oid, 'SELECT')
                          ELSE has_table_privilege('critter_reader', c.oid, 'SELECT') END)::int AS reads_all,
        1 / (NOT bool_or(CASE WHEN c.relkind = 'S' THEN has_sequence_privilege('critter_reader', c.oid, 'USAGE, UPDATE')

@@ -607,12 +607,13 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
   - Fix any failure before checking this off. A fix bigger than a few lines becomes a new step before S6.
   - Log each V's result in one line, with the E2E artifact's path.
 
-- [ ] S7. **P01: narrow the read-only claim to what the role enforces** (Astra code MUST-FIX 1). `default_transaction_read_only` is only a default, and PUBLIC keeps EXECUTE on `lo_create`/`lo_from_bytea`, so the reader can still create large objects (and temp tables, P05). Say so in the header and beside `writes_none`; no new grant or revoke.
+- [x] S7. **P01: narrow the read-only claim to what the role enforces** (Astra code MUST-FIX 1). `default_transaction_read_only` is only a default, and PUBLIC keeps EXECUTE on `lo_create`/`lo_from_bytea`, so the reader can still create large objects (and temp tables, P05). Say so in the header and beside `writes_none`; no new grant or revoke.
   - Check: V8 (target guard) unchanged; `git diff` on the proposal is comment-only; typecheck, lint.
+  - Result: [30] (live, read-only): PUBLIC executes lo_create, lo_creat, lo_from_bytea, lo_open, lo_put, lowrite, lo_unlink (not lo_import); lo_compat_privileges off; 0 large objects. P01 header, Scope, Risk and the writes_none comment now say: no relation writable; temp tables (P05) and large objects still creatable once a session turns read-only off. H23's P01 line says the same.
 - [ ] S8. **P01: rollback keeps the earlier state, and covers both databases** (MUST-FIX 2). Rollback grants PUBLIC CONNECT on the copy only if the pre-checks showed `public_connect` true; runs `DROP OWNED BY critter_reader` in `phaser_june_dev` too (a refresh from live copies the reader's grants there) before `DROP ROLE`. Note that a refresh (`dropdb`/`createdb`, `docs/DATABASE_ACCESS.md` refresh steps) reopens the copy's PUBLIC CONNECT, so the REVOKE is rerun after it.
   - Check: comment-only diff; V8; typecheck, lint.
 - [ ] S9. **Schema check shows grant options** (MUST-FIX 3). `db/analysis/schema-check.sql` marks a grantable privilege `*` (aclitem style) in every grant branch that uses `aclexplode`.
-  - Check: rerun live and dev read-only as new query files from 30 (guard, wrapper, V4 scan); `diff` against [25]/[26] is empty (nothing is grantable today); typecheck, lint.
+  - Check: rerun live and dev read-only as new query files from 31 (S7 took 30) (guard, wrapper, V4 scan); `diff` against [25]/[26] is empty (nothing is grantable today); typecheck, lint.
 - [ ] S10. **Map: what the content hashes prove** (MUST-FIX 4, plus SHOULD-CONSIDER 2). `docs/DATABASE_SCHEMA.md` "Same content" says which columns [09]/[19] hash (not every column: e.g. `natural_earth.countries` 5 of its columns; `iucn` geometry hashed apart from row ids) and so what it shows; "View output" gives the saved counts (`clue_match_ranges`: 7 SVG paths, 9 GeoJSON values, 10 species; 4 of 5 outlines). Sequences line: the content build resets four; `iucn_ogc_fid_seq` advances through its column default.
   - Check: the counts recomputed from `diff $Q/09-*.out $Q/19-*.out`; V7; typecheck, lint.
 - [ ] S11. **Map: `critter_app`'s effective privileges stated exactly** (MUST-FIX 5). Replace "SELECT and nothing else on every relation" with: SELECT on its 6 relations and PUBLIC's catalog/extension relations, no write privilege on any relation [07].
@@ -768,6 +769,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 10:49 UTC · S5: added H23 to `/srv/critter-ai/handoff/critter-connect.md` (format fields all present; no secret, IP or connection string). Typecheck, lint pass.
 - 2026-11-26 11:05 UTC · S6: full Verification on `c5e1c485`. V1 e2e:fresh 1563/1563, artifact `/srv/critter-ai/agent-state/missions/cc-schema-map/e2e-final/`. V2 typecheck, lint, 186/186 unit, CI guards empty. V3 scope empty, schema.sql hunks header + Content only. V4 scan-done (01-29). V5 [29] rerun = [25] (diff empty), same-order x5, 12/12 still. V6 parse 11,118,8, self_check + geometry 0 findings x2, SVGs parse, entities-match, fks-match, 11/11 in 4 renders, links + embed, profile + marker. V7 every relation headed (3 schema-qualified), all sections, no `schema.sql:N`. V8 ok x5. V9 no added line matches. V10 H23 open, waiting, Blocks nothing, P01-P05 + reply.
 - 2026-11-26 11:30 UTC · Astra code review: APPROVE_WITH_CHANGES, 6 MUST-FIX (P01 large objects + rollback, grant options, content-hash claim, critter_app wording, rerun database assert) -> S7-S12; 3 SHOULD-CONSIDER. Plan-only change.
+- 2026-11-26 11:14 UTC · S7: P01 read-only claim narrowed to no-relation-writes (temp tables + large objects remain, [30]); comment-only diff; H23 P01 line updated. V4 (01-30), V8 5 ok, typecheck, lint pass.
 
 ## Schema check result
 
