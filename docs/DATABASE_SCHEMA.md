@@ -27,7 +27,7 @@ Three schemas: `public`, `oneearth` and `natural_earth`. They hold 11 tables and
 | `oneearth.oneearth_bioregion` | table | 827 | 66 MB | an import outside the repo | `content -- ranges`, practice SQL |
 | `oneearth.eco_sym_colors` | table | 118 | 24 kB | nothing (kept by the owner) | nothing |
 
-The whole database is 167 MB [01]. Each serial column owns its sequence: `species_id_seq`, `species_deduction_clues_id_seq`, `species_facts_id_seq`, `content_sources_id_seq` and `iucn_ogc_fid_seq`. Each sequence's `last_value` equals its table's `max(id)` [08]. `scripts/content.ts:36` resets them after each build.
+The whole database is 167 MB [01]. Each serial column owns its sequence: `species_id_seq`, `species_deduction_clues_id_seq`, `species_facts_id_seq`, `content_sources_id_seq` and `iucn_ogc_fid_seq`. Each sequence's `last_value` equals its table's `max(id)` (`max(ogc_fid)` for `iucn`) [08]. The content build resets the four content tables' sequences after loading them (`scripts/content.ts:36`, called at 213-216). `iucn_ogc_fid_seq` advances through its column default: `npm run iucn -- import` inserts without `ogc_fid` (`scripts/iucn.ts:135`).
 
 The nightly backup, `pg_dump` (`deploy/backup/pg-backup.sh:20`), reads every table once a night at 03:15 UTC. The two kept tables' latest scans are that dump's. `oneearth.eco_sym_colors` was last read through its index on 2026-09-25, and `habitat_colormap` never has been [02].
 
@@ -328,11 +328,16 @@ CI's e2e job reads the dev copy, so it must keep up with live. The same queries 
   - both view definitions (`md5(pg_get_viewdef)` is equal) [13]–[15];
   - the grants to `critter_app` [17];
   - the extensions [11].
-- **Same content:** an md5 over every row of every table matches live's [09][19]. That covers the four content tables, `habitat_colormap`, `iucn` (attributes and geometry), `natural_earth.countries` and both `oneearth` tables.
+- **Same content, on the columns hashed:** per table, an md5 over the listed columns of every row matches live's [09][19]. Row counts match too.
+  - Every column: `content_sources`, `species`, `species_facts`, `habitat_colormap`, `oneearth.eco_sym_colors`; `species_deduction_clues` all but `created_at`.
+  - `iucn`: 10 of 30: 8 attributes (`id_no`, `sci_name`, `presence`, `origin`, `seasonal`, `subspecies`, `subpop`, `legend`), the set of `ogc_fid`s and the set of geometries. The geometries are hashed apart from their rows, so a shape on a different row would not show.
+  - `natural_earth.countries`: 5 of 12 (`gid`, `adm0_a3`, `name`, `continent`, `geom`); not `iso_a2`, `iso_a3`, `subregion` and the rest.
+  - `oneearth.oneearth_bioregion`: 5 of 15 (`ogc_fid`, `bioregion`, `realm`, `eco_sym`, geometry).
+  - So the content tables are the same, and the imported tables agree on every column the views and the content build read (`iucn` `id_no`, `presence`, geometry; countries `name`, `adm0_a3`, `continent`, `geom`; bioregions `realm`, geometry), except that `iucn`'s shapes aren't checked row by row. The hashes don't prove the imported tables' other columns equal.
 - **Owners:** `critter_dev` owns every app object and the `oneearth` and `natural_earth` schemas, by design (`deploy/db/dev-role.sql:37-63`). Live, `postgres` owns them.
 - **Database grants:** the copy keeps the default ACL, so PUBLIC can connect and create temporary tables there [01][11]. Through PUBLIC, `critter_app` can connect to the copy too, though nothing uses that [07][27]. Live revokes `CONNECT` from PUBLIC. Proposal 01 closes the copy's PUBLIC `CONNECT`.
 - **Column numbers:** the restore renumbered the columns. Live has gaps from dropped columns (`species` goes 1–4, 7–11, 35, 36, 49–53); order and names are the same [03][13].
-- **View output:** attributes are equal (ids, names, bounding boxes, marker points, areas). The shapes differ slightly in vertices: 7 of 76 range paths and 4 of 5 continent outlines [09][19]. The two databases refreshed the views at different times from differently ordered rows, and `ST_Union` follows input order, so the vertex differences are expected. The e2e doesn't compare vertices.
+- **View output:** attributes are equal (ids, names, bounding boxes, marker points, areas). The shapes differ slightly in vertices [09][19]: in `clue_match_ranges`, 10 of 76 species, with 7 SVG paths and 9 GeoJSON values different; in `clue_match_places`, 4 of 5 continent outlines. The two databases refreshed the views at different times from differently ordered rows, and `ST_Union` follows input order, so the vertex differences are expected. The e2e doesn't compare vertices.
 - **Statistics:** live's activity counters show 0 live rows for `natural_earth.countries`, both `oneearth` tables and `habitat_colormap`, which were never written since the counters began. Their planner statistics exist [08]. The copy's counters are complete [12].
 
 ## Schema check
