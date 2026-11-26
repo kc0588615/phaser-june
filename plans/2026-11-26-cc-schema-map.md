@@ -144,7 +144,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design (split into the three items below)
   - [x] Architecture A: `db-designer` maps the live and dev databases (query log), writes `docs/DATABASE_SCHEMA.md` (inventory), `db/analysis/schema-check.sql`, the plan's Data model section (summary, schema.sql drift, ranked findings) and `db/proposals/`
-  - [ ] Architecture B: `db-designer` makes the diagram-design profile and marker, the Mermaid ERDs in `docs/schema/` and their light/dark HTML+SVG renders, and embeds them in `docs/DATABASE_SCHEMA.md`
+  - [x] Architecture B: `db-designer` makes the diagram-design profile and marker, the Mermaid ERDs in `docs/schema/` and their light/dark HTML+SVG renders, and embeds them in `docs/DATABASE_SCHEMA.md`
   - [ ] Architecture C: `architect` writes the Architecture section for the repo edits (`db/schema.sql`, the docs, the check query)
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -277,6 +277,35 @@ From the schema check [20], read against the file object by object. The view SQL
 - **P05** revoke PUBLIC TEMP on `phaser_june`. Risk: none. Recommended; it completes M13's read-only app role.
 - **F2** is a code change: widen the clue-id rule before any animal passes 100 clues (the top today is 79).
 
+### ERD (Architecture B)
+
+From `db-designer`, 2026-11-26.
+
+- **Files** in `docs/schema/`:
+  - `phaser-june.mmd`, the source of truth: a Mermaid `erDiagram` with 11 entities and all 118 columns, with types and keys. Foreign keys are solid lines, logical joins dotted.
+  - `phaser-june.html` and `phaser-june-dark.html`, exported to `phaser-june.svg` and `phaser-june-dark.svg`.
+  - `docs/DATABASE_SCHEMA.md#diagrams` links all of them and embeds the light SVG.
+- **Dials** (set without asking):
+  - ER type, detail `faithful`: the map's 4 zones, 11 nodes, 8 edges, one diagram;
+  - size `fit`, 960×928, so GitHub shows it near 1:1;
+  - audience `engineer`;
+  - format HTML, with SVG from the skill's `export_svg.py --system-fonts`;
+  - focal: `species` only.
+- **Profile:** `~/.diagram-design/profiles/critter-connect.md`, from the cc tokens with `globals.css`'s AA overrides. Fonts are named only (font source `system`), and the contrast contract passes in both skins. The repo marker `.diagram-design` names it. No plugin file was touched.
+- **Choices:**
+  - Boxes show keys, join, geometry and CHECK columns, and count the rest. The `.mmd` has every column.
+  - Entities use bare table names; the zones carry the schemas.
+  - Spatial joins aren't drawn, because they have no key.
+- **Checks:**
+  - The extractor gives 11 entities, 8 edges and 118 columns, equal to [03] and to the map's tables and relationships.
+  - `self_check.py --offline` passes.
+  - Both SVGs parse as XML and render standalone in headless Chrome, as does an `<img>` embed.
+  - No Mermaid parser is installed, so the `.mmd` was checked against Mermaid's documented grammar only.
+- **Map fixed:**
+  - `iucn.yrcompiled`, `generalisd`, `shape_leng` and `shape_area` are numeric(65,30) [03]; the map said plain numeric.
+  - The ranges link is "zero or one to one".
+- **Keeping light and dark in sync:** the renders are hand-drawn HTML, not generated from the `.mmd`. db-designer's generator script is kept outside the repo at `/srv/critter-ai/agent-state/missions/cc-schema-map/erd-build/build.py`.
+
 ## Architecture review (Fable)
 
 ## Architecture review (Astra)
@@ -298,5 +327,6 @@ From the schema check [20], read against the file object by object. The view SQL
 
 - 2026-11-26 09:05 UTC · Baseline: typecheck, lint, 186/186 unit, e2e:fresh 1563/1563 pass; artifact `e2e-s0-baseline/`.
 - 2026-11-26 09:50 UTC · Architecture A: split stage into A/B/C; db-designer mapped live+dev (24 read-only query files in `queries/`), wrote `docs/DATABASE_SCHEMA.md`, `db/analysis/schema-check.sql`, Data model (12 schema.sql objects: 7 match, 5 file-behind; F1 medium + F2–F6 low), `db/proposals/01`–`05`. Query files checked (wrapper, no writes); typecheck, lint, 186/186 unit pass.
+- 2026-11-26 09:55 UTC · Architecture B: db-designer added the profile `~/.diagram-design/profiles/critter-connect.md`, the `.diagram-design` marker, `docs/schema/phaser-june.mmd` (11 entities, 118 cols, 8 links) and light/dark HTML+SVG renders, embedded in `DATABASE_SCHEMA.md` (fixed iucn numeric(65,30) and ranges cardinality). SVGs parse, light render checked by eye in headless Chrome; typecheck, lint pass.
 
 ## Summary

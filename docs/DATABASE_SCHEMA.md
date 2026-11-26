@@ -202,9 +202,9 @@ The IUCN Red List range polygons of the game's animals only: 202 polygons for 76
   - `marine`, `terrestria`, `freshwater` boolean;
   - `island` text;
   - `origin`, `presence`, `seasonal` numeric(65,30);
-  - `compiler` text, `yrcompiled` numeric;
+  - `compiler` text, `yrcompiled` numeric(65,30);
   - `citation`, `source`, `subspecies`, `subpop`, `legend` text;
-  - `generalisd`, `shape_leng`, `shape_area` numeric;
+  - `generalisd`, `shape_leng`, `shape_area` numeric(65,30);
   - `wkb_geometry` geometry(Geometry,4326);
   - `dist_comm` text.
 - **Keys:** `iucn_pkey` PRIMARY KEY (`ogc_fid`).
@@ -263,7 +263,7 @@ The bioregion map's legend colors: 118 rows.
 
 ## Relationships
 
-For the diagrams. "Enforced" means a foreign key. "Logical" means a join the code makes, with integrity checked by [08] rather than by the database.
+For the diagrams. "Enforced" means a foreign key. "Logical" means a join the code makes, with integrity checked by [08] rather than by the database. Cardinality is what the schema allows; the notes say what the data holds today.
 
 | From | To | Cardinality | Enforced | Notes |
 |---|---|---|---|---|
@@ -272,7 +272,7 @@ For the diagrams. "Enforced" means a foreign key. "Logical" means a join the cod
 | `species_deduction_clues.source_key` | `content_sources.key` | many to one, optional | FK | |
 | `species_facts.source_key` | `content_sources.key` | many to one, optional | FK | |
 | `iucn.id_no` | `species.iucn_id` | many to one | logical | 202 polygons, 76 species, no orphans either way |
-| `clue_match_ranges.species_id` | `species.id` | one to one | logical (view) | built from `species`, clues, `iucn` |
+| `clue_match_ranges.species_id` | `species.id` | zero or one to one | logical (view) | built from `species`, clues, `iucn`; every species has a row today |
 | `clue_match_places.species_ids[]` | `species.id` | many to many | logical (view, array) | built from `species`, clues, `iucn`, `natural_earth.countries` |
 | `oneearth.oneearth_bioregion.eco_sym` | `oneearth.eco_sym_colors.eco_sym` | many to one | logical | no orphans |
 
@@ -351,3 +351,14 @@ diff /tmp/schema-check-live.out /tmp/schema-check-dev.out   # expect owners and 
 Compare its output with `db/schema.sql` by reading both, object by object. There is no parser: `db/schema.sql`'s view SQL is hand-written, and `tests/clueGame/content.test.ts:27-52` pins literals in it. The 2026-11-26 comparison is in `plans/2026-11-26-cc-schema-map.md` ("Data model").
 
 ## Diagrams
+
+One entity-relationship diagram covers the whole map. It shows the 11 relations above in 4 zones and the 8 links in [Relationships](#relationships): 4 foreign keys (solid) and 4 logical joins (dashed).
+
+- **Source of truth:** [`schema/phaser-june.mmd`](schema/phaser-june.mmd), a Mermaid `erDiagram`. It has every column, with its type and key (118 columns, [03] [04]). When the schema changes, update it first, then the renders.
+- **Renders:** [`phaser-june.html`](schema/phaser-june.html) and [`phaser-june-dark.html`](schema/phaser-june-dark.html), exported to [`phaser-june.svg`](schema/phaser-june.svg) and [`phaser-june-dark.svg`](schema/phaser-june-dark.svg).
+  - They were drawn with diagram-design's ER type (detail `faithful`), using the `critter-connect` profile, which the repo's `.diagram-design` names.
+  - They are a redraw, not a Mermaid render. To change one, edit its HTML, then run the skill's `scripts/export_svg.py <html> <svg> --system-fonts`.
+- **What each box shows:** its keys, join columns, geometry and CHECK columns. It counts the other columns ("+ N more columns").
+- **Not drawn:** the spatial joins, which have no key (see [Relationships](#relationships)).
+
+![phaser_june entity-relationship diagram: 11 tables and materialized views in four schema zones, species at the centre, 4 foreign keys and 4 logical joins](schema/phaser-june.svg)
