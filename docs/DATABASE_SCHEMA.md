@@ -57,11 +57,11 @@ One row per animal. 76 rows, and every one is playable: each has clues and a ran
 
 - **Keys:** `species_pkey` PRIMARY KEY (`id`); `species_iucn_id_key` UNIQUE (`iucn_id`).
 - **Links:** `iucn_id` joins `iucn.id_no`, with no foreign key, because one animal has several polygons. All 76 ids have polygons and every polygon belongs to a species [08].
-- **Column order** in the table: `created_at` and `updated_at` sit after `conservation_code`, before `redlist_url` [03].
+- **Column order** in the table: `created_at` and `updated_at` sit after `conservation_code`, before `redlist_url` [03], as `db/schema.sql` lists them.
 - **Read by:**
   - `src/lib/cluePool.ts:13-16` (`GET /api/clue-game/pool`);
   - `src/lib/places.ts:21-23` (the place card's names);
-  - both views (`db/schema.sql:105-108`, `:165-168`);
+  - the `ranges` step of both views in `db/schema.sql`;
   - practice SQL `db/analysis/clue-match/01`–`06`.
 - **Written by:** `scripts/content.ts:214`. The build never sets `created_at` or `updated_at`, and nothing reads them. 48 of 76 rows still have `updated_at = created_at`, and the newest `updated_at` is 2026-09-30, though the build has rewritten rows since [08]. See the plan's finding F3.
 
@@ -81,7 +81,7 @@ The clues: one row per clue, 3,653 rows.
 | `species_id` | integer | not null | |
 | `source_key`, `source_url` | text | null (no `source_key` is) | |
 
-That is the table's physical column order [03]. `db/schema.sql` lists `species_id` second.
+That is the table's physical column order [03], and `db/schema.sql` lists the columns in the same order.
 
 - **Keys:**
   - `species_deduction_clues_pkey` PRIMARY KEY (`id`);
@@ -94,7 +94,7 @@ That is the table's physical column order [03]. `db/schema.sql` lists `species_i
   - `ix_deduction_clues_compare` GIN (`compare_tags`), used by practice SQL.
 - **Read by:**
   - `src/lib/cluePool.ts:17-19`;
-  - the `playable` step of both views (`db/schema.sql:103`, `:163`);
+  - the `playable` step of both views in `db/schema.sql`;
   - practice SQL `01`–`06`.
 - **Written by:** `scripts/content.ts:211` (delete) and `:215` (insert). The most clues one animal has is 79 [22]: the id rule allows 100 (finding F2).
 
@@ -140,19 +140,19 @@ Where facts come from, tier 1 (the IUCN Red List) first. 16 rows: 2 in tier 1, 7
 
 ### `habitat_colormap`
 
-The legend of the habitat raster behind the globe's habitat pictures: pixel value, IUCN habitat class. 82 rows, values 0–1700, 82 distinct labels [08].
+Legend of the habitat raster: pixel value -> IUCN habitat class and kind (e.g. 106 = Forest - Subtropical-tropical moist lowland). 82 rows, values 0–1700, 82 distinct labels [08].
 
 | Column | Type | Null |
 |---|---|---|
 | `value` | integer | not null |
 | `label` | text | not null |
 
-- **Keys:** `habitat_colormap_pkey` PRIMARY KEY (`value`) [04]. `db/schema.sql:84-87` has neither the key nor the NOT NULLs: the file is behind.
-- **Read by:** nothing in the repo, and no view depends on it [22]. The owner keeps it for map legends (audit Q18).
+- **Keys:** `habitat_colormap_pkey` PRIMARY KEY (`value`) [04], as `db/schema.sql`'s `CREATE TABLE habitat_colormap` has it, with both NOT NULLs.
+- **Read by:** nothing reads it, and no view depends on it [22]; the owner keeps it for map legends (audit Q18).
 
 ## Range and place views (`public`)
 
-Both are materialized views owned by `postgres`. Their definitions match `db/schema.sql:101-136` and `:161-235` [05]. They are refreshed by hand after a range, clue or animal change (`docs/SHAPEFILE_BEST_PRACTICES.md#adding-or-changing-an-animal`). They are fresh today:
+Both are materialized views owned by `postgres`. Their definitions match `db/schema.sql`'s two `CREATE MATERIALIZED VIEW` [05] [25]. They are refreshed by hand after a range, clue or animal change (`docs/SHAPEFILE_BEST_PRACTICES.md#adding-or-changing-an-animal`). They are fresh today:
 
 - no range row lacks a playable species;
 - no playable species with polygons lacks a range row;
@@ -230,7 +230,7 @@ Natural Earth countries: 258 rows, every `adm0_a3` distinct and none null [08].
 - **Keys:** `countries_pkey` PRIMARY KEY (`gid`).
 - **Indexes:** `natural_earth_countries_geom_idx` GiST (`geom`).
 - **Read by:**
-  - `clue_match_places` (`db/schema.sql:175-204`);
+  - `clue_match_places` (its `country_parts` step in `db/schema.sql`);
   - `scripts/content.ts:71-99` (the same country parts, by rule);
   - `scripts/clue-world-map.ts:19-23` and `:31-35`;
   - the query in the comment at `src/clueGame/regions.ts:5`.
@@ -259,7 +259,7 @@ The bioregion map's legend colors: 118 rows.
 
 - **Columns:** `eco_sym` integer, not null; `hex_color` varchar(7), not null.
 - **Keys:** `eco_sym_colors_pkey` PRIMARY KEY (`eco_sym`); `eco_sym_colors_hex_color_check` CHECK (`hex_color ~ '^#[0-9A-Fa-f]{6}$'`).
-- **Read by:** nothing in the repo, and nothing depends on it [22]. The owner keeps it (audit Q18). `db/schema.sql`'s header doesn't mention it.
+- **Read by:** nothing in the repo, and nothing depends on it [22]. The owner keeps it (audit Q18), and `db/schema.sql`'s header names it as kept.
 
 ## Relationships
 
@@ -301,17 +301,27 @@ Roles come from `pg_roles` [07]. Every login role other than `postgres` has a `s
 
 Grants come from `aclexplode`, which also covers materialized views and sequences [07]:
 
-- **`critter_app`:** `SELECT` on exactly `species`, `species_deduction_clues`, `species_facts`, `content_sources`, `clue_match_places` and `clue_match_ranges`. That is `deploy/db/app-role.sql:26`, plus `db/schema.sql:241-246` for the two views. It also has `USAGE` on `public` and `CONNECT` on `phaser_june`.
+- **`critter_app`:** `SELECT` on exactly `species`, `species_deduction_clues`, `species_facts`, `content_sources`, `clue_match_places` and `clue_match_ranges`. That is `deploy/db/app-role.sql:26`, plus `db/schema.sql`'s closing grant `DO` block for the two views. It also has `USAGE` on `public` and `CONNECT` on `phaser_june`.
   - Its effective privileges, PUBLIC's included, are SELECT and nothing else on every relation.
   - It has nothing on the sequences, `iucn`, `habitat_colormap`, `oneearth` or `natural_earth`, and it can't `CREATE` in `public`.
   - It can still create temporary tables (finding F6).
 - **PUBLIC:** `TEMPORARY` on `phaser_june` (`CONNECT` was revoked by `deploy/db/dev-role.sql:22-23`); `USAGE` on `public`; `SELECT` on PostGIS's `spatial_ref_sys`, `geometry_columns` and `geography_columns`, and on `pg_stat_statements` (which shows another role's query text only to privileged roles).
-- **Not granted:** there are no default privileges and no column grants [07].
-- **Functions:** none carries an explicit grant. The project has no functions of its own [06], and every extension function keeps its default ACL, so PUBLIC, and with it `critter_app`, can execute all of them. That includes PostGIS's 776 and the 46 of `pgcrypto` and `uuid-ossp` (finding F5). The one exception is a `pg_stat_statements` function whose ACL is owner-only [27].
+- **Not granted:** there are no default privileges [07], and no role memberships or column grants [25].
+- **Functions:** none carries an explicit grant. The project has no functions of its own [06], and every extension function keeps its default ACL, so PUBLIC, and with it `critter_app`, can execute all of them. That includes PostGIS's 776 and the 46 of `pgcrypto` and `uuid-ossp` (finding F5). The one exception is a `pg_stat_statements` function whose ACL is owner-only [27]. The schema check sums extension members' grants, one line per extension and kind [25]:
+
+  ```
+  grant extension pg_stat_statements functions to PUBLIC EXECUTE 2 of 3
+  grant extension pg_stat_statements relations to PUBLIC SELECT 2 of 2
+  grant extension pgcrypto functions to PUBLIC EXECUTE 36 of 36
+  grant extension plpgsql functions to PUBLIC EXECUTE 3 of 3
+  grant extension postgis functions to PUBLIC EXECUTE 776 of 776
+  grant extension postgis relations to PUBLIC SELECT 3 of 3
+  grant extension uuid-ossp functions to PUBLIC EXECUTE 10 of 10
+  ```
 
 ## Dev copy (`phaser_june_dev`)
 
-CI's e2e job reads the dev copy, so it must keep up with live. The same queries ran on it as `critter_dev`: [11]–[19], [21], [23]. Its schema check differs from live's only in owners and the database grants [20] vs [21].
+CI's e2e job reads the dev copy, so it must keep up with live. The same queries ran on it as `critter_dev`: [11]–[19], [21], [23]. Its schema check differs from live's only in owners and the database grants [25] vs [26].
 
 - **Same as live:**
   - every table, view, column (name, type, order, nullability, default), constraint, index and sequence;
@@ -336,20 +346,21 @@ CI's e2e job reads the dev copy, so it must keep up with live. The same queries 
 - sequences and their owning columns;
 - views (`md5` and `pg_get_viewdef`);
 - functions and triggers;
-- grants (relations, schemas, the database, default ACLs);
+- grants (relations, schemas, the database, default ACLs), role memberships, column grants, and extension members' grants (summed per extension as `k of n`);
 - the settings of roles that hold a grant.
 
 It runs read-only:
 
 ```bash
 ./scripts/db -qAt -f db/analysis/schema-check.sql > /tmp/schema-check-live.out
-( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy; set +a
+( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy || exit 1; set +a
+  : "${DATABASE_URL:?dev-copy settings not loaded}"
   ./scripts/db -qAt -f db/analysis/schema-check.sql > /tmp/schema-check-dev.out )
 head -1 /tmp/schema-check-*.out   # each output's first line names its database
-diff /tmp/schema-check-live.out /tmp/schema-check-dev.out   # expect owners and database grants only
+diff /tmp/schema-check-live.out /tmp/schema-check-dev.out   # expect owners and the database's grants only
 ```
 
-Compare its output with `db/schema.sql` by reading both, object by object. There is no parser: `db/schema.sql`'s view SQL is hand-written, and `tests/clueGame/content.test.ts:27-52` pins literals in it. The 2026-11-26 comparison is in `plans/2026-11-26-cc-schema-map.md` ("Data model").
+Compare its output with `db/schema.sql` by reading both, object by object. There is no parser: `db/schema.sql`'s view SQL is hand-written, and `tests/clueGame/content.test.ts:27-52` pins literals in it. The 2026-11-26 comparison is in `plans/2026-11-26-cc-schema-map.md` ("Schema check result").
 
 ## Diagrams
 

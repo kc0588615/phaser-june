@@ -2,7 +2,7 @@
 --
 -- Drops pgcrypto and uuid-ossp.
 --   - init/01-extensions.sql installed them on the first container start.
---   - No SQL in the repo calls them (db/schema.sql:13 already says so for pgcrypto), and no object outside them depends
+--   - No SQL in the repo calls them (db/schema.sql's header says so), and no object outside them depends
 --     on them (query log 22: 0 dependents each, live and in the dev copy).
 --   - Their 46 functions (pgcrypto 36, uuid-ossp 10) sit in public, executable by critter_app through PUBLIC (query log 24).
 -- postgis, pg_stat_statements (monitoring) and plpgsql stay.

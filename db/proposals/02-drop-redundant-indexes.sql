@@ -62,7 +62,7 @@ EXPLAIN SELECT id FROM species_facts WHERE species_id = 1 AND category = 'key_fa
 
 COMMIT;
 
--- Rollback (the definitions in db/schema.sql:64-65 and :79-80; each builds in well under a second):
+-- Rollback (the four CREATE INDEX lines in db/schema.sql; each builds in well under a second):
 --   BEGIN;
 --   SET LOCAL lock_timeout = '5s';
 --   CREATE INDEX ix_deduction_clues_species ON species_deduction_clues (species_id);

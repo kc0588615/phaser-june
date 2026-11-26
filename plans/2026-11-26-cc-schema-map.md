@@ -560,7 +560,7 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
 
     Never fix the database.
   - Check: 12 of 12 match (the Architecture expects this after S2), plus the `app-role.sql` row. `npm run typecheck`, `npm run lint`.
-- [ ] S4. **The map and proposals cite the edited file by object** (A2, A3, A5; target design steps 3-4).
+- [x] S4. **The map and proposals cite the edited file by object** (A2, A3, A5; target design steps 3-4).
   - Files: `docs/DATABASE_SCHEMA.md`, `db/proposals/02-drop-redundant-indexes.sql`, `db/proposals/04-drop-unused-extensions.sql`.
   - Do:
     - **Refs by object, not line:** every `db/schema.sql:N` ref becomes a reference to the object or step. In the map:
@@ -587,6 +587,7 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
     - Every remaining `db/schema.sql` mention in the map and the proposals names a step or block that is in the file. `grep -nE '^(WITH )?[a-z_]+ AS \(|^\), [a-z_]+ AS \(|^DO ' db/schema.sql` lists them.
     - `git diff db/proposals/` changes `--` lines only, and V8 prints `ok` 5 times.
     - `npm run typecheck`, `npm run lint`.
+  - Result (2026-11-26): every `db/schema.sql:N` ref in the map and proposals 02/04 now names its object, step or block (`ranges`/`playable` steps, `CREATE TABLE habitat_colormap`, the two `CREATE MATERIALIZED VIEW`, `country_parts`, closing grant `DO` block, the four `CREATE INDEX` lines, the header); file-behind sentences rewritten (clue/species order, habitat keys, `eco_sym_colors` kept); A3 first line; A5 dev subshell guard, expect comment, covers list, pointer to "Schema check result"; dev copy [25] vs [26]; roles/grants: S1's 7 `grant extension` lines + no memberships/column grants [25]. Line-ref grep empty, proposal diff `--` lines only, V8 `ok` x5, typecheck, lint pass.
 - [ ] S5. **Handoff item for Danby** (Definition of done 5).
   - Files: `/srv/critter-ai/handoff/critter-connect.md` (outside git), and the plan (Log; a Decisions line with the item's number).
   - Do: take the next unused number (`grep -n '^### H' /srv/critter-ai/handoff/critter-connect.md`; the highest today is H22, so H23). Add the item under `## Open`, in `~/AGENTS.md`'s exact format:
@@ -727,6 +728,7 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 - 2026-11-26 10:40 UTC · S1: schema-check.sql reads NULL database/function ACLs as defaults, adds role memberships, column grants and per-extension grant sums (`k of n`); header names the expected dev diff. Ran [25] live / [26] dev read-only: diffs exactly as predicted (7 extension lines; dev +PUBLIC CONNECT,TEMPORARY; 25 vs 26 owners + db grants only). Typecheck, lint pass.
 - 2026-11-26 10:43 UTC · S2: `db/schema.sql` matches live (header change rule + extensions + eco_sym_colors kept; species/clue column order; habitat_colormap PK/NOT NULL, A3 comment); change rule + pointers in AGENTS.md, CLUE_MATCH.md, DATABASE_ACCESS.md. same-order x5 vs [25], CI guards empty, 186/186 unit, typecheck, lint pass.
 - 2026-11-26 10:50 UTC · S3: read [25] against the edited `db/schema.sql` and `deploy/db/app-role.sql` object by object (no parser, no new query): 12 of 12 match (5 fixed by S2), app-role matches; view md5s equal in [05]/[20]/[25]/[26]; dev diff owners + db grants only. Recorded under `## Schema check result`. Nothing file-ahead, so no extra handoff line. Typecheck, lint pass.
+- 2026-11-26 10:58 UTC · S4: map + proposals 02/04 cite `db/schema.sql` by object, not line; file-behind sentences rewritten for the S2 state; A3/A5 applied; grants section gets S1's extension sums. `schema\.sql:[0-9]` grep empty, proposals comment-only diff, V8 ok x5, typecheck, lint pass.
 
 ## Schema check result
 
