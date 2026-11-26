@@ -1,6 +1,6 @@
-# Deploying Critter Connect on the VPS
+# Deploying Critter Connect on the Hetzner server
 
-The game runs on the Hetzner server in Docker, next to its database, and `deploy/deploy.sh` deploys it ([Start and update](#start-and-update)). Steps marked **owner** need the server or a password.
+The game runs on the Hetzner server in Docker, next to its database, and `deploy/deploy.sh` deploys it ([Start and update](#start-and-update)). The Oracle VPS (the agents' server) only deploys to it and copies its backups. The one-time setup below was done at the first deploy (2026-09-26) and stays here for [a rebuild](#rebuild-from-nothing). Steps marked **owner** need the server or a password.
 
 ## What runs where
 
@@ -16,7 +16,7 @@ Two Compose projects run there: `critter` (`critter-app`, `caddy`) from `/opt/cr
 ## One-time setup
 
 1. **Owner. DNS:** an A record for the app domain (for example `play.critterconnect.org`) pointing to the VPS.
-2. **Database role.** `deploy/db/app-role.sql` gives the app its own role, `critter_app`, with only the grants the running app needs. It was applied on 2026-09-25, without a login. **Owner:** give it a password, in psql so the password stays out of shell history:
+2. **Database role.** `deploy/db/app-role.sql` gives the app its own role, `critter_app`, with only the grants the running app needs. It was applied on 2026-09-25, without a login, and got its login and password at the first deploy (2026-09-26). On a new server, **owner:** give it a password, in psql so the password stays out of shell history:
 
    ```sh
    docker exec -it postgis psql -U postgres -d phaser_june
@@ -77,7 +77,8 @@ critterconnect.org is a static site (plan 051): `src/site/` rendered to HTML by 
 
 - Content (animal profiles and sources) lives in git, `db/content/`. `npm run content -- build` rebuilds those tables from it.
 - Everything else (GIS layers, views) is covered by `deploy/backup/pg-backup.sh`. It runs `pg_dump` inside the `postgis` container (so its version matches the server), checks that the dump reads back, and keeps 14 daily and 8 weekly dumps in `/var/backups/critter-connect`. The whole database is about 120 MB.
-- **Owner. Install it** (as root on the VPS):
+- **Before a schema change, a bulk write or a production content build,** take a fresh dump: `ssh root@play.critterconnect.org /opt/critter-connect/deploy/backup/pg-backup.sh`. Go on only once it prints `backup ok: <file>`; that file is the one to restore if the change goes wrong.
+- **The nightly cron** runs it at 03:15 UTC (installed 2026-09-26). **Owner:** on a new server, install it as root:
 
   ```sh
   echo '15 3 * * * root /opt/critter-connect/deploy/backup/pg-backup.sh >> /var/log/critter-backup.log 2>&1' > /etc/cron.d/critter-backup
