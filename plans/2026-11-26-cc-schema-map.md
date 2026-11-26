@@ -2,7 +2,7 @@
 mission: cc-schema-map
 project: critter-connect
 branch: agent/cc-schema-map
-status: active
+status: done
 started: 2026-11-26 08:54 UTC
 ---
 
@@ -806,6 +806,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 11:34 UTC · Gemini code review: APPROVE_WITH_CHANGES, 2 MUST-FIX (rerun guard exits 0 when stopped; multi-grantor ACL rows duplicate privileges) -> S13-S14, SC1-2 folded into S14, SC3 to owner. Plan-only change; typecheck, lint pass.
 - 2026-11-26 11:36 UTC · S13: rerun guard's stop branch exits 2 (diff's trouble code); on logged copies pass case exits 1 (diff = 32/33), dev-on-live [37] exits 2. Typecheck, lint pass.
 - 2026-11-26 11:39 UTC · S14: schema-check.sql grants fold per privilege whatever the grantor (one `acl` CTE, one fold/aggregate), global default ACL prints no `in schema -`, extension relation members filtered by relkind. [38]/[39] = [32]/[33]; [40] literal two-grantor ACL prints `SELECT*` once. V4 clean, typecheck, lint pass.
+- 2026-11-26 11:57 UTC · Final Verification on `951b705c`: V1 e2e:fresh 1563/1563 (`e2e-final/`), V2 typecheck/lint/186 unit/CI guards, V3-V10 pass; [41] live check = [25]. Summary written, status done.
 
 ## Schema check result
 
@@ -837,3 +838,46 @@ From S3, 2026-11-26. `$Q/25-live-schema-check.out` (live `phaser_june`, the comm
 Then read the live output against `db/schema.sql` as this table does. Under a mission's query-log rule, copy the file into `queries/` with the `current_database()` guard first, as [25] and [26] were built.
 
 ## Summary
+
+Final Verification 2026-11-26 on `951b705c` (base `origin/main` `62c63c32`, unchanged at this session's fetch; no rebase yet, the release does it). V1 e2e:fresh 1563/1563, artifact `/srv/critter-ai/agent-state/missions/cc-schema-map/e2e-final/` (`report.json`, screenshots, `run.log`; reproduce: `CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:fresh`, seed 7). V2 typecheck, lint, 186/186 unit, CI guards empty. V3 nothing under `src scripts db/content init deploy`, no `.env`. V4 41 query files, scan-done. V5 [41] = [38] = [25] (diff empty: live unchanged since S1), same-order x5. V6 parse 11/118/8, self_check + geometry 0 findings x2, SVGs parse, entities-match, fks-match, 11/11 in all 4 renders. V7 every relation has a heading, no `schema.sql:N` refs. V8 ok x5. V9 no hit in added lines. V10 H23 open, `Blocks: nothing`. **No database was changed**: every statement is a read-only query file in `queries/` (01-41).
+
+**Map in brief** (`docs/DATABASE_SCHEMA.md`, refs pinned to `62c63c32`):
+- live `phaser_june`: PostgreSQL 17.5, PostGIS 3.5.2, 167 MB; schemas `public`, `oneearth`, `natural_earth`; 9 tables, 2 matviews, 5 serial sequences; no own functions, triggers, policies or types.
+- rows: `species` 76, clues 3,653, facts 491, `content_sources` 16; kept legends `habitat_colormap` 82, `oneearth.eco_sym_colors` 118; imports `iucn` 202 polygons (76 species), `natural_earth.countries` 258, bioregions 827; views `clue_match_ranges` 76, `clue_match_places` 5.
+- game reads only `cluePool.ts`, `places.ts` and the two range routes, all cheap plans. Scripts run as `postgres` (superuser).
+- `critter_app`: SELECT on its 6 relations, plus PUBLIC's 5 extension relations (11 of 16 in the three schemas); no write privilege on any relation; 15 s timeout. It can still create temp tables (F6).
+- integrity: no orphans, sequences = max(id), views agree with sources, clue/fact ids follow species × 100 + position.
+- dev copy `phaser_june_dev`: same definitions, constraints, indexes, view md5s, `critter_app` grants and hashed content columns (hashes cover listed columns, not every one; `iucn` geometry hashed apart from ids: see the map's "Same content"). Differs in owners, its database ACL (default: PUBLIC CONNECT, TEMP), column numbers, and view vertices only: 10 of 76 species (7 SVG paths, 9 GeoJSON values), 4 of 5 outlines.
+- sequences: the content build resets 4; `iucn_ogc_fid_seq` advances through its column default.
+
+**Schema check** (`db/analysis/schema-check.sql`, read-only, rerun block in `docs/DATABASE_SCHEMA.md#schema-check`: exits 0 same / 1 differ / 2 stopped): 12 of 12 objects match after S2, plus `deploy/db/app-role.sql`; per-object table under `## Schema check result`. Before S2, 5 differed, all "file behind"; nothing "file ahead", so no drift for the owner.
+
+**Every `db/schema.sql` change** (header and Content section only; no database touched):
+1. change rule: edit this file *and* `docs/DATABASE_SCHEMA.md`; `schema-check.sql` prints live to compare (same words in `AGENTS.md`, `docs/CLUE_MATCH.md`).
+2. header names `oneearth.eco_sym_colors` as kept (Q18).
+3. Extensions line: postgis, pg_stat_statements, pgcrypto, uuid-ossp (all four from `init/01-extensions.sql`), plpgsql built in. Was: postgis + pgcrypto.
+4. `species`: `created_at`, `updated_at` moved after `conservation_code` (live's order).
+5. `species_deduction_clues`: `created_at`, `species_id` moved to live's order (`..., is_filtering, created_at, species_id, source_key, source_url`).
+6. `habitat_colormap`: `value integer PRIMARY KEY`, `label text NOT NULL` (was bare); comment corrected (nothing reads it; kept for map legends).
+
+**Findings, ranked** (Data model F1-F6; proposals are drafts, never run):
+- F1 medium: every agent and script logs in as superuser `postgres` -> `db/proposals/01-read-only-agent-role.sql` (`critter_reader`, live only; no relation writable, but temp tables until P05 and large objects stay creatable once a session turns read-only off; rollback covers both databases).
+- F2 low: clue/fact id = species × 100 + position, top 79; the 101st clue collides -> code, no proposal (H23 asks whether to queue a mission).
+- F3 low: 3 unread, partly wrong timestamps -> `03-drop-unread-timestamps.sql`.
+- F4 low: 4 indexes redundant with unique ones -> `02-drop-redundant-indexes.sql`.
+- F5 low: unused `pgcrypto`, `uuid-ossp` -> `04-drop-unused-extensions.sql`.
+- F6 low: PUBLIC TEMPORARY on `phaser_june` -> `05-revoke-public-temp.sql`.
+- Repo findings A1-A6 (check-query privilege gaps, line-number refs, wrong `habitat_colormap` comment, dev-guard fail-fast, change rule missing the map) all fixed in S1-S4.
+
+**Handoff:** **H23** in `/srv/critter-ai/handoff/critter-connect.md` (`Blocks: nothing`): P01-P05 one line each with risk + recommendation, F2.
+
+**For the owner:**
+- diagram-design profile: `~/.diagram-design/profiles/critter-connect.md` (from `GUI.md` + `gui/`), repo marker `.diagram-design` (`profile: critter-connect`). ERD: `docs/schema/phaser-june.mmd` (source of truth) + light/dark HTML/SVG.
+- Left as suggestions: Astra SC1 (P02's guard checks the covering indexes by name, not their columns); Gemini SC3 (P01's `writes_none` could add PG 17 `MAINTAIN` and foreign tables). Both are drafts' post-checks; fix when a proposal is picked.
+- `docs/DRIZZLE_ORM_GUIDE.md:39` keeps its own wording of the change rule (outside the brief's doc list; doesn't contradict it).
+- No production content build needed: no content or game code changed. `.env.local`'s comment calling live "dev DB copy" is stale (untracked file, left alone).
+
+**Specialists:**
+- `db-designer` + diagram-design did the job: a full map, a faithful 11-entity ERD that renders clean in both modes, a rerunnable check and 5 guarded drafts, in two units. The reviews still found real gaps in its first cut (Mermaid parse, cardinality, target guards; then grant options, large objects, overstated content-hash and privilege claims), so its output needs the review rounds.
+- Gemini added 2 real MUST-FIX that Astra missed (the rerun guard exited 0 when it stopped; multi-grantor ACLs duplicated a privilege) and 4 useful small items; narrower than Astra's 6, but not redundant.
+- Cost (`mission usage`): 24 Claude sessions, 137 minutes; list-price weight Opus $39.62 + Fable $4.19 (Astra and Gemini not counted). Worth repeating for schema work, with both code reviews; the read-only query-file rule made every live query auditable at no extra cost.
