@@ -625,6 +625,10 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
 - [x] S12. **Schema check rerun asserts each database** (MUST-FIX 6). The rerun block in `docs/DATABASE_SCHEMA.md` and the plan's "Schema check result" stops unless line 1 is `database phaser_june ...` / `database phaser_june_dev ...` (e.g. `head -1 ... | grep -q '^database phaser_june_dev '  || exit 1`), before the diff.
   - Check: run the block as written (read-only) and see it pass; point the dev part at live once (load `.env.local`) and see it stop; typecheck, lint.
   - Result: the map's block clears old outputs, then diffs only if line 1 is `database phaser_june ` (live) and `database phaser_june_dev ` (dev); else it prints `stopped: ...` and both line 1s to stderr. The plan's copy is now a pointer to it (one copy). Run as written on logged copies [35] live / [36] dev (V4 scan clean): diff = owners + database grants, both equal to [32]/[33]. Dev part on `.env.local` [37]: output identical to live (the old block's clean diff), block stops, no diff. Next free query number: 38.
+- [ ] S13. **Rerun guard exits non-zero when it stops** (Gemini code MUST-FIX 1). In `docs/DATABASE_SCHEMA.md#schema-check`, the guard's `else` branch ends in `head` (exit 0), so a stopped rerun reads as success. End it with `(exit 2)` ( diff's own "trouble" code, so 0 same / 1 differ / 2 stopped), and say so in the block's comment.
+  - Check: rerun S12's two cases on logged copies (no new live query): pass case exits 1 with the expected diff; dev-on-live case [37] prints `stopped` and exits 2. Typecheck, lint.
+- [ ] S14. **Schema check folds grants per privilege, whatever the grantor** (Gemini MUST-FIX 2, plus its SHOULD-CONSIDER 1-2, same file). `db/analysis/schema-check.sql`: `aclexplode` gives one row per grantor, so two grantors of one privilege print `SELECT,SELECT*` in an unstable order. Gather the five direct ACL sources (relations, schemas, database, functions, columns) into one CTE of (object, acl, owner), explode once, fold to one row per (object, grantee, privilege) with `bool_or(is_grantable)` for `*`, then `string_agg ... ORDER BY privilege_type` (one copy of the expression, not five); the extension branch folds the same way per member. Also: `nullif(da.defaclnamespace, 0)` so a global default ACL prints no `in schema -`; extension `pg_class` members filtered to `rel`'s relkinds so an index can't count in `n`.
+  - Check: V4 scan on the new logged copies; rerun live [38] and dev [39] read-only: both identical to [32]/[33] (if the relkind filter changes an `n`, explain it in the Result, and update the map's numbers); a literal-ACL check (as [34]) with two grantors of one privilege, one with grant option, prints it once, `*`. Typecheck, lint.
 
 ## Verification
 
@@ -746,6 +750,19 @@ SHOULD-CONSIDER:
 
 ## Code review (Gemini)
 
+`gemini-review --code origin/main` on `dfe85c9e` (base `62c63c32`, still `origin/main` after this session's fetch), 2026-11-26, exit 0; output also in `$S/gemini-code-review.out`. Two MUST-FIX, both real: S13-S14. SHOULD-CONSIDER 1-2 folded into S14; 3 left for the owner; 4 applied when the Summary is written.
+
+VERDICT: APPROVE_WITH_CHANGES
+MUST-FIX:
+1. [docs/DATABASE_SCHEMA.md:366-371](/srv/critter-ai/worktrees/cc-schema-map/docs/DATABASE_SCHEMA.md#L366-L371) — Rerun guard exits `0` on failure: `else` runs `echo ... >&2; head -1 ... >&2`, which succeeds whenever at least one output file exists (including when dev settings point at live or one `./scripts/db` call fails). End `else` with `; false` (and/or chain the two `./scripts/db` calls so connection errors abort) so a guard failure exits non-zero.
+2. [db/analysis/schema-check.sql:36](/srv/critter-ai/worktrees/cc-schema-map/db/analysis/schema-check.sql#L36) (and lines [42](/srv/critter-ai/worktrees/cc-schema-map/db/analysis/schema-check.sql#L42), [48](/srv/critter-ai/worktrees/cc-schema-map/db/analysis/schema-check.sql#L48), [54](/srv/critter-ai/worktrees/cc-schema-map/db/analysis/schema-check.sql#L54), [61](/srv/critter-ai/worktrees/cc-schema-map/db/analysis/schema-check.sql#L61), [79](/srv/critter-ai/worktrees/cc-schema-map/db/analysis/schema-check.sql#L79)) — `aclexplode` returns one row per `(grantor, grantee, privilege_type)`, so when multiple grantors grant the same privilege (the exact multi-grantor case `WITH GRANT OPTION` enables), `string_agg(privilege_type || ..., ',' ORDER BY privilege_type)` duplicates entries (`SELECT,SELECT*`) with nondeterministic tie-breaking, breaking diff stability. Fold `bool_or(is_grantable)` per `(..., grantee, privilege_type)` before aggregating.
+
+SHOULD-CONSIDER:
+1. [db/analysis/schema-check.sql:154](/srv/critter-ai/worktrees/cc-schema-map/db/analysis/schema-check.sql#L154) — `pg_default_acl.defaclnamespace` is `0` (not `NULL`) for global default privileges, and `0::oid::regnamespace::text` returns `'-'`, so `coalesce(...)` prints `in schema -`; wrap with `nullif(da.defaclnamespace, 0)`.
+2. [db/analysis/schema-check.sql:88-89](/srv/critter-ai/worktrees/cc-schema-map/db/analysis/schema-check.sql#L88-L89) — Filter extension `pg_class` members with `AND c.relkind IN ('r', 'p', 'v', 'm', 'f', 'S')` (matching `rel` on line 21) so a future extension-owned index or composite type cannot inflate `n` in `k of n`.
+3. [db/proposals/01-read-only-agent-role.sql:92-96](/srv/critter-ai/worktrees/cc-schema-map/db/proposals/01-read-only-agent-role.sql#L92-L96) — Add PG 17's `MAINTAIN` table privilege to `writes_none` and `'f'` to `c.relkind IN (...)` so the post-check covers foreign tables and maintenance privileges too.
+4. [plans/2026-11-26-cc-schema-map.md:287](/srv/critter-ai/worktrees/cc-schema-map/plans/2026-11-26-cc-schema-map.md#L287) — When writing `## Summary`, carry S7/S10/S11's corrected facts (10 of 76 ranges: 7 SVG, 9 GeoJSON; `critter_app` SELECT on 11 of 16 relations; P01 large-object caveat) rather than the pre-revision `Data model` lines 282, 287, 339.
+
 ## Release
 
 ## Decisions
@@ -758,6 +775,8 @@ SHOULD-CONSIDER:
 - 2026-11-26 · Astra code review: all 6 MUST-FIX adopted as S7-S12. SHOULD-CONSIDER 2 (sequence reset wording) folded into S10, being one line of the same doc. SHOULD-CONSIDER 1 (P02's guard should check the covering indexes' columns, not just their names) left for the owner: P02 is a draft he may never pick; in the Summary.
 - 2026-11-26 · S8: not comment-only as the step's check says: one read-only `SELECT` added to P01's Before block, since "only if the pre-checks showed it" needs a pre-check that prints it before the REVOKE.
 - 2026-11-26 · S12: the plan's rerun block becomes a pointer to the map's, not a second asserted copy (DRY: two copies already had to change together). S12's test ran the block with its `-f` path pointed at logged copies of the check ([35]-[37]), per the query-log rule; run 2's live leg reused [35] instead of querying live again.
+
+- 2026-11-26 · Gemini code review: both MUST-FIX adopted as S13 (rerun guard exits 0 when it stops) and S14 (multi-grantor ACL rows duplicate a privilege; latent today, as nothing is grantable [32], but it is the case S9 added `*` for). SC1 (`in schema -`) and SC2 (extension relkind filter) folded into S14, same file and a line each. SC3 (P01's `writes_none` to add PG 17 `MAINTAIN` and foreign tables) left for the owner: no foreign tables exist, MAINTAIN writes no rows, and P01 is a draft he may not pick; in the Summary. SC4 (Summary carries S7/S10/S11's corrected facts, not the Data model's pre-revision lines) applied at the Summary unit.
 
 ## Log
 
@@ -782,6 +801,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 11:22 UTC · S10: map's "Same content" says which columns [09]/[19] hash and what that proves; view diff counts 10 species (7 SVG, 9 GeoJSON), 4/5 outlines, recomputed; sequences line split (build resets 4, iucn via default). V7 pass, typecheck, lint pass.
 - 2026-11-26 11:23 UTC · S11: map states `critter_app`'s effective privileges exactly per [07] (SELECT on 11 of 16 relations, no writes, catalogs via PUBLIC). Typecheck, lint pass.
 - 2026-11-26 11:26 UTC · S12: rerun block diffs only after each output's line 1 names its expected database; ran as written ([35]/[36] pass, = [32]/[33]) and with dev on live ([37], stops). Plan copy -> pointer. Typecheck, lint pass.
+- 2026-11-26 11:34 UTC · Gemini code review: APPROVE_WITH_CHANGES, 2 MUST-FIX (rerun guard exits 0 when stopped; multi-grantor ACL rows duplicate privileges) -> S13-S14, SC1-2 folded into S14, SC3 to owner. Plan-only change; typecheck, lint pass.
 
 ## Schema check result
 
