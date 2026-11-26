@@ -545,7 +545,7 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
     - V2's CI greps come back empty.
     - Read the three change rules side by side (`git grep -n 'schema-check.sql' -- AGENTS.md docs/CLUE_MATCH.md db/schema.sql`): one rule.
   - Result (2026-11-26): header (change rule names map + check; `eco_sym_colors` kept line; Extensions line: postgis, pg_stat_statements, pgcrypto, uuid-ossp, plpgsql built in), `species` and clue column order, `habitat_colormap` PK + NOT NULL + A3 comment. Same rule in `AGENTS.md:55` and `docs/CLUE_MATCH.md` Database section; pointers in AGENTS.md Docs Map and DATABASE_ACCESS.md Related. Column-order loop vs [25]: `same-order` x5. schema.sql hunks end above `-- Range maps` (no view SQL touched). CI guards empty. `npm test` 186/186, typecheck, lint pass.
-- [ ] S3. **Record the schema check, object by object** (Definition of done, "The schema check").
+- [x] S3. **Record the schema check, object by object** (Definition of done, "The schema check").
   - Files: the plan only, a new `## Schema check result` section above `## Summary`.
   - Do: read `$Q/25-live-schema-check.out` against the edited `db/schema.sql`, object by object, with no parser:
     - the 12 objects of the Data model's table;
@@ -726,5 +726,44 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 - 2026-11-26 10:37 UTC · Steps: planner wrote S1–S6 (check-query privileges, schema.sql edits + change rule copies, object-by-object check record, cite by object, handoff H23, full Verification), Verification V1–V10, Failure modes. Plan-only change.
 - 2026-11-26 10:40 UTC · S1: schema-check.sql reads NULL database/function ACLs as defaults, adds role memberships, column grants and per-extension grant sums (`k of n`); header names the expected dev diff. Ran [25] live / [26] dev read-only: diffs exactly as predicted (7 extension lines; dev +PUBLIC CONNECT,TEMPORARY; 25 vs 26 owners + db grants only). Typecheck, lint pass.
 - 2026-11-26 10:43 UTC · S2: `db/schema.sql` matches live (header change rule + extensions + eco_sym_colors kept; species/clue column order; habitat_colormap PK/NOT NULL, A3 comment); change rule + pointers in AGENTS.md, CLUE_MATCH.md, DATABASE_ACCESS.md. same-order x5 vs [25], CI guards empty, 186/186 unit, typecheck, lint pass.
+- 2026-11-26 10:50 UTC · S3: read [25] against the edited `db/schema.sql` and `deploy/db/app-role.sql` object by object (no parser, no new query): 12 of 12 match (5 fixed by S2), app-role matches; view md5s equal in [05]/[20]/[25]/[26]; dev diff owners + db grants only. Recorded under `## Schema check result`. Nothing file-ahead, so no extra handoff line. Typecheck, lint pass.
+
+## Schema check result
+
+From S3, 2026-11-26. `$Q/25-live-schema-check.out` (live `phaser_june`, the committed `db/analysis/schema-check.sql` of S1) read against `db/schema.sql` at S2's commit `3003afa3` and `deploy/db/app-role.sql`, object by object, by eye. No parser, no scratch database, no new query.
+
+| Object | Result | How it was read, and what was done |
+|---|---|---|
+| Header: "Also needed" (`iucn`, `oneearth.oneearth_bioregion`, `natural_earth.countries`) | matches | all three are `relation ... table` lines in [25] |
+| Header: Extensions line | matches | [25] `extension`: `pg_stat_statements` 1.11, `pgcrypto` 1.3, `plpgsql` 1.0 (`pg_catalog`), `postgis` 3.5.2, `uuid-ossp` 1.1; the line names the four, plus plpgsql as built in. Differed before S2 (named only postgis and pgcrypto): S2 rewrote it |
+| Header: `oneearth.eco_sym_colors` kept | matches | [25] has the table (PK `eco_sym`, hex CHECK); the header names it as kept (Q18). Not mentioned before S2: S2 added the line |
+| `content_sources` | matches | 6 columns in order, types, NOT NULLs, `DEFAULT ''`; `content_sources_pkey`, `content_sources_key_key UNIQUE (key)`, `content_sources_tier_check` (`tier >= 1 AND tier <= 4` is `BETWEEN 1 AND 4`); 2 indexes, both from the constraints |
+| `species` | matches | 16 columns in live's order (`created_at`, `updated_at` at 10-11), `timestamptz NOT NULL DEFAULT now()`; `species_pkey`, `species_iucn_id_key UNIQUE (iucn_id)`; no other index. Column order differed before S2: S2 moved two lines |
+| `species_deduction_clues` | matches | 10 columns in live's order (`..., is_filtering, created_at, species_id, source_key, source_url`); the 9-value category CHECK in the same order; `species_id` FK `ON DELETE CASCADE`, `source_key` FK to `content_sources(key)` with no action; `uq_deduction_clues_species_cat_order` unique index (an index, not a constraint, in both), `ix_deduction_clues_species`, `_category`, `_compare` (gin). Column order differed before S2: S2 made the two moves |
+| `species_facts` | matches | 7 columns in order; `species_facts_species_id_category_sort_order_key UNIQUE`, both FKs (`species_id` cascades); `ix_species_facts_species`, `_category` |
+| `habitat_colormap` | matches | `value integer NOT NULL` with `habitat_colormap_pkey PRIMARY KEY (value)`, `label text NOT NULL`. Differed before S2 (no key, no NOT NULLs): S2 added them, and A3's comment |
+| `clue_match_ranges` | matches | the hand-written SQL read CTE by CTE against [25]'s `pg_get_viewdef` (`playable`, `ranges`, `kept`, `merged`, `parts`, `shapes`, `simple`, the 6 output columns; thresholds 0.05, 0.3/0.01/30, rounding 2, `1e6`). Live adds only implicit casts (`s.iucn_id::numeric`, `ANY (ARRAY[1::numeric, 2::numeric])`). md5 `df5c94a5...` in [05], [20], [25] and [26]: unchanged. `clue_match_ranges_species_id` unique index |
+| `clue_match_places` | matches | read the same way: the 5 `country_parts` branches (France < -30 and > 40, Russia's two envelopes at 60°E, IDN west and IDP east of Lydekker's Line at 133.2 / 130 and -3.5), `LEAST(0.05 * area, 5e9)`, `HAVING count(*) >= 2`, the 12 output columns, rounding 3, outline `LEAST(0.1, GREATEST(0.01, sqrt / 100))`. Live adds only casts (`l.part::box3d`). md5 `bb614da8...` in all four runs: unchanged. `clue_match_places_key` unique index |
+| The grant `DO` block | matches | [25]: `grant clue_match_places to critter_app SELECT`, `grant clue_match_ranges to critter_app SELECT` |
+| Serial sequences | matches | the file's 4 `serial` columns have their 4 `integer` sequences, each `owned by` its `id` in [25]. The 5th, `iucn_ogc_fid_seq`, belongs to the imported `iucn` (left out by design, below) |
+| `deploy/db/app-role.sql` | matches | `grant database to critter_app CONNECT`, `grant schema public to critter_app USAGE`, SELECT on exactly its 6 relations, no sequence grant, `role critter_app login settings {statement_timeout=15s}`. The file creates the role NOLOGIN, and its header gives the owner's `ALTER ROLE ... LOGIN` step, which was done: live is as the file says |
+| Left out by design | covered by the map | `iucn`, `oneearth.*`, `natural_earth.countries` and their keys, indexes and `iucn_ogc_fid_seq`; the schemas `oneearth` and `natural_earth` (owner `postgres`) and `public`'s default (`pg_database_owner`, PUBLIC USAGE); extension members (7 `grant extension` sums, S1's Result). All in `docs/DATABASE_SCHEMA.md`. `grant database to PUBLIC TEMPORARY` is in neither file: finding F6, P05. PUBLIC EXECUTE on the 46 `pgcrypto`/`uuid-ossp` functions: F5, P04 |
+
+**Result:** 12 of 12 match, plus `app-role.sql`. Five of them (the extensions line, `eco_sym_colors`, `species`, the clues, `habitat_colormap`) were "file behind" and S2 fixed them by hand; the database wasn't touched. Nothing is "file ahead", so S5 gets no drift line. `diff 20 25` changes no `view` line, so live's view definitions haven't moved since [05].
+
+**Dev copy** (`diff 25 26`): line 1 (database name), the owners of the 2 import schemas and the 16 relations (`postgres` vs `critter_dev`), and the database grants (live `PUBLIC TEMPORARY` + `critter_app CONNECT`; copy `PUBLIC CONNECT,TEMPORARY`, its default ACL). Nothing else: columns, constraints, indexes, both view definitions, table grants and the 7 extension sums are identical. Both are by design (`docs/DATABASE_SCHEMA.md#dev-copy-phaser_june_dev`); the copy's PUBLIC CONNECT is closed by P01.
+
+**Rerun** (a later mission), from the repo root:
+
+```bash
+./scripts/db -qAt -f db/analysis/schema-check.sql > /tmp/schema-check-live.out
+( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy || exit 1; set +a
+  : "${DATABASE_URL:?dev-copy settings not loaded}"
+  ./scripts/db -qAt -f db/analysis/schema-check.sql > /tmp/schema-check-dev.out )
+head -1 /tmp/schema-check-*.out                                # each names its database
+diff /tmp/schema-check-live.out /tmp/schema-check-dev.out      # owners and the database's grants only
+```
+
+Then read the live output against `db/schema.sql` as this table does. Under a mission's query-log rule, copy the file into `queries/` with the `current_database()` guard first, as [25] and [26] were built.
 
 ## Summary
