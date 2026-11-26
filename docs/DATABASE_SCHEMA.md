@@ -363,11 +363,13 @@ rm -f /tmp/schema-check-live.out /tmp/schema-check-dev.out   # no stale output f
   : "${DATABASE_URL:?dev-copy settings not loaded}"
   ./scripts/db -qAt -f db/analysis/schema-check.sql > /tmp/schema-check-dev.out )
 # Line 1 names the database each run reached. Diff only if both are right: settings pointing at live would diff live with itself, clean.
+# Exit status, as diff's: 0 same, 1 differ, 2 stopped.
 if head -1 /tmp/schema-check-live.out | grep -q '^database phaser_june ' &&
    head -1 /tmp/schema-check-dev.out | grep -q '^database phaser_june_dev '; then
   diff /tmp/schema-check-live.out /tmp/schema-check-dev.out   # expect owners and the database's grants only
 else
   echo 'stopped: an output is not from the database it should be' >&2; head -1 /tmp/schema-check-*.out >&2
+  (exit 2)
 fi
 ```
 
