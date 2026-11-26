@@ -603,7 +603,7 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
     - Every format field is present.
     - The title and body hold no secret, IP address or connection string.
     - `npm run typecheck`, `npm run lint`.
-- [ ] S6. **Full Verification:** V1-V10 below. Run V2-V9 first (seconds each) and V1, the E2E, last.
+- [x] S6. **Full Verification:** V1-V10 below. Run V2-V9 first (seconds each) and V1, the E2E, last.
   - Fix any failure before checking this off. A fix bigger than a few lines becomes a new step before S6.
   - Log each V's result in one line, with the E2E artifact's path.
 
@@ -706,6 +706,7 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 
 ## Code review (Astra)
 
+## Code review (Gemini)
 
 ## Release
 
@@ -715,6 +716,7 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 - 2026-11-26 · Revision: both reviews' 8 MUST-FIX items resolved (db-designer: .mmd parse, cardinality, proposal target guards, P01 scope; architect: clue column order, check-query privilege gaps, AGENTS.md change rule). Astra SC1 (P03 exact timestamp restore) rejected: values unread and wrong; the pre-run dump keeps them. Fable SC1 (cite schema.sql by object) adopted. No second review round, per pipeline.
 - 2026-11-26 · S2: the change rule's third copy, `docs/CLUE_MATCH.md`'s Database section, follows the A6 decision (same words as AGENTS.md). `docs/DRIZZLE_ORM_GUIDE.md:39` stays: not in the brief's doc list, and its query-change step doesn't contradict the rule.
 - 2026-11-26 · S5: handoff item is **H23** (`Blocks: nothing`): P01-P05 one line each with risk + recommendation, F2 as code-only, no file-ahead line (S3).
+- 2026-11-26 · S6: V7 read as passing: the 3 import tables' headings are schema-qualified (`` `natural_earth.countries` ``, `` `oneearth.oneearth_bioregion` ``, `` `oneearth.eco_sym_colors` ``), so the literal unqualified grep misses them. V9 read on the branch's added lines (none match): its whole-file grep hits only lines already on `origin/main` (localhost tunnel ports, the Docker-internal db address, a `<password>` placeholder).
 
 ## Log
 
@@ -731,6 +733,7 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 - 2026-11-26 10:50 UTC · S3: read [25] against the edited `db/schema.sql` and `deploy/db/app-role.sql` object by object (no parser, no new query): 12 of 12 match (5 fixed by S2), app-role matches; view md5s equal in [05]/[20]/[25]/[26]; dev diff owners + db grants only. Recorded under `## Schema check result`. Nothing file-ahead, so no extra handoff line. Typecheck, lint pass.
 - 2026-11-26 10:47 UTC · S4: map + proposals 02/04 cite `db/schema.sql` by object, not line; file-behind sentences rewritten for the S2 state; A3/A5 applied; grants section gets S1's extension sums. `schema\.sql:[0-9]` grep empty, proposals comment-only diff, V8 ok x5, typecheck, lint pass.
 - 2026-11-26 10:49 UTC · S5: added H23 to `/srv/critter-ai/handoff/critter-connect.md` (format fields all present; no secret, IP or connection string). Typecheck, lint pass.
+- 2026-11-26 11:05 UTC · S6: full Verification on `c5e1c485`. V1 e2e:fresh 1563/1563, artifact `/srv/critter-ai/agent-state/missions/cc-schema-map/e2e-final/`. V2 typecheck, lint, 186/186 unit, CI guards empty. V3 scope empty, schema.sql hunks header + Content only. V4 scan-done (01-29). V5 [29] rerun = [25] (diff empty), same-order x5, 12/12 still. V6 parse 11,118,8, self_check + geometry 0 findings x2, SVGs parse, entities-match, fks-match, 11/11 in 4 renders, links + embed, profile + marker. V7 every relation headed (3 schema-qualified), all sections, no `schema.sql:N`. V8 ok x5. V9 no added line matches. V10 H23 open, waiting, Blocks nothing, P01-P05 + reply.
 
 ## Schema check result
 
