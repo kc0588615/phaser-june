@@ -588,7 +588,7 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
     - `git diff db/proposals/` changes `--` lines only, and V8 prints `ok` 5 times.
     - `npm run typecheck`, `npm run lint`.
   - Result (2026-11-26): every `db/schema.sql:N` ref in the map and proposals 02/04 now names its object, step or block (`ranges`/`playable` steps, `CREATE TABLE habitat_colormap`, the two `CREATE MATERIALIZED VIEW`, `country_parts`, closing grant `DO` block, the four `CREATE INDEX` lines, the header); file-behind sentences rewritten (clue/species order, habitat keys, `eco_sym_colors` kept); A3 first line; A5 dev subshell guard, expect comment, covers list, pointer to "Schema check result"; dev copy [25] vs [26]; roles/grants: S1's 7 `grant extension` lines + no memberships/column grants [25]. Line-ref grep empty, proposal diff `--` lines only, V8 `ok` x5, typecheck, lint pass.
-- [ ] S5. **Handoff item for Danby** (Definition of done 5).
+- [x] S5. **Handoff item for Danby** (Definition of done 5).
   - Files: `/srv/critter-ai/handoff/critter-connect.md` (outside git), and the plan (Log; a Decisions line with the item's number).
   - Do: take the next unused number (`grep -n '^### H' /srv/critter-ai/handoff/critter-connect.md`; the highest today is H22, so H23). Add the item under `## Open`, in `~/AGENTS.md`'s exact format:
     - Title with no values, e.g. `### H23 · Database proposals from cc-schema-map: pick which to apply`.
@@ -714,6 +714,7 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 - 2026-11-26 · Scope: A6 adds one Docs Map line (AGENTS.md), one Related line (docs/DATABASE_ACCESS.md) and the map + check to the change rule (AGENTS.md:55, db/schema.sql header), past the brief's "change those facts only": the brief creates the map and check, and with nothing pointing at them and a change rule that skips them, the next schema change drifts them unseen. No database fact changes (Fable SC2).
 - 2026-11-26 · Revision: both reviews' 8 MUST-FIX items resolved (db-designer: .mmd parse, cardinality, proposal target guards, P01 scope; architect: clue column order, check-query privilege gaps, AGENTS.md change rule). Astra SC1 (P03 exact timestamp restore) rejected: values unread and wrong; the pre-run dump keeps them. Fable SC1 (cite schema.sql by object) adopted. No second review round, per pipeline.
 - 2026-11-26 · S2: the change rule's third copy, `docs/CLUE_MATCH.md`'s Database section, follows the A6 decision (same words as AGENTS.md). `docs/DRIZZLE_ORM_GUIDE.md:39` stays: not in the brief's doc list, and its query-change step doesn't contradict the rule.
+- 2026-11-26 · S5: handoff item is **H23** (`Blocks: nothing`): P01-P05 one line each with risk + recommendation, F2 as code-only, no file-ahead line (S3).
 
 ## Log
 
@@ -729,6 +730,7 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 - 2026-11-26 10:43 UTC · S2: `db/schema.sql` matches live (header change rule + extensions + eco_sym_colors kept; species/clue column order; habitat_colormap PK/NOT NULL, A3 comment); change rule + pointers in AGENTS.md, CLUE_MATCH.md, DATABASE_ACCESS.md. same-order x5 vs [25], CI guards empty, 186/186 unit, typecheck, lint pass.
 - 2026-11-26 10:50 UTC · S3: read [25] against the edited `db/schema.sql` and `deploy/db/app-role.sql` object by object (no parser, no new query): 12 of 12 match (5 fixed by S2), app-role matches; view md5s equal in [05]/[20]/[25]/[26]; dev diff owners + db grants only. Recorded under `## Schema check result`. Nothing file-ahead, so no extra handoff line. Typecheck, lint pass.
 - 2026-11-26 10:47 UTC · S4: map + proposals 02/04 cite `db/schema.sql` by object, not line; file-behind sentences rewritten for the S2 state; A3/A5 applied; grants section gets S1's extension sums. `schema\.sql:[0-9]` grep empty, proposals comment-only diff, V8 ok x5, typecheck, lint pass.
+- 2026-11-26 10:49 UTC · S5: added H23 to `/srv/critter-ai/handoff/critter-connect.md` (format fields all present; no secret, IP or connection string). Typecheck, lint pass.
 
 ## Schema check result
 
