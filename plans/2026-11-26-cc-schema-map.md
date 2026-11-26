@@ -772,7 +772,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 11:05 UTC · S6: full Verification on `c5e1c485`. V1 e2e:fresh 1563/1563, artifact `/srv/critter-ai/agent-state/missions/cc-schema-map/e2e-final/`. V2 typecheck, lint, 186/186 unit, CI guards empty. V3 scope empty, schema.sql hunks header + Content only. V4 scan-done (01-29). V5 [29] rerun = [25] (diff empty), same-order x5, 12/12 still. V6 parse 11,118,8, self_check + geometry 0 findings x2, SVGs parse, entities-match, fks-match, 11/11 in 4 renders, links + embed, profile + marker. V7 every relation headed (3 schema-qualified), all sections, no `schema.sql:N`. V8 ok x5. V9 no added line matches. V10 H23 open, waiting, Blocks nothing, P01-P05 + reply.
 - 2026-11-26 11:30 UTC · Astra code review: APPROVE_WITH_CHANGES, 6 MUST-FIX (P01 large objects + rollback, grant options, content-hash claim, critter_app wording, rerun database assert) -> S7-S12; 3 SHOULD-CONSIDER. Plan-only change.
 - 2026-11-26 11:14 UTC · S7: P01 read-only claim narrowed to no-relation-writes (temp tables + large objects remain, [30]); comment-only diff; H23 P01 line updated. V4 (01-30), V8 5 ok, typecheck, lint pass.
-- 2026-11-26 11:40 UTC · S8: P01 rollback covers both databases (copy's DROP OWNED first) and restores PUBLIC CONNECT only if the new pre-check `dev_public_connect_before` was t ([31] live: t); refresh note added. V8 5 ok, typecheck, lint pass.
+- 2026-11-26 11:16 UTC · S8: P01 rollback covers both databases (copy's DROP OWNED first) and restores PUBLIC CONNECT only if the new pre-check `dev_public_connect_before` was t ([31] live: t); refresh note added. V8 5 ok, typecheck, lint pass.
 
 ## Schema check result
 
