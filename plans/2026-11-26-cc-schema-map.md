@@ -619,8 +619,9 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
 - [x] S10. **Map: what the content hashes prove** (MUST-FIX 4, plus SHOULD-CONSIDER 2). `docs/DATABASE_SCHEMA.md` "Same content" says which columns [09]/[19] hash (not every column: e.g. `natural_earth.countries` 5 of its columns; `iucn` geometry hashed apart from row ids) and so what it shows; "View output" gives the saved counts (`clue_match_ranges`: 7 SVG paths, 9 GeoJSON values, 10 species; 4 of 5 outlines). Sequences line: the content build resets four; `iucn_ogc_fid_seq` advances through its column default.
   - Check: the counts recomputed from `diff $Q/09-*.out $Q/19-*.out`; V7; typecheck, lint.
   - Result: "Same content" now lists the hashed columns per table: content tables all (clues but `created_at`); `iucn` 10 of 30 (geometry a set, not per row), countries 5 of 12, bioregions 5 of 15; covers every column the views and content build read, not the imported tables' other columns. "View output": ranges 10 of 76 species (7 SVG, 9 GeoJSON), 4 of 5 outlines, recomputed by awk over [09]/[19] (attrs 0 diffs). Sequences line: build resets four (`content.ts:36`, 213-216), `iucn_ogc_fid_seq` via column default (`iucn.ts:135`). No new query.
-- [ ] S11. **Map: `critter_app`'s effective privileges stated exactly** (MUST-FIX 5). Replace "SELECT and nothing else on every relation" with: SELECT on its 6 relations and PUBLIC's catalog/extension relations, no write privilege on any relation [07].
+- [x] S11. **Map: `critter_app`'s effective privileges stated exactly** (MUST-FIX 5). Replace "SELECT and nothing else on every relation" with: SELECT on its 6 relations and PUBLIC's catalog/extension relations, no write privilege on any relation [07].
   - Check: the sentence matches [07]; typecheck, lint.
+  - Result: the line now reads: of the 16 relations in `public`/`natural_earth`/`oneearth`, SELECT on 11 (its 6 + PUBLIC's 5 extension relations), nothing on the other 5, no write privilege on any ([07] `has_table_privilege` table); outside them only PUBLIC's default `pg_catalog` reads. No new query.
 - [ ] S12. **Schema check rerun asserts each database** (MUST-FIX 6). The rerun block in `docs/DATABASE_SCHEMA.md` and the plan's "Schema check result" stops unless line 1 is `database phaser_june ...` / `database phaser_june_dev ...` (e.g. `head -1 ... | grep -q '^database phaser_june_dev '  || exit 1`), before the diff.
   - Check: run the block as written (read-only) and see it pass; point the dev part at live once (load `.env.local`) and see it stop; typecheck, lint.
 
@@ -777,6 +778,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 11:16 UTC · S8: P01 rollback covers both databases (copy's DROP OWNED first) and restores PUBLIC CONNECT only if the new pre-check `dev_public_connect_before` was t ([31] live: t); refresh note added. V8 5 ok, typecheck, lint pass.
 - 2026-11-26 11:19 UTC · S9: schema-check.sql marks grant-option privileges `*` in all 6 aclexplode branches; [32]/[33] reruns identical to [25]/[29]/[26] (nothing grantable today), [34] literal-ACL check shows `INSERT*`. V4 scan clean, typecheck, lint pass.
 - 2026-11-26 11:22 UTC · S10: map's "Same content" says which columns [09]/[19] hash and what that proves; view diff counts 10 species (7 SVG, 9 GeoJSON), 4/5 outlines, recomputed; sequences line split (build resets 4, iucn via default). V7 pass, typecheck, lint pass.
+- 2026-11-26 11:23 UTC · S11: map states `critter_app`'s effective privileges exactly per [07] (SELECT on 11 of 16 relations, no writes, catalogs via PUBLIC). Typecheck, lint pass.
 
 ## Schema check result
 

@@ -302,7 +302,7 @@ Roles come from `pg_roles` [07]. Every login role other than `postgres` has a `s
 Grants come from `aclexplode`, which also covers materialized views and sequences [07]:
 
 - **`critter_app`:** `SELECT` on exactly `species`, `species_deduction_clues`, `species_facts`, `content_sources`, `clue_match_places` and `clue_match_ranges`. That is `deploy/db/app-role.sql:26`, plus `db/schema.sql`'s closing grant `DO` block for the two views. It also has `USAGE` on `public` and `CONNECT` on `phaser_june`.
-  - Its effective privileges, PUBLIC's included, are SELECT and nothing else on every relation.
+  - Its effective privileges, PUBLIC's included, on the 16 relations in `public`, `natural_earth` and `oneearth` [07]: `SELECT` on 11, its 6 plus PUBLIC's 5 extension relations (PostGIS's 3, `pg_stat_statements`' 2), and nothing on the other 5. No relation gives it `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES` or `TRIGGER`. Outside those schemas it reads only what PUBLIC reads by default (the `pg_catalog` system catalogs; [07] doesn't list them).
   - It has nothing on the sequences, `iucn`, `habitat_colormap`, `oneearth` or `natural_earth`, and it can't `CREATE` in `public`.
   - It can still create temporary tables (finding F6).
 - **PUBLIC:** `TEMPORARY` on `phaser_june` (`CONNECT` was revoked by `deploy/db/dev-role.sql:22-23`); `USAGE` on `public`; `SELECT` on PostGIS's `spatial_ref_sys`, `geometry_columns` and `geography_columns`, and on `pg_stat_statements` (which shows another role's query text only to privileged roles).
