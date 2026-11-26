@@ -774,7 +774,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 11:30 UTC · Astra code review: APPROVE_WITH_CHANGES, 6 MUST-FIX (P01 large objects + rollback, grant options, content-hash claim, critter_app wording, rerun database assert) -> S7-S12; 3 SHOULD-CONSIDER. Plan-only change.
 - 2026-11-26 11:14 UTC · S7: P01 read-only claim narrowed to no-relation-writes (temp tables + large objects remain, [30]); comment-only diff; H23 P01 line updated. V4 (01-30), V8 5 ok, typecheck, lint pass.
 - 2026-11-26 11:16 UTC · S8: P01 rollback covers both databases (copy's DROP OWNED first) and restores PUBLIC CONNECT only if the new pre-check `dev_public_connect_before` was t ([31] live: t); refresh note added. V8 5 ok, typecheck, lint pass.
-- 2026-11-26 11:24 UTC · S9: schema-check.sql marks grant-option privileges `*` in all 6 aclexplode branches; [32]/[33] reruns identical to [25]/[29]/[26] (nothing grantable today), [34] literal-ACL check shows `INSERT*`. V4 scan clean, typecheck, lint pass.
+- 2026-11-26 11:19 UTC · S9: schema-check.sql marks grant-option privileges `*` in all 6 aclexplode branches; [32]/[33] reruns identical to [25]/[29]/[26] (nothing grantable today), [34] literal-ACL check shows `INSERT*`. V4 scan clean, typecheck, lint pass.
 
 ## Schema check result
 
