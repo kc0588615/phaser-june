@@ -357,12 +357,18 @@ CI's e2e job reads the dev copy, so it must keep up with live. The same queries 
 It runs read-only:
 
 ```bash
+rm -f /tmp/schema-check-live.out /tmp/schema-check-dev.out   # no stale output from an earlier run
 ./scripts/db -qAt -f db/analysis/schema-check.sql > /tmp/schema-check-live.out
 ( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy || exit 1; set +a
   : "${DATABASE_URL:?dev-copy settings not loaded}"
   ./scripts/db -qAt -f db/analysis/schema-check.sql > /tmp/schema-check-dev.out )
-head -1 /tmp/schema-check-*.out   # each output's first line names its database
-diff /tmp/schema-check-live.out /tmp/schema-check-dev.out   # expect owners and the database's grants only
+# Line 1 names the database each run reached. Diff only if both are right: settings pointing at live would diff live with itself, clean.
+if head -1 /tmp/schema-check-live.out | grep -q '^database phaser_june ' &&
+   head -1 /tmp/schema-check-dev.out | grep -q '^database phaser_june_dev '; then
+  diff /tmp/schema-check-live.out /tmp/schema-check-dev.out   # expect owners and the database's grants only
+else
+  echo 'stopped: an output is not from the database it should be' >&2; head -1 /tmp/schema-check-*.out >&2
+fi
 ```
 
 Compare its output with `db/schema.sql` by reading both, object by object. There is no parser: `db/schema.sql`'s view SQL is hand-written, and `tests/clueGame/content.test.ts:27-52` pins literals in it. The 2026-11-26 comparison is in `plans/2026-11-26-cc-schema-map.md` ("Schema check result").

@@ -622,8 +622,9 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
 - [x] S11. **Map: `critter_app`'s effective privileges stated exactly** (MUST-FIX 5). Replace "SELECT and nothing else on every relation" with: SELECT on its 6 relations and PUBLIC's catalog/extension relations, no write privilege on any relation [07].
   - Check: the sentence matches [07]; typecheck, lint.
   - Result: the line now reads: of the 16 relations in `public`/`natural_earth`/`oneearth`, SELECT on 11 (its 6 + PUBLIC's 5 extension relations), nothing on the other 5, no write privilege on any ([07] `has_table_privilege` table); outside them only PUBLIC's default `pg_catalog` reads. No new query.
-- [ ] S12. **Schema check rerun asserts each database** (MUST-FIX 6). The rerun block in `docs/DATABASE_SCHEMA.md` and the plan's "Schema check result" stops unless line 1 is `database phaser_june ...` / `database phaser_june_dev ...` (e.g. `head -1 ... | grep -q '^database phaser_june_dev '  || exit 1`), before the diff.
+- [x] S12. **Schema check rerun asserts each database** (MUST-FIX 6). The rerun block in `docs/DATABASE_SCHEMA.md` and the plan's "Schema check result" stops unless line 1 is `database phaser_june ...` / `database phaser_june_dev ...` (e.g. `head -1 ... | grep -q '^database phaser_june_dev '  || exit 1`), before the diff.
   - Check: run the block as written (read-only) and see it pass; point the dev part at live once (load `.env.local`) and see it stop; typecheck, lint.
+  - Result: the map's block clears old outputs, then diffs only if line 1 is `database phaser_june ` (live) and `database phaser_june_dev ` (dev); else it prints `stopped: ...` and both line 1s to stderr. The plan's copy is now a pointer to it (one copy). Run as written on logged copies [35] live / [36] dev (V4 scan clean): diff = owners + database grants, both equal to [32]/[33]. Dev part on `.env.local` [37]: output identical to live (the old block's clean diff), block stops, no diff. Next free query number: 38.
 
 ## Verification
 
@@ -756,6 +757,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 · S6: V7 read as passing: the 3 import tables' headings are schema-qualified (`` `natural_earth.countries` ``, `` `oneearth.oneearth_bioregion` ``, `` `oneearth.eco_sym_colors` ``), so the literal unqualified grep misses them. V9 read on the branch's added lines (none match): its whole-file grep hits only lines already on `origin/main` (localhost tunnel ports, the Docker-internal db address, a `<password>` placeholder).
 - 2026-11-26 · Astra code review: all 6 MUST-FIX adopted as S7-S12. SHOULD-CONSIDER 2 (sequence reset wording) folded into S10, being one line of the same doc. SHOULD-CONSIDER 1 (P02's guard should check the covering indexes' columns, not just their names) left for the owner: P02 is a draft he may never pick; in the Summary.
 - 2026-11-26 · S8: not comment-only as the step's check says: one read-only `SELECT` added to P01's Before block, since "only if the pre-checks showed it" needs a pre-check that prints it before the REVOKE.
+- 2026-11-26 · S12: the plan's rerun block becomes a pointer to the map's, not a second asserted copy (DRY: two copies already had to change together). S12's test ran the block with its `-f` path pointed at logged copies of the check ([35]-[37]), per the query-log rule; run 2's live leg reused [35] instead of querying live again.
 
 ## Log
 
@@ -779,6 +781,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 11:19 UTC · S9: schema-check.sql marks grant-option privileges `*` in all 6 aclexplode branches; [32]/[33] reruns identical to [25]/[29]/[26] (nothing grantable today), [34] literal-ACL check shows `INSERT*`. V4 scan clean, typecheck, lint pass.
 - 2026-11-26 11:22 UTC · S10: map's "Same content" says which columns [09]/[19] hash and what that proves; view diff counts 10 species (7 SVG, 9 GeoJSON), 4/5 outlines, recomputed; sequences line split (build resets 4, iucn via default). V7 pass, typecheck, lint pass.
 - 2026-11-26 11:23 UTC · S11: map states `critter_app`'s effective privileges exactly per [07] (SELECT on 11 of 16 relations, no writes, catalogs via PUBLIC). Typecheck, lint pass.
+- 2026-11-26 11:40 UTC · S12: rerun block diffs only after each output's line 1 names its expected database; ran as written ([35]/[36] pass, = [32]/[33]) and with dev on live ([37], stops). Plan copy -> pointer. Typecheck, lint pass.
 
 ## Schema check result
 
@@ -805,16 +808,7 @@ From S3, 2026-11-26. `$Q/25-live-schema-check.out` (live `phaser_june`, the comm
 
 **Dev copy** (`diff 25 26`): line 1 (database name), the owners of the 2 import schemas and the 16 relations (`postgres` vs `critter_dev`), and the database grants (live `PUBLIC TEMPORARY` + `critter_app CONNECT`; copy `PUBLIC CONNECT,TEMPORARY`, its default ACL). Nothing else: columns, constraints, indexes, both view definitions, table grants and the 7 extension sums are identical. Both are by design (`docs/DATABASE_SCHEMA.md#dev-copy-phaser_june_dev`); the copy's PUBLIC CONNECT is closed by P01.
 
-**Rerun** (a later mission), from the repo root:
-
-```bash
-./scripts/db -qAt -f db/analysis/schema-check.sql > /tmp/schema-check-live.out
-( set -a; . /srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy || exit 1; set +a
-  : "${DATABASE_URL:?dev-copy settings not loaded}"
-  ./scripts/db -qAt -f db/analysis/schema-check.sql > /tmp/schema-check-dev.out )
-head -1 /tmp/schema-check-*.out                                # each names its database
-diff /tmp/schema-check-live.out /tmp/schema-check-dev.out      # owners and the database's grants only
-```
+**Rerun** (a later mission): the block in `docs/DATABASE_SCHEMA.md#schema-check`, from the repo root. It diffs only after line 1 of each output names the database it should (S12), so settings pointing at the wrong database stop it. One copy, kept there.
 
 Then read the live output against `db/schema.sql` as this table does. Under a mission's query-log rule, copy the file into `queries/` with the `current_database()` guard first, as [25] and [26] were built.
 
