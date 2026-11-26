@@ -525,7 +525,7 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
     - `diff 21 26`: the same 7 lines plus `grant database to PUBLIC CONNECT,TEMPORARY` (FM1: the copy's NULL `datacl` now reads as its default).
     - `diff 25 26`: line 1, schema/relation owners (`postgres` vs `critter_dev`), and the database grants (live `PUBLIC TEMPORARY` + `critter_app CONNECT`; copy `PUBLIC CONNECT,TEMPORARY`) only. Extension lines identical in both (FM12).
     - No `grant role` and no column-grant lines in either (FM6-FM8). Typecheck, lint pass.
-- [ ] S2. **`db/schema.sql` to live, plus the change rule's other copies** (target design steps 2 and 5, A3, A6). Fable MISSED 2 asks for both copies of the change rule to be edited in the same step.
+- [x] S2. **`db/schema.sql` to live, plus the change rule's other copies** (target design steps 2 and 5, A3, A6). Fable MISSED 2 asks for both copies of the change rule to be edited in the same step.
   - Files: `db/schema.sql`, `AGENTS.md`, `docs/CLUE_MATCH.md`, `docs/DATABASE_ACCESS.md`.
   - Do:
     - **`db/schema.sql`**, exactly as target design step 2 says:
@@ -544,6 +544,7 @@ Rules for every step: no database writes. Each query is a new file in `/srv/crit
     - V5's column-order loop against `$Q/25-live-schema-check.out` prints `same-order` 5 times.
     - V2's CI greps come back empty.
     - Read the three change rules side by side (`git grep -n 'schema-check.sql' -- AGENTS.md docs/CLUE_MATCH.md db/schema.sql`): one rule.
+  - Result (2026-11-26): header (change rule names map + check; `eco_sym_colors` kept line; Extensions line: postgis, pg_stat_statements, pgcrypto, uuid-ossp, plpgsql built in), `species` and clue column order, `habitat_colormap` PK + NOT NULL + A3 comment. Same rule in `AGENTS.md:55` and `docs/CLUE_MATCH.md` Database section; pointers in AGENTS.md Docs Map and DATABASE_ACCESS.md Related. Column-order loop vs [25]: `same-order` x5. schema.sql hunks end above `-- Range maps` (no view SQL touched). CI guards empty. `npm test` 186/186, typecheck, lint pass.
 - [ ] S3. **Record the schema check, object by object** (Definition of done, "The schema check").
   - Files: the plan only, a new `## Schema check result` section above `## Summary`.
   - Do: read `$Q/25-live-schema-check.out` against the edited `db/schema.sql`, object by object, with no parser:
@@ -711,6 +712,7 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 
 - 2026-11-26 · Scope: A6 adds one Docs Map line (AGENTS.md), one Related line (docs/DATABASE_ACCESS.md) and the map + check to the change rule (AGENTS.md:55, db/schema.sql header), past the brief's "change those facts only": the brief creates the map and check, and with nothing pointing at them and a change rule that skips them, the next schema change drifts them unseen. No database fact changes (Fable SC2).
 - 2026-11-26 · Revision: both reviews' 8 MUST-FIX items resolved (db-designer: .mmd parse, cardinality, proposal target guards, P01 scope; architect: clue column order, check-query privilege gaps, AGENTS.md change rule). Astra SC1 (P03 exact timestamp restore) rejected: values unread and wrong; the pre-run dump keeps them. Fable SC1 (cite schema.sql by object) adopted. No second review round, per pipeline.
+- 2026-11-26 · S2: the change rule's third copy, `docs/CLUE_MATCH.md`'s Database section, follows the A6 decision (same words as AGENTS.md). `docs/DRIZZLE_ORM_GUIDE.md:39` stays: not in the brief's doc list, and its query-change step doesn't contradict the rule.
 
 ## Log
 
@@ -723,5 +725,6 @@ Only S1's grant additions to `db/analysis/schema-check.sql` are exercised on the
 - 2026-11-26 10:26 UTC · Revision: db-designer fixed .mmd parse (real Mermaid 12.2.0 parse: 11/118/8), iucn/eco_sym cardinality in .mmd+renders+map, target-DB guards on P01–P05 (proven read-only [28]), P01 scoped off pg_read_all_data (+ dev-copy PUBLIC CONNECT revoke); architect revised target design (clue order 2 moves, check-query memberships/column/extension grants, AGENTS.md change rule, cite schema.sql by object). Lint, typecheck pass.
 - 2026-11-26 10:37 UTC · Steps: planner wrote S1–S6 (check-query privileges, schema.sql edits + change rule copies, object-by-object check record, cite by object, handoff H23, full Verification), Verification V1–V10, Failure modes. Plan-only change.
 - 2026-11-26 10:40 UTC · S1: schema-check.sql reads NULL database/function ACLs as defaults, adds role memberships, column grants and per-extension grant sums (`k of n`); header names the expected dev diff. Ran [25] live / [26] dev read-only: diffs exactly as predicted (7 extension lines; dev +PUBLIC CONNECT,TEMPORARY; 25 vs 26 owners + db grants only). Typecheck, lint pass.
+- 2026-11-26 10:43 UTC · S2: `db/schema.sql` matches live (header change rule + extensions + eco_sym_colors kept; species/clue column order; habitat_colormap PK/NOT NULL, A3 comment); change rule + pointers in AGENTS.md, CLUE_MATCH.md, DATABASE_ACCESS.md. same-order x5 vs [25], CI guards empty, 186/186 unit, typecheck, lint pass.
 
 ## Summary

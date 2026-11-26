@@ -313,6 +313,7 @@ takes back every grant but the app's reads, and, on `phaser_june`, the `DROP TAB
 
 - `AGENTS.md` — authoritative agent policy
 - `db/schema.sql` — the tables and views the app uses
+- `docs/DATABASE_SCHEMA.md` — the live database's objects, readers, roles, grants and dev-copy drift; ERD `docs/schema/`; check `db/analysis/schema-check.sql`
 - `docs/DRIZZLE_ORM_GUIDE.md` — Drizzle client and queries
 - [PostgreSQL 17 `psql`](https://www.postgresql.org/docs/17/app-psql.html)
 - [PostgreSQL 17 libpq connections](https://www.postgresql.org/docs/17/libpq-connect.html)
