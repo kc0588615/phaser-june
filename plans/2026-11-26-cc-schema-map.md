@@ -148,7 +148,7 @@ Out:
   - [x] Architecture C: `architect` writes the Architecture section for the repo edits (`db/schema.sql`, the docs, the check query)
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -162,18 +162,18 @@ From `0c0f064e` (branch `agent/cc-schema-map`, cut from `origin/main` `62c63c32`
 
 ## Architecture
 
-From `architect`, Architecture C, 2026-11-26. Repo edits only: `db/schema.sql`, the docs, the check query. DB facts come from the Data model below and the query log [NN]; no database was touched.
+From `architect`, Architecture C, 2026-11-26; revised after both reviews (Revision notes, "Architecture revision"). Repo edits only: `db/schema.sql`, the docs, the check query. DB facts come from the Data model below and the query log [NN]; no database was touched.
 
 ### Findings, ranked
 
 | # | Rank | Where | Problem | Rule / bug | Fix |
 |---|---|---|---|---|---|
-| A1 | medium | `db/analysis/schema-check.sql:45-55` | `aclexplode(d.datacl)` and `aclexplode(f.proacl)` read a NULL ACL as "no grants". NULL means the default, which gives PUBLIC `CONNECT, TEMPORARY` on a database (`EXECUTE` on a function). The dev copy's `datacl` is NULL [01], so its check prints no database grant, and the [20]/[21] diff shows live with 2 extra grant lines when the copy in fact grants more | fail loud: a real privilege passes unseen; the drift evidence misleads | `aclexplode(coalesce(d.datacl, acldefault('d', d.datdba)))` and `aclexplode(coalesce(f.proacl, acldefault('f', f.proowner)))`. Relations and schemas default to owner-only, which `grantee <> owner` drops anyway: leave them |
-| A2 | medium | `docs/DATABASE_SCHEMA.md:64, 97, 150, 155, 233, 304`; `db/proposals/02-drop-redundant-indexes.sql:51`; `db/proposals/04-drop-unused-extensions.sql:5` | cite `db/schema.sql` by line; the header edit below shifts every line after 13. Three sentences describe the file as behind and turn false once it's fixed: `DATABASE_SCHEMA.md:84` ("lists `species_id` second"), `:150` ("has neither the key nor the NOT NULLs"), `:262` ("header doesn't mention it") | stale refs: wrong docs | in the same step as the schema.sql edit: renumber every live `schema\.sql:` ref (older `plans/` are history: untouched); rewrite the 3 sentences to the new state |
+| A1 | medium | `db/analysis/schema-check.sql:13-55` | (a) `aclexplode(d.datacl)` and `aclexplode(f.proacl)` read a NULL ACL as "no grants". NULL means the default, which gives PUBLIC `CONNECT, TEMPORARY` on a database (`EXECUTE` on a function). The dev copy's `datacl` is NULL [01], so its check prints no database grant, and the [20]/[21] diff shows live with 2 extra grant lines when the copy in fact grants more. (b) It never reads role memberships (`pg_auth_members`) or column grants (`pg_attribute.attacl`), and `rel`/`fn` drop every extension member (`deptype = 'e'`, lines 20, 31), so PUBLIC's EXECUTE on the 46 `pgcrypto`/`uuid-ossp` functions F5 cites [24] and its SELECT on 5 PostGIS/`pg_stat_statements` relations [07] never print. A clean run can't back the map's access claims (Astra MUST-FIX 3) | fail loud: real privileges pass unseen; the drift evidence misleads | (a) `aclexplode(coalesce(d.datacl, acldefault('d', d.datdba)))` and `aclexplode(coalesce(f.proacl, acldefault('f', f.proowner)))`. Relations and schemas default to owner-only, which `grantee <> owner` drops anyway: leave them. (b) memberships, column grants and per-extension sums in the same `grants` CTE (target design step 1) |
+| A2 | medium | `docs/DATABASE_SCHEMA.md:64, 97, 150, 155, 233, 304`; `db/proposals/02-drop-redundant-indexes.sql:51`; `db/proposals/04-drop-unused-extensions.sql:5` | cite `db/schema.sql` by line; the header edit below shifts every line after 13, and P02/P03 shift them again when applied. The map pins its `file:line` refs to `62c63c32` (`DATABASE_SCHEMA.md:6`), which renumbered refs wouldn't be. Three sentences describe the file as behind and turn false once it's fixed: `#species_deduction_clues` ("lists `species_id` second"), `#habitat_colormap` ("has neither the key nor the NOT NULLs"), `#oneeartheco_sym_colors` ("header doesn't mention it") | stale refs: wrong docs | after the schema.sql edit: cite `db/schema.sql` by object, not line, in every ref outside `plans/` (history: untouched); code refs keep `file:line`. Rewrite the 3 sentences to the new state (Fable SC1) |
 | A3 | low | `db/schema.sql:82-83`, copied at `docs/DATABASE_SCHEMA.md:143` | `habitat_colormap` is "the habitat raster behind the globe's habitat pictures". No code draws habitat pictures (`git grep -i 'colormap\|habitat raster' -- src scripts`: nothing), nothing reads the table [22]; the owner keeps it for map legends (Q18, `plans/2026-11-15-db-retire.md:203`) | wrong fact | "Legend of the habitat raster: pixel value -> IUCN habitat class and kind (e.g. 106 = ...). Nothing reads it; the owner keeps it for map legends (audit Q18)." Same fact in both files |
 | A4 | low | `db/analysis/schema-check.sql:6-7` vs `docs/DATABASE_SCHEMA.md:348` | the query says only owners differ by design; the doc says owners and database grants. After A1 the dev diff shows the database grants too | DRY: two copies of the expected diff, already disagreeing | the query's header names "owners and the database's grants" and points at `docs/DATABASE_SCHEMA.md#dev-copy-phaser_june_dev` for the rest |
 | A5 | low | `docs/DATABASE_SCHEMA.md:345` | the dev-copy subshell's `. <file>` doesn't stop if the file fails to load. `scripts/db` then falls back to `.env.local` (live), so the "dev" output is live's: harmless (read-only), but the diff lies | fail fast | `. <file> \|\| exit 1; set +a; : "${DATABASE_URL:?dev-copy settings not loaded}"`, as `docs/DATABASE_ACCESS.md:255-256` does |
-| A6 | low | `AGENTS.md:59-65` (Docs Map), `docs/DATABASE_ACCESS.md:312-320` (Related), `db/schema.sql:5-7` (change rule) | nothing points at the new map or the check, and the change rule ("apply, then edit this file") leaves `docs/DATABASE_SCHEMA.md` out. The next schema change drifts the map silently, the problem this mission clears | discoverability; drift | one Docs Map line, one Related line; the schema.sql change rule names the map and the check (every schema change already edits that file, so it's the one place) |
+| A6 | low | `AGENTS.md:59-65` (Docs Map), `docs/DATABASE_ACCESS.md:312-320` (Related), the change rule in `db/schema.sql:5-7` and its copy at `AGENTS.md:55` ("change the DB, then update the file") | nothing points at the new map or the check, and the change rule leaves `docs/DATABASE_SCHEMA.md` out. The next schema change drifts the map silently, the problem this mission clears | discoverability; drift; DRY (two copies of the rule must not disagree) | one Docs Map line, one Related line; both copies of the change rule name the map and the check, in the same words (Fable MISSED 2). Goes past "change those facts only": a Decision |
 
 **Checked and fine:**
 - `schema-check.sql` otherwise meets the Definition of done: `BEGIN TRANSACTION READ ONLY`, `SET LOCAL statement_timeout`, `ROLLBACK`; one sorted line per item (`ORDER BY section, object, pos, line`); columns by position with type, NOT NULL, default; `pg_get_constraintdef`, `pg_get_indexdef`, `pg_get_viewdef` (views and matviews); `aclexplode` grants incl. matviews and sequences; stateless, so rerunnable. `-qAt` hides the command tags ([20] starts at `database ...`).
@@ -207,26 +207,43 @@ The stale "dev DB copy" comment is only in the uncommitted `.env.local` (committ
 
 Edits in order; each step's check beside it. View SQL is never touched; no `pg_get_viewdef` text goes in any file.
 
-1. **`db/analysis/schema-check.sql`**: A1 (two `coalesce(..., acldefault(...))`) and A4 (header). Check: rerun it, the committed file plus a `current_database()` guard, as `queries/25-live-schema-check.sql` and `26-dev-schema-check.sql` (read-only, as 20/21). Expect 25 = [20] byte for byte; 26 = [21] plus `grant database to PUBLIC CONNECT,TEMPORARY`.
+1. **`db/analysis/schema-check.sql`**: A1 and A4. Every addition goes in the `grants` CTE, so it prints as section 12's sorted one-line `grant <object> to <grantee> <privileges>`, owner dropped, and section 13 prints any new grantee's role line by itself:
+   - (a) the two `coalesce(..., acldefault('d' | 'f', <owner>))`.
+   - (b) **Memberships:** `pg_auth_members`, names via `pg_get_userbyid` as now, members not `pg_*` (built-in nesting is noise; a `pg_*` role granted to ours, e.g. P01's, still prints). `grant role <role> to <member> <options>`: the true ones of `ADMIN`, `INHERIT`, `SET` (PG 16+ columns; both servers are 17 [01]), or `MEMBER` if none; `DISTINCT`, since one pair can have several grantors.
+   - (c) **Column grants:** `aclexplode(a.attacl)` over the `rel` relations' columns (NULL `attacl` means none): `grant <relation>.<column> to <grantee> <privileges>`.
+   - (d) **Extension members, summed:** for each extension (`pg_depend` `deptype = 'e'`, any schema), its functions (`coalesce(proacl, acldefault('f', proowner))`) and relations (`relacl`), exploded and grouped by extension, kind, grantee and privileges: `grant extension <ext> functions|relations to <grantee> <privileges> <k> of <n>`, `n` that kind's member count. 7 lines instead of ~830 (PostGIS alone has 776 functions [24]); a partial revoke shows as `k < n`, a direct grant to `critter_app` as its own grantee line. `rel` and `fn` keep excluding members, so no definitions are added.
+   - Header: A4; lines 9-10 say extension members are summed in the grant section, not listed.
+   - Held: catalog reads only (`pg_auth_members` holds only oids and options; no `pg_authid`, no new role name or secret in the file); stateless, so rerunnable; same sort.
+   - Check: rerun it, the committed file plus a `current_database()` guard, as `queries/25-live-schema-check.sql` and `26-dev-schema-check.sql` (read-only, as 20/21). Expect:
+     - 25 = [20] plus the 7 extension lines. Memberships, column grants and own functions print nothing: [07]/[17] have 0 memberships and 0 `attacl`, [06]/[16] no own functions.
+     - 26 = [21] plus the same 7 lines and `grant database to PUBLIC CONNECT,TEMPORARY`. `diff 25 26`: owners and the database's grants only.
+     - The 7, as `grant extension ...`: `pgcrypto functions to PUBLIC EXECUTE 36 of 36` and `uuid-ossp functions ... 10 of 10` (the 46 of [24]); `postgis relations to PUBLIC SELECT 3 of 3` and `pg_stat_statements relations ... 2 of 2` ([07]). Not yet logged, expected from default ACLs: `postgis functions ... 776 of 776`, `plpgsql functions ... 3 of 3`, and `pg_stat_statements functions ... 2 of 3` (its install script revokes `pg_stat_statements_reset` from PUBLIC). Write the real lines into the map's `#roles-and-grants`; a count that differs is a fact to record, never a reason to bend the query.
 2. **`db/schema.sql`**, every "file behind" item fixed by hand, in the file's style:
-   - Header: keep lines 1-3 (hand-kept baseline, not a migration history). Change rule: "...then edit this file and the map docs/DATABASE_SCHEMA.md to match; db/analysis/schema-check.sql prints the live definitions to compare." After the "Also needed" list: "Kept though nothing reads it (owner, audit Q18), like habitat_colormap below: oneearth.eco_sym_colors, the bioregions' legend colors." Extensions line becomes: "Extensions, as live has them (2026-11-26): postgis; pg_stat_statements (monitoring); pgcrypto and uuid-ossp, which no SQL in the repo calls; init/01-extensions.sql installs all four. plpgsql is built in."
+   - Header: keep lines 1-3 (hand-kept baseline, not a migration history). Change rule, same words as `AGENTS.md`'s copy (step 5): "...then edit this file and the map docs/DATABASE_SCHEMA.md to match; db/analysis/schema-check.sql prints the live definitions to compare." After the "Also needed" list: "Kept though nothing reads it (owner, audit Q18), like habitat_colormap below: oneearth.eco_sym_colors, the bioregions' legend colors." Extensions line becomes: "Extensions, as live has them (2026-11-26): postgis; pg_stat_statements (monitoring); pgcrypto and uuid-ossp, which no SQL in the repo calls; init/01-extensions.sql installs all four. plpgsql is built in."
    - `species`: move `created_at`, `updated_at` to follow `conservation_code` (live order [20]:111-126).
-   - `species_deduction_clues`: move `species_id` (with its inline FK) to follow `created_at` (live order [20]:127-136). Constraint names don't depend on position.
+   - `species_deduction_clues`, two moves: `created_at` up to follow `is_filtering`, then `species_id` (with its inline FK) to follow `created_at`. Result, live's order [20]:127-136: `id, category, label, compare_tags, reveal_order, is_filtering, created_at, species_id, source_key, source_url`; `source_url` is now the last line (no comma). Constraint names don't depend on position (`species_deduction_clues_species_id_fkey` stays).
    - `habitat_colormap`: `value integer PRIMARY KEY, label text NOT NULL` (live `habitat_colormap_pkey`, the default name [20]:147); its comment per A3.
-   - Check: `npm test` (content.test.ts); `git diff db/schema.sql` has no hunk from `-- Range maps` down; CI's legacy-ORM grep (`ci.yml:24`) empty; read each object against [25]: all 12 now "matches".
-3. **`docs/DATABASE_SCHEMA.md`**: A2 (renumber refs, rewrite `:84`, `:150`, `:262`), A3 (`:143`), A5 (`:345`), and cite [25]/[26] where it cites [20]/[21] (`:313`). Check: every `schema\.sql:N` ref read against the edited file.
-4. **`db/proposals/02-drop-redundant-indexes.sql:51`, `04-drop-unused-extensions.sql:5`**: A2 refs (04: "db/schema.sql's header says so"). Comments only. Check: read.
-5. **`AGENTS.md`** Docs Map: "`docs/DATABASE_SCHEMA.md`: the live database's objects, readers, roles, grants and dev-copy drift; ERD `docs/schema/`; check `db/analysis/schema-check.sql`." **`docs/DATABASE_ACCESS.md`** Related: the same pointer, one line. Check: read.
-6. **Final:** `npm run typecheck`, `npm run lint`, `npm test`, then `CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:fresh` once.
+   - Check: `npm test` (content.test.ts); `git diff db/schema.sql` has no hunk from `-- Range maps` down; CI's legacy-ORM grep (`ci.yml:24`) empty; read the `species` and clues column lists name by name against [25]'s `column species 01-16` and `column species_deduction_clues 01-10`, then every other object against [25]: all 12 now "matches".
+3. **`docs/DATABASE_SCHEMA.md`** (sections by anchor; db-designer's revision moves its lines):
+   - A2: every `db/schema.sql:N` ref cited by object, e.g. "`clue_match_ranges` and `clue_match_places` in `db/schema.sql`, their `ranges` step", "their `playable` step", "`clue_match_places`' `country_parts` step", "`db/schema.sql`'s closing grant `DO` block". Rewrite the 3 "file behind" sentences (`#species_deduction_clues`, `#habitat_colormap`, `#oneeartheco_sym_colors`) to the new state.
+   - A3 (`#habitat_colormap`'s first line), A5 (`#schema-check`'s dev subshell).
+   - `#dev-copy-phaser_june_dev` and `#schema-check` cite [25]/[26] where they cite [20]/[21]; `#roles-and-grants` gets step 1's extension lines and says memberships and column grants: none [25].
+   - Check: `git grep -n 'schema\.sql:' -- . ':!plans'` prints nothing (covers step 4); each object ref names a step or block that is in the edited `db/schema.sql`.
+4. **`db/proposals/*.sql`**: any `db/schema.sql:N` ref left after db-designer's revision (today 02's rollback note and 04's header) cited by object: 02 "the four CREATE INDEX lines in db/schema.sql", 04 "db/schema.sql's header says so". Comments only. Check: step 3's grep.
+5. **`AGENTS.md`**: the Data line's change rule (`:55`) becomes "change the DB, then update the file and the map `docs/DATABASE_SCHEMA.md`; `db/analysis/schema-check.sql` prints live to compare", the same rule as step 2's header. Docs Map: "`docs/DATABASE_SCHEMA.md`: the live database's objects, readers, roles, grants and dev-copy drift; ERD `docs/schema/`; check `db/analysis/schema-check.sql`." **`docs/DATABASE_ACCESS.md`** Related: the same pointer, one line. Check: read the two change rules side by side.
+6. **Final:** `npm run typecheck`, `npm run lint`, `npm test`, then `CHROME_PATH=~/.local/bin/chrome-nosandbox npm run e2e:fresh` once. Astra's review covered `0a5defb6` (its SC2): the recheck of this revision is the two final `--code` reviews of the whole branch against `origin/main`, and the release's rebase on a fresh `origin/main` reruns this step. No extra review.
 
 No change to `src/`, `scripts/`, `db/content/`, `init/` or `deploy/`.
 
 ### Rejected alternatives
 
-- Header note on column order instead of reordering: leaves 2 permanent "differs" for every later check to explain. The reorder moves 3 lines, and nothing depends on order.
+- Header note on column order instead of reordering: leaves 2 permanent "differs" for every later check to explain. The reorder moves 4 column lines, and nothing depends on order.
 - Header lists the extensions left after P04: P04 isn't applied, and the file describes live.
 - `CREATE TABLE oneearth.eco_sym_colors` in the file: it's imported with `oneearth`, like `oneearth_bioregion`. The brief asks only to name it as kept.
-- Object-name refs instead of renumbering `db/schema.sql:N`: the map uses `file:line` throughout. Renumber once.
+- Renumbering the `db/schema.sql:N` refs (this section's first call, before Fable SC1): renumbered refs break the map's "refs at `62c63c32`" line, and P02/P03 shift them again when applied. Object names don't move.
+- One check line per extension function: ~830 lines (776 PostGIS [24]) to say one thing per extension; the `k of n` sum still shows a partial revoke or a direct grant.
+- Effective-privilege lines (`has_*_privilege`) for `critter_app` in the check: it would name a role in a generic check, and memberships plus PUBLIC and direct grants already give the answer; [07] keeps the effective view.
+- Type, language, parameter and tablespace ACLs in the check: none gives access to the game's data.
 - `COLLATE "C"` in the check's `ORDER BY`: both databases share one server and `en_US.utf8` [01], and the two outputs are compared in the same run.
 - `acldefault` for relations and schemas too: their default is owner-only, which the owner filter drops. No output change.
 - A pointer in `docs/CLUE_MATCH.md`: it has no wrong DB fact, and AGENTS.md's Docs Map is the index.
@@ -238,7 +255,7 @@ From `db-designer`, Architecture A, 2026-11-26. The full map is in `docs/DATABAS
 
 **Query log:** `/srv/critter-ai/agent-state/missions/cc-schema-map/queries/`, written [NN] below. Each `.sql` sits beside its `.out`:
 
-- live: 01–10, 20, 22, 24;
+- live: 01–10, 20, 22, 24, and 27–28 from the revision;
 - dev copy: 11–19, 21 and 23, each the matching live file with only its guard changed.
 
 Every file opens `BEGIN TRANSACTION READ ONLY` with a 30 s timeout, ends `ROLLBACK`, and checks `current_database()` first. Nothing was written to either database.
@@ -298,7 +315,7 @@ From the schema check [20], read against the file object by object. The view SQL
 
 | # | Rank | Object | Evidence | What goes wrong | Fix | Proposal |
 |---|---|---|---|---|---|---|
-| F1 | medium | role `postgres` as every agent's and script's login | [01] `current_user = postgres`; [07] `rolsuper`, `rolbypassrls` | Only the query file's READ ONLY wrapper keeps a read-only task read-only. One slip (a bare `-c`, a wrong file) can change or drop what players read | A read-only login role for read-only work (`pg_read_all_data`, `default_transaction_read_only`, 30 s). Writes keep `postgres` (owner, 2026-11-01) | `db/proposals/01-read-only-agent-role.sql` |
+| F1 | medium | role `postgres` as every agent's and script's login | [01] `current_user = postgres`; [07] `rolsuper`, `rolbypassrls` | Only the query file's READ ONLY wrapper keeps a read-only task read-only. One slip (a bare `-c`, a wrong file) can change or drop what players read | A read-only login role for read-only work, scoped to live: CONNECT on `phaser_june`, SELECT on the 11 mapped relations and 5 sequences, `default_transaction_read_only`, 30 s; not `pg_read_all_data`, which spans the cluster. It also closes the dev copy's PUBLIC CONNECT [27]. Writes keep `postgres` (owner, 2026-11-01) | `db/proposals/01-read-only-agent-role.sql` |
 | F2 | low, next content mission | clue and fact ids, species id × 100 + position (`src/clueGame/profiles.ts:430`, `:442`) | [22]: at most 79 clues for one species; no off-scheme id | A profile's 101st clue takes the next species' first id. `content -- build` then fails ("cannot affect row a second time"), or fails later when that species arrives. Players see nothing; the content mission is blocked | Code, not the database: a wider multiplier. The build deletes all clues and facts first, and nothing outside the database stores their ids (journal, saved game) | none (code; a later mission) |
 | F3 | low | `species.created_at`, `species.updated_at`, `species_deduction_clues.created_at` | [08]: 48 of 76 rows have `updated_at = created_at`, the newest 2026-09-30, though [02] shows 962 updates through 2026-11-24. No trigger [06]. Nothing reads them (code search) | A reader trusting `updated_at` gets wrong dates. The clues' `created_at` only means "last build" | Drop all three; git history of `db/content/` is the record | `db/proposals/03-drop-unread-timestamps.sql` |
 | F4 | low | `ix_deduction_clues_species`, `ix_deduction_clues_category`, `ix_species_facts_species`, `ix_species_facts_category` | [04]: each is a leading part of a unique index on the same table; idx_scan 87, 2, 4, 0, with counters never reset [01] | Every build re-inserts all 4,144 rows and maintains 4 useless btrees. No effect on players | Drop them; the unique indexes serve the same lookups and the FK cascade | `db/proposals/02-drop-redundant-indexes.sql` |
@@ -321,7 +338,7 @@ From the schema check [20], read against the file object by object. The view SQL
 - **Naming:** mixed `ix_`, `uq_` and automatic names. Harmless; left alone.
 - **Grants:** `critter_app` is SELECT-only on exactly its six relations, in both databases, with nothing on the sequences or the import schemas [07][17].
 - **Dead objects:** no code reads `habitat_colormap` or `eco_sym_colors` (their latest scans are the nightly dump's [02]), but the owner keeps them (Q18), so they stay. `pg_stat_statements` stays for monitoring.
-- **Statistics:** every table has planner statistics [08].
+- **Statistics:** every table, and `clue_match_ranges`, has planner statistics on every column. `clue_match_places` has none (0 of 12 columns): at 5 rows autovacuum never analyzes it, and `REFRESH` doesn't. That's harmless at 5 rows, so there's no proposal [08].
 
 ### Target design
 
@@ -329,18 +346,19 @@ From the schema check [20], read against the file object by object. The view SQL
   - `species` drops `created_at` and `updated_at`, and the clues drop `created_at` (P03).
   - The clues and facts keep their primary key, unique and GIN indexes, without the 4 prefix indexes (P02).
   - Extensions: `postgis`, `pg_stat_statements`, `plpgsql` (P04).
-  - Roles: plus `critter_reader` for read-only agent work (P01).
+  - Roles: plus `critter_reader` for read-only agent work, which reads live's mapped objects only. The dev copy is closed to PUBLIC; `critter_dev` and `postgres` still connect (P01).
   - PUBLIC loses TEMP on `phaser_june` (P05).
 - **Code:** reads and writes don't change. No query in `src/` or `scripts/` names a dropped object. The build's upsert lists only profile columns, and the views use only `species.id` and `iucn_id` and the clues' `species_id`. F2's fix is a code change for a later mission.
 - **How each applied proposal runs:**
   1. On the dev copy first (CI's e2e reads it), except P01 and P05, which are for live only.
   2. Live, after a fresh dump.
+  - Every run names its database, `-v target=phaser_june_dev` or `-v target=phaser_june`. A missing or different name stops before any DDL ([28]: no target, or the wrong one, exits 3).
   3. Then the files: `db/schema.sql`, and `init/` and `deploy/db/app-role.sql` where the proposal names them.
 - **For unit B's ERD:** `docs/DATABASE_SCHEMA.md#relationships` lists 11 entities in 4 zones (content 5, ranges and places 3, `natural_earth` 1, `oneearth` 2), with 4 foreign keys and 4 logical links. Detail `faithful` fits.
 
 **Handoff lines for the lead's item** (`Blocks: nothing`):
 
-- **P01** read-only agent role. Risk: none (catalog only). Needs the owner to set a password and a new env file. Recommended.
+- **P01** read-only agent role, scoped to live. It also revokes PUBLIC CONNECT on the dev copy. Risk: catalog only; afterwards only `critter_dev` and `postgres` reach the copy, as today in practice. Needs the owner to set a password and a new env file once the post-checks pass. Recommended.
 - **P02** drop 4 redundant indexes. Risk: a lock of milliseconds on the clues and facts tables. Recommended with the next schema change.
 - **P03** drop 3 unread timestamp columns. Risk: a lock of milliseconds; their values are lost (unread, partly wrong); dump first. Recommended.
 - **P04** drop `pgcrypto` and `uuid-ossp`. Risk: none in the repo. Recommended only if no outside tool of the owner's calls them.
@@ -370,10 +388,11 @@ From `db-designer`, 2026-11-26.
   - The extractor gives 11 entities, 8 edges and 118 columns, equal to [03] and to the map's tables and relationships.
   - `self_check.py --offline` passes.
   - Both SVGs parse as XML and render standalone in headless Chrome, as does an `<img>` embed.
-  - No Mermaid parser is installed, so the `.mmd` was checked against Mermaid's documented grammar only.
+  - Revision: a real Mermaid (12.2.0, critwire's, imported read-only) parses the `.mmd`: 11 entities, 118 columns, 8 relationships, and the parsed cardinalities print back as the source's notation. The pre-revision file fails on its bare `%%` line. Rerun: `node /srv/critter-ai/agent-state/missions/cc-schema-map/erd-build/parse-mmd.mjs docs/schema/phaser-june.mmd 11,118,8` from the worktree root. Exit 0 means it passes; a parse error or a count mismatch exits 1. Output: `erd-build/parse-mmd.out`.
 - **Map fixed:**
   - `iucn.yrcompiled`, `generalisd`, `shape_leng` and `shape_area` are numeric(65,30) [03]; the map said plain numeric.
   - The ranges link is "zero or one to one".
+  - Revision: `iucn.id_no` and `oneearth_bioregion.eco_sym` are nullable with no FK, so their parent side is zero or one (`|o`), with no NULLs today [08].
 - **Keeping light and dark in sync:** the renders are hand-drawn HTML, not generated from the `.mmd`. db-designer's generator script is kept outside the repo at `/srv/critter-ai/agent-state/missions/cc-schema-map/erd-build/build.py`.
 
 ## Architecture review (Fable)
@@ -416,6 +435,58 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+### Data model revision
+
+From `db-designer`, 2026-11-26. Covers the `.mmd`, the renders, `docs/DATABASE_SCHEMA.md`, `db/proposals/` and the Data model section. No database was changed. There are two new read-only query files, [27] and [28]; numbers 25 and 26 stay free for the architect's step 1.
+
+- **Fable MUST-FIX 1 / Astra 4 (parse):**
+  - Change: deleted the bare `%%` line from `docs/schema/phaser-june.mmd`, and its conventions now explain why.
+  - Proof: `erd-build/parse-mmd.mjs` imports critwire's Mermaid 12.2.0 read-only and needs no DOM shim. It parses the file to 11 entities, 118 columns and 8 relationships (PK 9, FK 4, UK 11), and every parsed relationship prints back identical to the source. The HEAD file fails, as Fable said.
+  - Output: `erd-build/parse-mmd.out`. Verification: `node /srv/critter-ai/agent-state/missions/cc-schema-map/erd-build/parse-mmd.mjs docs/schema/phaser-june.mmd 11,118,8` from the worktree root exits 0. A parse error or a count mismatch exits 1.
+- **Fable MUST-FIX 3 / Astra 4 (cardinality):**
+  - `.mmd`: `species |o..o{ iucn` and `eco_sym_colors |o..o{ oneearth_bioregion`.
+  - `docs/DATABASE_SCHEMA.md#relationships`: both rows now say "many to one, optional"; the Notes say the column is nullable with no FK, and no NULLs today [08].
+  - Renders: the `1` label became `0..1` on both edges in `erd-build/build.py`. Both HTML files were rebuilt and both SVGs re-exported (`export_svg.py --system-fonts`).
+  - Checks: `self_check.py --offline` and `verify-geometry.py` report 0 findings on each file, the SVGs parse, and the light render was checked by eye.
+- **Astra MUST-FIX 1 (target database):**
+  - Every proposal sets `\set ON_ERROR_STOP on`. Right after `BEGIN` and before any DDL, it requires `-v target=<db>` and checks it against `current_database()`. 02–04 accept `phaser_june_dev` or `phaser_june`; 01 and 05 accept `phaser_june` only. A missing variable prints a message and fails.
+  - Proof: [28] ran the 02–04 block verbatim, read-only, on live. No target: exit 3. `target=phaser_june_dev`: exit 3. `target=phaser_june`: passes.
+  - Each header gives its run lines. Dev runs load the settings file fail-fast (A5's pattern).
+- **Astra MUST-FIX 2 (P01 scope):**
+  - Dropped `pg_read_all_data`. [27]: the cluster holds `phaser_june`, `phaser_june_dev`, `postgres` and the two templates.
+  - Grants now: CONNECT on `phaser_june`, USAGE on the 3 schemas, and SELECT on the 11 mapped relations and the 5 public sequences.
+  - No default privileges, so a later table stays closed until someone grants it, including any table about people.
+  - The gap: the copy's default ACL gives PUBLIC CONNECT, and so `critter_app` can connect too [27]. P01 also runs `REVOKE CONNECT ON DATABASE phaser_june_dev FROM PUBLIC`. Its owner `critter_dev` and the superuser `postgres` keep access, and git grep finds no other user. The header names the follow-up in `deploy/db/dev-role.sql`.
+  - Post-checks, run while the role is still NOLOGIN: not superuser, no BYPASSRLS, no login, no memberships; it reads every relation and sequence in the 3 schemas and writes none; no CREATE anywhere; CONNECT on live but not on the copy; `critter_dev` keeps the copy and `critter_app` keeps live. A per-database table prints the rest.
+  - Left over: PUBLIC CONNECT on `postgres` and `template1`. Both hold catalogs only, and PgBouncer routes neither.
+  - Rollback: GRANT the copy's CONNECT back to PUBLIC, then `DROP OWNED BY critter_reader` and `DROP ROLE critter_reader`.
+- **Fable MISSED 1:**
+  - `docs/DATABASE_SCHEMA.md#roles-and-grants` now says: no default privileges or column grants [07]; no function has an explicit grant; extension functions keep their default ACL, so PUBLIC, and with it `critter_app`, can execute them. The one exception is an owner-only `pg_stat_statements` function [27].
+  - The dev-copy section now notes that `critter_app` can reach the copy through PUBLIC.
+- **Fable MISSED 3:** the Data model's "Statistics" line is corrected: `clue_match_places` has statistics on 0 of 12 columns, which is harmless at 5 rows [08].
+- **Data model section:** updated to match: the query-log list, F1's fix, the target design (roles; every run names its target), P01's handoff line and the ERD checks.
+- **Should-consider decisions:**
+  - Fable SC3, adopted: P01's header loads the read-only settings with `|| exit 1`, `${DATABASE_URL:?}` and a `current_user` check.
+  - Fable SC4, adopted: P04's header gives `./scripts/db -d phaser_june_dev -v target=phaser_june_dev -f ...` with `.env.local`'s `postgres` login. psql's `-d` overrides the URL's database, and PgBouncer routes the copy. The route is untried, and the header says so; the target guard stops a run that lands anywhere else.
+  - Astra SC1, rejected: the values are unread and wrong (`updated_at` is stale in 48 of 76 rows, and a clue's `created_at` only records its last build). An exact restore brings back wrong data, and a saved-values table would add the kind of dead object this mission removes. The pre-run dump keeps the values, and P03's rollback note says so.
+- **For the architect's steps 3–4:** the map's line numbers moved (step 3 already cites anchors). P02's `db/schema.sql` ref moved from `:51` to `:65`; P04's stays at `:5`. Neither ref was edited.
+
+### Architecture revision
+
+From `architect`, 2026-11-26. Plan text only; repo edits stay in Steps.
+
+- **Fable MUST-FIX 2 / Astra MUST-FIX 5** (clue column order): target design step 2 now makes two moves (`created_at` after `is_filtering`, `species_id` after it) to live's `..., is_filtering, created_at, species_id, source_key, source_url`; its check reads both column lists name by name against [25]. Rejected alternative: "3 lines" -> "4 column lines".
+- **Astra MUST-FIX 3** (check blind to memberships, column grants, extension functions): A1 widened (b). Step 1 adds memberships (`pg_auth_members`, non-`pg_*` members), column grants (`attacl`) and per-extension sums (`grant extension <ext> functions|relations to <grantee> <privs> <k> of <n>`), all in the `grants` CTE's one-line form. Sums, not ~830 per-function lines: same answer, partial revokes and direct grants still show. Expected 25/26 outputs are spelled out (7 new lines each; memberships and column grants none, per [07]/[17]). Read-only catalog only, no `pg_authid`, rerunnable.
+- **Fable MISSED 2** (`AGENTS.md:55` repeats the change rule): A6 and step 5 edit both copies in the same words as step 2's header.
+- **Fable SC1** (cite `db/schema.sql` by object): adopted. A2's fix, steps 3-4, and Rejected alternatives changed; one grep (`git grep -n 'schema\.sql:' -- . ':!plans'`) checks both steps. Step 3 names map sections by anchor, since db-designer's revision moves its lines.
+- **Fable SC2** (A6 past "change those facts only"): Decision line below, for the lead.
+- **Astra SC2** (recheck reviewed revision): folded into step 6: the final `--code` reviews and the release's rebase-and-rerun are that recheck; no extra review.
+- Not mine (db-designer): Fable MUST-FIX 1 and 3, Astra MUST-FIX 1, 2, 4, Fable MISSED 1 and 3, Fable SC3-4, Astra SC1.
+
+Decision line for **Decisions**:
+
+`- 2026-11-26 · Scope: A6 adds one Docs Map line (AGENTS.md), one Related line (docs/DATABASE_ACCESS.md) and the map + check to the change rule (AGENTS.md:55, db/schema.sql header), past the brief's "change those facts only": the brief creates the map and check, and with nothing pointing at them and a change rule that skips them, the next schema change drifts them unseen. No database fact changes (Fable SC2).`
+
 ## Steps
 
 ## Verification
@@ -427,6 +498,9 @@ SHOULD-CONSIDER:
 
 ## Decisions
 
+- 2026-11-26 · Scope: A6 adds one Docs Map line (AGENTS.md), one Related line (docs/DATABASE_ACCESS.md) and the map + check to the change rule (AGENTS.md:55, db/schema.sql header), past the brief's "change those facts only": the brief creates the map and check, and with nothing pointing at them and a change rule that skips them, the next schema change drifts them unseen. No database fact changes (Fable SC2).
+- 2026-11-26 · Revision: both reviews' 8 MUST-FIX items resolved (db-designer: .mmd parse, cardinality, proposal target guards, P01 scope; architect: clue column order, check-query privilege gaps, AGENTS.md change rule). Astra SC1 (P03 exact timestamp restore) rejected: values unread and wrong; the pre-run dump keeps them. Fable SC1 (cite schema.sql by object) adopted. No second review round, per pipeline.
+
 ## Log
 
 - 2026-11-26 09:05 UTC · Baseline: typecheck, lint, 186/186 unit, e2e:fresh 1563/1563 pass; artifact `e2e-s0-baseline/`.
@@ -435,5 +509,6 @@ SHOULD-CONSIDER:
 - 2026-11-26 10:10 UTC · Architecture C: architect wrote Architecture (A1–A2 medium: check query misses default ACLs; stale schema.sql line refs; A3–A6 low), docs DB facts all verified correct (pointers only), target design: 6 ordered edits. Plan-only change; no DB access.
 - 2026-11-26 10:25 UTC · Fable review: APPROVE WITH CHANGES, 3 MUST-FIX (.mmd bare `%%` breaks Mermaid parse; species_deduction_clues column order needs two moves; iucn/oneearth logical links should be zero-or-one). Plan-only change.
 - 2026-11-26 10:12 UTC · Astra review: APPROVE_WITH_CHANGES, 5 MUST-FIX (proposals must assert target DB before DDL; P01 grants too broad, scope off pg_read_all_data; check query misses memberships/column/function grants; Mermaid parse + cardinality; deduction-clues column order), 2 SHOULD-CONSIDER. Plan-only change.
+- 2026-11-26 10:40 UTC · Revision: db-designer fixed .mmd parse (real Mermaid 12.2.0 parse: 11/118/8), iucn/eco_sym cardinality in .mmd+renders+map, target-DB guards on P01–P05 (proven read-only [28]), P01 scoped off pg_read_all_data (+ dev-copy PUBLIC CONNECT revoke); architect revised target design (clue order 2 moves, check-query memberships/column/extension grants, AGENTS.md change rule, cite schema.sql by object). Lint, typecheck pass.
 
 ## Summary

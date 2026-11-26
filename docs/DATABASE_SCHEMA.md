@@ -271,10 +271,10 @@ For the diagrams. "Enforced" means a foreign key. "Logical" means a join the cod
 | `species_facts.species_id` | `species.id` | many to one | FK, ON DELETE CASCADE | |
 | `species_deduction_clues.source_key` | `content_sources.key` | many to one, optional | FK | |
 | `species_facts.source_key` | `content_sources.key` | many to one, optional | FK | |
-| `iucn.id_no` | `species.iucn_id` | many to one | logical | 202 polygons, 76 species, no orphans either way |
+| `iucn.id_no` | `species.iucn_id` | many to one, optional | logical | `id_no` is nullable and has no FK. No NULLs today: 202 polygons, 76 species, no orphans either way [08] |
 | `clue_match_ranges.species_id` | `species.id` | zero or one to one | logical (view) | built from `species`, clues, `iucn`; every species has a row today |
 | `clue_match_places.species_ids[]` | `species.id` | many to many | logical (view, array) | built from `species`, clues, `iucn`, `natural_earth.countries` |
-| `oneearth.oneearth_bioregion.eco_sym` | `oneearth.eco_sym_colors.eco_sym` | many to one | logical | no orphans |
+| `oneearth.oneearth_bioregion.eco_sym` | `oneearth.eco_sym_colors.eco_sym` | many to one, optional | logical | `eco_sym` is nullable and has no FK. No NULLs and no orphans today [08] |
 
 There are also spatial joins, which have no key: `content -- ranges` intersects `iucn` with `oneearth.oneearth_bioregion` and `natural_earth.countries`, and `clue_match_places` intersects `iucn` with `natural_earth.countries`. `habitat_colormap` stands alone.
 
@@ -306,7 +306,8 @@ Grants come from `aclexplode`, which also covers materialized views and sequence
   - It has nothing on the sequences, `iucn`, `habitat_colormap`, `oneearth` or `natural_earth`, and it can't `CREATE` in `public`.
   - It can still create temporary tables (finding F6).
 - **PUBLIC:** `TEMPORARY` on `phaser_june` (`CONNECT` was revoked by `deploy/db/dev-role.sql:22-23`); `USAGE` on `public`; `SELECT` on PostGIS's `spatial_ref_sys`, `geometry_columns` and `geography_columns`, and on `pg_stat_statements` (which shows another role's query text only to privileged roles).
-- **Not granted:** there are no default privileges, column grants or function grants.
+- **Not granted:** there are no default privileges and no column grants [07].
+- **Functions:** none carries an explicit grant. The project has no functions of its own [06], and every extension function keeps its default ACL, so PUBLIC, and with it `critter_app`, can execute all of them. That includes PostGIS's 776 and the 46 of `pgcrypto` and `uuid-ossp` (finding F5). The one exception is a `pg_stat_statements` function whose ACL is owner-only [27].
 
 ## Dev copy (`phaser_june_dev`)
 
@@ -319,7 +320,7 @@ CI's e2e job reads the dev copy, so it must keep up with live. The same queries 
   - the extensions [11].
 - **Same content:** an md5 over every row of every table matches live's [09][19]. That covers the four content tables, `habitat_colormap`, `iucn` (attributes and geometry), `natural_earth.countries` and both `oneearth` tables.
 - **Owners:** `critter_dev` owns every app object and the `oneearth` and `natural_earth` schemas, by design (`deploy/db/dev-role.sql:37-63`). Live, `postgres` owns them.
-- **Database grants:** the copy keeps the default ACL, so PUBLIC can connect and create temporary tables there [01][11]. Live revokes `CONNECT` from PUBLIC.
+- **Database grants:** the copy keeps the default ACL, so PUBLIC can connect and create temporary tables there [01][11]. Through PUBLIC, `critter_app` can connect to the copy too, though nothing uses that [07][27]. Live revokes `CONNECT` from PUBLIC. Proposal 01 closes the copy's PUBLIC `CONNECT`.
 - **Column numbers:** the restore renumbered the columns. Live has gaps from dropped columns (`species` goes 1–4, 7–11, 35, 36, 49–53); order and names are the same [03][13].
 - **View output:** attributes are equal (ids, names, bounding boxes, marker points, areas). The shapes differ slightly in vertices: 7 of 76 range paths and 4 of 5 continent outlines [09][19]. The two databases refreshed the views at different times from differently ordered rows, and `ST_Union` follows input order, so the vertex differences are expected. The e2e doesn't compare vertices.
 - **Statistics:** live's activity counters show 0 live rows for `natural_earth.countries`, both `oneearth` tables and `habitat_colormap`, which were never written since the counters began. Their planner statistics exist [08]. The copy's counters are complete [12].
@@ -354,7 +355,7 @@ Compare its output with `db/schema.sql` by reading both, object by object. There
 
 One entity-relationship diagram covers the whole map. It shows the 11 relations above in 4 zones and the 8 links in [Relationships](#relationships): 4 foreign keys (solid) and 4 logical joins (dashed).
 
-- **Source of truth:** [`schema/phaser-june.mmd`](schema/phaser-june.mmd), a Mermaid `erDiagram`. It has every column, with its type and key (118 columns, [03] [04]). When the schema changes, update it first, then the renders.
+- **Source of truth:** [`schema/phaser-june.mmd`](schema/phaser-june.mmd), a Mermaid `erDiagram`. It has every column, with its type and key (118 columns, [03] [04]). When the schema changes, update it first, then the renders. Mermaid 12.2.0 parses it to 11 entities, 118 columns and 8 relationships, with the cardinalities above. Mermaid drops a `%%` comment line only if it has text after the `%%`, so a bare `%%` line breaks the parse.
 - **Renders:** [`phaser-june.html`](schema/phaser-june.html) and [`phaser-june-dark.html`](schema/phaser-june-dark.html), exported to [`phaser-june.svg`](schema/phaser-june.svg) and [`phaser-june-dark.svg`](schema/phaser-june-dark.svg).
   - They were drawn with diagram-design's ER type (detail `faithful`), using the `critter-connect` profile, which the repo's `.diagram-design` names.
   - They are a redraw, not a Mermaid render. To change one, edit its HTML, then run the skill's `scripts/export_svg.py <html> <svg> --system-fonts`.

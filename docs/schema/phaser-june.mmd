@@ -2,7 +2,6 @@
 %% Source of truth for the ERD. Renders: phaser-june.html / -dark.html, phaser-june.svg / -dark.svg
 %% (diagram-design, profile critter-connect). The map it follows: docs/DATABASE_SCHEMA.md.
 %% Mapped read-only on 2026-11-26 (cc-schema-map, query log [03] columns, [04] keys and indexes, [05] views).
-%%
 %% Conventions:
 %% - Every table and materialized view, every column in physical order, with its SQL type.
 %%   Mermaid types can't hold a comma or a space, so: numeric(65,30) and geometry(...) are spelled out in the
@@ -11,6 +10,9 @@
 %%   is one composite unique key, named in the comments.
 %% - Solid line (--) = a foreign key. Dotted line (..) = a logical join the code makes, with no foreign key;
 %%   its integrity was checked by query [08] instead.
+%% - Cardinality is what the schema allows, not what the data holds today: a nullable join column with no FK
+%%   (iucn.id_no, oneearth_bioregion.eco_sym) leaves the parent side zero or one (|o).
+%% - Check: a real Mermaid must parse this file (Mermaid drops only %% lines with text after them, so no bare %%).
 %% - Schemas: Mermaid has no namespaces, so entity names are the bare table names (all unique across the three
 %%   schemas). The schema of each zone is in the comment above it.
 
@@ -193,10 +195,10 @@ content_sources |o--o{ species_facts : "FK source_key to key"
 
 %% ── Relationships: 4 logical joins, no foreign key (dotted) ──
 
-species ||..o{ iucn : "iucn_id = id_no"
+species |o..o{ iucn : "iucn_id = id_no"
 species ||..o| clue_match_ranges : "view, species_id"
 species }o..o{ clue_match_places : "view, species_ids array"
-eco_sym_colors ||..o{ oneearth_bioregion : "eco_sym"
+eco_sym_colors |o..o{ oneearth_bioregion : "eco_sym"
 
 %% Not drawn as relationships (no key): the spatial joins. content -- ranges intersects iucn with
 %% oneearth_bioregion and countries; clue_match_places intersects iucn with countries.

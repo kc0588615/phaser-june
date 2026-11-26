@@ -7,8 +7,15 @@
 --   - Their 46 functions (pgcrypto 36, uuid-ossp 10) sit in public, executable by critter_app through PUBLIC (query log 24).
 -- postgis, pg_stat_statements (monitoring) and plpgsql stay.
 --
--- Run as postgres (extension owner) on the dev copy first, then live (after a fresh dump). critter_dev can't drop them.
---   ./scripts/db -f db/proposals/04-drop-unused-extensions.sql
+-- Every run names its target; a missing or different name stops before any change (scripts/db defaults to live).
+-- Run as postgres, the extensions' owner; critter_dev can't drop them.
+-- The dev copy first. No settings file gives postgres on the copy, so use .env.local's postgres login and switch the
+-- database with psql's -d, which overrides the URL's database. PgBouncer routes phaser_june_dev (docker-compose.yml,
+-- pgbouncer DATABASE_URLS). cc-schema-map didn't try this route, since it read the copy only as critter_dev. If the
+-- run lands anywhere else, the target guard stops it:
+--   ./scripts/db -d phaser_june_dev -v target=phaser_june_dev -f db/proposals/04-drop-unused-extensions.sql
+-- Then live, after a fresh dump (deploy/backup/pg-backup.sh on the server, AGENTS.md):
+--   ./scripts/db -v target=phaser_june -f db/proposals/04-drop-unused-extensions.sql
 -- Same later change: init/01-extensions.sql and init/README.md lose the two, and db/schema.sql's header lists the
 -- extensions that stay.
 --
@@ -19,11 +26,18 @@
 --   - A tool of the owner's outside the repo (QGIS, a saved query) that calls gen_random_uuid() keeps working: that is
 --     core Postgres since 13. Calls to uuid_generate_v4(), crypt() or digest() would fail. Check with the owner first
 --     (handoff line).
+\set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL lock_timeout = '5s';
 
--- Before: the right database, and nothing outside each extension depends on its members.
-SELECT 1 / (current_database() IN ('phaser_june', 'phaser_june_dev'))::int AS guard;
+-- Before: the named target is this database, and nothing outside each extension depends on its members.
+\if :{?target}
+\else
+  \echo 'Stopped: name the target, -v target=phaser_june_dev (rehearsal) or -v target=phaser_june (live). Nothing was changed.'
+  \set target '(not set)'
+\endif
+SELECT current_database() AS connected_to, :'target' AS target;
+SELECT 1 / (current_database() = :'target' AND :'target' IN ('phaser_june_dev', 'phaser_june'))::int AS guard_target;
 WITH members AS (
   SELECT de.classid, de.objid
   FROM pg_depend de JOIN pg_extension e ON e.oid = de.refobjid
