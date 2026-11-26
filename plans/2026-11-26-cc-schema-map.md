@@ -147,7 +147,7 @@ Out:
   - [x] Architecture B: `db-designer` makes the diagram-design profile and marker, the Mermaid ERDs in `docs/schema/` and their light/dark HTML+SVG renders, and embeds them in `docs/DATABASE_SCHEMA.md`
   - [x] Architecture C: `architect` writes the Architecture section for the repo edits (`db/schema.sql`, the docs, the check query)
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -399,6 +399,21 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. P02–P04 accept either database as their target, and `scripts/db` defaults to production. A dev rehearsal can therefore drop production columns, indexes, or extensions before the required backup. Require each run to name its expected database and abort on mismatch before any DDL.
+2. P01 grants `pg_read_all_data` across the cluster. The proposed live reader can also read the dev copy, where PUBLIC has `CONNECT`. Scope its grants to the required live objects and verify the effective access before enabling login. [PostgreSQL 17 predefined roles](https://www.postgresql.org/docs/17/predefined-roles.html)
+3. A1 still leaves the repeatable grants check blind to role memberships, column grants, and extension-function privileges, including the 46 functions cited in F5. Include those privileges so a clean comparison can support the map’s access claims.
+4. The ERD source fails to parse, yet its independent HTML/SVG renders pass verification. Require a successful Mermaid parse and agreement on relationship cardinality. Both `iucn.id_no` and `oneearth_bioregion.eco_sym` permit an unmatched parent.
+5. Step 2 leaves `species_deduction_clues` out of live column order. Use the recorded suffix `is_filtering, created_at, species_id, source_key, source_url` before declaring baseline parity.
+
+SHOULD-CONSIDER:
+
+1. Give P03 a rollback that restores the saved timestamps by row ID. Its current rollback assigns the recovery time to every existing row.
+2. Recheck the reviewed revision before merge. This review covers `agent/cc-schema-map` at `0a5defb6`. Remote freshness was unverified.
+
 ## Revision notes
 
 ## Steps
@@ -419,5 +434,6 @@ SHOULD-CONSIDER:
 - 2026-11-26 09:55 UTC · Architecture B: db-designer added the profile `~/.diagram-design/profiles/critter-connect.md`, the `.diagram-design` marker, `docs/schema/phaser-june.mmd` (11 entities, 118 cols, 8 links) and light/dark HTML+SVG renders, embedded in `DATABASE_SCHEMA.md` (fixed iucn numeric(65,30) and ranges cardinality). SVGs parse, light render checked by eye in headless Chrome; typecheck, lint pass.
 - 2026-11-26 10:10 UTC · Architecture C: architect wrote Architecture (A1–A2 medium: check query misses default ACLs; stale schema.sql line refs; A3–A6 low), docs DB facts all verified correct (pointers only), target design: 6 ordered edits. Plan-only change; no DB access.
 - 2026-11-26 10:25 UTC · Fable review: APPROVE WITH CHANGES, 3 MUST-FIX (.mmd bare `%%` breaks Mermaid parse; species_deduction_clues column order needs two moves; iucn/oneearth logical links should be zero-or-one). Plan-only change.
+- 2026-11-26 10:12 UTC · Astra review: APPROVE_WITH_CHANGES, 5 MUST-FIX (proposals must assert target DB before DDL; P01 grants too broad, scope off pg_read_all_data; check query misses memberships/column/function grants; Mermaid parse + cardinality; deduction-clues column order), 2 SHOULD-CONSIDER. Plan-only change.
 
 ## Summary
