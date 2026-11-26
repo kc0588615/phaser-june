@@ -805,7 +805,7 @@ SHOULD-CONSIDER:
 - 2026-11-26 11:26 UTC · S12: rerun block diffs only after each output's line 1 names its expected database; ran as written ([35]/[36] pass, = [32]/[33]) and with dev on live ([37], stops). Plan copy -> pointer. Typecheck, lint pass.
 - 2026-11-26 11:34 UTC · Gemini code review: APPROVE_WITH_CHANGES, 2 MUST-FIX (rerun guard exits 0 when stopped; multi-grantor ACL rows duplicate privileges) -> S13-S14, SC1-2 folded into S14, SC3 to owner. Plan-only change; typecheck, lint pass.
 - 2026-11-26 11:36 UTC · S13: rerun guard's stop branch exits 2 (diff's trouble code); on logged copies pass case exits 1 (diff = 32/33), dev-on-live [37] exits 2. Typecheck, lint pass.
-- 2026-11-26 11:45 UTC · S14: schema-check.sql grants fold per privilege whatever the grantor (one `acl` CTE, one fold/aggregate), global default ACL prints no `in schema -`, extension relation members filtered by relkind. [38]/[39] = [32]/[33]; [40] literal two-grantor ACL prints `SELECT*` once. V4 clean, typecheck, lint pass.
+- 2026-11-26 11:39 UTC · S14: schema-check.sql grants fold per privilege whatever the grantor (one `acl` CTE, one fold/aggregate), global default ACL prints no `in schema -`, extension relation members filtered by relkind. [38]/[39] = [32]/[33]; [40] literal two-grantor ACL prints `SELECT*` once. V4 clean, typecheck, lint pass.
 
 ## Schema check result
 
