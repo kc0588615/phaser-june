@@ -142,7 +142,10 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [ ] Architecture: `architect` writes findings and the target design (split into the three items below)
+  - [x] Architecture A: `db-designer` maps the live and dev databases (query log), writes `docs/DATABASE_SCHEMA.md` (inventory), `db/analysis/schema-check.sql`, the plan's Data model section (summary, schema.sql drift, ranked findings) and `db/proposals/`
+  - [ ] Architecture B: `db-designer` makes the diagram-design profile and marker, the Mermaid ERDs in `docs/schema/` and their light/dark HTML+SVG renders, and embeds them in `docs/DATABASE_SCHEMA.md`
+  - [ ] Architecture C: `architect` writes the Architecture section for the repo edits (`db/schema.sql`, the docs, the check query)
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -158,6 +161,121 @@ From `0c0f064e` (branch `agent/cc-schema-map`, cut from `origin/main` `62c63c32`
 - DB target: the worktree's `.env.local` `DATABASE_URL` is live `phaser_june` as `postgres` (its comment line still says "dev DB copy"; stale). The dev copy is reached only via `/srv/critter-ai/agent-state/secrets/critter-connect.env.local.dev-copy` (`critter_dev` / `phaser_june_dev`). The baseline e2e read live; the game writes nothing.
 
 ## Architecture
+
+## Data model
+
+From `db-designer`, Architecture A, 2026-11-26. The full map is in `docs/DATABASE_SCHEMA.md`.
+
+**Query log:** `/srv/critter-ai/agent-state/missions/cc-schema-map/queries/`, written [NN] below. Each `.sql` sits beside its `.out`:
+
+- live: 01–10, 20, 22, 24;
+- dev copy: 11–19, 21 and 23, each the matching live file with only its guard changed.
+
+Every file opens `BEGIN TRANSACTION READ ONLY` with a 30 s timeout, ends `ROLLBACK`, and checks `current_database()` first. Nothing was written to either database.
+
+### Map in brief
+
+- **Server:** live `phaser_june` runs PostgreSQL 17.5 with PostGIS 3.5.2 and is 167 MB [01].
+- **Objects:**
+  - 3 schemas: `public`, `oneearth`, `natural_earth`;
+  - 9 tables, 2 materialized views and 5 serial sequences;
+  - no functions, triggers, policies or types of the project's own [06].
+- **Rows** [08]:
+  - content: `species` 76, `species_deduction_clues` 3,653, `species_facts` 491, `content_sources` 16;
+  - kept legends: `habitat_colormap` 82, `oneearth.eco_sym_colors` 118;
+  - imported sources: `iucn` 202 polygons for 76 species, `natural_earth.countries` 258, `oneearth.oneearth_bioregion` 827;
+  - views: `clue_match_ranges` 76, `clue_match_places` 5 (continents only).
+- **Readers:** the game sends only the SELECTs in `src/lib/cluePool.ts:13-22`, `src/lib/places.ts:13-36` and the two range routes. All of them plan cheaply [10]. Scripts (`content`, `iucn`, `clue:world-map`, the Natural Earth import) run as `postgres`.
+- **Roles** [07]:
+  - `postgres`, a superuser: agents and scripts;
+  - `critter_app`: SELECT on exactly the six relations `deploy/db/app-role.sql:26` names, 15 s timeout;
+  - `critter_dev`: owns the dev copy, 60 s timeout.
+- **Integrity** [08][22]: every check passes. There are no orphans (`iucn` and `species`, bioregions and colors), the sequences equal `max(id)`, both views agree with their sources, and every clue and fact id follows the rule species id × 100 + position.
+- **Dev copy:**
+  - Same as live: schema (definitions, constraints, indexes, view md5s [13]–[15]), grants to `critter_app` [17], and content (row hashes of every table [09][19]).
+  - Different only in:
+    - owners (`critter_dev`, by design);
+    - its database ACL (the default, so PUBLIC has CONNECT and TEMP);
+    - column numbers (the restore compacted them);
+    - the views' shapes, at vertex level only: 7 of 76 ranges and 4 of 5 outlines. Ids, bounding boxes, points and areas are equal.
+
+### `db/schema.sql` against live
+
+From the schema check [20], read against the file object by object. The view SQL was compared with `pg_get_viewdef` [05].
+
+| Object | Result | Direction, and what the later step does |
+|---|---|---|
+| Header: the "Also needed" list (`iucn`, `oneearth.oneearth_bioregion`, `natural_earth.countries`) | matches | |
+| Header: the "Extensions:" line | differs. It names `postgis` and notes `pgcrypto`. Live also has `uuid-ossp` 1.1 and `pg_stat_statements` 1.11, all in `public` [01] | file behind: list them, or what stays after P04 |
+| Header: `oneearth.eco_sym_colors` | differs. Live has it (kept by the owner, unread); the file never mentions it | file behind: name it as kept, beside `habitat_colormap` |
+| `content_sources` | matches: columns, PK, `UNIQUE (key)`, the tier CHECK, auto names | |
+| `species` | differs in column order only: live puts `created_at`, `updated_at` after `conservation_code` [03]. Types, nulls, defaults and keys match | file behind, cosmetic: follow live's order, or say in the header that order may differ |
+| `species_deduction_clues` | differs in column order only. Live: `id, category, label, compare_tags, reveal_order, is_filtering, created_at, species_id, source_key, source_url`. The CHECK, both FKs and all 4 indexes match | file behind, cosmetic: as `species` |
+| `species_facts` | matches: columns in order, UNIQUE, both FKs, 2 indexes | |
+| `habitat_colormap` | differs. Live has `value integer NOT NULL` with `habitat_colormap_pkey PRIMARY KEY (value)`, and `label text NOT NULL` [04]. The file has bare `value integer, label text` | file behind: add the key and the NOT NULLs |
+| `clue_match_ranges` | matches: definition, and the unique index `clue_match_ranges_species_id` | |
+| `clue_match_places` | matches: definition (the Russia, France, IDN and IDP branches; continents only), and the unique index `clue_match_places_key` | |
+| The grant `DO` block | matches: `critter_app` has SELECT on both views | |
+| Serial sequences | match: 5, each owned by its column | |
+
+**Result:** 12 objects; 7 match and 5 differ.
+
+- All 5 are "file behind": 3 substantive (`habitat_colormap`'s key and NOT NULLs, the extension list, `eco_sym_colors`) and 2 cosmetic (column order).
+- Nothing is "file ahead", so no drift line goes in the handoff.
+- `deploy/db/app-role.sql` also matches live: SELECT on the 6 relations, `USAGE` on `public`, `CONNECT`, the 15 s timeout.
+
+### Findings, ranked
+
+| # | Rank | Object | Evidence | What goes wrong | Fix | Proposal |
+|---|---|---|---|---|---|---|
+| F1 | medium | role `postgres` as every agent's and script's login | [01] `current_user = postgres`; [07] `rolsuper`, `rolbypassrls` | Only the query file's READ ONLY wrapper keeps a read-only task read-only. One slip (a bare `-c`, a wrong file) can change or drop what players read | A read-only login role for read-only work (`pg_read_all_data`, `default_transaction_read_only`, 30 s). Writes keep `postgres` (owner, 2026-11-01) | `db/proposals/01-read-only-agent-role.sql` |
+| F2 | low, next content mission | clue and fact ids, species id × 100 + position (`src/clueGame/profiles.ts:430`, `:442`) | [22]: at most 79 clues for one species; no off-scheme id | A profile's 101st clue takes the next species' first id. `content -- build` then fails ("cannot affect row a second time"), or fails later when that species arrives. Players see nothing; the content mission is blocked | Code, not the database: a wider multiplier. The build deletes all clues and facts first, and nothing outside the database stores their ids (journal, saved game) | none (code; a later mission) |
+| F3 | low | `species.created_at`, `species.updated_at`, `species_deduction_clues.created_at` | [08]: 48 of 76 rows have `updated_at = created_at`, the newest 2026-09-30, though [02] shows 962 updates through 2026-11-24. No trigger [06]. Nothing reads them (code search) | A reader trusting `updated_at` gets wrong dates. The clues' `created_at` only means "last build" | Drop all three; git history of `db/content/` is the record | `db/proposals/03-drop-unread-timestamps.sql` |
+| F4 | low | `ix_deduction_clues_species`, `ix_deduction_clues_category`, `ix_species_facts_species`, `ix_species_facts_category` | [04]: each is a leading part of a unique index on the same table; idx_scan 87, 2, 4, 0, with counters never reset [01] | Every build re-inserts all 4,144 rows and maintains 4 useless btrees. No effect on players | Drop them; the unique indexes serve the same lookups and the FK cascade | `db/proposals/02-drop-redundant-indexes.sql` |
+| F5 | low | extensions `pgcrypto`, `uuid-ossp` | [22]: 0 outside dependents; [24]: 46 functions `critter_app` can execute; no SQL in the repo calls them | Dead surface in `public`, and a misleading picture of what the app needs | `DROP EXTENSION ... RESTRICT`. `init/01-extensions.sql` loses the two lines in the same later change. Ask the owner about outside tools first | `db/proposals/04-drop-unused-extensions.sql` |
+| F6 | low | PUBLIC's `TEMPORARY` on `phaser_june` | [01] datacl `=T/postgres`; [07] `has_database_privilege(critter_app, TEMP) = t` | The SELECT-only app role (M13) can still create temporary tables, and so fill disk through a bug in the app's SQL | `REVOKE TEMPORARY ... FROM PUBLIC`; `deploy/db/app-role.sql` carries it afterwards | `db/proposals/05-revoke-public-temp.sql` |
+
+**Areas checked and fine:**
+
+- **Keys:** every table has a primary key.
+  - The content tables' foreign keys cascade from `species` and point at `content_sources(key)`.
+  - `species.iucn_id` → `iucn.id_no` can't be a foreign key, because there are several polygons per species. Its integrity was checked in [08] instead.
+  - Both views have the unique index that `REFRESH ... CONCURRENTLY` needs.
+- **Constraints and nullability:** the NOT NULLs match what the build writes. `species_facts.category` has no CHECK, but the build allows only six values, and only those six occur [08].
+- **Types:** `iucn`'s numeric(65,30) columns, from ogr2ogr, join `species.iucn_id` through an implicit cast: a hash join at 202 rows [10]. They are left alone, because `scripts/iucn.ts` copies the columns by name.
+- **Spatial:**
+  - all three sources are typed 4326 geometries with GiST indexes [03][04], and every `iucn` row is a 4326 MultiPolygon [08];
+  - areas use `::geography` casts;
+  - the one note: `clue_match_places.outline` is untyped, so `geometry_columns` reports SRID 0 (the values are 4326) and QGIS must be told the CRS. Cast it if the view is ever rebuilt; no proposal.
+- **Indexes:** none missing for the game's queries [10]. There is no `iucn(id_no)` index; at 202 rows a scan is cheaper.
+- **Naming:** mixed `ix_`, `uq_` and automatic names. Harmless; left alone.
+- **Grants:** `critter_app` is SELECT-only on exactly its six relations, in both databases, with nothing on the sequences or the import schemas [07][17].
+- **Dead objects:** no code reads `habitat_colormap` or `eco_sym_colors` (their latest scans are the nightly dump's [02]), but the owner keeps them (Q18), so they stay. `pg_stat_statements` stays for monitoring.
+- **Statistics:** every table has planner statistics [08].
+
+### Target design
+
+- **After the proposals:** the same 11 relations.
+  - `species` drops `created_at` and `updated_at`, and the clues drop `created_at` (P03).
+  - The clues and facts keep their primary key, unique and GIN indexes, without the 4 prefix indexes (P02).
+  - Extensions: `postgis`, `pg_stat_statements`, `plpgsql` (P04).
+  - Roles: plus `critter_reader` for read-only agent work (P01).
+  - PUBLIC loses TEMP on `phaser_june` (P05).
+- **Code:** reads and writes don't change. No query in `src/` or `scripts/` names a dropped object. The build's upsert lists only profile columns, and the views use only `species.id` and `iucn_id` and the clues' `species_id`. F2's fix is a code change for a later mission.
+- **How each applied proposal runs:**
+  1. On the dev copy first (CI's e2e reads it), except P01 and P05, which are for live only.
+  2. Live, after a fresh dump.
+  3. Then the files: `db/schema.sql`, and `init/` and `deploy/db/app-role.sql` where the proposal names them.
+- **For unit B's ERD:** `docs/DATABASE_SCHEMA.md#relationships` lists 11 entities in 4 zones (content 5, ranges and places 3, `natural_earth` 1, `oneearth` 2), with 4 foreign keys and 4 logical links. Detail `faithful` fits.
+
+**Handoff lines for the lead's item** (`Blocks: nothing`):
+
+- **P01** read-only agent role. Risk: none (catalog only). Needs the owner to set a password and a new env file. Recommended.
+- **P02** drop 4 redundant indexes. Risk: a lock of milliseconds on the clues and facts tables. Recommended with the next schema change.
+- **P03** drop 3 unread timestamp columns. Risk: a lock of milliseconds; their values are lost (unread, partly wrong); dump first. Recommended.
+- **P04** drop `pgcrypto` and `uuid-ossp`. Risk: none in the repo. Recommended only if no outside tool of the owner's calls them.
+- **P05** revoke PUBLIC TEMP on `phaser_june`. Risk: none. Recommended; it completes M13's read-only app role.
+- **F2** is a code change: widen the clue-id rule before any animal passes 100 clues (the top today is 79).
 
 ## Architecture review (Fable)
 
@@ -179,5 +297,6 @@ From `0c0f064e` (branch `agent/cc-schema-map`, cut from `origin/main` `62c63c32`
 ## Log
 
 - 2026-11-26 09:05 UTC · Baseline: typecheck, lint, 186/186 unit, e2e:fresh 1563/1563 pass; artifact `e2e-s0-baseline/`.
+- 2026-11-26 09:50 UTC · Architecture A: split stage into A/B/C; db-designer mapped live+dev (24 read-only query files in `queries/`), wrote `docs/DATABASE_SCHEMA.md`, `db/analysis/schema-check.sql`, Data model (12 schema.sql objects: 7 match, 5 file-behind; F1 medium + F2–F6 low), `db/proposals/01`–`05`. Query files checked (wrapper, no writes); typecheck, lint, 186/186 unit pass.
 
 ## Summary
